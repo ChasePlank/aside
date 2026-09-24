@@ -1,0 +1,130 @@
+# Aside demo story — exercises staging, choices, conditions, effects
+# and branching endings. Written to be read, not just parsed.
+
+title: Night Shift
+author: Roxanne
+start: start
+
+== start ==
+bg office_night
+music fan_hum
+The chair is still warm from whoever had this shift before you.
+There is no one to ask about them.
+monty: You're late.
+show monty neutral at left
+monty: That's twice this week.
+
+* "I'm here, aren't I?" -> defiant
+* You say nothing. -> quiet
+    ~ let_the_quiet_stand true
+* "...Sorry." -> apologetic
+
+== defiant ==
+~ aff_monty -1
+monty: Being here isn't the same as showing up.
+monty (tired): I've been on this stage for thirty years. I know the difference.
+hide monty
+-> hallway
+
+== quiet ==
+~ aff_monty +1
+monty: ...
+monty (quiet): Good answer.
+monty: Most people fill the quiet. You didn't.
+hide monty
+-> hallway
+
+== apologetic ==
+~ aff_monty +1
+monty: Don't apologise to me.
+monty: Apologise to the one who had to cover you.
+hide monty
+-> cove
+
+== hallway ==
+bg west_hall
+The hall runs long and dim. Somewhere behind you a fan keeps turning.
+sfx footstep
+roxanne: I heard the door.
+show roxanne smirk at center
+roxanne: You're not supposed to be back here.
+
+* "Neither are you." -> roxy_banter
+* "I'm doing my rounds." -> roxy_rounds
+* Leave. -> hallway_exit
+
+== roxy_banter ==
+~ aff_roxy +2
+roxanne (laughs): No. I'm not.
+roxanne: But I've been here longer, so I win.
+show roxanne warm at center
+-> cove
+
+== roxy_rounds ==
+~ aff_roxy +1
+roxanne: Rounds. Sure.
+roxanne: You know what I do on my rounds? I check that you're still breathing.
+-> cove
+
+== hallway_exit ==
+roxanne: Good.
+roxanne (flat): Keep walking.
+-> ending_cold
+
+== cove ==
+bg coves
+The curtain is drawn. Something behind it is being very still.
+freddy: Hm.
+show freddy idle at right
+freddy: You can hear me, can't you.
+freddy: Most of them can't. They watch the cameras and think that's looking.
+
+* "I can hear you." -> freddy_seen
+* "Who are you?" -> freddy_name
+* "I should go." -> ending_cold
+
+== freddy_name ==
+freddy: That's a longer answer than you have time for.
+freddy (wry): Ask me again when you've done a week.
+-> freddy_offer
+
+== freddy_seen ==
+~ saw_freddy true
+~ aff_freddy +2
+freddy: ...
+freddy: Then stay a minute. That's all anyone ever wants, really.
+-> freddy_offer
+
+== freddy_offer ==
+music music_box
+freddy: There's a song that plays when the power dies.
+freddy: I don't choose it. But I'm the one standing there when it stops.
+freddy: Come back tomorrow, and I'll tell you the rest.
+-> ending_warm
+
+== ending_warm ==
+bg office_dawn
+The shift ends. 6 AM, and the lights come up like nothing happened.
+Everything is exactly where it was. You are not.
+~ nights_survived +1
+-> END
+
+== ending_cold ==
+bg office_dawn
+You leave without learning a single name.
+The building doesn't mind. It has had a lot of you.
+-> END
+
+# --- planted problems for the traversal bot to find ---
+# 1. nothing jumps here
+== epilogue ==
+The building is empty in the way that buildings are never empty.
+-> END
+
+# 2. typo: aff_montal is never written anywhere
+== apologist_alt ==
+~ aff_monty +1
+monty: Fine.
+-> hallway
+
+* "One more thing." -> apologist_alt [if aff_montal >= 2]
