@@ -18,7 +18,8 @@ public class Beat {
         GOTO,    // unconditional jump, ends the scene
         SET,     // variable assignment
         STAGE,   // bg / music / sfx / show / hide
-        EFFECT   // a `~` with no beat above it, applied on entry
+        EFFECT,  // a `~` with no beat above it, applied on entry
+        IFGOTO   // jump only when a condition holds, else fall through
     }
 
     public Kind kind;
@@ -32,8 +33,10 @@ public class Beat {
     // CHOICE
     public List<Choice> choices = new ArrayList<>();
 
-    // GOTO
+    // GOTO / IFGOTO
     public String target;
+    /** Gate for IFGOTO (and for CHOICE options, on the Choice itself). */
+    public String condition;
 
     // SET
     public String varName;
@@ -86,6 +89,17 @@ public class Beat {
         return b;
     }
 
+    /** Jump to `target` when `condition` holds; otherwise fall through
+     *  to the next beat. Used to grade a night, or route on a flag. */
+    public static Beat ifGoTo(String condition, String target, int line) {
+        Beat b = new Beat();
+        b.kind = Kind.IFGOTO;
+        b.condition = condition;
+        b.target = target;
+        b.line = line;
+        return b;
+    }
+
     /** A standalone `~` — carries effects applied when reached. */
     public static Beat effect(String effect, int line) {
         Beat b = new Beat();
@@ -110,6 +124,7 @@ public class Beat {
             case SET -> "set " + varName + " = " + value;
             case STAGE -> directive + " " + arg;
             case EFFECT -> "~ " + String.join("; ", effects);
+            case IFGOTO -> "if " + condition + " -> " + target;
         };
     }
 }

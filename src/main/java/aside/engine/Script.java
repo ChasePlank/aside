@@ -56,6 +56,7 @@ public class Script {
     static final Pattern CHOICE_P = Pattern.compile(
             "^\\*\\s+(.*?)\\s*->\\s*(\\S+)\\s*(?:\\[\\s*if\\s+(.+?)\\s*\\])?\\s*$");
     static final Pattern GOTO_P = Pattern.compile("^->\\s*(\\S+)\\s*$");
+    static final Pattern IF_P = Pattern.compile("^if\\s+(.+?)\\s*->\\s*(\\S+)\\s*$");
     static final Pattern SET_P = Pattern.compile("^set\\s+([A-Za-z_]\\w*)\\s*=\\s*(.+)$");
     static final Pattern EFFECT_P = Pattern.compile("^~\\s*(.+)$");
     static final Pattern STAGE_P = Pattern.compile("^(bg|music|sfx|show|hide)\\s+(.*)$");
@@ -152,6 +153,14 @@ public class Script {
             }
 
             lastChoice = null;
+
+            // --- conditional jump (must be tested before narration) ---
+            if ((m = IF_P.matcher(t)).matches()) {
+                Beat b = Beat.ifGoTo(m.group(1).trim(), m.group(2), lineNo);
+                current.beats.add(b);
+                lastBeat = b;
+                continue;
+            }
 
             // --- goto ---
             if ((m = GOTO_P.matcher(t)).matches()) {

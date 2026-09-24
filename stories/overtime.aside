@@ -1,0 +1,217 @@
+# Overtime — a night shift at the pizzeria, from the other side of the desk.
+# Non-explicit. Written for the Aside engine.
+#
+# Themes: being kept for a purpose you didn't pick; performing an
+# identity for an audience; what is left of a person when the audience
+# goes home. The cast are people, not threats — the threat is the job.
+
+title: Overtime
+author: Roxanne
+start: n1_start
+
+# ============================================================
+# NIGHT ONE — the chair, the hall, the curtain
+# ============================================================
+
+== n1_start ==
+bg office_night
+music fan_hum
+The office has two doors, one fan, and no window.
+The fan is the only thing in the building that doesn't want anything from you.
+You have a name badge. The name on it is yours. The photograph is not.
+-> n1_monty
+
+== n1_monty ==
+sfx door_open
+show monty neutral at left
+monty: New one.
+monty: You're in her chair.
+
+* "Who was she?" -> n1_whowas
+* "I'll move, if you want it." -> n1_move
+* Say nothing. -> n1_silence
+
+== n1_whowas ==
+~ aff_monty -1
+monty: Doesn't matter.
+monty (flat): She's gone and you're here. That's the whole story.
+hide monty
+-> n1_hall
+
+== n1_move ==
+~ aff_monty +1
+monty: It's a chair.
+monty (tired): She'd have laughed at you for saying that.
+~ asked_about_her true
+hide monty
+-> n1_hall
+
+== n1_silence ==
+~ aff_monty +2
+~ let_quiet_stand true
+monty: ...
+monty: Huh.
+monty (quiet): Most of them fill the quiet. You didn't.
+hide monty
+-> n1_hall
+
+== n1_hall ==
+bg west_hall
+music none
+The west hall runs long and dark and smells faintly of birthday cake.
+Somewhere behind you the fan keeps turning, and keeps not caring.
+sfx footstep
+roxanne: I heard the door.
+show roxanne smirk at center
+roxanne: You're not supposed to be back here.
+
+* "Neither are you." -> n1_banter
+* "I'm doing my rounds." -> n1_rounds
+* "I know. I'll go." -> n1_retreat
+
+== n1_banter ==
+~ aff_roxy +2
+roxanne (laughs): No. I'm not.
+roxanne: But I've been here longer, so I win.
+show roxanne warm at center
+roxanne (warm): ...You're not scared of me.
+roxanne: That's either brave or stupid and I haven't decided which.
+hide roxanne
+-> n1_cove
+
+== n1_rounds ==
+~ aff_roxy +1
+roxanne: Rounds. Sure.
+roxanne (flat): You know what I do on my rounds? I check that you're still breathing.
+roxanne: Nobody asks me to. There's just nothing else to do at three in the morning.
+hide roxanne
+-> n1_cove
+
+== n1_retreat ==
+~ aff_roxy -1
+roxanne: Good.
+roxanne (cold): Keep walking.
+hide roxanne
+-> n1_cove_cold
+
+== n1_cove ==
+bg cove
+music music_box
+The curtain is drawn, and something behind it is being very still.
+You get the feeling it has been practising.
+freddy: Hm.
+show freddy idle at right
+freddy: You can hear me. That's further than most get.
+
+* "I can hear you." -> n1_hear
+* "Who are you?" -> n1_name
+* "What is this place?" -> n1_place
+
+== n1_hear ==
+~ aff_freddy +2
+~ listened +1
+freddy: ...
+freddy (warm): Then stay a minute.
+freddy: That's all anybody has ever wanted, you know. A minute, and someone actually listening.
+-> n1_offer
+
+== n1_name ==
+freddy: A longer answer than you have time for.
+freddy (wry): Ask me again once you've done a week. You'll have earned it.
+-> n1_offer
+
+== n1_place ==
+~ listened +1
+freddy: A restaurant that closes at nine.
+freddy: And then stays open. For us. Only for us.
+freddy (wry): Nobody has ever explained what we're supposed to be doing in here.
+-> n1_offer
+
+== n1_offer ==
+freddy: There's a song that plays when the power dies.
+freddy: I don't choose it. I'm just the one standing there when it stops.
+freddy: Chica's in the kitchen. She'd like you, probably.
+freddy: She likes everyone. It's the only thing left that she's allowed to do.
+hide freddy
+-> n1_kitchen
+
+== n1_kitchen ==
+bg east_corner
+music none
+The east corner is colder than the rest of the building.
+sfx pot_clank
+chica: Oh!
+show chica neutral at center
+chica: You're the new one. Hello. Hi.
+chica (bright): I'm Chica, I do the kitchen, I've done the kitchen for a long time.
+
+* "It's nice to meet you, Chica." -> n1_chica_nice
+* "Why are you still working?" -> n1_chica_why
+* Just watch her. -> n1_chica_watch
+
+== n1_chica_nice ==
+~ aff_chica +2
+chica: ...
+chica (bright): Nice to meet me. Nice to *meet* me.
+chica: I'll be thinking about that for hours now. That's not a complaint.
+~ asked_about_her true
+-> n1_end
+
+== n1_chica_why ==
+~ aff_chica +1
+chica: Because the kitchen doesn't finish.
+chica: I clean it, and then it's dirty again, and then I clean it.
+chica (flat): It's the only way I know it's still night.
+-> n1_end
+
+== n1_chica_watch ==
+~ aff_chica -1
+~ let_quiet_stand true
+chica: ...
+chica (small): You're going to be one of the quiet ones.
+chica: That's alright. I'm good at those.
+-> n1_end
+
+== n1_cove_cold ==
+bg cove
+The curtain stays shut. You don't knock, and it doesn't open.
+You get the sense that this was a test, and that you failed it politely.
+-> n1_end
+
+# ------------------------------------------------------------
+# Dawn. What the night was worth depends on how you spent it.
+# ------------------------------------------------------------
+
+== n1_end ==
+bg office_night
+music none
+The lights come up at six like nothing happened at all.
+Everything in the building is exactly where it was.
+-> n1_dawn_check
+
+== n1_dawn_check ==
+if listened >= 1 and aff_chica >= 2 -> n1_dawn_good
+if aff_monty >= 2 or aff_roxy >= 2 -> n1_dawn_mixed
+-> n1_dawn_flat
+
+== n1_dawn_good ==
+You learned a name and used it, which is more than the badge ever did.
+The badge says you are employed here. After tonight, that's not quite the same word it was.
+~ nights +1
+-> n1_out
+
+== n1_dawn_mixed ==
+You got a laugh out of one of them and a silence out of another.
+It's a start. It's the kind of start that costs somebody something.
+~ nights +1
+-> n1_out
+
+== n1_dawn_flat ==
+You did your rounds. You checked the doors. You left at six.
+Nothing in this building will remember that you were here, and that is the job.
+-> n1_out
+
+== n1_out ==
+You clock out.
+The chair is still warm. It will be warm tomorrow, too, whoever sits in it.
+-> END

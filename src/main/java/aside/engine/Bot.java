@@ -116,15 +116,32 @@ public class Bot {
                 if (b.kind == Beat.Kind.SET) r.varsWritten.add(b.varName);
                 for (String e : b.effects) r.varsWritten.add(effectName(e));
                 if (b.kind == Beat.Kind.GOTO) checkTarget(script, b.target, b.line, sc.id, r);
+                if (b.kind == Beat.Kind.IFGOTO) {
+                    checkTarget(script, b.target, b.line, sc.id, r);
+                    if (b.condition == null || b.condition.isBlank()) {
+                        r.warnings.add(sc.id + ":" + b.line
+                                + " 'if' with an empty condition — use a plain '->'");
+                    }
+                }
                 if (b.kind == Beat.Kind.CHOICE) {
                     for (Choice c : b.choices) {
                         r.choiceSitesAuthored.add(site(sc.id, c.line, c.text));
                         checkTarget(script, c.target, c.line, sc.id, r);
                         for (String e : c.effects) r.varsWritten.add(effectName(e));
-                        if (c.condition != null) {
-                            for (String v : varsIn(c.condition)) {
-                                if (!isWritten(script, v)) r.varsReadOnly.add(v);
-                            }
+                    }
+                }
+                // Any condition — on a choice or an `if` jump — that
+                // reads a variable nothing ever writes is a typo.
+                if (b.condition != null) {
+                    for (String v : varsIn(b.condition)) {
+                        if (!isWritten(script, v)) r.varsReadOnly.add(v);
+                    }
+                }
+                if (b.kind == Beat.Kind.CHOICE) {
+                    for (Choice c : b.choices) {
+                        if (c.condition == null) continue;
+                        for (String v : varsIn(c.condition)) {
+                            if (!isWritten(script, v)) r.varsReadOnly.add(v);
                         }
                     }
                 }

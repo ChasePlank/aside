@@ -66,6 +66,9 @@ public class Vn {
             mode = Mode.ENDED;
             throw new IllegalStateException("start scene '" + sceneId + "' does not exist");
         }
+        // The opening scene counts as visited. Without this the
+        // traversal bot reports the start of the story as unreachable.
+        visited.add(sceneId);
         step();
     }
 
@@ -97,6 +100,12 @@ public class Vn {
                 case STAGE -> { applyStage(b); index++; }
                 case SET -> { Expr.apply(b.varName + " = " + b.value, vars); index++; }
                 case EFFECT -> { applyEffects(b.effects); index++; }
+                case IFGOTO -> {
+                    index++;
+                    if (Expr.test(b.condition, vars)) {
+                        if (!enter(b.target)) { mode = Mode.ENDED; return mode; }
+                    }
+                }
                 case GOTO -> {
                     index++;
                     if (!enter(b.target)) { mode = Mode.ENDED; return mode; }
@@ -176,7 +185,7 @@ public class Vn {
     void applyStage(Beat b) {
         switch (b.directive) {
             case "bg" -> background = b.arg;
-            case "music" -> music = b.arg;
+            case "music" -> music = "none".equals(b.arg) ? null : b.arg;
             case "sfx" -> {}                    // fire and forget
             case "show" -> {
                 shown.put(b.arg, b.arg2);
