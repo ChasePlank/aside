@@ -7,3 +7,7 @@ saves/
 # raw source images and intermediate dumps -- the processed
 # versions in art/sprites/ are what the build uses
 art/raw/
+
+# verification screenshots
+shot-*.png
+present-*.png
