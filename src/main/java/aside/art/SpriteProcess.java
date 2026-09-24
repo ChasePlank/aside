@@ -94,6 +94,7 @@ public class SpriteProcess extends Application {
 
         int ok = 0;
         List<String> failures = new ArrayList<>();
+        List<String> quality = new ArrayList<>();
         for (var e : NAMES.entrySet()) {
             File src = found.get(e.getKey());
             if (src == null) { failures.add(e.getValue() + " (no source file)"); continue; }
@@ -102,7 +103,11 @@ public class SpriteProcess extends Application {
                 System.out.printf("%-28s %-18s %-13s %-11s %s%n",
                         e.getKey(), e.getValue(), r.srcW + "x" + r.srcH,
                         r.cut ? "keyed" : "had alpha",
-                        r.figW + "x" + r.figH);
+                        r.figW + "x" + r.figH + (r.clipping.isEmpty() ? "" : "   CUT:" + r.clipping));
+                if (!r.clipping.isEmpty()) {
+                    quality.add(e.getValue() + " is cut off at " + r.clipping
+                            + " in the source -- leave margin around the figure.");
+                }
                 ok++;
             } catch (Exception ex) {
                 failures.add(e.getValue() + " (" + ex.getMessage() + ")");
@@ -111,6 +116,47 @@ public class SpriteProcess extends Application {
 
         System.out.println();
         System.out.println("processed " + ok + "/" + NAMES.size() + " -> " + outDir);
+
+        // ---- camera-distance consistency ----
+        // Every sprite is normalised to the same height, so its WIDTH
+        // tells us how close the camera was. Within one character that
+        // should barely vary; a big spread means the shots were taken
+        // from different distances and will read as different sizes
+        // when they stand side by side.
+        System.out.println();
+        System.out.println("camera consistency (width at equal height):");
+        Map<String, List<Integer>> byChar = new LinkedHashMap<>();
+        Map<String, Integer> heights = new LinkedHashMap<>();
+        for (var e : NAMES.entrySet()) {
+            File src = found.get(e.getKey());
+            if (src == null) continue;
+            int dash = e.getKey().indexOf('.');
+            String ch = dash < 0 ? e.getKey() : e.getKey().substring(0, dash);
+            File out = new File(outDir, e.getValue() + ".png");
+            if (!out.exists()) continue;
+            try {
+                Image im = new Image(out.toURI().toString());
+                byChar.computeIfAbsent(ch, k -> new ArrayList<>()).add((int) im.getWidth());
+                heights.merge(ch, (int) im.getHeight(), (a, b) -> a);
+            } catch (Exception ignored) { }
+        }
+        for (var e : byChar.entrySet()) {
+            List<Integer> ws = e.getValue();
+            int min = ws.stream().min(Integer::compare).orElse(0);
+            int max = ws.stream().max(Integer::compare).orElse(0);
+            double ratio = min == 0 ? 0 : max / (double) min;
+            String verdict = ratio <= 1.25 ? "consistent"
+                    : (ratio <= 1.5 ? "slightly varied" : "INCONSISTENT");
+            System.out.printf("  %-10s %-28s %.2fx   %s%n", e.getKey(), ws.toString(), ratio, verdict);
+        }
+        System.out.println();
+        System.out.println("  (1.00x = every shot from the same distance. Aim under 1.25x.)");
+
+        if (!quality.isEmpty()) {
+            System.out.println();
+            System.out.println("cropping problems:");
+            for (String q : quality) System.out.println("   !! " + q);
+        }
         if (!failures.isEmpty()) {
             System.out.println("MISSING:");
             for (String f : failures) System.out.println("   " + f);
@@ -118,7 +164,7 @@ public class SpriteProcess extends Application {
         Platform.exit();
     }
 
-    record Result(int srcW, int srcH, boolean cut, int figW, int figH) {}
+    record Result(int srcW, int srcH, boolean cut, int figW, int figH, String clipping) {}
 
     static Result process(File src, File out) throws Exception {
         Image img = new Image(src.toURI().toString());
@@ -146,6 +192,14 @@ public class SpriteProcess extends Application {
         }
         if (maxX < 0) throw new IllegalStateException("no opaque pixels");
         int sw = maxX - minX + 1, sh = maxY - minY + 1;
+
+        // Clipping: did the figure run into the source frame edge? A
+        // limb cut off by the crop can never be recovered downstream.
+        StringBuilder clip = new StringBuilder();
+        if (minX <= 0)      clip.append("left ");
+        if (maxX >= w - 1)  clip.append("right ");
+        if (minY <= 0)      clip.append("top ");
+        if (maxY >= h - 1)  clip.append("bottom ");
 
         // Scale so the figure is TARGET_H tall, then pad out to a
         // common canvas so every sprite shares one coordinate space.
@@ -179,10 +233,27 @@ public class SpriteProcess extends Application {
             }
         }
         ImageIO.write(bi, "png", out);
-        return new Result(w, h, !hasAlpha, dw, dh);
+        return new Result(w, h, !hasAlpha, dw, dh, clip.toString().trim());
     }
 
-    /** Flood fill inward from the border over the corner colour. */
+    /** Soft key: flood fill the flat background, then repair the rim.
+     *
+     * A binary mask leaves a halo, because the edge pixels of the source
+     * are the figure COMPOSITED OVER the background -- they are a blend,
+     * not the figure's real colour. Treating them as opaque keeps the
+     * background's contribution, which is what shows up as a white
+     * fringe.
+     *
+     * The fix is to invert the compositing. For a pixel that is really
+     * `alpha * figure + (1 - alpha) * background`, we can estimate alpha
+     * from how far the pixel sits from the background colour, then solve
+     * for the figure colour:
+     *
+     *     figure = (observed - (1 - alpha) * background) / alpha
+     *
+     * Applied only within a couple of pixels of the background, so
+     * genuinely light areas INSIDE the figure are never touched.
+     */
     static void keyFlatBackground(int[] argb, int w, int h) {
         int ref = argb[0];
         int rr = (ref >>> 16) & 0xFF, rg = (ref >>> 8) & 0xFF, rb = ref & 0xFF;
@@ -206,7 +277,51 @@ public class SpriteProcess extends Application {
             if (y > 0)     sp = push(argb, vis, stack, sp, idx - w, rr, rg, rb);
             if (y < h - 1) sp = push(argb, vis, stack, sp, idx + w, rr, rg, rb);
         }
-        for (int i = 0; i < argb.length; i++) if (vis[i]) argb[i] = 0;
+
+        // Pixels within RIM px of the background get the soft treatment.
+        final int RIM = 2;
+        int[] rimDist = new int[w * h];
+        java.util.Arrays.fill(rimDist, Integer.MAX_VALUE);
+        java.util.ArrayDeque<Integer> q = new java.util.ArrayDeque<>();
+        for (int i = 0; i < argb.length; i++) {
+            if (vis[i]) { rimDist[i] = 0; q.add(i); }
+        }
+        while (!q.isEmpty()) {
+            int idx = q.poll();
+            int d = rimDist[idx];
+            if (d >= RIM) continue;
+            int x = idx % w, y = idx / w;
+            int[] nb = {
+                x > 0 ? idx - 1 : -1,
+                x < w - 1 ? idx + 1 : -1,
+                y > 0 ? idx - w : -1,
+                y < h - 1 ? idx + w : -1,
+            };
+            for (int n : nb) {
+                if (n >= 0 && rimDist[n] > d + 1) { rimDist[n] = d + 1; q.add(n); }
+            }
+        }
+
+        final int SOFT_LO = 10, SOFT_HI = 46;
+        for (int i = 0; i < argb.length; i++) {
+            if (vis[i]) { argb[i] = 0; continue; }
+            if (rimDist[i] >= RIM) continue;              // deep inside: leave alone
+            int r = (argb[i] >>> 16) & 0xFF, g = (argb[i] >>> 8) & 0xFF, b = argb[i] & 0xFF;
+            int dist = Math.max(Math.abs(r - rr), Math.max(Math.abs(g - rg), Math.abs(b - rb)));
+            if (dist >= SOFT_HI) continue;                 // clearly figure
+            double a = Math.max(0, Math.min(1, (dist - SOFT_LO) / (double) (SOFT_HI - SOFT_LO)));
+            if (a <= 0.02) { argb[i] = 0; continue; }
+            // Solve for the un-composited colour
+            int rn = uncomposite(r, rr, a), gn = uncomposite(g, rg, a), bn = uncomposite(b, rb, a);
+            int al = (int) Math.round(a * 255);
+            argb[i] = (al << 24) | (rn << 16) | (gn << 8) | bn;
+        }
+    }
+
+    static int uncomposite(int observed, int bg, double a) {
+        if (a <= 0) return 0;
+        int v = (int) Math.round((observed - (1 - a) * bg) / a);
+        return Math.max(0, Math.min(255, v));
     }
 
     /** Tolerant match: flat backgrounds are rarely perfectly uniform. */
