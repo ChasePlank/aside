@@ -1,9 +1,41 @@
-Wire the supplied UI sounds into the presenter
+Make Aside a real engine: games as modules, FNAF ported in
 
-Typewriter blip every third character while text reveals; choice_move
-and choice_select on navigating and confirming. All request a fallback
-name, so a missing camera_down or choice_move resolves to the nearest
-equivalent instead of going silent.
+The engine now hosts games rather than being one game.
+
+aside.game.Game -- the contract: id, title, blurb, create(ui). Kept
+deliberately thin because it has to hold two genuinely different things,
+a branching visual novel and a real-time survival game. Everything else
+a game needs is already a static service (Audio.A, its own asset
+loading, Games.saveDir(id)), so the interface only answers who are you
+and give me something to put on screen.
+
+aside.game.Games -- the registry, plus saves/<id>/ per game so two games
+cannot collide on a filename.
+
+aside.games.overtime -- the visual novel, as a module. VnScreen moved
+here because it is the novel's screen, not a generic engine screen.
+TitleScreen is gone; the Library replaces it.
+
+aside.games.fnaf -- the survival game, ported from its own project.
+Its engine package (fnaf.engine.*) moved across with only a package
+rename and zero logic changes, which is what the headless-first design
+bought. All five screens now implement UiScreen; their per-screen
+AnimationTimer loops became tick(dt) driven by one host loop, so there
+is a single frame source instead of one timer per screen.
+
+LibraryScreen -- built from Games.all(), so adding a game is one entry
+in one registry and it appears with no other change.
+
+Two bugs found while porting, both from mechanical transformation:
+- FNAF screens declared Canvas/GraphicsContext/StackPane WITHOUT
+  private final, so the rewrite that removed "private final X" left
+  those declarations shadowing UiScreen's fields with nulls. Symptom
+  was "Children: child node is null" plus a null GraphicsContext.
+- GameScreen kept its own copy of the window-fitting code, redundant
+  now that UiScreen does it, and it crashed on a null parent.
+
+Verified in one process: library, the novel, and FNAF night 1 with its
+office, doors, lights and HUD.
 
 Generated with Letta Code (https://letta.com)
 

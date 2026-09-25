@@ -1,4 +1,10 @@
-package aside.ui;
+package aside.games.overtime;
+
+import aside.ui.Audio;
+import aside.ui.LibraryScreen;
+import aside.ui.Assets;
+import aside.ui.UiManager;
+import aside.ui.UiScreen;
 
 import aside.engine.Choice;
 import aside.engine.Script;
@@ -56,7 +62,7 @@ public class VnScreen extends UiScreen {
     double toastTimer = 0;
     int lastBlipAt = 0;
 
-    static final String[] MENU = {"Resume", "Save", "Load", "Back to title", "Quit"};
+    static final String[] MENU = {"Resume", "Save", "Load", "Back to library", "Quit"};
 
     public VnScreen(UiManager ui, Script script, String title) {
         super(ui);
@@ -101,7 +107,7 @@ public class VnScreen extends UiScreen {
 
     void handleStoryKey(KeyCode c) {
         if (vn.mode == Vn.Mode.ENDED) {
-            if (c == KeyCode.ENTER || c == KeyCode.SPACE) ui.replace(new TitleScreen(ui));
+            if (c == KeyCode.ENTER || c == KeyCode.SPACE) ui.replace(new LibraryScreen(ui));
             return;
         }
         if (vn.mode == Vn.Mode.CHOOSING) {
@@ -152,7 +158,7 @@ public class VnScreen extends UiScreen {
                     case 0 -> menuOpen = false;
                     case 1 -> save(false);
                     case 2 -> load(false);
-                    case 3 -> { menuOpen = false; ui.replace(new TitleScreen(ui)); }
+                    case 3 -> { menuOpen = false; ui.replace(new LibraryScreen(ui)); }
                     case 4 -> javafx.application.Platform.exit();
                 }
             }

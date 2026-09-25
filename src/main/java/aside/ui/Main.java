@@ -90,7 +90,7 @@ public class Main extends Application {
         stage.setResizable(true);
         stage.show();
 
-        ui.push(new TitleScreen(ui));
+        ui.push(new LibraryScreen(ui));
     }
 
     public static void main(String[] args) { launch(args); }
