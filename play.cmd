@@ -46,7 +46,7 @@ if not exist "%JFX%" (
 
 "%JAVA%" ^
   --module-path "%JFX%" ^
-  --add-modules javafx.base,javafx.graphics,javafx.controls,javafx.swing ^
+  --add-modules javafx.base,javafx.graphics,javafx.controls,javafx.swing,javafx.media ^
   -Dprism.order=sw ^
   -Daside.root=. ^
   -cp classes aside.ui.Main

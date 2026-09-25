@@ -1,0 +1,34 @@
+Add audio: a cue layer, a synth for the mechanical sounds, and a play test
+
+Audio.java - loads cues by name from an audio folder; missing files are
+noted and ignored rather than breaking anything.
+- music: one looping MediaPlayer, swapped when the script asks
+- effects: AudioClips, cheap and able to overlap
+- lookup falls back through a list of candidate names, so a cue can be
+  requested specifically (scare_monty) and resolve to a general one
+  (scare_door) when the specific file is absent. Per-character sounds
+  can therefore be added later, or not, with no code change.
+- searches ../audio as well, so the game and the novel can share one
+  folder rather than duplicating files
+
+Synth.java - generates the sounds that are filtering and noise rather
+than performance: fan hum (rumble plus low-passed air plus a rotation
+wobble), camera static, door thumps, a light click, a metal clank,
+power sweeps and a 6AM chime. Loop points are cross-faded so there is
+no click at the seam. Writes 16-bit PCM WAV by hand, no dependency.
+
+AudioTest.java - loads the folder and actually plays every cue. The
+existence of a file is not evidence it can be played: JavaFX refuses
+OGG and FLAC, and refuses them at play time rather than load time.
+The first version of this test reported ok for files that did not
+exist, because it checked whether ANYTHING was playing rather than
+whether the requested cue started. Fixed.
+
+Verified: 10 cues decode and play with no errors.
+
+Engine gained pendingSfx, so a script sfx cue reaches the presenter
+instead of being swallowed. play.cmd now loads javafx.media.
+
+Generated with Letta Code (https://letta.com)
+
+Co-Authored-By: Letta Code <noreply@letta.com>

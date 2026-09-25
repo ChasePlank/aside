@@ -21,8 +21,10 @@ public class Main extends Application {
     public void start(Stage stage) {
         String root = System.getProperty("aside.root", ".");
         Assets.load(root);
+        Audio.load(root);
 
         for (String note : Assets.A.notes) System.out.println("[assets] " + note);
+        for (String note : Audio.A.notes) System.out.println("[audio] " + note);
 
         UiManager ui = new UiManager(root);
 

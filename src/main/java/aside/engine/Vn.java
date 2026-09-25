@@ -52,6 +52,13 @@ public class Vn {
      */
     public final List<String> enteredLog = new ArrayList<>();
 
+    /**
+     * One-shot sound cues emitted since the presenter last drained
+     * this. The engine has no audio dependency, so it records what the
+     * script asked for and lets the host decide how to play it.
+     */
+    public final List<String> pendingSfx = new ArrayList<>();
+
     public Vn(Script script) {
         this.script = script;
         start();
@@ -226,7 +233,7 @@ public class Vn {
         switch (b.directive) {
             case "bg" -> background = b.arg;
             case "music" -> music = "none".equals(b.arg) ? null : b.arg;
-            case "sfx" -> {}                    // fire and forget
+            case "sfx" -> pendingSfx.add(b.arg);   // drained by the presenter
             case "show" -> {
                 shown.put(b.arg, b.arg2);
                 if (b.arg3 != null) stagePos.put(b.arg, b.arg3);

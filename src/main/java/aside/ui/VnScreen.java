@@ -184,12 +184,25 @@ public class VnScreen extends UiScreen {
 
     @Override
     public void tick(double dt) {
+        syncAudio();
         if (toastTimer > 0) toastTimer -= dt;
         if (!textComplete) {
             revealed += dt * CHARS_PER_SEC;
             if (revealed >= shownText.length()) { revealed = shownText.length(); textComplete = true; }
         }
         draw();
+    }
+
+    /** Keep the music in step with the script, and fire any one-shots
+     *  the engine recorded this frame. */
+    void syncAudio() {
+        Audio a = Audio.A;
+        if (a == null) return;
+        a.music(vn.music);
+        if (!vn.pendingSfx.isEmpty()) {
+            for (String cue : vn.pendingSfx) a.sfx(cue);
+            vn.pendingSfx.clear();
+        }
     }
 
     // ------------------------------------------------ save / load
