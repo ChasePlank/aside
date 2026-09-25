@@ -55,7 +55,13 @@ public class TitleScreen extends UiScreen {
         if (loadError != null) return;
         String item = items.get(index);
         switch (item) {
-            case "Begin" -> ui.replace(new VnScreen(ui, script, script.title));
+            case "Begin" -> {
+                VnScreen vs = new VnScreen(ui, script, script.title);
+                // Dev shortcut: -Daside.scene=n3_notice jumps straight there
+                String jump = System.getProperty("aside.scene");
+                if (jump != null) vs.vn.startAt(jump);
+                ui.replace(vs);
+            }
             case "Continue" -> {
                 try {
                     var vn = aside.engine.Vn.load(script, Path.of("saves", "quicksave.txt"));

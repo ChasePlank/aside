@@ -44,6 +44,14 @@ public class Vn {
 
     public int stepsTaken = 0;    // guards against runaway loops
 
+    /**
+     * Scenes entered by THIS instance, in order, for the reachability
+     * audit. Kept separate from `visited` so search copies do not have
+     * to carry a growing set each -- the bot accumulates this into one
+     * global set and clears it, so memory stays bounded.
+     */
+    public final List<String> enteredLog = new ArrayList<>();
+
     public Vn(Script script) {
         this.script = script;
         start();
@@ -69,6 +77,7 @@ public class Vn {
         // The opening scene counts as visited. Without this the
         // traversal bot reports the start of the story as unreachable.
         visited.add(sceneId);
+        enteredLog.add(sceneId);
         step();
     }
 
@@ -133,6 +142,36 @@ public class Vn {
         return step();
     }
 
+    /**
+     * Jump straight to a scene, ignoring everything before it.
+     *
+     * For development only: lets a scene be inspected in the presenter
+     * without playing the four nights that lead to it. Variables keep
+     * whatever defaults they have, so affinities start at zero.
+     */
+    public void startAt(String scene) {
+        if (script.scene(scene) == null) {
+            System.err.println("no such scene: " + scene);
+            return;
+        }
+        vars.clear();
+        visited.clear();
+        enteredLog.clear();
+        history.clear();
+        shown.clear();
+        stagePos.clear();
+        background = null;
+        music = null;
+        current = null;
+        index = 0;
+        stepsTaken = 0;
+        mode = Mode.SHOWING;
+        sceneId = scene;
+        visited.add(scene);
+        enteredLog.add(scene);
+        step();
+    }
+
     /** Picks an option from the currently offered choice beat. */
     public Mode choose(int i) {
         if (mode != Mode.CHOOSING || current == null || current.kind != Beat.Kind.CHOICE) {
@@ -175,6 +214,7 @@ public class Vn {
         sceneId = target;
         index = 0;
         visited.add(target);
+        enteredLog.add(target);
         return true;
     }
 
@@ -224,6 +264,30 @@ public class Vn {
         v.stagePos.putAll(stagePos);
         v.background = background;
         v.music = music;
+        v.sceneId = sceneId;
+        v.index = index;
+        v.mode = mode;
+        v.current = current;
+        v.stepsTaken = stepsTaken;
+        return v;
+    }
+
+    /**
+     * Copy for state-space search: everything that can change what
+     * happens next, and nothing that only affects display.
+     *
+     * The important omission is `history`. A full copy carries every
+     * line said so far, and a breadth-first search holds an entire
+     * frontier of states at once -- with histories included that is
+     * hundreds of megabytes and it exhausts the heap. Dialogue history
+     * cannot influence branching, so the search does not need it.
+     */
+    public Vn copyForSearch() {
+        Vn v = new Vn(script);
+        v.vars.clear();
+        v.vars.putAll(vars);
+        v.visited.clear();          // reporting only; the bot uses enteredLog
+        v.enteredLog.clear();       // starts fresh so it only logs NEW entries
         v.sceneId = sceneId;
         v.index = index;
         v.mode = mode;

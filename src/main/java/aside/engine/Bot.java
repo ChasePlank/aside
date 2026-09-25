@@ -23,8 +23,11 @@ import java.util.Set;
  * assumptions can't see the author's bugs.
  */
 public class Bot {
-    /** Wall-clock-free budget: max player-states expanded. */
-    public int budget = 20_000;
+    /** Wall-clock-free budget: max player-states expanded.
+     *  A five-night branching story with accumulating variables needs
+     *  far more than a short one -- 20k truncated it mid-story and the
+     *  partial results looked like real defects. */
+    public int budget = Integer.getInteger("aside.budget", 600_000);
 
     public static class Report {
         public Set<String> scenesReached = new LinkedHashSet<>();
@@ -44,6 +47,9 @@ public class Bot {
         public Map<String, Double> varMax = new LinkedHashMap<>();
         public Set<String> varsReadOnly = new LinkedHashSet<>();
         public Set<String> varsWritten = new LinkedHashSet<>();
+        /** Written but never read anywhere — usually a typo'd name, e.g.
+         *  `~ listed +1` when every condition tests `listened`. */
+        public Set<String> varsNeverRead = new LinkedHashSet<>();
         public int pathsExplored = 0;
         public int statesExpanded = 0;
         public boolean budgetHit = false;
@@ -77,8 +83,10 @@ public class Bot {
             }
 
             var u = unreachableScenes();
-            sb.append("unreachable scenes:  ").append(u.size()).append('\n');
-            for (String s : u) sb.append("    !! ").append(s).append('\n');
+            sb.append("unreachable scenes:  ").append(u.size())
+              .append(budgetHit ? "   (UNRELIABLE: traversal did not finish)" : "")
+              .append('\n');
+            for (String s : u) sb.append("    ").append(budgetHit ? "?? " : "!! ").append(s).append('\n');
 
             sb.append("missing targets:     ").append(missingTargets.size()).append('\n');
             for (String s : missingTargets) sb.append("    !! ").append(s).append('\n');
@@ -90,11 +98,16 @@ public class Bot {
             for (String s : unreachableBeats) sb.append("    !! ").append(s).append('\n');
 
             var n = neverOfferedChoices();
-            sb.append("never-offered picks: ").append(n.size()).append('\n');
-            for (String s : n) sb.append("    !! ").append(s).append('\n');
+            sb.append("never-offered picks: ").append(n.size())
+              .append(budgetHit ? "   (UNRELIABLE: traversal did not finish)" : "")
+              .append('\n');
+            for (String s : n) sb.append("    ").append(budgetHit ? "?? " : "!! ").append(s).append('\n');
 
             sb.append("vars read but never written: ").append(varsReadOnly.size()).append('\n');
             for (String s : varsReadOnly) sb.append("    !! ").append(s).append('\n');
+
+            sb.append("vars written but never read: ").append(varsNeverRead.size()).append('\n');
+            for (String s : varsNeverRead) sb.append("    !! ").append(s).append('\n');
 
             if (!warnings.isEmpty()) {
                 sb.append("warnings:\n");
@@ -108,6 +121,7 @@ public class Bot {
         Report r = new Report();
         for (String id : script.scenes.keySet()) r.scenesDefined.add(id);
         for (String w : script.warnings) r.warnings.add(w);
+        collectThresholds(script);
 
         // What the script reads vs writes — a read-only variable is
         // almost always a typo in a condition.
@@ -155,6 +169,19 @@ public class Bot {
             }
         }
 
+        // Anything written that no condition ever reads is dead -- and
+        // nearly always a misspelling of something else that IS read.
+        for (String w : r.varsWritten) {
+            boolean read = false;
+            for (Scene sc : script.scenes.values()) {
+                for (Beat b : sc.beats) {
+                    if (readsVar(b, w)) { read = true; break; }
+                }
+                if (read) break;
+            }
+            if (!read) r.varsNeverRead.add(w);
+        }
+
         // Beats authored after a GOTO never run — the jump leaves first
         for (Scene sc : script.scenes.values()) {
             boolean afterJump = false;
@@ -168,21 +195,48 @@ public class Bot {
         }
 
         // --- traversal ---
+        // FIFO, not LIFO. Depth-first descends into one branch's entire
+        // subtree before touching its siblings -- with a branching
+        // factor of 3 over 15 choice points that single subtree is
+        // millions of states, so the budget ran out having explored one
+        // corridor of the story and never returned to Night 1's other
+        // options. Those then got reported as unreachable when they were
+        // simply unvisited yet. Breadth-first covers the whole story
+        // evenly, which is the correct order for a reachability audit.
         Deque<Vn> stack = new ArrayDeque<>();
         Vn root = new Vn(script);
-        stack.push(root);
+        stack.addLast(root);
+
+        // Dedupe on story state, not on path. Many different routes lead
+        // to the same (scene, position, variables), and re-exploring each
+        // one makes the search exponential -- a five-night story blew
+        // past 20k states and returned partial, misleading results.
+        // Collapsing identical states makes this a graph search, so the
+        // budget goes on genuinely new territory.
+        Set<String> seen = new LinkedHashSet<>();
 
         while (!stack.isEmpty()) {
             if (r.statesExpanded >= budget) { r.budgetHit = true; break; }
-            Vn v = stack.pop();
+            Vn v = stack.pollFirst();
+
+            String sig = signature(v);
+            if (!seen.add(sig)) continue;
             r.statesExpanded++;
 
             // Run this state to a decision point or an ending
             int spin = 0;
             while (v.mode == Vn.Mode.SHOWING && spin++ < 100_000) v.advance();
 
-            r.scenesReached.addAll(v.visited);
+            // Record reachability AFTER the advance, not before. The
+            // advance loop is what walks the story forward, and every
+            // scene it passes through is added to `visited` on the way.
+            // Recording before it meant those scenes were never counted,
+            // so finished endings were reported as unreachable while
+            // simultaneously appearing in the endings list.
+            r.scenesReached.addAll(v.enteredLog);
+            v.enteredLog.clear();
             if (v.sceneId != null) r.scenesReached.add(v.sceneId);
+
             noteVars(r, v.vars);
 
             if (v.mode == Vn.Mode.ENDED) {
@@ -204,7 +258,7 @@ public class Bot {
                     continue;
                 }
                 for (int i = 0; i < avail.size(); i++) {
-                    Vn branch = v.copy();
+                    Vn branch = v.copyForSearch();
                     // Re-find the same choice in the clone by site
                     List<Choice> av2 = branch.availableChoices();
                     int idx = -1;
@@ -213,12 +267,70 @@ public class Bot {
                     }
                     if (idx < 0) continue;
                     branch.choose(idx);
-                    stack.push(branch);
+                    stack.addLast(branch);
                 }
             }
         }
 
         return r;
+    }
+
+    /** Canonical signature of a story state: where we are, how far
+     *  through, and what every variable currently holds. */
+    String signature(Vn v) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(v.sceneId).append('|').append(v.index).append('|');
+        List<String> keys = new ArrayList<>(v.vars.keySet());
+        java.util.Collections.sort(keys);
+        for (String k : keys) sb.append(k).append('=').append(bucket(v.vars.get(k))).append(';');
+        return sb.toString();
+    }
+
+    /** Every integer literal the script compares against. A variable's
+     *  exact value does not matter -- only how it compares to these. */
+    final java.util.TreeSet<Integer> thresholds = new java.util.TreeSet<>();
+
+    void collectThresholds(Script script) {
+        for (Scene sc : script.scenes.values()) {
+            for (Beat b : sc.beats) {
+                addThresholds(b.condition);
+                if (b.kind == Beat.Kind.CHOICE) {
+                    for (Choice c : b.choices) addThresholds(c.condition);
+                }
+            }
+        }
+    }
+
+    void addThresholds(String condition) {
+        if (condition == null) return;
+        for (String t : Expr.tokenize(condition)) {
+            try { thresholds.add(Integer.parseInt(t.trim())); } catch (Exception ignored) { }
+        }
+    }
+
+    /**
+     * Collapse a variable value to what the story can actually
+     * distinguish. Two counts are equivalent if every `>=` in the
+     * script answers the same for both -- so values between adjacent
+     * thresholds are one state, and anything at or above the largest
+     * threshold is one state.
+     *
+     * Without this, a five-night story with four accumulating affinity
+     * counters has hundreds of thousands of distinct states that are
+     * behaviourally identical, and the traversal never finishes.
+     */
+    Object bucket(Object value) {
+        Double d = Expr.asNumber(value);
+        if (d == null) return value;
+        if (thresholds.isEmpty()) return value;
+        int v = (int) Math.floor(d);
+        Integer best = null;
+        for (int t : thresholds) {
+            if (t <= v) best = t;
+            else break;
+        }
+        // Below every threshold, counts collapse to one bucket too
+        return best == null ? "low" : String.valueOf(best);
     }
 
     static String site(String scene, int line, String text) {
@@ -275,5 +387,16 @@ public class Bot {
             }
         }
         return out;
+    }
+
+    /** Does this beat gate on the named variable? */
+    static boolean readsVar(Beat b, String name) {
+        if (b.condition != null && varsIn(b.condition).contains(name)) return true;
+        if (b.kind == Beat.Kind.CHOICE) {
+            for (Choice c : b.choices) {
+                if (c.condition != null && varsIn(c.condition).contains(name)) return true;
+            }
+        }
+        return false;
     }
 }

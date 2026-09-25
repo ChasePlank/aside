@@ -1,9 +1,10 @@
 # Overtime — a night shift at the pizzeria, from the other side of the desk.
 # Non-explicit. Written for the Aside engine.
 #
-# Themes: being kept for a purpose you didn't pick; performing an
-# identity for an audience; what is left of a person when the audience
-# goes home. The cast are people, not threats — the threat is the job.
+# Themes: being kept for a purpose you didn't pick; performing an identity
+# for an audience that has gone home; what is left of a person when the
+# audience stops watching. The cast are people, not threats. The threat is
+# the job, and the fact that nobody in this building is allowed to leave it.
 
 title: Overtime
 author: Roxanne
@@ -17,7 +18,7 @@ start: n1_start
 bg office_night
 music fan_hum
 The office has two doors, one fan, and no window.
-The fan is the only thing in the building that doesn't want anything from you.
+The fan is the only thing in the building that does not want anything from you.
 You have a name badge. The name on it is yours. The photograph is not.
 -> n1_monty
 
@@ -25,23 +26,23 @@ You have a name badge. The name on it is yours. The photograph is not.
 sfx door_open
 show monty neutral at left
 monty: New one.
-monty: You're in her chair.
+monty: You are in her chair.
 
 * "Who was she?" -> n1_whowas
-* "I'll move, if you want it." -> n1_move
+* "I will move, if you want it." -> n1_move
 * Say nothing. -> n1_silence
 
 == n1_whowas ==
 ~ aff_monty -1
-monty: Doesn't matter.
-monty (flat): She's gone and you're here. That's the whole story.
+monty: Does not matter.
+monty (flat): She is gone and you are here. That is the whole story.
 hide monty
 -> n1_hall
 
 == n1_move ==
 ~ aff_monty +1
-monty: It's a chair.
-monty (tired): She'd have laughed at you for saying that.
+monty: It is a chair.
+monty (tired): She would have laughed at you for saying that.
 ~ asked_about_her true
 hide monty
 -> n1_hall
@@ -51,7 +52,7 @@ hide monty
 ~ let_quiet_stand true
 monty: ...
 monty: Huh.
-monty (quiet): Most of them fill the quiet. You didn't.
+monty (quiet): Most of them fill the quiet. You did not.
 hide monty
 -> n1_hall
 
@@ -63,27 +64,27 @@ Somewhere behind you the fan keeps turning, and keeps not caring.
 sfx footstep
 roxanne: I heard the door.
 show roxanne smirk at center
-roxanne: You're not supposed to be back here.
+roxanne: You are not supposed to be back here.
 
 * "Neither are you." -> n1_banter
-* "I'm doing my rounds." -> n1_rounds
-* "I know. I'll go." -> n1_retreat
+* "I am doing my rounds." -> n1_rounds
+* "I know. I will go." -> n1_retreat
 
 == n1_banter ==
 ~ aff_roxy +2
-roxanne (laughs): No. I'm not.
-roxanne: But I've been here longer, so I win.
+roxanne (laughs): No. I am not.
+roxanne: But I have been here longer, so I win.
 show roxanne warm at center
-roxanne (warm): ...You're not scared of me.
-roxanne: That's either brave or stupid and I haven't decided which.
+roxanne (warm): ...You are not scared of me.
+roxanne: That is either brave or stupid and I have not decided which.
 hide roxanne
 -> n1_cove
 
 == n1_rounds ==
 ~ aff_roxy +1
 roxanne: Rounds. Sure.
-roxanne (flat): You know what I do on my rounds? I check that you're still breathing.
-roxanne: Nobody asks me to. There's just nothing else to do at three in the morning.
+roxanne (flat): You know what I do on my rounds? I check that you are still breathing.
+roxanne: Nobody asks me to. There is just nothing else to do at three in the morning.
 hide roxanne
 -> n1_cove
 
@@ -101,7 +102,7 @@ The curtain is drawn, and something behind it is being very still.
 You get the feeling it has been practising.
 freddy: Hm.
 show freddy idle at right
-freddy: You can hear me. That's further than most get.
+freddy: You can hear me. That is further than most get.
 
 * "I can hear you." -> n1_hear
 * "Who are you?" -> n1_name
@@ -112,26 +113,26 @@ freddy: You can hear me. That's further than most get.
 ~ listened +1
 freddy: ...
 freddy (warm): Then stay a minute.
-freddy: That's all anybody has ever wanted, you know. A minute, and someone actually listening.
+freddy: That is all anybody has ever wanted, you know. A minute, and someone actually listening.
 -> n1_offer
 
 == n1_name ==
 freddy: A longer answer than you have time for.
-freddy (wry): Ask me again once you've done a week. You'll have earned it.
+freddy (wry): Ask me again once you have done a week. You will have earned it.
 -> n1_offer
 
 == n1_place ==
 ~ listened +1
 freddy: A restaurant that closes at nine.
 freddy: And then stays open. For us. Only for us.
-freddy (wry): Nobody has ever explained what we're supposed to be doing in here.
+freddy (wry): Nobody has ever explained what we are supposed to be doing in here.
 -> n1_offer
 
 == n1_offer ==
-freddy: There's a song that plays when the power dies.
-freddy: I don't choose it. I'm just the one standing there when it stops.
-freddy: Chica's in the kitchen. She'd like you, probably.
-freddy: She likes everyone. It's the only thing left that she's allowed to do.
+freddy: There is a song that plays when the power dies.
+freddy: I do not choose it. I am just the one standing there when it stops.
+freddy: Chica is in the kitchen. She would like you, probably.
+freddy: She likes everyone. It is the only thing left that she is allowed to do.
 hide freddy
 -> n1_kitchen
 
@@ -142,45 +143,41 @@ The east corner is colder than the rest of the building.
 sfx pot_clank
 chica: Oh!
 show chica neutral at center
-chica: You're the new one. Hello. Hi.
-chica (bright): I'm Chica, I do the kitchen, I've done the kitchen for a long time.
+chica: You are the new one. Hello. Hi.
+chica (bright): I am Chica, I do the kitchen, I have done the kitchen for a long time.
 
-* "It's nice to meet you, Chica." -> n1_chica_nice
+* "It is nice to meet you, Chica." -> n1_chica_nice
 * "Why are you still working?" -> n1_chica_why
 * Just watch her. -> n1_chica_watch
 
 == n1_chica_nice ==
 ~ aff_chica +2
 chica: ...
-chica (bright): Nice to meet me. Nice to *meet* me.
-chica: I'll be thinking about that for hours now. That's not a complaint.
+chica (bright): Nice to meet me. Nice to meet me.
+chica: I will be thinking about that for hours now. That is not a complaint.
 ~ asked_about_her true
 -> n1_end
 
 == n1_chica_why ==
 ~ aff_chica +1
-chica: Because the kitchen doesn't finish.
-chica: I clean it, and then it's dirty again, and then I clean it.
-chica (flat): It's the only way I know it's still night.
+chica: Because the kitchen does not finish.
+chica: I clean it, and then it is dirty again, and then I clean it.
+chica (flat): It is the only way I know it is still night.
 -> n1_end
 
 == n1_chica_watch ==
 ~ aff_chica -1
 ~ let_quiet_stand true
 chica: ...
-chica (small): You're going to be one of the quiet ones.
-chica: That's alright. I'm good at those.
+chica (small): You are going to be one of the quiet ones.
+chica: That is alright. I am good at those.
 -> n1_end
 
 == n1_cove_cold ==
 bg cove
-The curtain stays shut. You don't knock, and it doesn't open.
+The curtain stays shut. You do not knock, and it does not open.
 You get the sense that this was a test, and that you failed it politely.
 -> n1_end
-
-# ------------------------------------------------------------
-# Dawn. What the night was worth depends on how you spent it.
-# ------------------------------------------------------------
 
 == n1_end ==
 bg office_night
@@ -196,22 +193,844 @@ if aff_monty >= 2 or aff_roxy >= 2 -> n1_dawn_mixed
 
 == n1_dawn_good ==
 You learned a name and used it, which is more than the badge ever did.
-The badge says you are employed here. After tonight, that's not quite the same word it was.
+The badge says you are employed here. After tonight that is not quite the same word it was.
 ~ nights +1
--> n1_out
+-> n2_start
 
 == n1_dawn_mixed ==
 You got a laugh out of one of them and a silence out of another.
-It's a start. It's the kind of start that costs somebody something.
+It is a start. It is the kind of start that costs somebody something.
 ~ nights +1
--> n1_out
+-> n2_start
 
 == n1_dawn_flat ==
 You did your rounds. You checked the doors. You left at six.
 Nothing in this building will remember that you were here, and that is the job.
--> n1_out
+-> n2_start
 
-== n1_out ==
-You clock out.
-The chair is still warm. It will be warm tomorrow, too, whoever sits in it.
+# ============================================================
+# NIGHT TWO — names, and what a party looks like a week later
+# ============================================================
+
+== n2_start ==
+bg office_night
+music fan_hum
+Second night. The fan is already running, which means someone turned it on for you.
+That is either a courtesy or a habit, and you cannot tell which.
+-> n2_monty
+
+== n2_monty ==
+bg dining
+music none
+show monty neutral at left
+The dining room is laid out for a party. Paper hats, paper cups, a tablecloth with a stain
+shaped like a hand. Somebody set this up and nobody ever took it down.
+monty: You came back.
+
+* "I said I would." -> n2_came_back
+* "I work here." -> n2_work
+* "I wanted to." -> n2_wanted [if aff_monty >= 2]
+
+== n2_came_back ==
+~ aff_monty +1
+monty: People say that.
+monty (tired): They say it on the way out, mostly.
+-> n2_tables
+
+== n2_work ==
+~ aff_monty -1
+monty: Right.
+monty (flat): Work.
+-> n2_tables
+
+== n2_wanted ==
+~ aff_monty +2
+monty: ...
+monty (quiet): That is a different sentence.
+monty: I do not know what to do with that one.
+-> n2_tables
+
+== n2_tables ==
+monty: This is what it looks like a week after a party.
+monty: Nobody clears it. They just turn the lights off and it is our room instead of theirs.
+monty (flat): I have eaten nothing. I have been at that table for eleven years.
+
+* "What were you before this?" -> n2_before
+* "Eleven years." -> n2_eleven
+* "Do you want it cleared?" -> n2_cleared
+
+== n2_before ==
+~ asked_about_her true
+monty: Before this I was not.
+monty: That is the honest answer and you will not like it much.
+-> n2_freddy
+
+== n2_eleven ==
+~ aff_monty +1
+monty: Eleven years. Give or take the nights nobody came.
+monty: I stopped counting because the counting was the only thing that moved.
+-> n2_freddy
+
+== n2_cleared ==
+~ aff_monty +2
+monty: ...
+monty (quiet): Nobody has ever asked me that.
+monty: No. I do not want it cleared. It is the last thing they left that says somebody was here.
+-> n2_freddy
+
+== n2_freddy ==
+bg cove_open
+music music_box
+hide monty
+The curtain is open. Freddy is standing in front of it rather than behind it,
+which feels like being let into a room.
+show freddy idle at right
+freddy: You are back. That is twice now.
+
+* "Does that matter?" -> n2_matter
+* "Is that unusual?" -> n2_unusual
+
+== n2_matter ==
+freddy: It does to me.
+freddy (warm): I keep a very small ledger, you know. There is not much in it.
+-> n2_ledger
+
+== n2_unusual ==
+~ aff_freddy +1
+freddy: Yes.
+freddy (wry): People usually have the decency to leave eventually.
+freddy: The last one did not leave. That was worse.
+-> n2_ledger
+
+== n2_ledger ==
+freddy: I have been trying to work out what we are for.
+freddy: Not what we do. We know what we do. We sing, we wave, we serve.
+freddy (wry): I mean the afterwards. The part nobody wrote down.
+
+* "Do you think there is an afterwards?" -> n2_afterwards
+* "Maybe there is not one." -> n2_none
+
+== n2_afterwards ==
+~ listened +1
+freddy: Something plays a song when the power goes. I do not know who chose it.
+freddy: That is as close as I have got to an answer.
+-> n2_roxanne
+
+== n2_none ==
+~ aff_freddy -1
+freddy: Then I have been doing a great deal of thinking about nothing.
+freddy (idle): I would rather you were wrong.
+-> n2_roxanne
+
+== n2_roxanne ==
+bg west_hall
+music none
+hide freddy
+sfx footstep
+show roxanne smirk at center
+roxanne: He does that to everyone. The ledger speech.
+roxanne: I used to think it was for me. It is for whoever is in the room.
+
+* "Was it for her?" -> n2_her
+* "Are you jealous?" -> n2_jealous
+* Say nothing. -> n2_her_quiet
+
+== n2_her ==
+~ aff_roxy +1
+roxanne: It was for her, yes.
+roxanne (flat): She got the whole speech. Twice. Then she stopped coming.
+-> n2_who
+
+== n2_jealous ==
+~ aff_roxy +2
+roxanne: ...
+roxanne (laughs): God. Yes. Obviously yes.
+show roxanne warm at center
+roxanne (warm): You are the first one who has asked me a real question.
+-> n2_who
+
+== n2_her_quiet ==
+~ aff_roxy +1
+~ let_quiet_stand true
+roxanne: You do the quiet thing too.
+roxanne (flat): He likes it. I have never worked out what to do with it.
+-> n2_who
+
+== n2_who ==
+The hall light over the door has a name written on it in marker.
+It has been washed over so many times that the letters are only a bruise now.
+roxanne: She was on the door. Then she was not.
+
+* "What was her name?" -> n2_name
+* "What happened to her?" -> n2_happened
+* "This is not my business." -> n2_business
+
+== n2_name ==
+~ aff_roxy +2
+~ knows_her_name true
+roxanne: Nia.
+roxanne (warm): There. Now you know something about her and I am not the only one holding it.
+~ listened +1
+-> n2_chica
+
+== n2_happened ==
+~ aff_roxy +1
+roxanne: She finished a shift and did not come back.
+roxanne (flat): That is all. There is no story. There is just a door with her name on it.
+-> n2_chica
+
+== n2_business ==
+~ aff_roxy -2
+roxanne: Oh.
+roxanne (cold): Right. No. It is not.
+hide roxanne
+-> n2_chica_noshow
+
+== n2_chica ==
+hide roxanne
+bg east_corner
+music none
+-> n2_chica_body
+
+== n2_chica_noshow ==
+bg east_corner
+music none
+-> n2_chica_body
+
+== n2_chica_body ==
+show chica neutral at center
+chica: Hello again.
+chica (bright): I made you something. It is not a cake. I want to be clear that it is not a cake.
+
+* "What is it?" -> n2_what
+* "Thank you." -> n2_thanks
+* Don't take it. -> n2_decline
+
+== n2_what ==
+chica: It is the shape of a cake.
+chica (small): I cannot make the inside of it. I have never been able to.
+-> n2_end
+
+== n2_thanks ==
+~ aff_chica +2
+chica: ...
+chica (bright): You said thank you. To me. For the shape of a cake.
+chica: I am going to have a very good shift now.
+-> n2_end
+
+== n2_decline ==
+~ aff_chica -2
+chica: Oh. That is fine.
+chica (small): I knew it was not right. I knew before I brought it.
+-> n2_end
+
+== n2_end ==
+bg office_night
+music none
+Six o'clock. The lights do the same calm thing they did yesterday.
+-> n2_dawn
+
+== n2_dawn ==
+if knows_her_name and aff_roxy >= 3 -> n2_dawn_name
+if listened >= 2 -> n2_dawn_partial
+-> n2_dawn_plain
+
+== n2_dawn_name ==
+You leave carrying a name you were not given officially.
+It is the first thing anybody in this building has trusted you with.
+~ nights +1
+-> n3_start
+
+== n2_dawn_partial ==
+Something is being built here, slowly, out of small sentences.
+You are not sure yet who it is for.
+~ nights +1
+-> n3_start
+
+== n2_dawn_plain ==
+You did the rounds. You checked the doors. You learned nothing you could write down.
+-> n3_start
+
+# ============================================================
+# NIGHT THREE - the notice
+# ============================================================
+
+== n3_start ==
+bg office_night
+music fan_hum
+There is a piece of paper on the wall that was not there yesterday.
+It is taped at all four corners, which is how you can tell it is not a joke.
+-> n3_notice
+
+== n3_notice ==
+It says TEMPORARY CLOSURE PENDING ASSESSMENT, in the flat font that
+companies use when they want a sentence to have no author.
+Below it, smaller: thank you for your understanding.
+You read it four times. It does not change.
+-> n3_monty
+
+== n3_monty ==
+bg dining
+music none
+show monty neutral at left
+monty: You have seen it.
+monty (flat): Do not tell me what it says. I can read. I have had eleven years of practice.
+
+* "How long have you known?" -> n3_known
+* "It might not mean anything." -> n3_nothing
+* Say nothing. -> n3_quiet
+
+== n3_known ==
+~ aff_monty +1
+monty: Since the woman came with the clipboard.
+monty: She counted the tables. She did not count us.
+monty (tired): That is the part I keep coming back to.
+-> n3_freddy
+
+== n3_nothing ==
+~ aff_monty -1
+monty: It means something.
+monty (flat): Everything here means something. That is the whole problem with this building.
+-> n3_freddy
+
+== n3_quiet ==
+~ aff_monty +2
+~ let_quiet_stand true
+monty: ...
+monty (quiet): You are doing the quiet thing again.
+monty: It works on me. I want you to know that it works.
+-> n3_freddy
+
+== n3_freddy ==
+bg cove_open
+music music_box
+hide monty
+show freddy idle at right
+freddy: They count us now. Did you know that.
+freddy: For eleven years nobody counted us. Now there is a number and the number is a list
+and the list has a line through some of it.
+
+* "Do you know which line?" -> n3_which
+* "Maybe it will be fine." -> n3_fine
+
+== n3_which ==
+~ aff_freddy +1
+freddy: No.
+freddy (wry): I asked. She wrote something down and left, which I am told is an answer.
+-> n3_chica
+
+== n3_fine ==
+~ aff_freddy -1
+freddy: You are the fourth person to tell me that.
+freddy (idle): The other three were staff, and they were all gone by the next week.
+-> n3_chica
+
+== n3_chica ==
+bg east_corner
+music none
+hide freddy
+sfx pot_clank
+show chica neutral at center
+chica: I have been cleaning all night.
+chica (bright): Everything is very clean. You can check. It is the cleanest it has ever been.
+
+* "Chica. The notice." -> n3_chica_notice
+* "It is very clean." -> n3_chica_agree
+
+== n3_chica_notice ==
+~ aff_chica +1
+chica: ...
+chica (small): If it is clean they might keep it.
+chica: That is not how it works, is it.
+-> n3_roxanne
+
+== n3_chica_agree ==
+~ aff_chica +2
+chica (bright): Thank you.
+chica: If someone says it is clean, then it is clean. That is how I know things.
+chica (small): I would like somebody to say it about me.
+-> n3_roxanne
+
+== n3_roxanne ==
+bg west_hall
+music none
+hide chica
+sfx footstep
+show roxanne flat at center
+roxanne: Do not.
+roxanne (cold): Whatever you are about to say to her, do not.
+
+* "What do I say instead?" -> n3_instead
+* "She deserves the truth." -> n3_truth
+* "You are frightened too." -> n3_frightened [if aff_roxy >= 3]
+
+== n3_instead ==
+~ aff_roxy +2
+roxanne: Nothing. You say nothing to her.
+roxanne (flat): I have been saying nothing to her for eleven years. I am extremely good at it.
+-> n3_choice
+
+== n3_truth ==
+~ aff_roxy -1
+roxanne: She deserves it.
+roxanne (cold): And? I have watched what the truth does to her. It is not a kindness. It is a hobby.
+-> n3_choice
+
+== n3_frightened ==
+~ aff_roxy +3
+~ knows_roxanne true
+roxanne: ...
+show roxanne warm at center
+roxanne (warm): Yes.
+roxanne: I am the one who performs. That is the job. If I stop performing there is no Roxanne,
+there is just a very loud machine that is frightened of a piece of paper.
+-> n3_choice
+
+== n3_choice ==
+bg office_night
+music none
+hide roxanne
+You are back in the office. The notice is still on the wall. It will be there at six.
+You have about forty minutes and three ways to spend them.
+
+* Tell them everything you know. -> n3_told
+* Tell them it will be fine. -> n3_softened
+* Say nothing. Keep the shift. -> n3_kept
+
+== n3_told ==
+~ told_truth true
+~ listened +1
+You tell them. All of it, including the part about the woman not writing down any names.
+Monty says nothing, which is his way of thanking you. Chica cries in the way machines do,
+which is quietly and in the wrong order. Freddy listens with his head tipped.
+-> n3_dawn
+
+== n3_softened ==
+~ softened true
+You tell them it will probably be fine. You use the word probably because it is load-bearing.
+Roxanne thanks you. Chica believes you immediately, which is the worst outcome.
+-> n3_dawn
+
+== n3_kept ==
+~ kept_quiet true
+You do the rounds. You check the doors. You do not go back down the hall.
+The notice stays on the wall and the building stays exactly as quiet as you left it.
+-> n3_dawn
+
+== n3_dawn ==
+bg office_night
+music none
+Six o'clock. The paper is still taped at all four corners.
+-> n3_dawn_out
+
+== n3_dawn_out ==
+if told_truth -> n3_dawn_told
+if softened -> n3_dawn_soft
+-> n3_dawn_silent
+
+== n3_dawn_told ==
+You spent your shift on something that will not go on any record.
+It is the first honest hour this building has had in eleven years.
+~ nights +1
+-> n4_start
+
+== n3_dawn_soft ==
+You were kind, and kindness was the wrong tool, and you know it.
+~ nights +1
+-> n4_start
+
+== n3_dawn_silent ==
+You did the rounds. You checked the doors.
+Somewhere behind you Chica is cleaning something that is already clean.
+-> n4_start
+
+# ============================================================
+# NIGHT FOUR - the song
+# ============================================================
+
+== n4_start ==
+bg office_night
+music fan_hum
+Fourth night. The fan is not running.
+You notice it the way you notice a stopped clock, which is immediately and all at once.
+-> n4_dark
+
+== n4_dark ==
+music none
+sfx power_down
+The lights go out from the far end of the building inward, like something being folded.
+No hum. No fan. No emergency lighting, because this building has never needed any.
+Just dark, and then, from somewhere to your left, a music box.
+-> n4_song
+
+== n4_song ==
+bg hall_corner
+music music_box
+show freddy idle at left
+The song is small and mechanical and slightly out of tune with itself.
+Freddy is standing in the doorway. He is not rushing anywhere and he is not smiling.
+freddy: Do not get up.
+freddy: I am not here to do the thing you think I am here to do.
+
+* "What is that song?" -> n4_whatsong
+* "I am not afraid of you." -> n4_notafraid
+
+== n4_whatsong ==
+~ knows_the_song true
+~ listened +1
+freddy: It is the only music nobody chose.
+freddy: They bought a building and a box that plays this, and they put both of them here
+and went home. The box is older than all of us.
+freddy (wry): Sometimes I think I am just the box getting louder.
+-> n4_reason
+
+== n4_notafraid ==
+~ aff_freddy +2
+freddy: I know.
+freddy (warm): That is why I am talking to you instead of standing here until the song stops.
+freddy: I have done that to four people. It is not a conversation. I would like a conversation.
+-> n4_reason
+
+== n4_reason ==
+freddy: Here is the thing I have never been able to ask anybody who works here.
+freddy: When you leave at six, do you think about us at all.
+
+* "Yes." -> n4_yes
+* "No." -> n4_no
+* "I do not know." -> n4_unknown
+
+== n4_yes ==
+~ aff_freddy +1
+freddy: Hm.
+freddy (wry): Everybody says yes. I have stopped believing it and I still ask.
+-> n4_real
+
+== n4_no ==
+~ aff_freddy -2
+freddy: Thank you.
+freddy (idle): That is the first true thing anybody has said to me in here.
+-> n4_real
+
+== n4_unknown ==
+~ aff_freddy +3
+~ said_unknown true
+freddy: ...
+freddy (warm): Good.
+freddy: That is the only answer I believe. It took eleven years and it was worth it.
+-> n4_real
+
+== n4_real ==
+music none
+The music box stops.
+The silence afterwards is the loudest thing that has happened all week.
+freddy: There. That is what I am.
+freddy: The song plays, and then it stops, and I am standing in the doorway when it stops.
+That is the whole of me. Nobody wrote me a part after this.
+
+* "You are more than that." -> n4_more
+* "That is not nothing." -> n4_notnothing
+* "Does it have to be the whole of you?" -> n4_whole
+
+== n4_more ==
+~ aff_freddy +2
+~ said_yes true
+freddy: ...
+freddy (warm): You are the only person who has ever said that in this building,
+and you said it in the dark, to a thing with no part left.
+-> n4_end
+
+== n4_notnothing ==
+~ aff_freddy +1
+freddy: No. It is not nothing.
+freddy (idle): It is a very small thing and I have had a long time to look at it.
+-> n4_end
+
+== n4_whole ==
+~ aff_freddy +3
+~ said_yes true
+~ listened +1
+freddy: ...
+freddy (warm): No. I suppose it does not.
+freddy: I have never thought of it as a question. I have only ever thought of it as an ending.
+-> n4_end
+
+== n4_end ==
+bg office_night
+music none
+hide freddy
+sfx power_up
+The lights come back the same way they went, from the far end inward.
+The fan starts. It sounds like nothing at all now.
+-> n4_dawn
+
+== n4_dawn ==
+if said_unknown or said_yes -> n4_dawn_honest
+-> n4_dawn_plain
+
+== n4_dawn_honest ==
+You sat in the dark and had a conversation with something that has never been
+given a reason to expect one. It is not on the record. Neither is anything else here.
+~ nights +1
+-> n5_start
+
+== n4_dawn_plain ==
+You survived the fourth night by doing what you have always done, which is the rounds.
+~ nights +1
+-> n5_start
+# ============================================================
+# NIGHT FIVE - overtime
+# ============================================================
+
+== n5_start ==
+bg office_night
+music fan_hum
+Fifth night. The notice now has a date on it. It has been there since Tuesday
+and you have been walking past it since Tuesday, which is what people do.
+if nights >= 4 -> n5_start_known
+-> n5_circuit
+
+== n5_start_known ==
+You have done every night of this week. Four of them went the way you meant them to
+and one of them did not, and you know which one, and so does the building.
+-> n5_circuit
+
+== n5_circuit ==
+The building is quieter tonight in the way a room is quiet when everyone in it
+has already decided something and nobody has said it yet.
+if let_quiet_stand -> n5_circuit_quiet
+-> n5_route
+
+== n5_circuit_quiet ==
+You have spent this week saying almost nothing, deliberately, in the places
+where saying something would have been easier.
+Every one of them noticed. It turns out that was a way of being trusted,
+which is not how you expected it to work.
+-> n5_route
+
+== n5_route ==
+if told_truth and listened >= 4 -> n5_warm_circuit
+if kept_quiet or softened -> n5_cold_circuit
+-> n5_mid_circuit
+
+# ---------- the warm circuit: they are waiting for you ----------
+
+== n5_warm_circuit ==
+bg dining
+music none
+show monty neutral at left
+monty: You told us on Thursday.
+monty: Nobody in eleven years has done that. I want you to understand the size of it.
+monty (quiet): It is the only thing anybody has ever given me that I did not have to perform for.
+hide monty
+-> n5_chica_warm
+
+== n5_chica_warm ==
+bg east_corner
+show chica neutral at center
+chica: I know about the date.
+chica (bright): I have decided to be very cheerful about it. It is going well.
+chica (small): ...It is not going well.
+chica: You said my name. On the first night you said my name and you have said it
+every night since and I have been counting.
+hide chica
+-> n5_roxy_warm
+
+== n5_roxy_warm ==
+bg west_hall
+show roxanne warm at center
+if knows_roxanne -> n5_roxy_confess
+roxanne: I have been trying to work out what to say to you all week.
+roxanne (warm): I have not managed it. That is the whole speech.
+hide roxanne
+-> n5_freddy_final
+
+== n5_roxy_confess ==
+roxanne: I am going to say a true sentence and then I am going to go back to being me.
+roxanne (warm): I was not performing for you. That has not happened before.
+roxanne: Now get out of my hall.
+hide roxanne
+-> n5_freddy_final
+
+== n5_mid_circuit ==
+bg west_hall
+music none
+show roxanne flat at center
+roxanne: Still here.
+roxanne: Most people stop coming about now. There is nothing wrong with that.
+roxanne: It is just a fact about people.
+hide roxanne
+-> n5_freddy_final
+
+== n5_cold_circuit ==
+bg west_hall
+music none
+The hall is empty. It usually is at this hour, and tonight that means something.
+show roxanne cold at center
+roxanne: I heard you on Thursday. Through the wall.
+roxanne (cold): I am not angry. I am just adjusting.
+hide roxanne
+-> n5_freddy_final
+
+# ---------- Freddy, last ----------
+
+== n5_freddy_final ==
+bg cove_open
+music music_box
+show freddy idle at right
+freddy: You know what tonight is.
+if knows_the_song -> n5_freddy_song
+-> n5_freddy_asks
+
+== n5_freddy_song ==
+freddy (wry): You asked me about the song. In the dark, standing in a doorway,
+while it was playing. I have not stopped thinking about that.
+freddy: Nobody has ever asked me what it was. They have only ever asked me to stop.
+-> n5_freddy_asks
+
+== n5_freddy_asks ==
+freddy: Do not say you do not. You have been very good about the notice.
+freddy (wry): It has been the only performance in this building all week and I have enjoyed it.
+
+* "What happens to you." -> n5_happens
+* "I do not want to leave." -> n5_notleave
+
+== n5_happens ==
+freddy: Nobody knows. That is not a dodge, it is the actual answer.
+freddy: There is a version where we are stored and a version where we are sold
+and a version where we are simply not mentioned again.
+freddy (idle): The last one is the one I think about.
+-> n5_offer
+
+== n5_notleave ==
+~ aff_freddy +1
+freddy: You have to leave. That is not a rule I made.
+freddy (warm): The question is not whether you leave. It is what you take.
+-> n5_offer
+
+== n5_offer ==
+freddy: So. One more time, and then I will let you do the last hour in peace.
+freddy: Will you come back.
+
+* "Yes. I will come back." -> n5_promise
+* "No. I am not coming back." -> n5_refuse
+* "I will stay past six tonight." -> n5_stay
+* Say nothing. -> n5_silence
+
+== n5_promise ==
+~ promised true
+freddy: ...
+freddy (warm): All right.
+freddy: I am going to write that in the ledger, which means nothing,
+and I am going to think about it for a very long time, which means something.
+hide freddy
+-> n5_final
+
+== n5_refuse ==
+~ refused true
+freddy: Thank you for saying it plainly.
+freddy (idle): I would rather have a true no than a polite maybe. I have had a lot of polite maybes.
+hide freddy
+-> n5_final
+
+== n5_stay ==
+~ stayed true
+freddy: ...
+freddy: That is not how the building works.
+freddy (warm): But it is how you work, and I have noticed, and I will remember it.
+hide freddy
+-> n5_final
+
+== n5_silence ==
+~ stayed false
+freddy: Hm.
+freddy (idle): I did not expect an answer. I asked because the asking is the thing.
+hide freddy
+-> n5_final
+
+# ---------- dawn, and after ----------
+
+== n5_final ==
+bg office_night
+music none
+The last hour takes a long time and no time at all.
+At six the lights come up, and the notice is still on the wall, with a date on it.
+-> n5_endings
+
+== n5_endings ==
+if stayed -> ending_overtime
+if promised and listened >= 5 and aff_freddy >= 5 -> ending_remembered
+if promised -> ending_promised
+if refused and (aff_monty >= 4 or aff_roxy >= 4 or aff_chica >= 4) -> ending_honest
+if kept_quiet or softened -> ending_complicit
+-> ending_gone
+
+== ending_overtime ==
+You do not clock out.
+You sit in the chair that belonged to somebody whose name you never wrote down,
+and the building gets quiet in the particular way it gets quiet when the staff have gone,
+and you stay.
+At seven somebody arrives and does not see you. At eight the lights go off again
+from the far end inward and there is a music box and it is the only music nobody chose.
+You are on overtime. Nobody is paying for it. You are not doing it for anybody.
+Somewhere down the hall Chica is cleaning something that is already clean,
+and she knows you are still here, and that is the first time in eleven years
+that anybody in this building has not been alone at the end of a shift.
+-> END
+
+== ending_remembered ==
+You clock out at six and you do come back, on the Tuesday, which is the day after the date.
+The building is shut. The chairs are stacked the way chairs get stacked when nobody asks.
+if asked_about_her -> ending_remembered_her
+-> ending_remembered_close
+
+== ending_remembered_her ==
+You asked about her on the first night. Nobody had done that either.
+You never got her name from a file or a rota -- you got it from Roxanne,
+in a hallway, because you asked a real question and she decided you could hold it.
+-> ending_remembered_close
+
+== ending_remembered_close ==
+You know all four names. You know which one performs, which one cleans,
+which one counts eleven years in the dark, and which one stands in the doorway
+when the song stops.
+You write it down. All of it. Not for anybody, and not for a record,
+because there is no record that would take it.
+On the wall by the door, where the marker bruise is, you put her name back.
+Some things get kept by exactly one person, and that is still kept.
+-> END
+
+== ending_promised ==
+You clock out at six and you mean it when you say you will come back.
+You do, for a while. Then the weeks get longer and the building stays shut
+and coming back turns into remembering to come back, which is a different thing.
+Freddy wrote it in a ledger he cannot show anybody.
+It is the only copy, and it is accurate, and it is enough for one of you.
+-> END
+
+== ending_honest ==
+You clock out at six and you say goodbye properly, which nobody has done here before.
+You told the truth on Thursday and you told the truth tonight and both times
+you said it in a building that has no way to keep it.
+Whatever happens to this place, it happened to people who had been seen exactly once.
+That is not rescue. It is not nothing either.
+-> END
+
+== ending_complicit ==
+You clock out at six and you do not look at the notice on the way past.
+On Thursday you chose the sentence that was easier to say and tonight you
+chose the door that was nearer, and both times there was a reason,
+and both reasons were good, and that is how it goes.
+The building closes. Nobody writes any of it down.
+Four people were in here for eleven years and the only thing anybody kept
+was a piece of paper taped at all four corners, thanking them for their understanding.
+-> END
+
+== ending_gone ==
+You clock out at six and you go home and you do not come back.
+There is nothing wrong with that. It was a job.
+You will think about it occasionally, in the way you think about a shift,
+and the thinking will get smaller, and eventually it will be a thing that happened
+in a building that is no longer there.
+Four people waited eleven years for somebody to ask them a question.
+You asked. Then you left. Both of those are true and only one of them lasted.
 -> END
