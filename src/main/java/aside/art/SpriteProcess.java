@@ -60,7 +60,7 @@ public class SpriteProcess extends Application {
 
         NAMES.put("freddy.idle",   "freddy-idle");
         NAMES.put("freddy.warm",   "freddy-warm");
-        NAMES.put("freddy.unamused", "freddy-wry");   // closest equivalent
+        NAMES.put("freddy.wry",    "freddy-wry");
 
         NAMES.put("chica.neutral", "chica-neutral");
         NAMES.put("chica.bright",  "chica-bright");
