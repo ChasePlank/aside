@@ -1,0 +1,10 @@
+Wire the supplied UI sounds into the presenter
+
+Typewriter blip every third character while text reveals; choice_move
+and choice_select on navigating and confirming. All request a fallback
+name, so a missing camera_down or choice_move resolves to the nearest
+equivalent instead of going silent.
+
+Generated with Letta Code (https://letta.com)
+
+Co-Authored-By: Letta Code <noreply@letta.com>

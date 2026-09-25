@@ -54,6 +54,7 @@ public class VnScreen extends UiScreen {
     int historyScroll = 0;
     String toast = "";
     double toastTimer = 0;
+    int lastBlipAt = 0;
 
     static final String[] MENU = {"Resume", "Save", "Load", "Back to title", "Quit"};
 
@@ -106,15 +107,22 @@ public class VnScreen extends UiScreen {
         if (vn.mode == Vn.Mode.CHOOSING) {
             List<Choice> opts = vn.availableChoices();
             if (opts.isEmpty()) return;
-            if (c == KeyCode.UP) choiceIndex = (choiceIndex - 1 + opts.size()) % opts.size();
-            else if (c == KeyCode.DOWN) choiceIndex = (choiceIndex + 1) % opts.size();
+            if (c == KeyCode.UP) {
+                choiceIndex = (choiceIndex - 1 + opts.size()) % opts.size();
+                Audio.A.sfx("choice_move", "choice_select");
+            } else if (c == KeyCode.DOWN) {
+                choiceIndex = (choiceIndex + 1) % opts.size();
+                Audio.A.sfx("choice_move", "choice_select");
+            }
             else if (c == KeyCode.ENTER || c == KeyCode.SPACE) {
+                Audio.A.sfx("choice_select");
                 vn.choose(choiceIndex);
                 choiceIndex = 0;
                 syncText();
             } else {
                 int d = digit(c);
                 if (d >= 1 && d <= opts.size()) {
+                    Audio.A.sfx("choice_select");
                     vn.choose(d - 1);
                     choiceIndex = 0;
                     syncText();
@@ -172,6 +180,7 @@ public class VnScreen extends UiScreen {
             shownText = t;
             revealed = 0;
             textComplete = false;
+            lastBlipAt = 0;
         }
         if (vn.mode == Vn.Mode.CHOOSING) {
             textComplete = true;
@@ -189,6 +198,12 @@ public class VnScreen extends UiScreen {
         if (!textComplete) {
             revealed += dt * CHARS_PER_SEC;
             if (revealed >= shownText.length()) { revealed = shownText.length(); textComplete = true; }
+            // Typewriter blip, every few characters rather than each one
+            int shown = (int) revealed;
+            if (shown >= lastBlipAt + 3 && shown < shownText.length()) {
+                lastBlipAt = shown;
+                Audio.A.sfx("text_blip");
+            }
         }
         draw();
     }
