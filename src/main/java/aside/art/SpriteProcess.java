@@ -53,7 +53,7 @@ public class SpriteProcess extends Application {
         NAMES.put("monty.quiet",   "monty-quiet");
 
         NAMES.put("roxy.smirk",    "roxanne-smirk");
-        NAMES.put("roxy.happy.replacing.laugh", "roxanne-laughs");
+        NAMES.put("roxy.happy",    "roxanne-laughs");
         NAMES.put("roxy.flat",     "roxanne-flat");
         NAMES.put("roxy.cold",     "roxanne-cold");
         NAMES.put("roxy.warm",     "roxanne-warm");
