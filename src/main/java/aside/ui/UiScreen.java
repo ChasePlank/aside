@@ -23,7 +23,7 @@ public abstract class UiScreen {
 
     protected UiScreen(UiManager ui) {
         this.ui = ui;
-        this.canvas = new Canvas(W, H);
+        this.canvas = new Canvas(canvasWidth(), canvasHeight());
         this.gc = canvas.getGraphicsContext2D();
         this.root = new StackPane(canvas);
         // NOTE: Region backgrounds do not paint on Kinger's GPU -- draw
@@ -35,12 +35,35 @@ public abstract class UiScreen {
 
     public Parent getRoot() { return root; }
 
+    /**
+     * Drawing resolution for this screen. The host scales whatever a screen
+     * declares to fit the window, so a game rendering at a higher internal
+     * resolution is not forced down to the engine default.
+     *
+     * Must be constants: this is called from the constructor.
+     */
+    protected int canvasWidth() { return W; }
+    protected int canvasHeight() { return H; }
+
     public void enter() {}
     public void pause() {}
     public void resume() {}
     public void exit() {}
 
     public abstract void handleKey(KeyEvent e);
+
+
+    /**
+
+     * Key released. Most screens only care about presses, but a
+
+     * platformer needs to know when a held key stops being held, so the
+
+     * host routes this as well and the default does nothing.
+
+     */
+
+    public void handleKeyReleased(KeyEvent e) {}
     /** Called once per frame with seconds elapsed. */
     public abstract void tick(double dt);
 
@@ -51,21 +74,36 @@ public abstract class UiScreen {
         fit(parent, canvas);
     }
 
+    /**
+     * Re-apply the fit. Called by the host before every frame, because
+     * resize listeners are not reliable enough on their own: a screen
+     * created while the window is still settling can end up fitted to a
+     * size that no longer applies, and never corrected. Four numbers of
+     * arithmetic per frame is cheaper than the bug.
+     */
+    void refit() { fit(root, canvas); }
+
     static int fitLogs = 0;
 
     static void fit(StackPane parent, Canvas canvas) {
         double pw = parent.getWidth(), ph = parent.getHeight();
-        if (fitLogs < 6) {
+        if (fitLogs < 3) {
             System.out.println("[fit] parent=" + pw + "x" + ph
                     + " canvas=" + canvas.getWidth() + "x" + canvas.getHeight());
             fitLogs++;
         }
         if (pw <= 0 || ph <= 0) return;
+        // Scale pivots at the NODE CENTRE, not the top-left, so scaling
+        // already keeps the centre in place. The translate therefore only
+        // has to centre the UNSCALED canvas -- centring the scaled one as
+        // well double-counts the shift and pushes the image off-centre.
+        // Invisible until a screen used a canvas size different from the
+        // host: at scale 1 the pivot does not matter.
         double s = Math.min(pw / canvas.getWidth(), ph / canvas.getHeight());
         canvas.setScaleX(s);
         canvas.setScaleY(s);
-        canvas.setTranslateX((pw - canvas.getWidth() * s) / 2);
-        canvas.setTranslateY((ph - canvas.getHeight() * s) / 2);
+        canvas.setTranslateX((pw - canvas.getWidth()) / 2);
+        canvas.setTranslateY((ph - canvas.getHeight()) / 2);
     }
 
     /** Draw an image to cover the whole frame, cropping overflow. */

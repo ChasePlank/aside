@@ -1,41 +1,49 @@
-Make Aside a real engine: games as modules, FNAF ported in
+Port Tropical Punch in as the third game, and fix an engine bug it exposed
 
-The engine now hosts games rather than being one game.
+aside.games.fruitjump -- the playable Java version: Fruit Jump, a
+side-view platformer, plus the top-down room-crawler underneath it. Its
+engine (physics, level generation, enemy AI, the AI director) moved
+across with a package rename, same as the survival game did. All three
+games now run in one process from the library.
 
-aside.game.Game -- the contract: id, title, blurb, create(ui). Kept
-deliberately thin because it has to hold two genuinely different things,
-a branching visual novel and a real-time survival game. Everything else
-a game needs is already a static service (Audio.A, its own asset
-loading, Games.saveDir(id)), so the interface only answers who are you
-and give me something to put on screen.
+Engine features this needed, both real rather than workarounds:
 
-aside.game.Games -- the registry, plus saves/<id>/ per game so two games
-cannot collide on a filename.
+- handleKeyReleased on UiScreen, routed through UiManager and the host.
+  A platformer needs to know when a held key stops being held; nothing
+  before this cared about releases.
 
-aside.games.overtime -- the visual novel, as a module. VnScreen moved
-here because it is the novel's screen, not a generic engine screen.
-TitleScreen is gone; the Library replaces it.
+- Per-screen drawing resolution. UiScreen.canvasWidth()/canvasHeight()
+  default to 1280x720 and screens override them. Fruit Jump renders at
+  1600x1200 by design and is no longer forced down to the engine size;
+  the host scales whatever a screen declares.
 
-aside.games.fnaf -- the survival game, ported from its own project.
-Its engine package (fnaf.engine.*) moved across with only a package
-rename and zero logic changes, which is what the headless-first design
-bought. All five screens now implement UiScreen; their per-screen
-AnimationTimer loops became tick(dt) driven by one host loop, so there
-is a single frame source instead of one timer per screen.
+THE BUG IT EXPOSED, in my own code since the engine was written:
 
-LibraryScreen -- built from Games.all(), so adding a game is one entry
-in one registry and it appears with no other change.
+fit() centred the SCALED canvas. But setScaleX/Y pivots at the NODE
+CENTRE, not the top-left, so scaling already keeps the centre where it
+is -- centring the scaled result as well double-counted the shift and
+pushed the image off-centre by (1-s)*size/2.
 
-Two bugs found while porting, both from mechanical transformation:
-- FNAF screens declared Canvas/GraphicsContext/StackPane WITHOUT
-  private final, so the rewrite that removed "private final X" left
-  those declarations shadowing UiScreen's fields with nulls. Symptom
-  was "Children: child node is null" plus a null GraphicsContext.
-- GameScreen kept its own copy of the window-fitting code, redundant
-  now that UiScreen does it, and it crashed on a null parent.
+It was invisible until now because every previous screen used a canvas
+the same size as the host, so s was 1 and the pivot did not matter.
+Fruit Jump is the first screen with a different resolution, and it
+rendered in the corner. Fixed to centre the unscaled canvas.
 
-Verified in one process: library, the novel, and FNAF night 1 with its
-office, doors, lights and HUD.
+Also: each GameplayScreen/RoomsScreen built its own StackPane root
+containing the shared canvas. A JavaFX node can have only one parent, so
+that silently REPARENTED the canvas away from the visible root and the
+screen drew to a node nobody could see -- a black window with no
+exception anywhere. Removed; UiScreen owns the canvas.
+
+And: Resize listeners alone are not reliable for fitting, because a
+screen created while the window is still settling can be fitted to a size
+that no longer applies and never corrected. UiManager now refits the top
+screen before each frame -- four numbers of arithmetic is cheaper than
+the bug.
+
+Known cosmetic issue: Fruit Jump's 4:3 canvas letterboxes inside the
+16:9 window. Correct, but the canvas size or the window aspect may want
+revisiting.
 
 Generated with Letta Code (https://letta.com)
 

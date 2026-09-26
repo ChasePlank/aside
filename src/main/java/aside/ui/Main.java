@@ -38,6 +38,7 @@ public class Main extends Application {
 
         Scene scene = new Scene(host, w, h, Color.BLACK);
         scene.setOnKeyPressed(ui::handleKey);
+        scene.setOnKeyReleased(ui::handleKeyReleased);
 
         // Screenshot mode: render N frames, write the frame to a file,
         // exit. Screen-grabbing the desktop proved unreliable (the

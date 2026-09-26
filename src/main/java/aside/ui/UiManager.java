@@ -54,12 +54,22 @@ public class UiManager {
         s.enter();
     }
 
+    public void handleKeyReleased(KeyEvent e) {
+
+        if (!stack.isEmpty()) stack.peek().handleKeyReleased(e);
+
+    }
+
+
     public void handleKey(KeyEvent e) {
         if (!stack.isEmpty()) stack.peek().handleKey(e);
     }
 
     public void tick(double dt) {
-        if (!stack.isEmpty()) stack.peek().tick(dt);
+        if (stack.isEmpty()) return;
+        UiScreen top = stack.peek();
+        top.refit();
+        top.tick(dt);
     }
 
     public UiScreen peek() { return stack.peek(); }

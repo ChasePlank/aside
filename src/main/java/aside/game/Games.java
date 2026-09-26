@@ -1,6 +1,7 @@
 package aside.game;
 
 import aside.games.fnaf.FnafGame;
+import aside.games.fruitjump.FruitJumpGame;
 import aside.games.overtime.OvertimeGame;
 
 import java.io.File;
@@ -16,6 +17,7 @@ public final class Games {
         List<Game> g = new ArrayList<>();
         g.add(new OvertimeGame());
         g.add(new FnafGame());
+        g.add(new FruitJumpGame());
         return g;
     }
 
