@@ -36,6 +36,22 @@ public class GameScreen extends UiScreen {
 
     final int[] customLevels;   // non-null only for Custom Night
 
+    /**
+     * The seed this run was generated from.
+     *
+     * Was System.nanoTime() inline at the Game construction, which made every run
+     * unreplayable - and that is not a small thing for a game whose AI is emergent. A
+     * playtest report ("chica showed up on the left and killed me before i could react")
+     * could not be reproduced, and two hours went into ruling out mechanical causes one
+     * at a time because the exact night could not be replayed.
+     *
+     * Now: the seed is a field, it is logged on start, it is shown on screen, and it can
+     * be forced from the command line so a reported night can be replayed exactly:
+     *
+     *     java -Dfnaf.seed=1234567 ...
+     */
+    public final long seed;
+
     public GameScreen(UiManager ui, int night) {
         this(ui, night, null);
     }
@@ -49,7 +65,13 @@ public class GameScreen extends UiScreen {
         super(ui);
         this.night = night;
         this.customLevels = customLevels;
-        this.game = new Game(night, System.nanoTime(), customLevels);  // fresh seed each run
+        String forced = System.getProperty("fnaf.seed");
+        this.seed = forced != null ? Long.parseLong(forced) : System.nanoTime();
+        this.game = new Game(night, seed, customLevels);
+        // One line per run, so a playtest log carries every seed played.
+        System.out.println("[fnaf] night " + night + " seed " + seed
+                + (customLevels != null ? " custom " + java.util.Arrays.toString(customLevels) : "")
+                + (forced != null ? " (forced)" : ""));
     }
 
 
@@ -322,6 +344,12 @@ public class GameScreen extends UiScreen {
         // Night (top-right, second line)
         gc.setFont(Font.font("Arial", 20));
         gc.fillText("Night " + game.night, W - 110, 80);
+        // The seed, small and dim: it is a debugging affordance, not decoration, and it
+        // is what makes a screenshot of a bad night actionable. Drop it at ship.
+        gc.setFont(Font.font("Arial", 11));
+        gc.setFill(Color.web("#555577"));
+        gc.fillText("seed " + seed, W - 110, 100);
+        gc.setFill(Color.WHITE);
 
         // Controls hint (bottom-right, changes based on camera state)
         gc.setFont(Font.font("Arial", 13));
