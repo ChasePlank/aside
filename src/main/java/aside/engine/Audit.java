@@ -64,21 +64,40 @@ public class Audit {
             // "your story is broken" when it means "the search did not finish".
             boolean reliable = !r.missingTargets.isEmpty() || !r.deadEnds.isEmpty()
                     || !r.varsReadOnly.isEmpty() || !r.varsNeverRead.isEmpty();
-            boolean fromTraversal = !r.unreachableScenes().isEmpty()
-                    || !r.unreachableBeats.isEmpty() || !r.neverOfferedChoices().isEmpty();
 
-            if (reliable || (fromTraversal && !r.budgetHit)) {
+            // A completeness claim that does NOT need the whole traversal: if every
+            // DEFINED scene was reached, the unreachable-scene list cannot be missing
+            // an entry - so that finding is proven even when the budget ran out. The
+            // other two traversal findings are not covered by it: a beat can be
+            // unreachable inside a scene that was reached, and a choice can be offered
+            // only on a path that has not been walked yet.
+            boolean scenesComplete = r.scenesReached.size() >= r.scenesDefined.size();
+            boolean scenesIssue = !r.unreachableScenes().isEmpty();
+            boolean otherTraversal = !r.unreachableBeats.isEmpty()
+                    || !r.neverOfferedChoices().isEmpty();
+
+            boolean provenIssue = reliable
+                    || (scenesIssue && (scenesComplete || !r.budgetHit))
+                    || (otherTraversal && !r.budgetHit);
+
+            if (provenIssue) {
                 System.out.println("\nISSUES FOUND");
                 failures++;
-            } else if (fromTraversal && r.budgetHit) {
-                System.out.println("\nINCONCLUSIVE: the traversal did not finish, so the "
-                        + "unreachable-scene report is unproven. Raise the budget:\n"
-                        + "    java -Daside.budget=" + Math.max(4_000_000, r.statesExpanded * 4)
+            } else if (otherTraversal && r.budgetHit) {
+                System.out.println("\nINCONCLUSIVE: every scene was accounted for, but "
+                        + "unreachable beats and never-offered choices are path questions, "
+                        + "and the traversal did not finish. Raise the budget:\n"
+                        + "    java -Xmx2g -Daside.frontier.paths=true -Daside.budget="
+                        + Math.max(4_000_000, r.statesExpanded * 4)
                         + " aside.engine.Audit <story>");
                 failures++;   // distinct from clean, and distinct from proven issues
             } else if (r.budgetHit) {
                 System.out.println("\nCLEAN SO FAR (traversal partial: "
-                        + r.scenesReached.size() + "/" + r.scenesDefined.size() + " scenes, budget hit)");
+                        + r.scenesReached.size() + "/" + r.scenesDefined.size() + " scenes, budget hit)"
+                        + (scenesComplete
+                           ? "\n  the unreachable-scene list is nonetheless COMPLETE:"
+                             + " every scene was reached, so nothing can be missing from it"
+                           : ""));
             } else {
                 System.out.println("\nCLEAN");
             }
