@@ -37,13 +37,30 @@ public class Synth {
         // whole set comes from one place and can be regenerated or replaced
         // wholesale - these are placeholders with the right *character*, not
         // finished sound design.
-        write(new File(out, "title.wav"), titleBed(10.0));
-        write(new File(out, "camera_down.wav"), stepDown());
-        write(new File(out, "choice_move.wav"), blip(880));
-        write(new File(out, "scare_freddy.wav"), scare(55, 170, 0.45, 1.15));
-        write(new File(out, "scare_roxanne.wav"), scare(130, 1500, 0.35, 0.95));
-        write(new File(out, "scare_monty.wav"), scare(72, 330, 0.70, 1.05));
-        write(new File(out, "scare_chica.wav"), scare(185, 950, 0.95, 0.85));
+        // Each cue is normalised to a TARGET peak rather than trusted to whatever
+        // the formula happened to produce. The first pass clipped Chica at full
+        // scale (the noisiest tuning, so the noise burst pushed it over), and a
+        // clipped jumpscare is distortion, which reads as a bug in the speakers.
+        // Per-cue targets, because these are not meant to be equally loud: the
+        // title bed sits under a menu, the scares are the loudest thing in the game.
+        write(new File(out, "title.wav"), titleBed(10.0));                    // 0.33 as built: a bed
+        write(new File(out, "camera_down.wav"), norm(stepDown(), 0.70));
+        write(new File(out, "choice_move.wav"), norm(blip(880), 0.55));
+        write(new File(out, "scare_freddy.wav"), norm(scare(55, 170, 0.45, 1.15), 0.90));
+        write(new File(out, "scare_roxanne.wav"), norm(scare(130, 1500, 0.35, 0.95), 0.90));
+        write(new File(out, "scare_monty.wav"), norm(scare(72, 330, 0.70, 1.05), 0.90));
+        write(new File(out, "scare_chica.wav"), norm(scare(185, 950, 0.95, 0.85), 0.90));
+    }
+
+    /** Scale a cue so its loudest sample sits at the target peak. Cheap, and it
+     *  keeps a formula's output inside the format instead of relying on luck. */
+    static double[] norm(double[] s, double target) {
+        double peak = 0;
+        for (double v : s) peak = Math.max(peak, Math.abs(v));
+        if (peak < 1e-9) return s;
+        double g = target / peak;
+        for (int i = 0; i < s.length; i++) s[i] *= g;
+        return s;
     }
 
     /** The title bed: a slow minor drone with a breath in it, and one quiet
