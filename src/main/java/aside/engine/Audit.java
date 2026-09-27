@@ -52,15 +52,36 @@ public class Audit {
             Bot.Report r = new Bot().run(s);
             System.out.print(r.summary());
 
-            boolean clean = r.missingTargets.isEmpty()
-                    && r.unreachableScenes().isEmpty()
-                    && r.deadEnds.isEmpty()
-                    && r.unreachableBeats.isEmpty()
-                    && r.neverOfferedChoices().isEmpty()
-                    && r.varsReadOnly.isEmpty()
-                    && !r.budgetHit;
-            System.out.println("\n" + (clean ? "CLEAN" : "ISSUES FOUND"));
-            if (!clean) failures++;
+            // The verdict separates what the report KNOWS from what it merely
+            // could not finish. Missing targets and the variable analysis do not
+            // depend on the traversal at all; unreachable scenes, unreachable
+            // beats and never-offered choices do, so on a budget hit they are
+            // unproven rather than wrong.
+            //
+            // Before this, "clean" included !r.budgetHit, so a large story with
+            // nothing wrong with it printed ISSUES FOUND and exited 1 - Overtime
+            // (131 scenes) did exactly that at the default budget, which reads as
+            // "your story is broken" when it means "the search did not finish".
+            boolean reliable = !r.missingTargets.isEmpty() || !r.deadEnds.isEmpty()
+                    || !r.varsReadOnly.isEmpty() || !r.varsNeverRead.isEmpty();
+            boolean fromTraversal = !r.unreachableScenes().isEmpty()
+                    || !r.unreachableBeats.isEmpty() || !r.neverOfferedChoices().isEmpty();
+
+            if (reliable || (fromTraversal && !r.budgetHit)) {
+                System.out.println("\nISSUES FOUND");
+                failures++;
+            } else if (fromTraversal && r.budgetHit) {
+                System.out.println("\nINCONCLUSIVE: the traversal did not finish, so the "
+                        + "unreachable-scene report is unproven. Raise the budget:\n"
+                        + "    java -Daside.budget=" + Math.max(4_000_000, r.statesExpanded * 4)
+                        + " aside.engine.Audit <story>");
+                failures++;   // distinct from clean, and distinct from proven issues
+            } else if (r.budgetHit) {
+                System.out.println("\nCLEAN SO FAR (traversal partial: "
+                        + r.scenesReached.size() + "/" + r.scenesDefined.size() + " scenes, budget hit)");
+            } else {
+                System.out.println("\nCLEAN");
+            }
             System.out.println();
         }
         if (failures > 0) System.exit(1);
