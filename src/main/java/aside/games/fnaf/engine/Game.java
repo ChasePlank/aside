@@ -133,8 +133,15 @@ public class Game {
                 lv[1], 4.98, this);
         roxanne.doorSide = 1;
 
+        // 5.02, not 3.02. moveInterval is the SECONDS BETWEEN MOVE CHANCES, so a
+        // smaller number moves more often - and at 3.02 Chica was the fastest thing in
+        // the building while her own bio called her "slower" and her role (the blackout
+        // attacker, FNAF 1's Freddy) is the one that hangs back. Measured over 200
+        // games: 1951 arrivals to the door against Monty's 976 and Roxanne's 727, i.e.
+        // she was over twice as active as anyone. The other three cluster at 4.97,
+        // 4.98 and 5.01, so 3.02 reads as a mistyped digit rather than a decision.
         chica = new Animatronic("Chica", 1, new int[]{1, 7, 8, 9, OFFICE},
-                lv[2], 3.02, this);
+                lv[2], 5.02, this);
         chica.doorSide = 1;
 
         // Foxy role: waits in Pirate Cove, stages advance on rolls,
