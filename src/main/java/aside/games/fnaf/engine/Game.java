@@ -22,7 +22,7 @@ import java.util.*;
  *    viewing his room stalls his movement)
  *  - Power: starts 100%. Passive drain + per-tool drain. 0% = blackout.
  *
- * Blackout: doors open, lights dead, cameras dead. Monty (the Freddy
+ * Blackout: doors open, lights dead, cameras dead. Chica (the Freddy
  * role) plays his music box; when it stops, he attacks after a random
  * delay. Survive to 6 AM.
  *
@@ -66,6 +66,25 @@ public class Game {
     public final Animatronic freddy;   // Foxy role: sprints from his cove
 
     // Freddy-role: the power-out attacker (classic Freddy music box)
+    /**
+     * How long an animatronic stands in an open doorway before it kills you.
+     *
+     * Was 3.0, and playtest said so: "chica showed up on the left and before i could
+     * even say 'oh chicas there' she jumpscared me, and thats with the monitor down".
+     * The window runs from ARRIVAL, not from when you notice - with the light off, a
+     * doorway is dark and the only warning is a pulsing sprite - so 3 seconds was
+     * really "3 seconds minus however long you were looking elsewhere".
+     *
+     * Calibrated on evidence rather than taste: 14.0 made the nights unloseable for an
+     * idle player (20/20 wins, zero jumpscares, where 3.0 had produced 5-6/20), and
+     * 6.0 and 8.0 measure identically to 14.0 - the idle baseline is a CLIFF, not a
+     * curve, because the arrivals land close enough to 6AM that the night simply ends
+     * first. So the idle test cannot tune this, and the honest instrument is the one
+     * that reported it: a player at the desk. 8.0 is 2.7x the old window and leaves
+     * the reaction time the game is made of.
+     */
+    public static final double GRACE_SECONDS = 8.0;
+
     public double blackoutTimer = 0;
     public boolean blackoutMusicPlaying = true;
     public double blackoutAttackDelay = 0;   // set when music stops
@@ -248,7 +267,7 @@ public class Game {
                 } else if (a.doorSide > 0 && rightDoorClosed) {
                     a.officeEntryResolved = true;
                     a.retreat();
-                } else if (a.officeTimer > 3.0) {
+                } else if (a.officeTimer > GRACE_SECONDS) {
                     // door was open the whole grace window — kill
                     jumpscare(a);
                 }

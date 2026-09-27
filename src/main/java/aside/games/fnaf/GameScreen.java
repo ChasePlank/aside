@@ -186,18 +186,36 @@ public class GameScreen extends UiScreen {
             gc.strokeRect(r[0], r[1], r[2], r[3]);
         }
 
-        // Buttons, mounted inside the doorway edge
+        // Buttons, mounted inside the doorway edge.
+        //
+        // LIGHT ON TOP, and that is a playtest fix: the keys are Q/E for the lights
+        // and A/D for the doors, and on a keyboard Q/E sit ABOVE A/D. The screen had
+        // it the other way up, so the visual order fought the hand's order - "the
+        // visual button on top isnt the key layout on top, theyre reversed and it can
+        // be confusing".
+        //
+        // Each button now also carries its own key letter, because an order can be
+        // argued about and a letter cannot.
         double bx = side < 0 ? r[0] + r[2] + 12 : r[0] - 52;
         double by = 250;
-        gc.setFill(closed ? Color.web("#E94560") : Color.web("#5A2A3A"));
-        gc.fillOval(bx, by, 40, 40);
-        gc.setFill(Color.WHITE);
-        gc.setFont(Font.font("Arial", 9));
-        gc.fillText("DOOR", bx + 4, by + 62);
+        String lightKey = side < 0 ? "Q" : "E";
+        String doorKey = side < 0 ? "A" : "D";
 
         gc.setFill(lit ? Color.web("#FFD700") : Color.web("#5A502A"));
+        gc.fillOval(bx, by, 40, 40);
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Arial", 16));
+        gc.fillText(lightKey, bx + 13, by + 27);
+        gc.setFont(Font.font("Arial", 9));
+        gc.fillText("LIGHT", bx + 3, by + 62);
+
+        gc.setFill(closed ? Color.web("#E94560") : Color.web("#5A2A3A"));
         gc.fillOval(bx, by + 90, 40, 40);
-        gc.fillText("LIGHT", bx + 3, by + 152);
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Arial", 16));
+        gc.fillText(doorKey, bx + 13, by + 117);
+        gc.setFont(Font.font("Arial", 9));
+        gc.fillText("DOOR", bx + 4, by + 152);
 
         // Door warning: pixel sprite pulses when someone is at this door
         Animatronic atDoor = animatronicAt(side);
