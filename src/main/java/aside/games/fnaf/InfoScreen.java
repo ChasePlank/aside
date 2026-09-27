@@ -27,25 +27,31 @@ public class InfoScreen extends UiScreen {
     private double noticeTimer = 0;
     private boolean confirmingReset = false;
 
-    // name, role, portrait sprite, behaviour, how to survive
+    // name, what it does, behaviour, how to survive
+    //
+    // The second column used to name the FNAF-1 role this animatronic was built from
+    // ("Roxanne — Chica role"), which made the bios read as mixed up: the player sees
+    // Roxanne's name beside the word Chica and reasonably thinks one of them is wrong.
+    // The mapping is real design history and lives in the commit that replaced the
+    // cast; the screen should say what a character DOES.
     private static final String[][] DATA = {
-        {"Monty", "Bonnie role — left door",
+        {"Monty", "Left door — stalls on camera",
          "Gator. Lives on the Show Stage and drifts down the West Hall\n"
          + "toward your LEFT door. Camera-shy: watching his room on the\n"
          + "monitor freezes him in place.",
          "Check cam 1/2/4/5. If he's in the West Hall corner, close the\n"
          + "left door. Watching him on camera stalls him — free time."},
-        {"Roxanne", "Chica role — right door",
+        {"Roxanne", "Right door — never stalls",
          "Wolf. Works the right side: Restrooms, Kitchen, then the East\n"
          + "Hall. Doesn't stall on camera — she keeps coming.",
          "Light the right doorway often. Close the right door the moment\n"
          + "she appears in the corner; you get a short grace window."},
-        {"Chica", "Freddy role — power-out",
+        {"Chica", "Comes in the blackout",
          "Chicken. Right side, but slower. She's the one who comes for\n"
          + "you in the blackout — the music box plays, then goes quiet.",
          "Keep power above zero. If you black out, the box plays for a\n"
          + "while — a late blackout can still reach 6 AM."},
-        {"Freddy", "Foxy role — Kid's Cove sprint",
+        {"Freddy", "Kid's Cove — sprints",
          "Bear. Hides in Kid's Cove (cam 3) behind the curtain. Watch\n"
          + "him in stages: empty cove, peeking, emerged, then GONE — and\n"
          + "GONE means he's already running.",
