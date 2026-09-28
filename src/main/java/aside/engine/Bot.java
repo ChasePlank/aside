@@ -34,6 +34,10 @@ public class Bot {
         public Set<String> scenesDefined = new LinkedHashSet<>();
         public Set<String> choiceSitesOffered = new LinkedHashSet<>();
         public Set<String> choiceSitesAuthored = new LinkedHashSet<>();
+        /** Choices that do not matter: options a player cannot tell apart, or two options
+         *  available under the same conditions that lead to the same place. Satisfiable is
+         *  not the same as meaningful, and only the first was checked. */
+        public List<String> falseChoices = new ArrayList<>();
         public List<String> missingTargets = new ArrayList<>();
         public List<String> deadEnds = new ArrayList<>();
         /** Beats sitting after a GOTO in the same scene — unreachable
@@ -103,7 +107,9 @@ public class Bot {
               .append('\n');
             for (String s : n) sb.append("    ").append(budgetHit ? "?? " : "!! ").append(s).append('\n');
 
-            sb.append("vars read but never written: ").append(varsReadOnly.size()).append('\n');
+            sb.append("choices that do not matter:  ").append(falseChoices.size()).append('\n');
+        for (String fc : falseChoices) sb.append("    !! ").append(fc).append('\n');
+        sb.append("vars read but never written: ").append(varsReadOnly.size()).append('\n');
             for (String s : varsReadOnly) sb.append("    !! ").append(s).append('\n');
 
             sb.append("vars written but never read: ").append(varsNeverRead.size()).append('\n');
@@ -138,6 +144,9 @@ public class Bot {
                     }
                 }
                 if (b.kind == Beat.Kind.CHOICE) {
+                    for (Choice c : b.choices) {
+                        r.choiceSitesAuthored.add(site(sc.id, c.line, c.text));
+                    }
                     for (Choice c : b.choices) {
                         r.choiceSitesAuthored.add(site(sc.id, c.line, c.text));
                         checkTarget(script, c.target, c.line, sc.id, r);
@@ -191,6 +200,18 @@ public class Bot {
                             + " (" + b.kind + ") sits after a '-> ' jump");
                 }
                 if (b.kind == Beat.Kind.GOTO) afterJump = true;
+            }
+        }
+
+        // --- static content pass: choices that do not matter ----------------
+        // Deliberately BEFORE the traversal and independent of it. The first attempt hooked
+        // this into a per-state path, which meant it only saw choices in scenes the walk
+        // reached - so the planted fork in the fixture, sitting off the path, was never
+        // checked, and the check looked like it worked because a reachable test story
+        // tripped it. A static check must be run statically or it is not one.
+        for (Scene sc : script.scenes.values()) {
+            for (Beat b : sc.beats) {
+                if (b.kind == Beat.Kind.CHOICE) findFalseChoices(sc, b, r);
             }
         }
 
@@ -376,6 +397,56 @@ public class Bot {
             v.choose(idx);
         }
         return v;
+    }
+
+    /**
+     * Choices that do not matter. Two shapes:
+     *
+     *  - two options available under the SAME conditions (both unconditional, or identical
+     *    condition text) that lead to the same scene. The player picks, and nothing changes;
+     *  - two options whose wording is nearly identical, so the player cannot tell them apart
+     *    without reading twice. Distinct targets, same reading experience.
+     *
+     * Static rather than traversal-based, so it is a proven finding even when the traversal
+     * does not finish - unlike the reachability results, this needs no search at all.
+     */
+    void findFalseChoices(Scene sc, Beat b, Report r) {
+        for (int i = 0; i < b.choices.size(); i++) {
+            Choice a = b.choices.get(i);
+            for (int j = i + 1; j < b.choices.size(); j++) {
+                Choice c = b.choices.get(j);
+                boolean sameGating = java.util.Objects.equals(a.condition, c.condition);
+                boolean sameTarget = java.util.Objects.equals(a.target, c.target);
+                if (sameGating && sameTarget) {
+                    r.falseChoices.add(sc.id + ": line " + a.line
+                            + " — two options under the same condition both go to "
+                            + a.target + ", so the pick changes nothing");
+                } else if (similar(a.text, c.text)) {
+                    r.falseChoices.add(sc.id + ": line " + a.line + " and line " + c.line
+                            + " — near-identical wording (\"" + trim(a.text) + "\" / \""
+                            + trim(c.text) + "\"), so a player cannot tell them apart");
+                }
+            }
+        }
+    }
+
+    /** Loose sameness for prose: case, punctuation and filler words removed. */
+    static boolean similar(String x, String y) {
+        String a = squash(x), b = squash(y);
+        if (a.isEmpty() || b.isEmpty()) return false;
+        if (a.equals(b)) return true;
+        return a.length() >= 8 && b.length() >= 8
+                && (a.contains(b) || b.contains(a));
+    }
+
+    static String squash(String s) {
+        return s == null ? "" : s.toLowerCase().replaceAll("[^a-z0-9 ]", " ")
+                .replaceAll("\\s+", " ").trim();
+    }
+
+    static String trim(String s) {
+        String t = s == null ? "" : s.trim();
+        return t.length() > 34 ? t.substring(0, 31) + "..." : t;
     }
 
     static String site(String scene, int line, String text) {
