@@ -138,12 +138,18 @@ public class GameScreen extends UiScreen {
             drawFan();
         }
 
-        // Doorway overlays: light glow, closed slab, buttons
-        drawDoorway(-1);
-        drawDoorway(1);
-
-        // Whoever is standing in a lit doorway
-        drawDoorwayOccupants();
+        // Doorway overlays: light glow, closed slab, buttons - but only when the office
+        // is the thing on screen. With the monitor up these are drawn and then painted
+        // over by the camera view, which HAPPENS to hide them and also wastes the work:
+        // the occupants are image blits. Skipping them makes the rule explicit, so a
+        // future translucent monitor cannot leak the door warning - the pulsing someone-is-
+        // here sprite - into the camera view, which would tell you where they are while you
+        // are looking somewhere else.
+        if (!game.cameraUp) {
+            drawDoorway(-1);
+            drawDoorway(1);
+            drawDoorwayOccupants();   // whoever is standing in a lit doorway
+        }
 
         // Camera overlay
         if (game.cameraUp) drawCameraView();
