@@ -147,7 +147,6 @@ public class Bot {
                     for (Choice c : b.choices) {
                         r.choiceSitesAuthored.add(site(sc.id, c.line, c.text));
                     }
-                    findFalseChoices(sc, b, r);
                     for (Choice c : b.choices) {
                         r.choiceSitesAuthored.add(site(sc.id, c.line, c.text));
                         checkTarget(script, c.target, c.line, sc.id, r);
@@ -201,6 +200,18 @@ public class Bot {
                             + " (" + b.kind + ") sits after a '-> ' jump");
                 }
                 if (b.kind == Beat.Kind.GOTO) afterJump = true;
+            }
+        }
+
+        // --- static content pass: choices that do not matter ----------------
+        // Deliberately BEFORE the traversal and independent of it. The first attempt hooked
+        // this into a per-state path, which meant it only saw choices in scenes the walk
+        // reached - so the planted fork in the fixture, sitting off the path, was never
+        // checked, and the check looked like it worked because a reachable test story
+        // tripped it. A static check must be run statically or it is not one.
+        for (Scene sc : script.scenes.values()) {
+            for (Beat b : sc.beats) {
+                if (b.kind == Beat.Kind.CHOICE) findFalseChoices(sc, b, r);
             }
         }
 
