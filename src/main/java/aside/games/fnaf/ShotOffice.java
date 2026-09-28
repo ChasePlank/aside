@@ -20,7 +20,10 @@ import javafx.stage.Stage;
  *
  * THREE THINGS IT TOOK, and the third is the one worth remembering:
  *   1. Assets.load() first - without the art the renderer draws its backdrop and nothing else.
- *   2. Do not also push the screen onto the UiManager; the root belongs in the scene.
+ *   2. Push the screen onto the UiManager. tick() ticks ITS STACK, so a screen that
+ *      is only parked in a Scene is never ticked and never draws - which is how this
+ *      failed the second time. (An earlier version of this comment claimed the
+ *      opposite, from a wrong guess. The code pushes, and that is why it works.)
  *   3. **UiManager.tick(dt) IS the game loop.** Constructing a screen and calling enter()
  *      starts a timer but draws nothing: measured 0 non-black pixels in the snapshot
  *      before ticking and 33,469 after 120 ticks. Any future capture or headless harness
