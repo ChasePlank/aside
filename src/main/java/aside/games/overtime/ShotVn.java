@@ -21,6 +21,17 @@ import java.nio.file.Path;
  * were both found. So: advance the story to a beat that actually shows someone, then draw.
  *
  * Run from the repo root: Assets resolves art/backgrounds and art/sprites relatively.
+ *
+ * VERIFIED (Sept 28): Monty drawn on the office background, keyed and cropped onto the
+ * shared floor line, text box reading "Monty / Ne" - the typewriter caught mid-line by the
+ * three-tick capture. So aside.art.SpriteProcess output renders correctly, which until now
+ * was only known from its own quality report.
+ *
+ * Two things it took, both worth keeping:
+ *   1. Three ticks, not ninety. One frame draws; ninety of them re-decoded the large sprite
+ *      PNGs per tick and spent two minutes hitting the timeout without reaching the snapshot.
+ *   2. DISPLAY=:99 on the command. Without it JavaFX dies with "Unable to open DISPLAY", and
+ *      a pgrep for Xvfb does not tell you whether the display you are about to use is live.
  */
 public class ShotVn extends Application {
     @Override public void start(Stage stage) throws Exception {
@@ -46,7 +57,10 @@ public class ShotVn extends Application {
 
         var t = new javafx.animation.PauseTransition(javafx.util.Duration.millis(500));
         t.setOnFinished(e -> {
-            for (int i = 0; i < 90; i++) ui.tick(1.0 / 60);
+            // Three ticks, not ninety. One frame is enough to draw, and this screen decodes
+            // large sprite PNGs per tick - ninety of them is how the first attempt spent two
+            // minutes and hit its timeout without ever reaching the snapshot.
+            for (int i = 0; i < 3; i++) ui.tick(1.0 / 60);
             WritableImage img = scene.snapshot(null);
             try {
                 int w = (int) img.getWidth(), h = (int) img.getHeight();
