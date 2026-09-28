@@ -586,9 +586,17 @@ public class GameScreen extends UiScreen {
             double[] c = Assets.JSCARE_CROP[i];
             double cx = c[0], cy = c[1], cw = c[2], ch = c[3];
 
-            // Slow push-in over the first ~0.35s, then hold
-            double t = Math.min(1.0, (System.nanoTime() % 4_000_000_000L) / 4e9);
-            double zoom = 1.0;
+            // Zoom past 1.0, and not just for drama: the image is drawn to COVER the
+            // canvas and then shaken by up to +/-17px, so at exactly 1.0 the shake slides
+            // it off-centre and exposes a band of the room down one side. A captured
+            // frame showed a dark strip on the left and a light one on the right - the
+            // scariest moment in the game leaking background around the edges.
+            //
+            // The push-in the comment below promised was never wired: `t` was computed
+            // and then unused, with zoom pinned to 1.0. Driving it from System.nanoTime()
+            // would make it PULSE on a 4s cycle rather than play once, so it wants a
+            // scare-start timestamp rather than a guess - until then, a constant.
+            double zoom = 1.10;
             double shakeX = (Math.random() - 0.5) * 34;
             double shakeY = (Math.random() - 0.5) * 26;
 
