@@ -11,6 +11,22 @@ import aside.ui.UiScreen;
  * reasonable player.
  */
 public class SelfTest {
+
+    static int failures = 0;
+
+    /**
+     * A real assertion. This file used to print measurements and nothing else - every line was
+     * a System.out.println with no pass or fail - so NOTHING IN IT COULD EVER FAIL, and it was
+     * called a self-test. Proven by mutation: night 1's AI levels set to zero (the bug that
+     * shipped as "they dont move on night 1"), Chica's interval back to 3.02, and the grace
+     * window cut to half a second all passed it without a murmur.
+     */
+    static void check(String what, boolean ok, String detail) {
+        System.out.printf("  %-4s %s%s%n", ok ? "ok" : "FAIL", what,
+                detail.isEmpty() ? "" : "   [" + detail + "]");
+        if (!ok) failures++;
+    }
+
     public static void main(String[] args) {
         System.out.println("=== FNAF-Glamrock self-test ===\n");
 
@@ -87,6 +103,82 @@ public class SelfTest {
                 if (g.status == Game.Status.SURVIVED) survived++;
             }
             System.out.println("Blackout survival (forced at 5AM, night 3): " + survived + "/" + tested + " (skipped seeds where bot died early)");
+        }
+
+        // 5. Every animatronic must actually MOVE, on every night.
+        //    Not hypothetical: the night-1 row {0,0,1,1} shipped, and level 0 is a 0% move
+        //    chance, so Monty and Roxanne literally never moved. Kinger reported it as
+        //    "they dont move on night 1". This test printed win rates straight through that
+        //    bug without noticing, because it asserted nothing about them - the same hollow
+        //    shape as a check that has never been seen to fail.
+        for (int night = 1; night <= 5; night++) {
+            boolean[] moved = new boolean[4];
+            for (long seed = 1; seed <= 10; seed++) {
+                Game g = new Game(night, seed);
+                Animatronic[] cast = {g.monty, g.roxanne, g.chica, g.freddy};
+                for (int i = 0; i < (int) (270 * 60) && g.status == Game.Status.PLAYING; i++) {
+                    g.update(1.0 / 60);
+                    for (int c = 0; c < 4; c++) {
+                        if (cast[c].pathIndex > 0 || cast[c].stages > 0) moved[c] = true;
+                    }
+                }
+            }
+            check("night " + night + ": every animatronic moves at least once",
+                    moved[0] && moved[1] && moved[2] && moved[3],
+                    "Monty=" + moved[0] + " Roxanne=" + moved[1]
+                            + " Chica=" + moved[2] + " Freddy=" + moved[3]);
+        }
+
+        // 6. An animatronic standing in an open doorway must wait the grace window before it
+        //    kills. The window is what the whole desk feels like: it is the difference between
+        //    a game and a reflex test. Tracked by watching arrival and death on an idle night
+        //    (doors open the whole time, which is the only way to reach a door kill at all -
+        //    the bot always closes in time, and that is why the bot can never test this).
+        {
+            double shortest = 1e9;
+            int measured = 0;
+            for (long seed = 1; seed <= 12; seed++) {
+                Game g = new Game(5, seed);
+                Animatronic[] cast = {g.monty, g.roxanne, g.chica};
+                boolean[] seen = new boolean[3];
+                double[] arrive = new double[3];
+                for (int i = 0; i < (int) (270 * 60); i++) {
+                    g.update(1.0 / 60);
+                    for (int c = 0; c < 3; c++) {
+                        boolean here = cast[c].atOffice();
+                        if (here && !seen[c]) { seen[c] = true; arrive[c] = g.time; }
+                        else if (!here) seen[c] = false;
+                    }
+                    if (g.status == Game.Status.JUMPSCARED) {
+                        for (int c = 0; c < 3; c++) {
+                            if (g.jumpscareBy == cast[c] && seen[c]) {
+                                shortest = Math.min(shortest, g.time - arrive[c]);
+                                measured++;
+                            }
+                        }
+                        break;
+                    }
+                    if (g.status != Game.Status.PLAYING) break;
+                }
+            }
+            // Compared against an INDEPENDENT floor, not against GRACE_SECONDS. The first
+            // version of this assertion measured the gap and checked it against the constant
+            // that defines the gap - which is self-referential and can never fail: set the
+            // window to half a second and the expectation falls to half a second with it. It
+            // passed the mutation, which is how that was found. Two seconds is the floor a
+            // person can actually react inside, and the design value is well above it.
+            check("grace window: a doorway kill waits at least 2s after arriving",
+                    measured == 0 || shortest >= 2.0,
+                    measured + " door kill(s), shortest gap "
+                            + (measured == 0 ? "n/a" : String.format("%.1fs", shortest))
+                            + " vs GRACE_SECONDS=" + Game.GRACE_SECONDS);
+        }
+        System.out.println();
+        if (failures == 0) {
+            System.out.println("=== ALL CHECKS PASS ===");
+        } else {
+            System.out.println("=== " + failures + " CHECK(S) FAILED ===");
+            System.exit(1);
         }
     }
 }
