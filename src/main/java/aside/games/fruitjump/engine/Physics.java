@@ -19,6 +19,16 @@ public class Physics {
         public boolean oneway;        // can jump through from below
         public boolean noGravity;     // skip gravity (hookshot pull, etc.)
         public boolean hitByExplosion; // damaged by bomb blast this frame
+
+        /**
+         * Seconds left flat on the ground. Set by a bat hit; while it is
+         * positive the body takes no horizontal input and keeps its
+         * gravity, so an airborne body still falls.
+         *
+         * Lives on the BODY (not the view) so the headless validator and
+         * the recovery test can see the same state the player does.
+         */
+        public double stunTimer = 0;
         
         public Body(double x, double y, double w, double h) {
             this.x = x; this.y = y;

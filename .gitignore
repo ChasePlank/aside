@@ -11,3 +11,7 @@ art/raw/
 # verification screenshots
 shot-*.png
 present-*.png
+
+# verification harnesses and rendered frames (my own tooling, not the game)
+diag/
+shots/

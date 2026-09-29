@@ -31,6 +31,17 @@ public class MainMenu extends UiScreen {
     static final Font F_ITEM = Font.font("Arial", 28);
     static final Font F_TINY = Font.font("Arial", 13);
 
+    /**
+     * THE TITLE LIVES HERE AND NOWHERE ELSE.
+     *
+     * It said "TROPICAL PUNCH" - the wrong name, belonging to a different and
+     * as-yet-unbuilt game. This game is its own thing and still needs a real
+     * name (Kinger, Sept 28). Until then "Fruit Jump" is the working title,
+     * and renaming the title screen is this one constant.
+     */
+    static final String TITLE = "FRUIT JUMP";
+    static final String SUBTITLE = "work in progress - the name is still open";
+
     final List<String> items = new ArrayList<>();
     int index = 0;
     String notice = "";
@@ -41,6 +52,8 @@ public class MainMenu extends UiScreen {
         items.add("New Game");
         if (new File(SAVE_FILE).exists()) items.add("Continue");
         items.add("Rooms Mode");
+        items.add("Tutorial");
+        items.add("The Climber");
         items.add("Quit to library");
     }
 
@@ -57,6 +70,9 @@ public class MainMenu extends UiScreen {
         switch (items.get(index)) {
             case "New Game" -> ui.replace(new GameplayScreen(ui, 1));
             case "Rooms Mode" -> ui.replace(new RoomsScreen(ui, 1));
+            case "Tutorial" -> ui.replace(new GameplayScreen(ui, 1, true));
+            case "The Climber" ->
+                    ui.replace(new CustomizeScreen(ui, CharacterConfig.load(), this));
             case "Quit to library" -> ui.replace(new LibraryScreen(ui));
             case "Continue" -> continueSave();
             default -> { }
@@ -90,11 +106,11 @@ public class MainMenu extends UiScreen {
 
         gc.setFill(Color.web("#f5a623"));
         gc.setFont(F_TITLE);
-        gc.fillText("TROPICAL PUNCH", 90, 170);
+        gc.fillText(TITLE, 90, 170);
 
         gc.setFill(Color.web("#8a8aa0"));
         gc.setFont(F_SUB);
-        gc.fillText("Fruit Jump  -  a platformer and a room-crawler", 94, 206);
+        gc.fillText(SUBTITLE, 94, 206);
 
         double y = 300;
         for (int i = 0; i < items.size(); i++) {

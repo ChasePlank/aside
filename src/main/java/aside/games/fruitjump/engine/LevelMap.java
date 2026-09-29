@@ -37,6 +37,7 @@ public class LevelMap {
     final List<Physics.AABB> spikes = new ArrayList<>();
     public final List<Physics.AABB> cracked = new ArrayList<>();  // bombable
     public final List<double[]> enemies = new ArrayList<>();   // {x, y}
+    public final List<double[]> bats = new ArrayList<>();      // {x, y}
     public final List<Pickup> pickups = new ArrayList<>();
     public final List<Door> doors = new ArrayList<>();
 
@@ -80,13 +81,30 @@ public class LevelMap {
                         ex = x + TILE / 2; ey = y + TILE / 2;
                         break;
                     case 'o':
-                        enemies.add(new double[]{x + TILE / 2, y + TILE / 2});
+                        // spider
+                        enemies.add(new double[]{x + TILE / 2, y + TILE / 2,
+                                                 Enemy.KIND_SPIDER});
+                        break;
+                    case 's':
+                        // snake
+                        enemies.add(new double[]{x + TILE / 2, y + TILE / 2,
+                                                 Enemy.KIND_SNAKE});
+                        break;
+                    case 'b':
+                        // Flying enemy anchor. Bats are free to engage over
+                        // gaps - gaps are climbable spike pits, so a mid-air
+                        // knockover is a setback, not a death.
+                        bats.add(new double[]{x + TILE / 2, y + TILE / 2});
                         break;
                     case 'k':
                         pickups.add(Pickup.key(x + TILE / 2, y + TILE / 2));
                         break;
                     case 'h':
                         pickups.add(Pickup.heart(x + TILE / 2, y + TILE / 2));
+                        break;
+                    case 'j':
+                        // Safe-room reward: raises the lives cap and refills.
+                        pickups.add(Pickup.jar(x + TILE / 2, y + TILE / 2));
                         break;
                     case 'D':
                         // Door: VISIBLE sprite is 2 tiles (64px) sitting
@@ -125,8 +143,9 @@ public class LevelMap {
         this.exitX = ex; this.exitY = ey;
     }
 
-    /** Parse from a text block (lines split on \n). */
-    static LevelMap parse(String text) {
+    /** Parse from a text block (lines split on \n). Public so hand-authored
+     *  levels (the tutorial) can build a map without a generator. */
+    public static LevelMap parse(String text) {
         List<String> rows = new ArrayList<>();
         for (String line : text.split("\n")) {
             if (!line.isEmpty()) rows.add(line);
@@ -136,12 +155,19 @@ public class LevelMap {
 
     /** Build the world: geometry into the given World. */
     public void buildWorld(World world) {
+        // Tell the world how big the level is, so projectiles cull against the
+        // real extent instead of a constant that goes stale.
+        world.setBounds(width * (double) TILE, height * (double) TILE);
         for (Physics.AABB t : solidTiles) world.tiles.add(t);
         for (Physics.AABB t : onewayTiles) world.oneways.add(t);
         for (Slope s : slopes) world.slopes.add(s);
         for (Physics.AABB sp : spikes) world.spikes.add(sp);
         for (Physics.AABB c : cracked) world.cracked.add(c);
         for (Pickup p : pickups) world.addPickup(p);
+        for (int i = 0; i < bats.size(); i++) {
+            double[] b = bats.get(i);
+            world.addBat(new Bat(b[0], b[1], (long) (b[0] * 31 + b[1] * 17 + i)));
+        }
         for (Door d : doors) {
             world.doors.add(d);
             world.tiles.add(d.aabb());
@@ -153,5 +179,15 @@ public class LevelMap {
         if (r < 0 || r >= height || c < 0) return ' ';
         String row = rows.get(r);
         return (c < row.length()) ? row.charAt(c) : ' ';
+    }
+
+    /** Grid height in cells (the view needs it to size the letterbox). */
+    public int heightCells() {
+        return height;
+    }
+
+    /** Grid width in cells. */
+    public int widthCells() {
+        return width;
     }
 }

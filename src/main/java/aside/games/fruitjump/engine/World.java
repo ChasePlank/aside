@@ -22,6 +22,34 @@ public class World {
     public final List<Pickup> pickups = new ArrayList<>();
     public final List<Door> doors = new ArrayList<>();
     public final List<Enemy> enemies = new ArrayList<>();  // for save system tracking
+    /** Flying pursuers. They cannot hurt the player - a hit only knocks
+     *  them flat for a moment and makes the bat disengage. */
+    public final List<Bat> bats = new ArrayList<>();
+    /** Raised when the player is inside a blast. The view consumes it and
+     *  applies the HP loss, so the damage RULE lives in the engine and the HP
+     *  write stays in one place. */
+    public boolean playerBlastPending = false;
+    /**
+     * The player body. Set explicitly by whoever adds it.
+     *
+     * This used to be sniffed by looking for a body with `oneway == true`,
+     * which is a property of the COLLISION, not of being the player - so a
+     * headless test whose player was not marked oneway found nothing, and the
+     * bat loop dereferenced null. Being explicit removes the whole class of
+     * bug.
+     */
+    public Physics.Body playerBody;
+    /** Level extents in world units. Anything leaving these is culled. Kept on
+     *  the World so nothing has to hardcode a level size again. */
+    public double boundsLeft = 0, boundsTop = 0, boundsRight = 1920, boundsBottom = 640;
+
+    /** Set the level extents (called when a map builds into this world). */
+    public void setBounds(double w, double h) {
+        boundsLeft = 0;
+        boundsTop = 0;
+        boundsRight = w;
+        boundsBottom = h;
+    }
     final List<Emitter> emitters = new ArrayList<>();
     final List<Slope> slopes = new ArrayList<>();  // walkable inclined surfaces
     public final List<Physics.AABB> spikes = new ArrayList<>();  // contact-damage zones
@@ -86,6 +114,7 @@ public class World {
         tiles.clear();
         oneways.clear();
         enemies.clear();
+        bats.clear();
         projectiles.clear();
         pickups.clear();
         doors.clear();
@@ -95,6 +124,12 @@ public class World {
     public void addEnemy(Enemy e) {
         enemies.add(e);
         bodies.add(e.body);
+    }
+
+    /** Add a bat (flying, no gravity, but still collides with terrain). */
+    public void addBat(Bat b) {
+        bats.add(b);
+        bodies.add(b.body);
     }
     
     /** Add a kinematic moving platform. */
@@ -177,6 +212,18 @@ public class World {
             Projectile p = projectiles.get(i);
             double oldX = p.x, oldY = p.y;
             p.update(dt);
+
+            // Cull against the LEVEL's bounds. This is where the old hardcoded
+            // `y > 500` in Projectile.update belonged, and its absence is what
+            // made arrows disappear: the level got taller and the constant did
+            // not, so every arrow spawned already outside the world.
+            if (p.active) {
+                double m = 200;
+                if (p.x < boundsLeft - m || p.x > boundsRight + m
+                        || p.y > boundsBottom + m || p.y < boundsTop - m) {
+                    p.active = false;
+                }
+            }
             
             // Bomb tile collision - stop on ground
             if (p.active && p.type == Projectile.Type.BOMB) {
@@ -220,6 +267,20 @@ public class World {
                         }
                     }
                 }
+                // Arrows hit bats too. They were not in `enemies`, so an arrow
+                // flew straight through one (playtest: the bat reads as
+                // invincible).
+                if (p.active) {
+                    for (int bi = bats.size() - 1; bi >= 0; bi--) {
+                        Bat bat = bats.get(bi);
+                        if (pbox.overlaps(bat.body.aabb())) {
+                            bats.remove(bi);
+                            bodies.remove(bat.body);
+                            p.active = false;
+                            break;
+                        }
+                    }
+                }
             }
             
             if (!p.active) {
@@ -245,9 +306,13 @@ public class World {
         }
         
         // Update enemy AI (find player body for chase logic)
-        Physics.Body playerBody = null;
-        for (Physics.Body b : bodies) {
-            if (b.oneway) { playerBody = b; break; }  // player is marked oneway=true
+        Physics.Body playerBody = this.playerBody;
+        if (playerBody == null) {
+            // Fallback for callers that have not set it. Still a heuristic, so
+            // it can find nothing - every use below must null-check.
+            for (Physics.Body b : bodies) {
+                if (b.oneway) { playerBody = b; break; }
+            }
         }
         for (Enemy e : enemies) {
             if (!e.dead && playerBody != null) {
@@ -258,6 +323,50 @@ public class World {
                     e.atLedge = senseLedge(e.body, e.dir);
                 }
                 e.updateAI(dt, playerBody.x, playerBody.y);
+            }
+        }
+
+        // Bats. Their whole point is the FOLLOW: the player can lead one away
+        // from a gap or bait its dive, so the bat is positioning play rather
+        // than a timed jump. PURSUE_SPEED is deliberately below the player's
+        // run speed, because you cannot lead something that outruns you.
+        for (int bi = bats.size() - 1; bi >= 0; bi--) {
+            Bat bat = bats.get(bi);
+            if (playerBody == null) continue;
+            // Null-checked BEFORE bat.update, which dereferences the player.
+            // The check used to come after, so a caller with no player body
+            // crashed here instead of skipping the bats.
+            boolean connected = bat.update(dt, playerBody);
+            if (!bat.body.aabb().overlaps(playerBody.aabb())) continue;
+            // Coming down on top of one squashes it, exactly like a ground
+            // enemy. A bat is NOT invincible - the flight is what makes it hard
+            // to reach, not armour (playtest: "the bat is invincible, i tried
+            // jumping on it and it stunned me instead").
+            boolean stomped = playerBody.vy > 0
+                    && (playerBody.y + playerBody.hh) < bat.body.y;
+            if (stomped) {
+                bats.remove(bi);
+                bodies.remove(bat.body);
+                playerBody.vy = -400;      // same bounce as stomping an enemy
+                if (audio != null) audio.playSfx(AudioSystem.Sfx.STOMP);
+            } else if (connected) {
+                playerBody.stunTimer = Bat.STUN_SECONDS;
+                // EVERY bat breaks off, not just the one that connected. With
+                // three bats the old relay meant each stunned in turn and the
+                // player stayed pinned for the whole sequence - the more bats,
+                // the longer the lock.
+                for (Bat other : bats) other.flee();
+            }
+        }
+
+        // Stun tick. While a body is flat it keeps its gravity - an airborne
+        // player keeps falling - but loses all horizontal control. This lives
+        // in the engine, not the view, so the validator and the recovery test
+        // see exactly the state the player does.
+        for (Physics.Body b : bodies) {
+            if (b.stunTimer > 0) {
+                b.stunTimer -= dt;
+                b.vx = 0;
             }
         }
         
@@ -288,16 +397,30 @@ public class World {
     /** Handle bomb explosion: damage enemies, destroy cracked tiles. */
     void handleExplosion(double x, double y) {
         if (audio != null) audio.playSfx(AudioSystem.Sfx.EXPLOSION);
-        
-        // Damage enemies in range
+
+        // Blast damage. This used to set `hitByExplosion` on every body in
+        // range and NOTHING ever read the flag - so a bomb killed nothing at
+        // all, not even enemies. Applied directly now.
+        //
+        // A blast is not selective: the player is inside its own blast radius
+        // like anything else (Kinger, Sept 29). That is also what makes a
+        // placed bomb a real decision rather than a free wall-opener.
+        for (Enemy e : enemies) {
+            if (!e.dead && inBlast(e.body.x, e.body.y, x, y)) e.dead = true;
+        }
+        for (int i = bats.size() - 1; i >= 0; i--) {
+            Bat bat = bats.get(i);
+            if (inBlast(bat.body.x, bat.body.y, x, y)) {
+                bats.remove(i);
+                bodies.remove(bat.body);
+            }
+        }
         for (Physics.Body b : bodies) {
-            double dx = b.x - x;
-            double dy = b.y - y;
-            double dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist < Projectile.BLAST_DAMAGE_RANGE) {
-                // Mark for death — combat system will handle
-                // For now, we use a simple flag on the body
-                b.hitByExplosion = true;
+            if (b.oneway && inBlast(b.x, b.y, x, y)) {
+                // The player is marked `oneway`. World has no Combat, so it
+                // raises an event and the view applies it - keeps the damage
+                // rule in the engine and the HP write in one place.
+                playerBlastPending = true;
             }
         }
         
@@ -314,6 +437,11 @@ public class World {
                 tiles.remove(c);
             }
         }
+    }
+
+    private static boolean inBlast(double bx, double by, double x, double y) {
+        double dx = bx - x, dy = by - y;
+        return Math.sqrt(dx * dx + dy * dy) < Projectile.BLAST_DAMAGE_RANGE;
     }
     
     /** Unlock a door (remove from solid tiles). */
