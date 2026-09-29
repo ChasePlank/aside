@@ -4,6 +4,7 @@ import aside.games.fnaf.FnafGame;
 import aside.games.fruitjump.FruitJumpGame;
 import aside.games.handoff.HandoffGame;
 import aside.games.ledger.LedgerGame;
+import aside.games.outside.OutsideGame;
 import aside.games.overtime.OvertimeGame;
 import aside.games.residue.ResidueGame;
 import aside.games.testimony.TestimonyGame;
@@ -26,6 +27,7 @@ public final class Games {
         g.add(new LedgerGame());
         g.add(new TestimonyGame());
         g.add(new HandoffGame());
+        g.add(new OutsideGame());
         return g;
     }
 
