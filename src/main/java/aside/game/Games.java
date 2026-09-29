@@ -5,6 +5,7 @@ import aside.games.fruitjump.FruitJumpGame;
 import aside.games.ledger.LedgerGame;
 import aside.games.overtime.OvertimeGame;
 import aside.games.residue.ResidueGame;
+import aside.games.testimony.TestimonyGame;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -22,6 +23,7 @@ public final class Games {
         g.add(new FruitJumpGame());
         g.add(new ResidueGame());
         g.add(new LedgerGame());
+        g.add(new TestimonyGame());
         return g;
     }
 
