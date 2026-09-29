@@ -81,7 +81,26 @@ moves at least once a night, and a doorway kill waits at least two seconds.
 
 ## What is in here
 
-- **`stories/overtime.aside`** — the five-night FNAF Glamrock visual novel. Ends in three places.
+- **`stories/overtime.aside`** — the five-night FNAF Glamrock visual novel. **Six distinct endings**, and the
+  spread is wide: `ending_remembered_close` is the rarest at 5,356 of the paths explored, `ending_overtime` the
+  most common at 386,617. The auditor reports the distribution, so you can see which branches players actually
+  reach — and a fuller audit of it is below.
+
+A full-budget audit of Overtime, run rather than assumed:
+
+```
+scenes 131   beats 656   choice options 58      paths explored 1,546,467
+distinct endings: 6
+unreachable scenes: 0   (complete: 131/131 scenes reached, so nothing can be missing)
+missing targets: 0      dead ends: 0      unreachable beats: 0
+never-offered picks: 0  choices that do not matter: 0
+vars read but never written: 0   vars written but never read: 0
+
+CLEAN SO FAR (traversal partial: 131/131 scenes, budget hit)
+```
+
+The traversal was budget-limited, but the scene count is complete — which is why the unreachable list can still
+be called complete while the picks line cannot. That distinction is the whole reason the verdict says which.
 - **`stories/night-shift.aside`** — **a test fixture, not a story.** It contains deliberately planted
   problems (an unreachable scene, a variable typo, beats after a jump, and a fork whose choices do
   nothing) so the self-test can assert the auditor catches them. It is written to be read as well as
