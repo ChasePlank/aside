@@ -213,66 +213,108 @@ public class Bot {
         // past 20k states and returned partial, misleading results.
         // Collapsing identical states makes this a graph search, so the
         // budget goes on genuinely new territory.
-        Set<String> seen = new LinkedHashSet<>();
+        //
+        // The set holds a 64-bit hash per state, not the signature string.
+        // It used to hold the string, and that is what actually ran out of
+        // memory: `budget` counts states, but the retained bytes per state
+        // were unbounded, so the state budget was a memory budget in
+        // disguise and it ran out about 1.6x above the default. A hash
+        // collision costs one branch re-explored, never a wrong answer.
+        Set<Long> seen = new java.util.HashSet<>();
 
-        while (!stack.isEmpty()) {
-            if (r.statesExpanded >= budget) { r.budgetHit = true; break; }
-            Vn v = stack.pollFirst();
+        // An audit tool that dies instead of reporting partial results is
+        // strictly worse than one that reports them: the report format
+        // already knows how to say "do not trust this" (?? prefixes,
+        // BUDGET HIT, UNRELIABLE). So the traversal is allowed to fail,
+        // and if it does the report says so rather than the process
+        // printing a stack trace.
+        try {
+            while (!stack.isEmpty()) {
+                if (r.statesExpanded >= budget) { r.budgetHit = true; break; }
+                Vn v = stack.pollFirst();
 
-            String sig = signature(v);
-            if (!seen.add(sig)) continue;
-            r.statesExpanded++;
+                if (!seen.add(signatureHash(v))) continue;
+                r.statesExpanded++;
 
-            // Run this state to a decision point or an ending
-            int spin = 0;
-            while (v.mode == Vn.Mode.SHOWING && spin++ < 100_000) v.advance();
+                // Run this state to a decision point or an ending
+                int spin = 0;
+                while (v.mode == Vn.Mode.SHOWING && spin++ < 100_000) v.advance();
 
-            // Record reachability AFTER the advance, not before. The
-            // advance loop is what walks the story forward, and every
-            // scene it passes through is added to `visited` on the way.
-            // Recording before it meant those scenes were never counted,
-            // so finished endings were reported as unreachable while
-            // simultaneously appearing in the endings list.
-            r.scenesReached.addAll(v.enteredLog);
-            v.enteredLog.clear();
-            if (v.sceneId != null) r.scenesReached.add(v.sceneId);
+                // Record reachability AFTER the advance, not before. The
+                // advance loop is what walks the story forward, and every
+                // scene it passes through is added to `visited` on the way.
+                // Recording before it meant those scenes were never counted,
+                // so finished endings were reported as unreachable while
+                // simultaneously appearing in the endings list.
+                r.scenesReached.addAll(v.enteredLog);
+                v.enteredLog.clear();
+                if (v.sceneId != null) r.scenesReached.add(v.sceneId);
 
-            noteVars(r, v.vars);
+                noteVars(r, v.vars);
 
-            if (v.mode == Vn.Mode.ENDED) {
-                r.pathsExplored++;
-                String key = v.sceneId == null ? "(no scene)" : v.sceneId;
-                r.endings.add(key);
-                r.endingCounts.merge(key, 1, Integer::sum);
-                continue;
-            }
-
-            if (v.mode == Vn.Mode.CHOOSING) {
-                List<Choice> avail = v.availableChoices();
-                for (Choice c : avail) r.choiceSitesOffered.add(site(v.sceneId, c.line, c.text));
-                if (avail.isEmpty()) {
-                    r.deadEnds.add(v.sceneId + " — choice at line "
-                            + (v.current != null ? v.current.line : -1)
-                            + " has NO satisfiable options");
+                if (v.mode == Vn.Mode.ENDED) {
                     r.pathsExplored++;
+                    String key = v.sceneId == null ? "(no scene)" : v.sceneId;
+                    r.endings.add(key);
+                    r.endingCounts.merge(key, 1, Integer::sum);
                     continue;
                 }
-                for (int i = 0; i < avail.size(); i++) {
-                    Vn branch = v.copyForSearch();
-                    // Re-find the same choice in the clone by site
-                    List<Choice> av2 = branch.availableChoices();
-                    int idx = -1;
-                    for (int j = 0; j < av2.size(); j++) {
-                        if (av2.get(j).line == avail.get(i).line) { idx = j; break; }
+
+                if (v.mode == Vn.Mode.CHOOSING) {
+                    List<Choice> avail = v.availableChoices();
+                    for (Choice c : avail) r.choiceSitesOffered.add(site(v.sceneId, c.line, c.text));
+                    if (avail.isEmpty()) {
+                        r.deadEnds.add(v.sceneId + " — choice at line "
+                                + (v.current != null ? v.current.line : -1)
+                                + " has NO satisfiable options");
+                        r.pathsExplored++;
+                        continue;
                     }
-                    if (idx < 0) continue;
-                    branch.choose(idx);
-                    stack.addLast(branch);
+                    for (int i = 0; i < avail.size(); i++) {
+                        Vn branch = v.copyForSearch();
+                        // Re-find the same choice in the clone by site
+                        List<Choice> av2 = branch.availableChoices();
+                        int idx = -1;
+                        for (int j = 0; j < av2.size(); j++) {
+                            if (av2.get(j).line == avail.get(i).line) { idx = j; break; }
+                        }
+                        if (idx < 0) continue;
+                        branch.choose(idx);
+                        stack.addLast(branch);
+                    }
                 }
             }
+        } catch (OutOfMemoryError oom) {
+            // Free the two structures that caused it before building the
+            // report, so the report itself has room to be written.
+            seen.clear();
+            stack.clear();
+            r.budgetHit = true;
+            r.warnings.add("ran out of memory after " + r.statesExpanded
+                    + " states — the traversal did not finish, so anything it did not"
+                    + " reach is unknown rather than unreachable");
         }
 
         return r;
+    }
+
+    /**
+     * FNV-1a over the canonical signature.
+     *
+     * The signature string is still built, because that is how a state is
+     * described; what changes is that it is not retained. One long per
+     * expanded state instead of one string is the difference between a
+     * traversal that finishes a five-night story and one that dies at 1.6x
+     * the default budget.
+     */
+    long signatureHash(Vn v) {
+        String s = signature(v);
+        long h = 0xcbf29ce484222325L;
+        for (int i = 0; i < s.length(); i++) {
+            h ^= s.charAt(i);
+            h *= 0x100000001b3L;
+        }
+        return h;
     }
 
     /** Canonical signature of a story state: where we are, how far

@@ -142,6 +142,55 @@ public class SelfTest {
         check("choices were offered during traversal",
                 r.choiceSitesOffered.size() >= 5);
 
+        System.out.println("\n--- partial traversal is still an honest report ---");
+        // The budget counts states, but the memory cost per state is what
+        // actually runs out, so the traversal is allowed to fail. What it
+        // must never do is present a partial walk as a complete one.
+        Bot small = new Bot();
+        // night-shift is small: a full walk of it expands 25 states, so the
+        // budget has to be well under that to actually stop it.
+        small.budget = 5;
+        Bot.Report part = small.run(s);
+        check("a tiny budget stops the traversal", part.budgetHit);
+        check("a stopped traversal says so in the summary",
+                part.summary().contains("BUDGET HIT"));
+        check("a stopped traversal marks its findings unreliable",
+                part.summary().contains("UNRELIABLE"));
+        check("a stopped traversal prefixes its findings with ??",
+                part.summary().contains("?? "));
+        check("a stopped traversal explored less than a full one",
+                part.statesExpanded < r.statesExpanded);
+        // The structural findings do not depend on the traversal at all, so
+        // they have to be identical whether or not it finished. A partial
+        // report that also lost its certain answers would be worse than
+        // useless.
+        check("structural findings survive a stopped traversal",
+                part.missingTargets.equals(r.missingTargets)
+                        && part.unreachableBeats.equals(r.unreachableBeats)
+                        && part.varsReadOnly.equals(r.varsReadOnly)
+                        && part.varsNeverRead.equals(r.varsNeverRead));
+        check("a stopped traversal reports fewer reached scenes",
+                part.scenesReached.size() <= r.scenesReached.size());
+
+        System.out.println("\n--- the dedupe key ---");
+        // The set holds a hash per state, not the signature string: the
+        // string was what ran out of memory. A collision costs one branch
+        // re-explored, never a wrong answer, so the only thing worth
+        // asserting is that the key is stable and separating.
+        Bot hasher = new Bot();
+        Vn a = new Vn(s);
+        Vn b = new Vn(s);
+        check("the same state hashes the same", hasher.signatureHash(a) == hasher.signatureHash(b));
+        b.vars.put("aff_monty", 3.0);
+        check("a different variable value hashes differently",
+                hasher.signatureHash(a) != hasher.signatureHash(b));
+        Vn c = new Vn(s);
+        c.index = a.index + 1;
+        check("a different position hashes differently",
+                hasher.signatureHash(a) != hasher.signatureHash(c));
+        check("the signature itself is unchanged by hashing",
+                hasher.signature(a).equals(hasher.signature(new Vn(s))));
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
     }
