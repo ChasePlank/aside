@@ -1,5 +1,6 @@
 package aside.game;
 
+import aside.games.bearings.BearingsGame;
 import aside.games.fnaf.FnafGame;
 import aside.games.fruitjump.FruitJumpGame;
 import aside.games.handoff.HandoffGame;
@@ -28,6 +29,7 @@ public final class Games {
         g.add(new TestimonyGame());
         g.add(new HandoffGame());
         g.add(new OutsideGame());
+        g.add(new BearingsGame());
         return g;
     }
 
