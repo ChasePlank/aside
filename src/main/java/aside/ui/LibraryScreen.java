@@ -90,6 +90,12 @@ public class LibraryScreen extends UiScreen {
         double top = 196;
         double bottom = H - 62;
         double step = Math.min(88, (bottom - top) / Math.max(1, rows() - 1));
+        // The selection bar and the row below it have to share the same
+        // pitch. At eleven rows the derived step is 46px, and a bar centred
+        // on its own row (y - step*0.56) reached up into the previous row's
+        // blurb -- the highlight of the newest game sat on top of the
+        // second-newest game's description. The bar hangs lower and the
+        // blurb sits closer to its title, which clears at any row count.
         double y = top;
         for (int i = 0; i < rows(); i++) {
             boolean sel = i == index;
@@ -99,7 +105,7 @@ public class LibraryScreen extends UiScreen {
 
             if (sel) {
                 gc.setFill(Color.rgb(30, 30, 46, 0.85));
-                gc.fillRoundRect(60, y - step * 0.56, W - 120, step - 8, 10, 10);
+                gc.fillRoundRect(60, y - step * 0.45, W - 120, step - 4, 10, 10);
             }
             gc.setFill(sel ? Color.web("#F2C14E") : Color.web("#B9B9C6"));
             gc.setFont(F_ITEM);
@@ -107,7 +113,7 @@ public class LibraryScreen extends UiScreen {
             if (!blurb.isEmpty()) {
                 gc.setFill(Color.web("#6E6E86"));
                 gc.setFont(F_BLURB);
-                gc.fillText(blurb, 122, y + 20);
+                gc.fillText(blurb, 122, y + 17);
             }
             y += step;
         }
