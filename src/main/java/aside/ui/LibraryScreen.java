@@ -83,7 +83,14 @@ public class LibraryScreen extends UiScreen {
         gc.setFont(F_SUB);
         gc.fillText("a small engine, and the games built on it", 72, 128);
 
-        double y = 214;
+        // The row pitch is derived from how many rows there are, not fixed.
+        // At seven games the fixed 88 put the last row at y=830 on a 720
+        // canvas, so the newest game was simply not on screen. A library
+        // that silently hides its last entry is worse than a tight one.
+        double top = 196;
+        double bottom = H - 62;
+        double step = Math.min(88, (bottom - top) / Math.max(1, rows() - 1));
+        double y = top;
         for (int i = 0; i < rows(); i++) {
             boolean sel = i == index;
             boolean isQuit = i == quitRow();
@@ -92,7 +99,7 @@ public class LibraryScreen extends UiScreen {
 
             if (sel) {
                 gc.setFill(Color.rgb(30, 30, 46, 0.85));
-                gc.fillRoundRect(60, y - 36, W - 120, 70, 10, 10);
+                gc.fillRoundRect(60, y - step * 0.56, W - 120, step - 8, 10, 10);
             }
             gc.setFill(sel ? Color.web("#F2C14E") : Color.web("#B9B9C6"));
             gc.setFont(F_ITEM);
@@ -100,9 +107,9 @@ public class LibraryScreen extends UiScreen {
             if (!blurb.isEmpty()) {
                 gc.setFill(Color.web("#6E6E86"));
                 gc.setFont(F_BLURB);
-                gc.fillText(blurb, 122, y + 22);
+                gc.fillText(blurb, 122, y + 20);
             }
-            y += 88;
+            y += step;
         }
 
         if (noticeTimer > 0) {

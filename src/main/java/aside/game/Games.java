@@ -2,6 +2,7 @@ package aside.game;
 
 import aside.games.fnaf.FnafGame;
 import aside.games.fruitjump.FruitJumpGame;
+import aside.games.handoff.HandoffGame;
 import aside.games.ledger.LedgerGame;
 import aside.games.overtime.OvertimeGame;
 import aside.games.residue.ResidueGame;
@@ -24,6 +25,7 @@ public final class Games {
         g.add(new ResidueGame());
         g.add(new LedgerGame());
         g.add(new TestimonyGame());
+        g.add(new HandoffGame());
         return g;
     }
 
