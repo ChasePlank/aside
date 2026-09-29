@@ -3,6 +3,7 @@ package aside.game;
 import aside.games.fnaf.FnafGame;
 import aside.games.fruitjump.FruitJumpGame;
 import aside.games.overtime.OvertimeGame;
+import aside.games.residue.ResidueGame;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -18,6 +19,7 @@ public final class Games {
         g.add(new OvertimeGame());
         g.add(new FnafGame());
         g.add(new FruitJumpGame());
+        g.add(new ResidueGame());
         return g;
     }
 

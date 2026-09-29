@@ -1,49 +1,43 @@
-Port Tropical Punch in as the third game, and fix an engine bug it exposed
+Port Residue in as the fourth game -- the first one with no script
 
-aside.games.fruitjump -- the playable Java version: Fruit Jump, a
-side-view platformer, plus the top-down room-crawler underneath it. Its
-engine (physics, level generation, enemy AI, the AI director) moved
-across with a package rename, same as the survival game did. All three
-games now run in one process from the library.
+aside.games.residue -- one room, five things, one visit at a time. You
+leave a single thing and go; when you come back the room has aged without
+you. The mechanic is the difference between evidence and messages: a cup
+you forgot outlasts a note you wrote on purpose, because a message is
+about the writer and wanting is fragile.
 
-Engine features this needed, both real rather than workarounds:
+This is the first game in the library that has no .aside file, and that
+is the point. There is nothing to author and nothing to read ahead of --
+the content is generated from the room's state, and the only thing that
+differs between playthroughs is what the player did last time. It is also
+the first game that owns its persistence rather than borrowing the
+engine's: it keeps its own plain-text room in saves/residue/room.state,
+because the thing being saved is not a position in a story.
 
-- handleKeyReleased on UiScreen, routed through UiManager and the host.
-  A platformer needs to know when a held key stops being held; nothing
-  before this cared about releases.
+The Game interface held. It has now survived a visual novel, a real-time
+survival game, a platformer, and a thing with no script at all, without
+gaining a method.
 
-- Per-screen drawing resolution. UiScreen.canvasWidth()/canvasHeight()
-  default to 1280x720 and screens override them. Fruit Jump renders at
-  1600x1200 by design and is no longer forced down to the engine size;
-  the host scales whatever a screen declares.
+THE BUG THE PORT EXPOSED, in the new module rather than the engine:
 
-THE BUG IT EXPOSED, in my own code since the engine was written:
+ResidueGame.create() loaded the room and handed it to the screen without
+aging it. The room ages on arrival, so the first frame showed "visit 0"
+and traces at the ages they were saved at -- the room was displayed
+before it had happened to you. Caught by rendering the screen rather than
+by reading the code. Fixed to advance on create. It is in-memory only:
+the room is written back when the player actually leaves something, so
+walking in and out again costs nothing and reopening the screen twice
+gives the same room both times.
 
-fit() centred the SCALED canvas. But setScaleX/Y pivots at the NODE
-CENTRE, not the top-left, so scaling already keeps the centre where it
-is -- centring the scaled result as well double-counted the shift and
-pushed the image off-centre by (1-s)*size/2.
+Design note, since it is not obvious from the code: the room holds THREE
+things, not five. Five things and five places would mean the choice of
+what to leave is free. At three, leaving something new costs the oldest
+thing in the room, and the player has to decide what the next person is
+allowed to find.
 
-It was invisible until now because every previous screen used a canvas
-the same size as the host, so s was 1 and the pivot did not matter.
-Fruit Jump is the first screen with a different resolution, and it
-rendered in the corner. Fixed to centre the unscaled canvas.
-
-Also: each GameplayScreen/RoomsScreen built its own StackPane root
-containing the shared canvas. A JavaFX node can have only one parent, so
-that silently REPARENTED the canvas away from the visible root and the
-screen drew to a node nobody could see -- a black window with no
-exception anywhere. Removed; UiScreen owns the canvas.
-
-And: Resize listeners alone are not reliable for fitting, because a
-screen created while the window is still settling can be fitted to a size
-that no longer applies and never corrected. UiManager now refits the top
-screen before each frame -- four numbers of arithmetic is cheaper than
-the bug.
-
-Known cosmetic issue: Fruit Jump's 4:3 canvas letterboxes inside the
-16:9 window. Correct, but the canvas size or the window aspect may want
-revisiting.
+Verified: the 46 room assertions run against the ported package, and all
+four beats (arrival, pick, gesture, departure) were rendered headlessly
+through the engine's own snapshot mode.
 
 Generated with Letta Code (https://letta.com)
 
