@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0a09">
+<title>Night Shift</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #0d0a09; color: #e8e4dc;
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  #wrap { max-width: 720px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+  #stage { flex: 1; padding: 22px 20px 0; }
+  #place { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #8a7f70; margin-bottom: 14px; min-height: 16px; }
+  #log p { margin: 0 0 14px; }
+  #log .say { color: #e8e4dc; }
+  #log .who { display: block; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #c4622b; margin-bottom: 3px; }
+  #log .narrate { color: #b3aa9c; font-style: italic; }
+  #log .old { opacity: .38; }
+  #choices { padding: 0 20px 8px; }
+  button {
+    display: block; width: 100%; margin: 0 0 10px; padding: 15px 16px;
+    background: #1c1614; color: #e8e4dc; border: 1px solid #3a2f28; border-radius: 10px;
+    font: inherit; text-align: left; cursor: pointer;
+  }
+  button:hover { border-color: #c4622b; }
+  #hint { padding: 0 20px 26px; color: #6e655a; font-size: 13px; }
+  #bar { height: 3px; background: #c4622b; width: 0; transition: width .25s; }
+  @media (prefers-reduced-motion: reduce) { #bar { transition: none; } }
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="wrap">
+  <div id="stage">
+    <div id="place"></div>
+    <div id="log"></div>
+  </div>
+  <div id="choices"></div>
+  <div id="hint">tap anywhere to continue</div>
+</div>
+<script>
+const STORY = {"title":"Night Shift","author":"Roxanne","start":"start","passages":{"start":[{"type":"bg","name":"office_night"},{"type":"narrate","text":"The chair is still warm from whoever had this shift before you."},{"type":"narrate","text":"There is no one to ask about them."},{"type":"say","who":"monty","text":"You're late."},{"type":"show","who":"monty","where":"left"},{"type":"say","who":"monty","text":"That's twice this week."},{"type":"choice","text":"I'm here, aren't I?","to":"defiant"},{"type":"choice","text":"You say nothing.","to":"quiet"},{"type":"flag","name":"let_the_quiet_stand","delta":"true"},{"type":"choice","text":"...Sorry.","to":"apologetic"}],"defiant":[{"type":"flag","name":"aff_monty","delta":"-1"},{"type":"say","who":"monty","text":"Being here isn't the same as showing up."},{"type":"say","who":"monty (tired)","text":"I've been on this stage for thirty years. I know the difference."},{"type":"hide","who":"monty"},{"type":"jump","to":"hallway"}],"quiet":[{"type":"flag","name":"aff_monty","delta":"+1"},{"type":"say","who":"monty","text":"..."},{"type":"say","who":"monty (quiet)","text":"Good answer."},{"type":"say","who":"monty","text":"Most people fill the quiet. You didn't."},{"type":"hide","who":"monty"},{"type":"jump","to":"hallway"}],"apologetic":[{"type":"flag","name":"aff_monty","delta":"+1"},{"type":"say","who":"monty","text":"Don't apologise to me."},{"type":"say","who":"monty","text":"Apologise to the one who had to cover you."},{"type":"hide","who":"monty"},{"type":"jump","to":"cove"}],"hallway":[{"type":"bg","name":"west_hall"},{"type":"narrate","text":"The hall runs long and dim. Somewhere behind you a fan keeps turning."},{"type":"say","who":"roxanne","text":"I heard the door."},{"type":"show","who":"roxanne","where":"center"},{"type":"say","who":"roxanne","text":"You're not supposed to be back here."},{"type":"choice","text":"Neither are you.","to":"roxy_banter"},{"type":"choice","text":"I'm doing my rounds.","to":"roxy_rounds"},{"type":"choice","text":"Leave.","to":"hallway_exit"}],"roxy_banter":[{"type":"flag","name":"aff_roxy","delta":"+2"},{"type":"say","who":"roxanne (laughs)","text":"No. I'm not."},{"type":"say","who":"roxanne","text":"But I've been here longer, so I win."},{"type":"show","who":"roxanne","where":"center"},{"type":"jump","to":"cove"}],"roxy_rounds":[{"type":"flag","name":"aff_roxy","delta":"+1"},{"type":"say","who":"roxanne","text":"Rounds. Sure."},{"type":"say","who":"roxanne","text":"You know what I do on my rounds? I check that you're still breathing."},{"type":"jump","to":"cove"}],"hallway_exit":[{"type":"say","who":"roxanne","text":"Good."},{"type":"say","who":"roxanne (flat)","text":"Keep walking."},{"type":"jump","to":"ending_cold"}],"cove":[{"type":"bg","name":"coves"},{"type":"narrate","text":"The curtain is drawn. Something behind it is being very still."},{"type":"say","who":"freddy","text":"Hm."},{"type":"show","who":"freddy","where":"right"},{"type":"say","who":"freddy","text":"You can hear me, can't you."},{"type":"say","who":"freddy","text":"Most of them can't. They watch the cameras and think that's looking."},{"type":"choice","text":"I can hear you.","to":"freddy_seen"},{"type":"choice","text":"Who are you?","to":"freddy_name"},{"type":"choice","text":"I should go.","to":"ending_cold"}],"freddy_name":[{"type":"say","who":"freddy","text":"That's a longer answer than you have time for."},{"type":"say","who":"freddy (wry)","text":"Ask me again when you've done a week."},{"type":"jump","to":"freddy_offer"}],"freddy_seen":[{"type":"flag","name":"saw_freddy","delta":"true"},{"type":"flag","name":"aff_freddy","delta":"+2"},{"type":"say","who":"freddy","text":"..."},{"type":"say","who":"freddy","text":"Then stay a minute. That's all anyone ever wants, really."},{"type":"jump","to":"freddy_offer"}],"freddy_offer":[{"type":"say","who":"freddy","text":"There's a song that plays when the power dies."},{"type":"say","who":"freddy","text":"I don't choose it. But I'm the one standing there when it stops."},{"type":"say","who":"freddy","text":"Come back tomorrow, and I'll tell you the rest."},{"type":"jump","to":"ending_warm"}],"ending_warm":[{"type":"bg","name":"office_dawn"},{"type":"narrate","text":"The shift ends. 6 AM, and the lights come up like nothing happened."},{"type":"narrate","text":"Everything is exactly where it was. You are not."},{"type":"flag","name":"nights_survived","delta":"+1"}],"ending_cold":[{"type":"bg","name":"office_dawn"},{"type":"narrate","text":"You leave without learning a single name."},{"type":"narrate","text":"The building doesn't mind. It has had a lot of you."}],"epilogue":[{"type":"narrate","text":"The building is empty in the way that buildings are never empty."}],"apologist_alt":[{"type":"flag","name":"aff_monty","delta":"+1"},{"type":"say","who":"monty","text":"Fine."},{"type":"jump","to":"hallway"},{"type":"choice","text":"One more thing.","to":"apologist_alt","cond":"aff_montal >= 2"}]}};
+let here = STORY.start, step = 0, lines = [];
+const vars = {};   // affection and anything else set by "~ name +1"
+const log = document.getElementById('log');
+const choices = document.getElementById('choices');
+const place = document.getElementById('place');
+const hint = document.getElementById('hint');
+const bar = document.getElementById('bar');
+
+function applyFlag(it) {
+  const d = parseFloat(it.delta);
+  vars[it.name] = (vars[it.name] || 0) + (isNaN(d) ? 0 : d);
+}
+
+// A condition arrives as a raw expression ("listened >= 1 and aff_chica >= 2").
+// It is rewritten into JavaScript and run against the flags. Without this the
+// web build would take the FIRST branch every time, which does not simplify the
+// story - it tells a different one, and most of the later scenes would never be
+// reached at all.
+function condOK(it) {
+  if (!it.cond) return true;
+  const js = it.cond
+    .replace(/and/g, '&&')
+    .replace(/or/g, '||')
+    .replace(/not/g, '!')
+    .replace(/[A-Za-z_][A-Za-z0-9_]*/g, m => 'vars.' + m);
+  try { return !!Function('vars', 'return (' + js + ')')(vars); }
+  catch (e) { return true; }   // an expression this build cannot read: do not block the story
+}
+
+function esc(s) { return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function enter(label) {
+  here = label; step = 0; lines = STORY.passages[label] || [];
+  log.innerHTML = ''; choices.innerHTML = ''; place.textContent = '';
+  advance();
+}
+
+function advance() {
+  // consume non-visual items, then show one line
+  while (step < lines.length) {
+    const it = lines[step++];
+    if (it.type === "bg") { place.textContent = it.name.replace(/_/g, " "); continue; }
+    if (it.type === "show" || it.type === "hide") continue;
+    if (it.type === "flag") { applyFlag(it); continue; }
+    if (it.type === "jump") { if (condOK(it)) { enter(it.to); return; } continue; }
+    if (it.type === "choice") { step--; offer(); return; }
+    render(it);
+    progress();
+    return;
+  }
+  // passage ran out with no jump: nothing more to say
+  hint.textContent = 'the end';
+}
+
+function render(it) {
+  for (const p of log.children) p.classList.add('old');
+  const p = document.createElement('p');
+  if (it.type === "say") {
+    p.className = 'say';
+    p.innerHTML = '<span class="who">' + esc(it.who) + '</span>' + esc(it.text);
+  } else {
+    p.className = 'narrate';
+    p.textContent = it.text;
+  }
+  log.appendChild(p);
+  p.scrollIntoView({ block: 'nearest' });
+  hint.textContent = 'tap anywhere to continue';
+}
+
+function offer() {
+  const opts = [];
+  while (step < lines.length && lines[step].type === "choice") {
+    const c = lines[step++];
+    if (condOK(c)) opts.push(c);
+  }
+  for (const o of opts) {
+    const b = document.createElement('button');
+    b.textContent = o.text;
+    b.onclick = ev => { ev.stopPropagation(); enter(o.to); };
+    choices.appendChild(b);
+  }
+  hint.textContent = 'choose';
+  progress();
+}
+
+function progress() {
+  const pct = lines.length ? Math.min(100, Math.round(100 * step / lines.length)) : 0;
+  bar.style.width = pct + '%';
+}
+
+document.body.addEventListener('click', () => { if (!choices.children.length) advance(); });
+document.addEventListener('keydown', e => {
+  if ((e.key === ' ' || e.key === 'Enter') && !choices.children.length) advance();
+});
+enter(STORY.start);
+</script>
+</body>
+</html>
