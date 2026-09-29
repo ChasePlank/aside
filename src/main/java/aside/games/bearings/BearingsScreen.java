@@ -340,8 +340,20 @@ public class BearingsScreen extends UiScreen {
 
     String ratingLabel(int i) {
         Bearings.Clock c = b.clocks.get(i);
-        String rate = (c.rated > 0 ? "+" : "") + Math.round(c.rated);
-        return "rated " + rate + ", " + ageLabel(c.ageOn(b.day));
+        return "rated " + rateLabel(c) + ", " + ratedWhenLabel(c);
+    }
+
+    /** A rate with its sign, because the sign is the whole point of it. */
+    static String rateLabel(Bearings.Clock c) {
+        return (c.rated > 0 ? "+" : "") + Math.round(c.rated);
+    }
+
+    /**
+     * When a clock was last rated. A rating made before the ship sailed is
+     * not "yesterday" -- it is the one the voyage is spending.
+     */
+    String ratedWhenLabel(Bearings.Clock c) {
+        return c.ratedOn < 0 ? "in port" : ageLabel(c.ageOn(b.day));
     }
 
     static String ageLabel(int days) {
@@ -439,10 +451,10 @@ public class BearingsScreen extends UiScreen {
             gc.fillText(c.name, x, y);
             gc.setFont(F_MONO_S);
             gc.setFill(INK);
-            gc.fillText((c.rated > 0 ? "+" : "") + Math.round(c.rated), x + 34, y);
+            gc.fillText(rateLabel(c), x + 34, y);
             gc.setFont(F_SMALL);
             gc.setFill(FAINT);
-            gc.fillText(ageLabel(c.ageOn(b.day)), x + 92, y);
+            gc.fillText(ratedWhenLabel(c), x + 92, y);
             y += 24;
         }
 
