@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0A0C">
+<title>Attribution</title>
+<style>
+  :root{
+    --bg:#0A0A0C; --paper:#131317; --edge:#26262E; --gold:#D8B45A;
+    --ink:#E9E9EF; --dim:#A2A2B0; --faint:#6B6B7C;
+    --true:#7FA88A; --false:#C4553F; --sel:#1C1C24;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:16px/1.5 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:20px 16px 0}
+  header{display:flex; align-items:baseline; gap:12px; margin-bottom:18px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0}
+  .where{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.14em;
+         color:var(--faint); margin-left:auto; text-align:right}
+  p.para{color:var(--ink); margin:0 0 14px; font-size:17px}
+  .panel{background:var(--paper); border:1px solid var(--edge); border-radius:12px;
+         padding:14px 15px; margin:20px 0 0}
+  .ph{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.16em; color:var(--faint);
+      margin-bottom:14px}
+  .rule{display:flex; gap:12px; margin-bottom:11px; font-size:14px; color:var(--dim)}
+  .rule .k{flex:0 0 62px; font:13px/1.5 Consolas,Menlo,monospace; color:var(--gold)}
+  .row2{display:flex; gap:10px; align-items:baseline; margin-bottom:8px}
+  .row2:last-child{margin-bottom:0}
+  .nm2{flex:0 0 110px; font-size:16px}
+  .bt2{font:12px/1.5 Arial,Helvetica,sans-serif; color:var(--faint)}
+  .label{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.16em; color:var(--faint);
+         margin:22px 0 10px}
+  .line{background:var(--paper); border:1px solid var(--edge); border-radius:12px;
+        padding:13px 14px; margin:0 0 10px; cursor:pointer}
+  .line.sel{border-color:var(--gold); background:var(--sel)}
+  .line .top{display:flex; gap:10px; align-items:baseline}
+  .line .n{font:13px/1.5 Consolas,Menlo,monospace; color:var(--faint); flex:0 0 14px}
+  .line.sel .n{color:var(--gold)}
+  .line .t{font-size:17px; color:var(--ink)}
+  .line .by{font-style:italic; font-size:14px; color:var(--faint); margin:6px 0 0 24px}
+  .line .marks{display:flex; gap:14px; margin:9px 0 0 24px;
+               font:12px/1.5 Consolas,Menlo,monospace}
+  .t-true{color:var(--true)} .t-false{color:var(--false)} .t-faint{color:var(--faint)}
+  .line.done .t{color:var(--dim)}
+  .desk{background:var(--paper); border:1px solid var(--edge); border-radius:12px;
+        padding:14px 15px; margin:6px 0 0}
+  .desk .row{display:flex; align-items:baseline; gap:10px; font-size:15px; margin-bottom:9px}
+  .desk .row:last-child{margin-bottom:0}
+  .desk .nm{flex:0 0 96px}
+  .desk .num{font:12px/1.5 Consolas,Menlo,monospace; color:var(--dim)}
+  .desk .none{font:12px/1.5 Consolas,Menlo,monospace; color:var(--faint)}
+  .head{font-size:23px; color:var(--gold); margin:0 0 12px}
+  .head.good{color:var(--true)}
+  .verdict{color:var(--ink); font-size:17px; white-space:pre-line; margin:0 0 6px}
+  .tbl{width:100%; border-collapse:collapse; font-size:14px; margin-top:6px}
+  .tbl td{padding:5px 0; border-bottom:1px solid var(--edge); vertical-align:baseline}
+  .tbl td.beat{font:11px/1.4 Arial,Helvetica,sans-serif; color:var(--faint)}
+  .tbl td.n{font:12px/1.5 Consolas,Menlo,monospace; color:var(--dim); text-align:right;
+            padding-right:14px; white-space:nowrap}
+  .tbl td.never{font:12px/1.5 Consolas,Menlo,monospace; color:var(--false); text-align:right}
+  .tbl td.was{font:12px/1.5 Consolas,Menlo,monospace; text-align:right; padding-right:14px}
+  .calls{color:#C9C9D4; font-size:17px; margin:20px 0 0}
+  .closing{color:#B0B0BE; font-size:17px; margin:14px 0 0}
+  .standing{color:var(--gold); font-size:17px; margin:14px 0 0}
+  #bar{position:fixed; left:0; right:0; bottom:0; background:rgba(10,10,12,.94);
+       border-top:1px solid var(--edge); backdrop-filter:blur(6px);
+       padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  #bar .inner{max-width:640px; margin:0 auto; display:flex; align-items:center; gap:10px}
+  #bar .hint{font:12px/1.4 Arial,Helvetica,sans-serif; color:var(--faint)}
+  #bar .btns{margin-left:auto; display:flex; gap:8px}
+  button{font:15px/1 Georgia,serif; color:var(--ink); background:var(--paper);
+         border:1px solid var(--edge); border-radius:9px; padding:11px 14px; cursor:pointer}
+  button.go{color:var(--gold); border-color:var(--gold)}
+  button:disabled{opacity:.4; cursor:default}
+  .spacer{height:0}
+  .warn{color:var(--false); font:12px/1.6 Arial,Helvetica,sans-serif; margin:14px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap"><div id="app"></div><div class="spacer"></div></div>
+<div id="bar"><div class="inner"></div></div>
+<script>
+const C = {
+"wordmark":"Attribution",
+"whereOpen":"the wire desk",
+"whereNight":"the night's copy",
+"whereReport":"the edition",
+"calls":5,
+"rounds":6,
+"perRound":4,
+"reliabilities":[0.95,0.85,0.65,0.45,0.25,0.1],
+"stringers":[{"name":"Halloran","beat":"the city desk"},{"name":"Pryce","beat":"the courts"},{"name":"Nkemdi","beat":"the docks"},{"name":"Vasquez","beat":"the scanner"},{"name":"Auerbach","beat":"the county"},{"name":"Sandoval","beat":"the obituaries"}],
+"copy":["Two men were held after a break-in at the cold storage on Pier 4.","The county has approved repaving on Route 9 for the spring.","A fire at the mill was ruled accidental by the fire marshal.","The harbor master has resigned, effective the end of the month.","A body was recovered from the river below the dam on Tuesday.","The school board voted to keep the fourth-grade class intact.","Three arrests were made at the depot after the Saturday fight.","The water main on Ash Street will be shut off from eight until noon.","A jury took four hours to acquit the driver in the March collision.","The mill has laid off forty workers and expects more in the fall.","A dog was destroyed after a second complaint from the same street.","The council has tabled the zoning change until the next session.","A man was treated for burns after a kitchen fire on Bell Street.","The ferry will run a reduced schedule through the end of October.","A stolen truck was found abandoned on the county road near the quarry.","The library has extended its hours on Thursdays to nine o'clock.","A woman was cited for leaving the scene of a fender-bender on Main.","The old cannery has been sold to a buyer from out of state.","A gas leak closed the block around Fifth and Vine for two hours.","The coroner has ruled the death at the motel a homicide.","Two dozen head of cattle were lost when the barn came down.","The school bus route to the north end has been suspended.","A fire at the paper plant burned through the night and is out.","The city has hired a consultant to study the parking downtown."],
+"voice":{
+  "opening":["Copy comes in all night. Six stringers, four lines each, and every line is a claim about something you did not see.","You can call and check a line. You have five calls for the night, and a call tells you one thing: whether that line is true.","Everything else you file on the strength of who filed it. Run it and it is in the edition. Spike it and it is not.","The same copy comes in every night, in the same order. What changes is who filed it.","The edition is what survives. It does not say which of it you checked."],
+  "rulesHeading":"THE DESK",
+  "rules":[{"key":"1 - 4","text":"select a line"},{"key":"C","text":"call and check it. One call, and it tells you whether that line is true."},{"key":"R","text":"run it. It goes in the edition."},{"key":"S","text":"spike it. It does not."},{"key":"","text":"The round is filed when all four lines are decided. A line you have filed cannot be called."},{"key":"","text":"Five calls, twenty-four lines. You will not check most of them."}],
+  "startLine":"ENTER to take the desk.",
+  "startButton":"Take the desk",
+  "callBtn":"Call",
+  "theDesk":"THE DESK",
+  "whoYouCalled":"WHO YOU HAVE CALLED",
+  "whoFilesHere":"WHO FILES HERE",
+  "nobodyCalled":"Nobody yet.",
+  "theEdition":"THE EDITION",
+  "filed":"filed",
+  "trueOf":"true",
+  "called":"called",
+  "notCalled":"not called",
+  "run":"run",
+  "spike":"spike",
+  "noCall":"no call",
+  "wasTrue":"true",
+  "wasFalse":"false",
+  "roundFiled":"The round is filed.",
+  "noCalls":"The desk has no calls left.",
+  "alreadyCalled":"That line has already been called.",
+  "alreadyFiled":"That line is filed.",
+  "again":"Start another night",
+  "or":" or ",
+  "callsLineNever":". You never called %s.",
+  "callsLineAll":", and there is no one on the desk you did not call.",
+  "callsLineMade":["You made no calls","You made one call","You made two calls","You made three calls","You made four calls","You made five calls"],
+  "callsWhere":["0 calls left","1 call left","2 calls left","3 calls left","4 calls left","5 calls left"],
+  "roundWhere":["round 1 of 6","round 2 of 6","round 3 of 6","round 4 of 6","round 5 of 6","round 6 of 6",""]
+},
+"headline":["A bad edition.","A bad edition.","A bad edition.","A bad edition.","A bad edition.","A bad edition.","A bad edition.","A bad edition.","A bad edition.","A bad edition.","A bad edition.","A poor edition.","A poor edition.","A poor edition.","A poor edition.","An ordinary edition.","An ordinary edition.","An ordinary edition.","A good edition.","A good edition.","A good edition.","A good edition.","A clean edition.","A clean edition.","A clean edition."],
+"closing":["You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran what you could not vouch for, and the edition carries it. Nothing on the page says so. That is the whole of it.","You ran about as well as the desk does. Five calls is not enough to learn six people, and the lines you could not vouch for went out anyway, because a night does not wait for you to be sure.","You ran about as well as the desk does. Five calls is not enough to learn six people, and the lines you could not vouch for went out anyway, because a night does not wait for you to be sure.","You ran about as well as the desk does. Five calls is not enough to learn six people, and the lines you could not vouch for went out anyway, because a night does not wait for you to be sure.","You ran about as well as the desk does. Five calls is not enough to learn six people, and the lines you could not vouch for went out anyway, because a night does not wait for you to be sure.","Some of it was judgement and some of it was the shape of a byline you had learned to trust. The edition is better than chance and worse than it reads.","Some of it was judgement and some of it was the shape of a byline you had learned to trust. The edition is better than chance and worse than it reads.","Some of it was judgement and some of it was the shape of a byline you had learned to trust. The edition is better than chance and worse than it reads.","Some of it was judgement and some of it was the shape of a byline you had learned to trust. The edition is better than chance and worse than it reads.","Some of it was judgement and some of it was the shape of a byline you had learned to trust. The edition is better than chance and worse than it reads.","You spent the calls where they were worth spending. Most of what you ran was true and most of what you killed deserved it. The desk will not remember how you knew.","You spent the calls where they were worth spending. Most of what you ran was true and most of what you killed deserved it. The desk will not remember how you knew.","You spent the calls where they were worth spending. Most of what you ran was true and most of what you killed deserved it. The desk will not remember how you knew.","You spent the calls where they were worth spending. Most of what you ran was true and most of what you killed deserved it. The desk will not remember how you knew."],
+"verdictTemplate":"You ran %ran% of the twenty-four lines, and %ranTrue% of those were true.\nYou spiked %spiked%, and %spikedTrue% of those were true, and are not in the edition.\n%correct% of the twenty-four came out right.",
+"standing":"Nobody downstream can tell which lines you called. The edition reads the same either way."
+}
+;
+
+// ---------------------------------------------------------------- the night
+// The desk is dealt here rather than emitted, because a phone build that
+// always dealt the same night would not be a game. What the file carries is
+// the desk itself -- six names, six beats, six reliabilities -- and the copy.
+// Which byline gets which reliability is decided at load, exactly as the
+// desktop decides it from a seed.
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function deal() {
+  const rel = shuffle(C.reliabilities.slice());
+  const byline = [];
+  for (let s = 0; s < C.stringers.length; s++)
+    for (let k = 0; k < C.perRound; k++) byline.push(s);
+  shuffle(byline);
+  const items = [];
+  for (let i = 0; i < C.copy.length; i++) {
+    const s = byline[i];
+    items.push({
+      n: i + 1,
+      round: Math.floor(i / C.perRound),
+      text: C.copy[i],
+      s: s,
+      truth: Math.random() < rel[s] ? 1 : 0,
+      filed: 0,     // 0 unfiled, 1 run, 2 spike
+      called: 0     // 0 not called, 1 called true, 2 called false
+    });
+  }
+  return { rel: rel, items: items };
+}
+
+let NIGHT = deal();
+let callsLeft = C.calls;
+let phase = 'open';
+let sel = 0;
+let notice = '';
+
+const N = () => NIGHT.items.length;
+const round = () => {
+  for (const it of NIGHT.items) if (!it.filed) return it.round;
+  return C.rounds;
+};
+const finished = () => round() >= C.rounds;
+const roundItems = () => NIGHT.items.filter(it => it.round === round());
+const ran = () => NIGHT.items.filter(it => it.filed === 1).length;
+const spiked = () => NIGHT.items.filter(it => it.filed === 2).length;
+const correct = () => NIGHT.items.filter(it => (it.filed === 1 && it.truth) || (it.filed === 2 && !it.truth)).length;
+const calledBy = s => NIGHT.items.filter(it => it.s === s && it.called).length;
+const calledTrueBy = s => NIGHT.items.filter(it => it.s === s && it.called === 1).length;
+const filedBy = s => NIGHT.items.filter(it => it.s === s && it.filed).length;
+const trueBy = s => NIGHT.items.filter(it => it.s === s && it.truth).length;
+
+// ------------------------------------------------------------- the save file
+// The desktop writes "<seed> <callsLeft>" then the filed and called rows. The
+// phone has no seed -- the desk is dealt at load -- so it writes the whole
+// night: the reliabilities in desk order, then the two rows. One line, and a
+// night can be carried between the two builds by copying it.
+
+const KEY = 'aside.attribution.night';
+
+function serialize() {
+  const rel = NIGHT.rel.map(x => Math.round(x * 100)).join('.');
+  const by = NIGHT.items.map(it => it.s).join('.');
+  const truth = NIGHT.items.map(it => it.truth).join('.');
+  const filed = NIGHT.items.map(it => it.filed).join('.');
+  const called = NIGHT.items.map(it => it.called).join('.');
+  return rel + '|' + by + '|' + truth + '|' + callsLeft + '|' + filed + '|' + called + '\n';
+}
+
+function deserialize(text) {
+  const parts = String(text).split(/\r?\n/)[0].split('|');
+  if (parts.length < 6) return null;
+  const rel = parts[0].split('.').map(x => parseInt(x, 10) / 100);
+  const by = parts[1].split('.').map(x => parseInt(x, 10));
+  const truth = parts[2].split('.').map(x => parseInt(x, 10) ? 1 : 0);
+  const left = parseInt(parts[3], 10);
+  const filed = parts[4].split('.').map(x => parseInt(x, 10));
+  const called = parts[5].split('.').map(x => parseInt(x, 10));
+  if (rel.length !== C.stringers.length || by.length !== N()) return null;
+  const items = [];
+  for (let i = 0; i < by.length; i++) {
+    items.push({ n: i + 1, round: Math.floor(i / C.perRound), text: C.copy[i], s: by[i],
+                 truth: truth[i] || 0, filed: filed[i] || 0, called: called[i] || 0 });
+  }
+  return { rel: rel, items: items, callsLeft: left };
+}
+
+const CAN_STORE = (() => {
+  try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); return true; }
+  catch (e) { return false; }
+})();
+
+function load() {
+  if (!CAN_STORE) return null;
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { text = null; }
+  return text === null ? null : deserialize(text);
+}
+
+function save() {
+  if (!CAN_STORE) return false;
+  try { localStorage.setItem(KEY, serialize()); return true; } catch (e) { return false; }
+}
+
+// --------------------------------------------------------------- the screen
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar').querySelector('.inner');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function header() {
+  const where = phase === 'open' ? C.whereOpen
+    : phase === 'night' ? C.voice.roundWhere[round()]
+    : C.whereReport;
+  return '<header><h1>' + esc(C.wordmark) + '</h1><div class="where">' + esc(where) + '</div></header>';
+}
+
+function drawOpen() {
+  let h = header();
+  for (const p of C.voice.opening) h += '<p class="para">' + esc(p) + '</p>';
+  h += '<div class="panel"><div class="ph">' + esc(C.voice.rulesHeading) + '</div>';
+  for (const r of C.voice.rules) {
+    h += '<div class="rule"><span class="k">' + esc(r.key) + '</span>'
+       + '<span>' + esc(r.text) + '</span></div>';
+  }
+  h += '</div>';
+  // Who is on the desk. The names are not the game -- which of them is worth
+  // anything is -- but a player should know who filed tonight.
+  h += '<div class="panel"><div class="ph">' + esc(C.voice.whoFilesHere) + '</div>';
+  for (const s of C.stringers) {
+    h += '<div class="row2"><span class="nm2">' + esc(s.name) + '</span>'
+       + '<span class="bt2">' + esc(s.beat) + '</span></div>';
+  }
+  h += '</div>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="hint">' + esc(C.voice.startLine) + '</div>'
+    + '<div class="btns"><button class="go" id="go">' + esc(C.voice.startButton) + '</button></div>';
+  document.getElementById('go').onclick = () => { phase = 'night'; sel = 0; draw(); };
+}
+
+function drawNight() {
+  if (finished()) { phase = 'report'; draw(); return; }
+  const round_ = roundItems();
+  if (sel >= round_.length) sel = 0;
+  let h = header() + '<div class="label">' + esc(C.whereNight) + '</div>';
+  round_.forEach((it, i) => {
+    const s = C.stringers[it.s];
+    let marks = '';
+    if (it.called === 1) marks += '<span class="t-true">' + esc(C.voice.wasTrue) + '</span>';
+    else if (it.called === 2) marks += '<span class="t-false">' + esc(C.voice.wasFalse) + '</span>';
+    else if (it.filed) marks += '<span class="t-faint">' + esc(C.voice.noCall) + '</span>';
+    if (it.filed) marks += '<span class="' + (it.filed === 1 ? 't-true' : 't-false') + '">'
+      + esc(it.filed === 1 ? C.voice.run : C.voice.spike) + '</span>';
+    h += '<div class="line' + (i === sel ? ' sel' : '') + (it.filed ? ' done' : '')
+       + '" data-i="' + i + '"><div class="top"><span class="n">' + (i + 1) + '</span>'
+       + '<span class="t">' + esc(it.text) + '</span></div>'
+       + '<div class="by">\u2014 ' + esc(s.name) + ', ' + esc(s.beat) + '</div>'
+       + (marks ? '<div class="marks">' + marks + '</div>' : '')
+       + '</div>';
+  });
+
+  // The desk, folded under the round the way Inventory folds its catalogue.
+  h += '<div class="label">' + esc(C.voice.whoYouCalled) + '</div><div class="desk">';
+  const anyCalled = C.stringers.some((s, i) => calledBy(i) > 0);
+  if (!anyCalled) {
+    h += '<div class="row"><span class="none">' + esc(C.voice.nobodyCalled) + '</span></div>';
+  } else {
+    C.stringers.forEach((s, i) => {
+      const n = calledBy(i);
+      h += '<div class="row"><span class="nm">' + esc(s.name) + '</span>'
+        + (n === 0
+            ? '<span class="none">' + esc(C.voice.notCalled) + '</span>'
+            : '<span class="num">' + n + ' ' + esc(C.voice.called) + '</span>'
+              + '<span class="num t-true">' + calledTrueBy(i) + ' ' + esc(C.voice.wasTrue) + '</span>')
+        + '</div>';
+    });
+  }
+  h += '</div>';
+  if (notice) h += '<p class="warn">' + esc(notice) + '</p>';
+  app.innerHTML = h;
+  app.querySelectorAll('.line').forEach(el => {
+    el.onclick = () => { sel = +el.dataset.i; notice = ''; draw(); };
+  });
+
+  const it = round_[sel];
+  bar.innerHTML = '<div class="hint">' + esc(C.voice.callsWhere[callsLeft])
+    + ' &nbsp;\u00b7&nbsp; ' + esc(C.voice.run) + ' ' + ran() + ' &nbsp;\u00b7&nbsp; '
+    + esc(C.voice.spike) + ' ' + spiked() + '</div>'
+    + '<div class="btns">'
+    + '<button id="c"' + (it.called || callsLeft <= 0 ? ' disabled' : '') + '>' + esc(C.voice.callBtn) + '</button>'
+    + '<button class="go" id="r"' + (it.filed ? ' disabled' : '') + '>' + esc(C.voice.run) + '</button>'
+    + '<button id="s"' + (it.filed ? ' disabled' : '') + '>' + esc(C.voice.spike) + '</button>'
+    + '</div>';
+  document.getElementById('c').onclick = () => doCall(it);
+  document.getElementById('r').onclick = () => doFile(it, 1);
+  document.getElementById('s').onclick = () => doFile(it, 2);
+}
+
+function doCall(it) {
+  if (it.called) { notice = C.voice.alreadyCalled; draw(); return; }
+  if (callsLeft <= 0) { notice = C.voice.noCalls; draw(); return; }
+  callsLeft--;
+  it.called = it.truth ? 1 : 2;
+  notice = '';
+  save();
+  draw();
+}
+
+function doFile(it, how) {
+  if (it.filed) { notice = C.voice.alreadyFiled; draw(); return; }
+  it.filed = how;
+  notice = '';
+  save();
+  if (finished()) { phase = 'report'; draw(); return; }
+  sel = 0;
+  draw();
+}
+
+function drawReport() {
+  const c = correct();
+  let h = header()
+    + '<div class="head' + (c / N() >= 0.75 ? ' good' : '') + '">' + esc(C.headline[c]) + '</div>'
+    + '<p class="verdict">' + esc(fill(C.verdictTemplate, {
+        ran: ran(), ranTrue: NIGHT.items.filter(i => i.filed === 1 && i.truth).length,
+        spiked: spiked(), spikedTrue: NIGHT.items.filter(i => i.filed === 2 && i.truth).length,
+        correct: c })) + '</p>'
+    + '<div class="label">' + esc(C.voice.theEdition) + '</div>'
+    + '<table class="tbl">';
+  C.stringers.forEach((s, i) => {
+    const n = calledBy(i), t = trueBy(i), f = filedBy(i);
+    h += '<tr><td>' + esc(s.name) + '<div class="beat">' + esc(s.beat) + '</div></td>'
+      + '<td class="n">' + f + ' ' + esc(C.voice.filed) + '</td>'
+      + '<td class="was ' + (t * 2 >= f ? 't-true' : 't-false') + '">' + t + ' ' + esc(C.voice.trueOf) + ' ' + f + '</td>'
+      + (n > 0
+          ? '<td class="n">' + n + ' ' + esc(C.voice.called) + '</td>'
+          : '<td class="never">' + esc(C.voice.notCalled) + '</td>')
+      + '</tr>';
+  });
+  h += '</table>';
+
+  const never = C.stringers.map((s, i) => calledBy(i) === 0 ? s.name : null).filter(Boolean);
+  h += '<p class="calls">' + esc(C.voice.callsLineMade[callsLeft === C.calls ? 0 : C.calls - callsLeft])
+    + (never.length === 0
+        ? esc(C.voice.callsLineAll)
+        : esc(C.voice.callsLineNever.replace('%s', joinOr(never))))
+    + '</p>';
+  h += '<p class="closing">' + esc(C.closing[c]) + '</p>'
+    + '<p class="standing">' + esc(C.standing) + '</p>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="btns"><button class="go" id="again">' + esc(C.voice.again) + '</button></div>';
+  document.getElementById('again').onclick = () => {
+    NIGHT = deal(); callsLeft = C.calls; sel = 0; notice = ''; phase = 'night'; save(); draw();
+  };
+}
+
+function joinOr(xs) {
+  if (xs.length === 1) return xs[0];
+  return xs.slice(0, -1).join(', ') + C.voice.or + xs[xs.length - 1];
+}
+
+function fill(t, v) {
+  return t.replace(/%ranTrue%/g, v.ranTrue).replace(/%spikedTrue%/g, v.spikedTrue)
+          .replace(/%ran%/g, v.ran).replace(/%spiked%/g, v.spiked)
+          .replace(/%correct%/g, v.correct);
+}
+
+function draw() {
+  if (phase === 'open') drawOpen();
+  else if (phase === 'night') drawNight();
+  else drawReport();
+  const sp = app.parentElement.querySelector('.spacer');
+  if (sp) sp.style.height = (document.getElementById('bar').offsetHeight + 16) + 'px';
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('keydown', e => {
+  if (phase === 'night') {
+    const n = roundItems().length;
+    if (e.key === 'ArrowDown') { sel = (sel + 1) % n; draw(); }
+    else if (e.key === 'ArrowUp') { sel = (sel - 1 + n) % n; draw(); }
+    else if (e.key >= '1' && e.key <= '9') { const i = +e.key - 1; if (i < n) { sel = i; draw(); } }
+  }
+  if (e.key === 'Enter') {
+    const b = bar.querySelector('button.go') || bar.querySelector('button');
+    if (b && !b.disabled) b.click();
+  }
+});
+
+const saved = load();
+if (saved) {
+  NIGHT = { rel: saved.rel, items: saved.items };
+  callsLeft = saved.callsLeft;
+  phase = finished() ? 'report' : 'night';
+}
+draw();
+</script>
+</body>
+</html>

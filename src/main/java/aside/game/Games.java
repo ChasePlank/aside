@@ -2,6 +2,7 @@ package aside.game;
 
 import aside.games.bearings.BearingsGame;
 import aside.games.corroboration.CorroborationGame;
+import aside.games.attribution.AttributionGame;
 import aside.games.fnaf.FnafGame;
 import aside.games.fnaf2.Fnaf2Game;
 import aside.games.fruitjump.FruitJumpGame;
@@ -38,6 +39,7 @@ public final class Games {
         g.add(new InventoryGame());
         g.add(new VigilGame());
         g.add(new CorroborationGame());
+        g.add(new AttributionGame());
         return g;
     }
 

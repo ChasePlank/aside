@@ -82,6 +82,8 @@ public final class PhoneShelf {
             case "inventory" -> "Keeps the bench in this browser. Eight objects, and one sitting.";
             case "bearings" -> "Keeps the voyage in this browser. Sixteen days, and one sitting.";
             case "vigil" -> "Twelve days. One sitting.";
+            case "corroboration" -> "Keeps the night in this browser. Two observers, and one sitting.";
+            case "attribution" -> "Scored, and dealt fresh every night. Five calls, one sitting.";
             case "overtime" -> "A visual novel. What you say carries.";
             default -> "";
         };
