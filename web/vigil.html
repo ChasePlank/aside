@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>vigil</title>
+<style>
+  :root{
+    --bg:#0B0A0C; --paper:#141317; --edge:#2A2730; --gold:#D9A441;
+    --ink:#EDE7DE; --dim:#A79C8E; --faint:#6E655A;
+    --green:#7FA88A; --red:#C4553F;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:16px/1.5 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:20px 18px 96px}
+  header{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
+  .where{font:12px/1.4 Arial,Helvetica,sans-serif; color:var(--faint)}
+  .promise{font-style:italic; color:var(--faint); font-size:15px; margin:6px 0 0}
+  .dayline{font-style:italic; color:#B9AFA2; font-size:16px; margin:22px 0 0}
+  .label{font:12px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.08em; color:var(--faint);
+         margin:26px 0 8px}
+  .thing{border:1px solid transparent; border-radius:10px; padding:10px 12px; margin:0 0 6px;
+         cursor:pointer}
+  .thing.sel{background:#1E1C24; border-color:#3A3546}
+  .thing .top{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+  .thing .n{font:13px/1.6 Consolas,Menlo,monospace; color:var(--faint); min-width:12px}
+  .thing.kept .n{color:var(--gold)}
+  .thing .name{font-size:18px}
+  .thing .state{font:12px/1.6 Arial,Helvetica,sans-serif}
+  .thing .where2{font:12px/1.6 Arial,Helvetica,sans-serif; color:var(--faint)}
+  .dots{display:flex; gap:4px; margin-left:auto; padding-top:4px}
+  .dot{width:9px; height:9px; border-radius:2px; background:#26232C}
+  .line{color:#B4ABA0; font-size:14px; margin:4px 0 0 22px}
+  .thing.gone .name{color:var(--faint)}
+  .thing.gone .line{color:#7A6E64}
+  .asleft{color:var(--green)} .mine{color:var(--gold)} .lost{color:var(--red)}
+  .panel{background:var(--paper); border:1px solid var(--edge); border-radius:12px;
+         padding:14px 16px; margin-top:14px}
+  .panel h2{font:12px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.08em; color:var(--faint);
+            margin:0 0 10px; font-weight:normal}
+  .thing.sel .line{color:#CFC6BA}
+  .opt{margin:0 0 14px}
+  .opt:last-child{margin-bottom:0}
+  .opt .head{font:12px/1.4 Arial,Helvetica,sans-serif; color:var(--gold); margin-bottom:4px}
+  .opt p{margin:0; color:#B4ABA0; font-size:14px}
+  .effort{display:flex; gap:5px; align-items:center}
+  .pip{width:14px; height:14px; border-radius:3px; background:#26232C}
+  .pip.on{background:var(--gold)}
+  .count{font:13px/1.4 Consolas,Menlo,monospace; color:var(--dim); margin-left:8px}
+  .tally{font:13px/1.4 Consolas,Menlo,monospace; color:var(--dim); margin-top:14px}
+  .bar{position:fixed; left:0; right:0; bottom:0; background:#0B0A0Cee;
+       border-top:1px solid var(--edge); padding:10px 18px calc(10px + env(safe-area-inset-bottom))}
+  .bar .inner{max-width:640px; margin:0 auto; display:flex; gap:10px; align-items:center}
+  .opts{margin-top:10px; border-top:1px solid var(--edge); padding-top:10px}
+  .optbtns{display:flex; gap:8px; margin-top:12px}
+  .optbtns button{padding:13px 8px; font-size:15px}
+  .barbits{flex:0 0 auto; display:flex; align-items:center; gap:8px}
+  button{flex:1; font:16px/1 Georgia,serif; padding:14px 10px; border-radius:10px;
+         background:#1E1C24; color:var(--ink); border:1px solid var(--edge); cursor:pointer}
+  button:disabled{opacity:.35}
+  button.go{background:var(--gold); color:#171410; border-color:var(--gold)}
+  .wide{flex:1 1 100%}
+  .end{font-size:19px; line-height:1.6; margin:0 0 16px}
+  .head{font-size:22px; color:var(--gold); margin:0 0 18px}
+  .head.green{color:var(--green)}
+  .room{margin-top:18px}
+  .room .row{display:flex; gap:10px; align-items:baseline; padding:7px 0;
+             border-bottom:1px solid #1C1A20}
+  .room .row:last-child{border-bottom:0}
+  .room .rn{font-size:16px; min-width:96px}
+  .room .rs{font:12px/1.6 Arial,Helvetica,sans-serif; min-width:104px}
+  .room .rl{font-size:13px; color:#B4ABA0}
+  .rule{font-style:italic; color:var(--gold); font-size:18px; margin:34px 0 0;
+        border-top:1px solid var(--edge); padding-top:26px}
+  .hint{font:12px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin-top:22px}
+  .open p{margin:0 0 16px; font-size:17px}
+  .rules{margin:0; padding:0; list-style:none}
+  .rules li{display:flex; gap:12px; margin-bottom:12px; font-size:13px; color:var(--dim)}
+  .rules b{font:13px/1.5 Consolas,Menlo,monospace; color:var(--gold); font-weight:normal;
+           min-width:56px}
+  .sums{font:13px/1.7 Consolas,Menlo,monospace; color:var(--dim); margin:0; padding:0; list-style:none}
+  .sums .hi{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar"></div>
+<script>
+const C = {
+"promise":"I'll keep it exactly as it is.",
+"days":12,
+"full":3,
+"keepCost":1,
+"changeCost":2,
+"maxSurvivors":3,
+"totalUnits":24,
+"units":[3,3,3,3,2,2,2,2,1,1,1,1],
+"words":["none","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"],
+"dayLines":["The first day is the same as the day they left, minus them.","Rain. The path outside the door goes to mud and stays there.","You catch yourself listening for the gate. You stop yourself. It is day three.","The house makes a noise in the night. You know what it is. You get up anyway.","There is less of you today than there was yesterday, and it is not sleep that is missing.","You do the arithmetic again, as if it will come out differently this time.","A week. You say it out loud, to the room, and the room does not answer, which is correct.","You have started talking to the things. Not to them. To the things.","One unit of effort left in you a day. You knew this was coming. Knowing is different.","You stand in the doorway for a long time before you spend anything.","Tomorrow. You keep saying it. Tomorrow.","They come back today."],
+"things":[{"name":"the fire","where":"in the hearth","kept":"Burning. The same wood, the same shape in the grate, the same low noise it has always made.","changed":"Banked low under its own ash. It will still be warm when they come, and it will not be their fire.","replaced":"Lit again from scratch, in a grate you cleaned out yourself. It burns well. It is not the fire that was here.","lost":"Cold. Grey. Nothing in it but what a fire leaves behind, which is not much."},{"name":"the lamp","where":"in the window","kept":"Lit in the window, where it has always been, where it can be seen from the road.","changed":"On the table. It lights the room now instead of the road. It is not a signal any more, it is just a lamp.","replaced":"A new one, and it is brighter than the old one and it is in the window. It is not the lamp that was here.","lost":"Out of oil. The wick is dry and black and there is a smear of soot on the inside of the glass."},{"name":"the plant","where":"on the sill","kept":"Watered, upright, the same four leaves it had the morning they left.","changed":"A second one beside it, in a tin, and the new one is yours. Two plants where there was one.","replaced":"Something new in the same pot. It is green and it is growing and it is not the plant that was here.","lost":"A stick in dry soil. It went yellow, then it went thin, and then it was a stick."},{"name":"the clock","where":"on the mantel","kept":"Wound. Ticking. Saying the right time, which is the only thing it has ever been asked to do.","changed":"Stopped. You stopped it at the hour they left, and it has said that hour for days now.","replaced":"A new one, and it keeps better time than the old one ever did. The old one is in a drawer.","lost":"Run down. The hands are wherever they were when it gave up, and they have not moved since."},{"name":"the bread","where":"on the board","kept":"A fresh loaf, every day, on the board, the way it was the morning they left.","changed":"Two loaves, and flour on the board, and the whole house smells like someone has been in it.","replaced":"Bought, not baked, and put on the board. It is bread. It is not the bread that was here.","lost":"Mould. It went green at the edges, then it went soft, then it went."}],
+"open":["They left on a Tuesday. They did not say when they would be back, and you did not ask, and you said the thing you always say.","Twelve days. Not because they told you twelve. Because that is how long you can keep this up, and you know it without having to work it out.","Five things in this house need you. Keeping one costs a unit of effort, and a thing you do not keep loses a step. Three steps and it is gone, and gone is gone.","You have three units today. From the fifth day you have two. From the ninth you have one, and you have one for the rest of it. Twenty-four units altogether, and that is the whole of what you have.","Changing a thing costs two, leaves a mark on it, and cannot be undone.","Do the arithmetic now. It does not get easier later."],
+"rules":[["1 - 5","Pick a thing. Picking costs nothing and you can change your mind."],["K","Keep it. One unit. It stays exactly what it was."],["C","Change it. Two units. It becomes yours, and it cannot be changed back."],["ENTER","End the day. Effort you do not spend is effort you do not get back."],["","A thing you do not keep loses a step. At nothing it is gone, and gone is gone."],["","You can put something new where something was. What goes there is yours."]],
+"sums":["five things, twelve days","sixty units to hold all five every day","3 a day, then 2, then 1","24 units in you"],
+"arrivals":{"nothing":"Nothing is where they left it, because nothing is there. They stand in the doorway for a long time.\n\nThen they come in, because there is nothing to come in to, and it turns out that is the same thing.","kept":"They walk through it slowly. They stop at the places where something used to be, and they do not say anything about it.\n\nAt the end of it they stand in the middle of the room and look at you and say: you kept it.\n\nAnd you did. That is exactly what you did, and there is nothing in this house that says otherwise, because there is nothing in this house that says anything about you at all.","allYours":"They walk through a house that is entirely yours. They are careful about it. They touch nothing and they ask about nothing, and they are polite to you in a way they have never been polite to you before.","mixed":"They stop at the first thing that is not how they left it. They look at it for a while. They do not touch it.\n\nThen they look at you, and it is not anger. It is the look you give a house you have come back to and found lived in."},
+"closings":{"nothing":"You kept the promise and lost the house, and nobody could have done both.","madeIt":"You broke the promise and it bought you nothing, because the thing you changed was going to go anyway.","kept":"A room kept exactly as it was is a room with no one in it.","allYours":"A room that is entirely yours is not the room they left, and they will know it before they are through the door.","mixed":"You could not keep it as it was -- nobody could have. What you did instead was leave something of yourself in it, and they will see it the moment they walk in. That is the whole of what twelve days bought you, and it is not nothing."}
+}
+;
+
+// ---------------------------------------------------------------- the model
+// A port of aside.games.vigil.Vigil. The content above is generated from the
+// Java model, so the writing cannot drift; this logic is the same rules
+// written a second time in a language a phone can run.
+
+function fresh() {
+  return {
+    day: 1, effort: C.units[0], spentKeeping: 0, spentChanging: 0, finished: false,
+    things: C.things.map(t => ({ cond: C.full, changed: false, replaced: false,
+                                 gone: false, everLost: false, kept: false })),
+  };
+}
+
+const unitsFor = d => C.units[d - 1];
+const stateOf = t => t.gone ? 'lost' : (t.changed || t.replaced) ? 'changed' : 'asleft';
+const mineOf = t => t.changed || t.replaced;
+const lineOf = t => stateOf(t) === 'lost' ? C.things[cur(t)].lost : null;
+
+function count(s, f) { return s.things.filter(f).length; }
+const intact = s => count(s, t => stateOf(t) === 'asleft');
+const mine   = s => count(s, t => stateOf(t) === 'changed');
+const empty  = s => count(s, t => stateOf(t) === 'lost');
+const replaced = s => count(s, t => t.replaced);
+
+function keep(s, i) {
+  const t = s.things[i];
+  if (s.finished || !t || t.gone || s.effort < C.keepCost) return false;
+  s.effort -= C.keepCost; s.spentKeeping += C.keepCost;
+  t.cond = C.full; t.kept = true;
+  return true;
+}
+
+function change(s, i) {
+  const t = s.things[i];
+  if (s.finished || !t) return false;
+  if (!t.gone && mineOf(t)) return false;
+  if (s.effort < C.changeCost) return false;
+  s.effort -= C.changeCost; s.spentChanging += C.changeCost;
+  if (t.gone) { t.gone = false; t.replaced = true; } else { t.changed = true; }
+  t.cond = C.full; t.kept = true;
+  return true;
+}
+
+function endDay(s) {
+  if (s.finished) return;
+  s.things.forEach(t => {
+    if (t.gone || t.kept) return;
+    t.cond -= 1;
+    if (t.cond <= 0) { t.cond = 0; t.gone = true; t.everLost = true; }
+  });
+  if (s.day >= C.days) { s.finished = true; return; }
+  s.day += 1; s.effort = unitsFor(s.day);
+  s.things.forEach(t => t.kept = false);
+}
+
+// ---------------------------------------------------------------- the words
+
+const num = n => n < 20 ? C.words[n] : n === 20 ? 'twenty' : n < 30 ? 'twenty-' + C.words[n - 20] : String(n);
+const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+const plural = (n, one, many) => n === 1 ? one : many;
+
+function headline(s) {
+  const m = mine(s), i = intact(s);
+  if (m === 0 && i === 0) return 'Nothing left.';
+  if (m === 0 && s.spentChanging > 0) return 'Nothing of yours made it.';
+  if (m === 0) return 'As it was, what is left of it.';
+  if (i === 0) return 'Nothing of theirs.';
+  return 'Theirs, and yours.';
+}
+
+function verdict(s) {
+  const m = mine(s), i = intact(s), e = empty(s), through = i + m;
+  let out = 'Twelve days, ' + num(C.totalUnits) + ' units of effort in you altogether. '
+    + cap(num(s.spentKeeping)) + ' went on holding on to what was here';
+  if (s.spentChanging > 0) out += ', and ' + num(s.spentChanging) + ' went on making it something else';
+  out += '.\n\n';
+
+  if (s.spentChanging === 0) {
+    out += 'You did not spend a single unit on yourself. That was the promise, and you kept it exactly.\n\n';
+  } else if (m === 0) {
+    out += 'You spent ' + num(s.spentChanging) + ' units on yourself, and none of it is here. '
+        + 'What you changed went the way of everything else.\n\n';
+  }
+
+  out += cap(num(C.maxSurvivors)) + ' things come through twelve days in this house, whatever you do '
+      + 'with them. You brought through ' + num(through) + '.\n\n';
+
+  if (through === 0) {
+    out += 'None of them is here. Every one of the five went, and the room they walk into has '
+        + 'nothing in it that was in it before.';
+  } else if (i === 0) {
+    out += 'Not one of them is theirs. The things still standing in this room are things you put '
+        + 'there, or things you made out of what was there.';
+  } else if (m === 0) {
+    out += i === 1 ? 'It is exactly what it was. Nothing in this room is yours.'
+                   : 'All of them are exactly what they were. Nothing in this room is yours.';
+  } else {
+    out += cap(num(i)) + plural(i, ' of them is', ' of them are') + ' exactly what '
+        + plural(i, 'it was', 'they were') + ', and ' + num(m) + plural(m, ' is yours.', ' are yours.');
+  }
+  if (e > 0) out += ' ' + cap(num(e)) + plural(e, ' of the five is gone.', ' of the five are gone.');
+  return out;
+}
+
+function arrival(s) {
+  const m = mine(s), i = intact(s);
+  if (m === 0 && i === 0) return C.arrivals.nothing;
+  if (m === 0) return C.arrivals.kept;
+  if (i === 0) return C.arrivals.allYours;
+  return C.arrivals.mixed;
+}
+
+function closing(s) {
+  const m = mine(s), i = intact(s);
+  if (m === 0 && i === 0) return C.closings.nothing;
+  if (m === 0 && s.spentChanging > 0) return C.closings.madeIt;
+  if (m === 0) return C.closings.kept;
+  if (i === 0) return C.closings.allYours;
+  return C.closings.mixed;
+}
+
+// ---------------------------------------------------------------- the screen
+
+let S = fresh();
+let phase = 'open';
+let sel = 0;
+let notice = '';
+let noticeTimer = 0;
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const paras = s => s.split('\n\n').map(p => '<p class="end">' + esc(p) + '</p>').join('');
+
+function thingLine(i) {
+  const t = S.things[i];
+  if (t.gone) return C.things[i].lost;
+  if (mineOf(t)) return t.replaced ? C.things[i].replaced : C.things[i].changed;
+  return C.things[i].kept;
+}
+
+function stateWord(i) {
+  const t = S.things[i];
+  if (t.gone) return 'gone';
+  if (mineOf(t)) return t.replaced ? 'yours, and not theirs' : 'yours';
+  return 'as they left it';
+}
+
+function dots(i) {
+  const t = S.things[i];
+  let out = '<div class="dots">';
+  for (let k = 0; k < C.full; k++) {
+    out += '<div class="dot" style="' + (k < t.cond ? 'background:var(--' +
+      (t.gone ? 'red' : mineOf(t) ? 'gold' : 'green') + ')' : '') + '"></div>';
+  }
+  return out + '</div>';
+}
+
+function drawOpen() {
+  app.innerHTML = '<header><h1>vigil</h1><div class="where">twelve days</div></header>'
+    + '<p class="promise">' + esc(C.promise) + '</p>'
+    + '<div class="open" style="margin-top:22px">' + C.open.map(p => '<p>' + esc(p) + '</p>').join('') + '</div>'
+    + '<div class="panel"><h2>HOW IT GOES</h2><ul class="rules">'
+    + C.rules.map(r => '<li>' + (r[0] ? '<b>' + esc(r[0]) + '</b>' : '<b></b>') + '<span>' + esc(r[1]) + '</span></li>').join('')
+    + '</ul></div>'
+    + '<div class="panel"><h2>THE ARITHMETIC</h2><ul class="sums">'
+    + C.sums.map((s, k) => '<li class="' + (k === C.sums.length - 1 ? 'hi' : '') + '">' + esc(s) + '</li>').join('')
+    + '</ul></div>';
+  bar.innerHTML = '<div class="inner"><button class="go wide" id="begin">Begin the first day</button></div>';
+  document.getElementById('begin').onclick = () => { phase = 'day'; notice = ''; draw(); };
+}
+
+function drawDay() {
+  let h = '<header><h1>vigil</h1><div class="where">day ' + S.day + ' of ' + C.days + '</div></header>'
+    + '<p class="dayline">' + esc(C.dayLines[S.day - 1]) + '</p>'
+    + '<div class="label">THE HOUSE</div>';
+
+  for (let i = 0; i < C.things.length; i++) {
+    const t = S.things[i];
+    const st = stateOf(t);
+    h += '<div class="thing ' + (i === sel ? 'sel ' : '') + (t.gone ? 'gone ' : '') + (t.kept ? 'kept' : '')
+      + '" data-i="' + i + '">'
+      + '<div class="top"><span class="n">' + (i + 1) + '</span>'
+      + '<span class="name">' + esc(C.things[i].name) + '</span>'
+      + '<span class="state ' + (st === 'asleft' ? 'asleft' : st === 'changed' ? 'mine' : 'lost') + '">'
+      + esc(stateWord(i)) + '</span>'
+      + '<span class="where2">' + esc(C.things[i].where) + '</span>'
+      + dots(i) + '</div>'
+      + '<div class="line">' + esc(thingLine(i)) + '</div></div>';
+  }
+
+  h += '<div class="tally">theirs ' + intact(S) + '   yours ' + mine(S) + '   gone ' + empty(S) + '</div>';
+  if (noticeTimer > 0) h += '<p class="hint" style="color:var(--red)">' + esc(notice) + '</p>';
+  h += '<p class="hint">' + esc(C.promise) + '</p>';
+  app.innerHTML = h;
+
+  app.querySelectorAll('.thing').forEach(el => {
+    el.onclick = ev => {
+      if (ev.target.closest('button')) return;
+      sel = +el.dataset.i; noticeTimer = 0; draw();
+    };
+  });
+
+  // The choice lives inside the card it is about. On a phone the decision and
+  // the thing being decided about have to be on the same screen, or the player
+  // is scrolling back and forth to read two halves of one sentence.
+  const t = S.things[sel];
+  const canKeep = !t.gone && S.effort >= C.keepCost;
+  const canChange = (t.gone || !mineOf(t)) && S.effort >= C.changeCost;
+  const keepText = t.gone ? null : (mineOf(t) ? (t.replaced ? C.things[sel].replaced : C.things[sel].changed) : C.things[sel].kept);
+  const changeText = (t.gone || !mineOf(t)) ? (t.gone ? C.things[sel].replaced : C.things[sel].changed) : null;
+  const card = app.querySelector('.thing[data-i="' + sel + '"]');
+  if (card) {
+    card.insertAdjacentHTML('beforeend',
+      '<div class="opts">'
+      + '<div class="opt"><div class="head">KEEP \u00b7 1 unit</div><p>'
+      + (keepText ? esc(keepText) : 'There is nothing there.') + '</p></div>'
+      + '<div class="opt"><div class="head">CHANGE \u00b7 2 units</div><p>'
+      + (changeText ? esc(changeText) : 'That one is already yours.') + '</p></div>'
+      + '<div class="optbtns">'
+      + '<button id="k" ' + (canKeep ? '' : 'disabled') + '>Keep \u00b7 1</button>'
+      + '<button id="c" ' + (canChange ? '' : 'disabled') + '>Change \u00b7 2</button>'
+      + '</div></div>');
+  }
+
+  bar.innerHTML = '<div class="inner">'
+    + '<div class="barbits"><div class="effort">'
+    + Array.from({length: unitsFor(S.day)}, (_, k) => '<div class="pip ' + (k < S.effort ? 'on' : '') + '"></div>').join('')
+    + '</div><span class="count">' + S.effort + ' left</span></div>'
+    + '<button class="go" id="e">End the day</button></div>';
+  document.getElementById('k').onclick = () => {
+    if (keep(S, sel)) { noticeTimer = 0; } else { say('You do not have a unit left today.'); }
+    draw();
+  };
+  document.getElementById('c').onclick = () => {
+    if (change(S, sel)) { noticeTimer = 0; }
+    else if (S.things[sel].gone || !mineOf(S.things[sel])) say('A change costs two units, and you do not have two.');
+    else say('That one is already yours. It cannot be changed twice.');
+    draw();
+  };
+  document.getElementById('e').onclick = () => {
+    const left = S.effort;
+    endDay(S);
+    if (S.finished) { phase = 'report'; noticeTimer = 0; }
+    else if (left > 0) say('You ended the day with ' + left + (left === 1 ? ' unit' : ' units') + ' unspent.');
+    draw();
+  };
+}
+
+function say(text) { notice = text; noticeTimer = 1; }
+
+function drawReport() {
+  const i = intact(S);
+  app.innerHTML = '<header><h1>vigil</h1><div class="where">day ' + C.days + ' of ' + C.days + '</div></header>'
+    + '<h2 class="head' + (mine(S) === 0 ? ' green' : '') + '">' + esc(headline(S)) + '</h2>'
+    + paras(verdict(S))
+    + '<div class="label">THE HOUSE THEY WALK INTO</div><div class="room">'
+    + C.things.map((c, k) => {
+        const t = S.things[k], st = stateOf(t);
+        return '<div class="row"><span class="rn" style="color:' + (t.gone ? 'var(--faint)' : 'var(--ink)') + '">'
+          + esc(c.name) + '</span><span class="rs ' + (st === 'asleft' ? 'asleft' : st === 'changed' ? 'mine' : 'lost')
+          + '">' + esc(stateWord(k)) + '</span><span class="rl">' + esc(thingLine(k)) + '</span></div>';
+      }).join('')
+    + '</div>';
+  bar.innerHTML = '<div class="inner"><button id="r">Start again</button><button class="go" id="n">They come back</button></div>';
+  document.getElementById('r').onclick = () => { S = fresh(); sel = 0; phase = 'day'; noticeTimer = 0; draw(); };
+  document.getElementById('n').onclick = () => { phase = 'arrival'; noticeTimer = 0; draw(); };
+}
+
+function drawArrival() {
+  app.innerHTML = '<header><h1>vigil</h1><div class="where">the door</div></header>'
+    + paras(arrival(S))
+    + '<p class="rule">' + esc(closing(S)) + '</p>'
+    + '<div class="tally">theirs ' + intact(S) + '   yours ' + mine(S) + '   gone ' + empty(S) + '</div>';
+  bar.innerHTML = '<div class="inner"><button id="r">Start again</button><button class="go" id="n">Done</button></div>';
+  document.getElementById('r').onclick = () => { S = fresh(); sel = 0; phase = 'day'; noticeTimer = 0; draw(); };
+  document.getElementById('n').onclick = () => { S = fresh(); sel = 0; phase = 'open'; noticeTimer = 0; draw(); };
+}
+
+function draw() {
+  if (phase === 'open') drawOpen();
+  else if (phase === 'day') drawDay();
+  else if (phase === 'report') drawReport();
+  else drawArrival();
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('keydown', e => {
+  if (phase !== 'day') return;
+  const k = e.key;
+  if (k >= '1' && k <= '5') { sel = Math.min(+k - 1, C.things.length - 1); draw(); }
+  else if (k === 'k' || k === 'K') document.getElementById('k').click();
+  else if (k === 'c' || k === 'C') document.getElementById('c').click();
+  else if (k === 'Enter') document.getElementById('e').click();
+});
+
+draw();
+</script>
+</body>
+</html>

@@ -427,50 +427,108 @@ public class Vigil {
         return b.toString();
     }
 
+    // The four arrivals and the five closings, named. The screen picks one;
+    // the phone build carries all of them and picks the same one. Keeping
+    // them as constants rather than as branches is what lets the two builds
+    // share the writing instead of each having its own copy of it.
+
+    public static final String ARRIVAL_NOTHING =
+            "Nothing is where they left it, because nothing is there. They stand in the doorway "
+            + "for a long time.\n\nThen they come in, because there is nothing to come in to, and "
+            + "it turns out that is the same thing.";
+
+    public static final String ARRIVAL_KEPT =
+            "They walk through it slowly. They stop at the places where something used to be, and "
+            + "they do not say anything about it.\n\nAt the end of it they stand in the middle of "
+            + "the room and look at you and say: you kept it.\n\nAnd you did. That is exactly what "
+            + "you did, and there is nothing in this house that says otherwise, because there is "
+            + "nothing in this house that says anything about you at all.";
+
+    public static final String ARRIVAL_ALL_YOURS =
+            "They walk through a house that is entirely yours. They are careful about it. They "
+            + "touch nothing and they ask about nothing, and they are polite to you in a way they "
+            + "have never been polite to you before.";
+
+    public static final String ARRIVAL_MIXED =
+            "They stop at the first thing that is not how they left it. They look at it for a "
+            + "while. They do not touch it.\n\nThen they look at you, and it is not anger. It is "
+            + "the look you give a house you have come back to and found lived in.";
+
+    public static final String CLOSING_NOTHING =
+            "You kept the promise and lost the house, and nobody could have done both.";
+
+    public static final String CLOSING_MADE_IT =
+            "You broke the promise and it bought you nothing, because the thing you changed was "
+            + "going to go anyway.";
+
+    public static final String CLOSING_KEPT =
+            "A room kept exactly as it was is a room with no one in it.";
+
+    public static final String CLOSING_ALL_YOURS =
+            "A room that is entirely yours is not the room they left, and they will know it before "
+            + "they are through the door.";
+
+    public static final String CLOSING_MIXED =
+            "You could not keep it as it was -- nobody could have. What you did instead was leave "
+            + "something of yourself in it, and they will see it the moment they walk in. That is "
+            + "the whole of what twelve days bought you, and it is not nothing.";
+
     public String arrival() {
-        int m = mine(), i = intact(), e = empty();
-        if (m == 0 && i == 0) {
-            return "Nothing is where they left it, because nothing is there. They stand in the "
-                 + "doorway for a long time.\n\nThen they come in, because there is nothing to come "
-                 + "in to, and it turns out that is the same thing.";
-        }
-        if (m == 0) {
-            return "They walk through it slowly. They stop at the places where something used to "
-                 + "be, and they do not say anything about it.\n\nAt the end of it they stand in "
-                 + "the middle of the room and look at you and say: you kept it.\n\nAnd you did. "
-                 + "That is exactly what you did, and there is nothing in this house that says "
-                 + "otherwise, because there is nothing in this house that says anything about you "
-                 + "at all.";
-        }
-        if (i == 0) {
-            return "They walk through a house that is entirely yours. They are careful about it. "
-                 + "They touch nothing and they ask about nothing, and they are polite to you in a "
-                 + "way they have never been polite to you before.";
-        }
-        return "They stop at the first thing that is not how they left it. They look at it for a "
-             + "while. They do not touch it.\n\nThen they look at you, and it is not anger. It is "
-             + "the look you give a house you have come back to and found lived in.";
+        int m = mine(), i = intact();
+        if (m == 0 && i == 0) return ARRIVAL_NOTHING;
+        if (m == 0) return ARRIVAL_KEPT;
+        if (i == 0) return ARRIVAL_ALL_YOURS;
+        return ARRIVAL_MIXED;
     }
 
     public String closing() {
         int m = mine(), i = intact();
-        if (m == 0 && i == 0) {
-            return "You kept the promise and lost the house, and nobody could have done both.";
-        }
-        if (m == 0 && spentChanging > 0) {
-            return "You broke the promise and it bought you nothing, because the thing you changed "
-                 + "was going to go anyway.";
-        }
-        if (m == 0) {
-            return "A room kept exactly as it was is a room with no one in it.";
-        }
-        if (i == 0) {
-            return "A room that is entirely yours is not the room they left, and they will know it "
-                 + "before they are through the door.";
-        }
-        return "You could not keep it as it was -- nobody could have. What you did instead was "
-             + "leave something of yourself in it, and they will see it the moment they walk in. "
-             + "That is the whole of what twelve days bought you, and it is not nothing.";
+        if (m == 0 && i == 0) return CLOSING_NOTHING;
+        if (m == 0 && spentChanging > 0) return CLOSING_MADE_IT;
+        if (m == 0) return CLOSING_KEPT;
+        if (i == 0) return CLOSING_ALL_YOURS;
+        return CLOSING_MIXED;
+    }
+
+    // ------------------------------------------------------- the open screen
+
+    /** The premise, in the order it is read. Shared by the screen and the web build. */
+    public static String[] openParagraphs() {
+        return new String[]{
+                "They left on a Tuesday. They did not say when they would be back, and you did not "
+                        + "ask, and you said the thing you always say.",
+                "Twelve days. Not because they told you twelve. Because that is how long you can "
+                        + "keep this up, and you know it without having to work it out.",
+                "Five things in this house need you. Keeping one costs a unit of effort, and a thing "
+                        + "you do not keep loses a step. Three steps and it is gone, and gone is gone.",
+                "You have three units today. From the fifth day you have two. From the ninth you "
+                        + "have one, and you have one for the rest of it. Twenty-four units "
+                        + "altogether, and that is the whole of what you have.",
+                "Changing a thing costs two, leaves a mark on it, and cannot be undone.",
+                "Do the arithmetic now. It does not get easier later.",
+        };
+    }
+
+    /** Key, then what it does. An empty key continues the line above. */
+    public static String[][] rules() {
+        return new String[][]{
+                {"1 - 5", "Pick a thing. Picking costs nothing and you can change your mind."},
+                {"K", "Keep it. One unit. It stays exactly what it was."},
+                {"C", "Change it. Two units. It becomes yours, and it cannot be changed back."},
+                {"ENTER", "End the day. Effort you do not spend is effort you do not get back."},
+                {"", "A thing you do not keep loses a step. At nothing it is gone, and gone is gone."},
+                {"", "You can put something new where something was. What goes there is yours."},
+        };
+    }
+
+    /** The arithmetic panel. The last line is the one that matters. */
+    public static String[] sums() {
+        return new String[]{
+                "five things, twelve days",
+                "sixty units to hold all five every day",
+                "3 a day, then 2, then 1",
+                totalUnits() + " units in you",
+        };
     }
 
     // ------------------------------------------------------------- storage

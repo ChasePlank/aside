@@ -58,6 +58,7 @@ public final class SelfTest {
         storage();
         determinism();
         registry();
+        thePhoneBuild();
         System.out.println((checks - failed) + "/" + checks + " checks passed"
                 + (failed == 0 ? "" : "  --  " + failed + " FAILED"));
         if (failed > 0) System.exit(1);
@@ -563,6 +564,66 @@ public final class SelfTest {
         ok(!b.keptToday[0], "keeping a thing in one vigil does not keep it in another");
         a.endDay();
         eq(b.day, 1, "and a day in one is not a day in another");
+    }
+
+    // ------------------------------------------------------- the phone build
+
+    /**
+     * The single-file build is generated, not written, and a generated file
+     * that has gone stale is worse than no file: it is a second copy of the
+     * game quietly disagreeing with the first. So the test regenerates it and
+     * compares. If this fails, run aside.games.vigil.WebVigil from the
+     * repository root.
+     */
+    static void thePhoneBuild() throws Exception {
+        Path out = Path.of("web", "vigil.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no web/vigil.html from here -- run from the repository root)");
+            return;
+        }
+        String generated;
+        try {
+            generated = WebVigil.html();
+        } catch (Exception e) {
+            System.out.println("       (no template from here: " + e.getMessage() + ")");
+            return;
+        }
+        String checkedIn = Files.readString(out);
+        ok(generated.equals(checkedIn),
+                "web/vigil.html is current -- regenerate it with aside.games.vigil.WebVigil");
+
+        // And it has to actually carry the writing, not just be the right size.
+        for (Vigil.Thing t : Vigil.defaultThings()) {
+            ok(generated.contains(t.keptText), "the phone build carries " + t.name + " as they left it");
+            ok(generated.contains(t.changedText), "the phone build carries " + t.name + " changed");
+            ok(generated.contains(t.replacedText), "the phone build carries " + t.name + " replaced");
+            ok(generated.contains(t.lostText), "the phone build carries " + t.name + " gone");
+        }
+        for (int d = 1; d <= Vigil.DAYS; d++) {
+            ok(generated.contains(Vigil.dayLine(d)), "the phone build carries day " + d);
+        }
+        ok(generated.contains(Vigil.PROMISE), "the phone build carries the promise");
+        // Paragraph breaks are escaped in the JSON, so the paragraphs are what
+        // to look for, not the joined string.
+        carries(generated, Vigil.ARRIVAL_NOTHING, "the phone build carries the arrival with nothing left");
+        carries(generated, Vigil.ARRIVAL_KEPT, "the phone build carries the arrival with the promise kept");
+        carries(generated, Vigil.ARRIVAL_ALL_YOURS, "the phone build carries the arrival with nothing of theirs");
+        carries(generated, Vigil.ARRIVAL_MIXED, "the phone build carries the mixed arrival");
+        carries(generated, Vigil.CLOSING_NOTHING, "the phone build carries the closing with nothing left");
+        carries(generated, Vigil.CLOSING_MADE_IT, "the phone build carries the closing that bought nothing");
+        carries(generated, Vigil.CLOSING_KEPT, "the phone build carries the closing about the empty room");
+        carries(generated, Vigil.CLOSING_ALL_YOURS, "the phone build carries the closing about a room that is yours");
+        carries(generated, Vigil.CLOSING_MIXED, "the phone build carries the mixed closing");
+        ok(generated.contains("\u003c") || !generated.contains("<script>\"<"),
+                "nothing in the prose can end the script block early");
+        System.out.println("       phone build: " + (generated.length() / 1024) + " KB, current");
+    }
+
+    /** Every paragraph of a multi-paragraph string has to be in the build. */
+    static void carries(String haystack, String text, String what) {
+        for (String para : text.split("\n\n")) {
+            ok(haystack.contains(para), what);
+        }
     }
 
     // ------------------------------------------------------------ registry

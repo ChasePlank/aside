@@ -233,19 +233,7 @@ public class VigilScreen extends UiScreen {
 
     void drawOpen() {
         double y = 138;
-        String[] paras = {
-                "They left on a Tuesday. They did not say when they would be back, and you did not "
-                        + "ask, and you said the thing you always say.",
-                "Twelve days. Not because they told you twelve. Because that is how long you can "
-                        + "keep this up, and you know it without having to work it out.",
-                "Five things in this house need you. Keeping one costs a unit of effort, and a thing "
-                        + "you do not keep loses a step. Three steps and it is gone, and gone is gone.",
-                "You have three units today. From the fifth day you have two. From the ninth you "
-                        + "have one, and you have one for the rest of it. Twenty-four units "
-                        + "altogether, and that is the whole of what you have.",
-                "Changing a thing costs two, leaves a mark on it, and cannot be undone.",
-                "Do the arithmetic now. It does not get easier later.",
-        };
+        String[] paras = Vigil.openParagraphs();
         for (String p : paras) {
             for (String line : wrap(p, F_SCENE, LEFT_W)) {
                 gc.setFont(F_SCENE);
@@ -275,14 +263,7 @@ public class VigilScreen extends UiScreen {
         gc.fillText("HOW IT GOES", x, y);
         y += 30;
 
-        String[][] rules = {
-                {"1 - 5", "Pick a thing. Picking costs nothing and you can change your mind."},
-                {"K", "Keep it. One unit. It stays exactly what it was."},
-                {"C", "Change it. Two units. It becomes yours, and it cannot be changed back."},
-                {"ENTER", "End the day. Effort you do not spend is effort you do not get back."},
-                {"", "A thing you do not keep loses a step. At nothing it is gone, and gone is gone."},
-                {"", "You can put something new where something was. What goes there is yours."},
-        };
+        String[][] rules = Vigil.rules();
         for (String[] r : rules) {
             if (!r[0].isEmpty()) {
                 gc.setFont(F_MONO_S);
@@ -308,12 +289,7 @@ public class VigilScreen extends UiScreen {
         gc.setFill(FAINT);
         gc.fillText("THE ARITHMETIC", x, y);
         y += 26;
-        String[] sums = {
-                "five things, twelve days",
-                "sixty units to hold all five every day",
-                "3 a day, then 2, then 1",
-                Vigil.totalUnits() + " units in you",
-        };
+        String[] sums = Vigil.sums();
         for (int i = 0; i < sums.length; i++) {
             gc.setFont(F_MONO_S);
             gc.setFill(i == 3 ? GOLD : DIM);
