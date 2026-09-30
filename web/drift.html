@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drift</title>
+<style>
+  :root {
+    --bg: #0A0A12;
+    --ink: #E8E8F0;
+    --dim: #9A9AAE;
+    --faint: #6E6E86;
+    --gold: #F2C14E;
+    --bad: #E94560;
+    --good: #6FCF97;
+    --paper: #1E1E2E;
+    --edge: #2A2A3A;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 0px) 0;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 96px; }
+  h1 { font-family: Georgia, serif; font-size: 34px; color: var(--gold); margin: 18px 0 2px; font-weight: 400; }
+  .sub { color: var(--faint); font-size: 12px; margin-bottom: 18px; }
+  p { margin: 0 0 14px; }
+  .scene { font-family: Georgia, serif; font-size: 17px; color: var(--ink); }
+  .card { background: var(--paper); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; margin: 0 0 16px; }
+  .card h2 { font-size: 12px; letter-spacing: .08em; color: var(--faint); margin: 0 0 12px; font-weight: 600; }
+  .rule { margin-bottom: 14px; }
+  .rule .k { color: var(--gold); font-size: 14px; }
+  .rule .t { color: var(--dim); font-size: 13px; }
+  button {
+    font: inherit; font-size: 15px; border: 0; border-radius: 10px; padding: 13px 18px;
+    background: var(--gold); color: #14141C; font-weight: 600; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--dim); border: 1px solid var(--edge); font-weight: 400; }
+  .heads { display: flex; gap: 8px; padding: 0 2px 8px; font-size: 11px; letter-spacing: .07em; color: var(--faint); }
+  .heads .h { flex: 1; }
+  .row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 10px 10px 8px; border-radius: 10px; border-bottom: 1px solid var(--edge); }
+  .row.night { border-top: 1px solid var(--edge); }
+  .row.marked { background: var(--paper); }
+  .row .num { width: 20px; flex: 0 0 20px; color: var(--faint); font-size: 12px; padding-top: 2px; }
+  .row.marked .num { color: var(--gold); }
+  .row .txt { flex: 1; min-width: 0; }
+  .row .then { color: var(--faint); font-size: 13px; }
+  .row .now { color: var(--ink); font-size: 14px; margin-top: 3px; }
+  .row .tick { width: 18px; flex: 0 0 18px; color: var(--gold); text-align: right; padding-top: 2px; }
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; background: rgba(10,10,18,.96);
+    border-top: 1px solid var(--edge); padding: 10px 16px calc(env(safe-area-inset-bottom) + 10px);
+  }
+  .bar .in { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .bar .n { color: var(--dim); font-size: 13px; flex: 1; }
+  .big { font-family: Georgia, serif; font-size: 26px; color: var(--gold); margin: 4px 0 14px; }
+  .big.win { color: var(--good); }
+  .stat { font-size: 14px; color: var(--dim); margin-bottom: 6px; }
+  .stat.bad { color: var(--bad); }
+  .stat.good { color: var(--good); }
+  .pair { padding: 8px 0; border-bottom: 1px solid var(--edge); }
+  .pair .n { color: var(--faint); font-size: 12px; }
+  .pair .t { color: var(--dim); font-size: 13px; }
+  .pair .w { color: var(--bad); font-size: 13px; }
+  .pair.waste .w { color: var(--dim); }
+  .closing { font-family: Georgia, serif; font-size: 16px; color: var(--ink); margin: 18px 0; }
+  .note { color: var(--faint); font-size: 12px; margin-top: 8px; }
+  .warn { color: var(--bad); font-size: 13px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const C = {
+"wordmark":"Drift",
+"whereThen":"the copy you left",
+"whereNow":"the copy that is here",
+"whereReport":"the report",
+"lines":16,
+"nights":4,
+"perNight":4,
+"changed":5,
+"reworded":4,
+"corpus":[{"night":1,"base":"Gauge read 3.1 at the 04:20 watch; the float was steady all through it.","same":["The 04:20 watch put the gauge at 3.1, float steady throughout.","Gauge 3.1 at the 04:20 watch. Float steady."],"changed":["Gauge read 3.7 at the 04:20 watch; the float was steady all through it.","The 04:20 watch put the gauge at 3.1, float unsteady throughout."]},{"night":1,"base":"Wind backed to the south-west by six and held there until the change.","same":["By six the wind had backed south-west, and held until the change.","Wind SW by six; held until the change."],"changed":["Wind backed to the south-east by six and held there until the change.","Wind backed to the south-west by nine and held there until the change."]},{"night":1,"base":"The lamp on the outer mark was out; the depot was told at 09:00.","same":["Outer mark lamp out. Depot told at nine.","The outer mark's lamp was out, and the depot heard about it at 09:00."],"changed":["The lamp on the inner mark was out; the depot was told at 09:00.","Outer mark lamp out; the depot was told at 11:00."]},{"night":1,"base":"No traffic after the 19:10; the board went quiet at eight.","same":["Nothing moved after the 19:10; the board was quiet from eight.","Board quiet from eight. Last traffic the 19:10."],"changed":["No traffic after the 21:10; the board went quiet at eight.","No traffic after the 19:10; the board went quiet at nine."]},{"night":2,"base":"The pump in the north culvert ran for eleven minutes and stopped clean.","same":["North culvert pump ran eleven minutes, stopped clean.","The north culvert's pump ran for eleven minutes and stopped without complaint."],"changed":["The pump in the north culvert ran for seventeen minutes and stopped clean.","The pump in the south culvert ran for eleven minutes and stopped clean."]},{"night":2,"base":"Vessel 4 passed the outer mark at 11:40 and did not answer the lamp.","same":["Vessel 4 cleared the outer mark at 11:40; no answer to the lamp.","At 11:40 Vessel 4 passed the outer mark without answering the lamp."],"changed":["Vessel 9 passed the outer mark at 11:40 and did not answer the lamp.","Vessel 4 passed the outer mark at 14:10 and did not answer the lamp."]},{"night":2,"base":"Barometer fell four points across the afternoon and kept falling.","same":["The barometer lost four points in the afternoon and went on falling.","Barometer down four points over the afternoon; still falling."],"changed":["Barometer fell nine points across the afternoon and kept falling.","Barometer rose four points across the afternoon and kept rising."]},{"night":2,"base":"The spare float is in the second drawer, behind the log books.","same":["Spare float: second drawer, behind the log books.","The spare float sits behind the log books in the second drawer."],"changed":["The spare float is in the third drawer, behind the log books.","The spare float is in the second drawer, in front of the log books."]},{"night":3,"base":"Gauge read 4.2 at the 03:50 watch, the highest this month.","same":["The 03:50 watch gave 4.2, the month's highest.","Gauge 4.2 at 03:50, the highest this month."],"changed":["Gauge read 4.2 at the 05:30 watch, the highest this month.","Gauge read 4.8 at the 03:50 watch, the highest this month."]},{"night":3,"base":"The tide staff on the east groyne is two marks out and needs replacing.","same":["East groyne tide staff: two marks out, needs replacing.","The east groyne's tide staff is out by two marks and wants replacing."],"changed":["The tide staff on the west groyne is two marks out and needs replacing.","The tide staff on the east groyne is four marks out and needs replacing."]},{"night":3,"base":"A trawler worked the bay all night and showed no lights at all.","same":["Trawler in the bay all night, no lights shown.","All night a trawler worked the bay and showed nothing."],"changed":["A coaster worked the bay all night and showed no lights at all.","A trawler worked the bay all night and showed running lights."]},{"night":3,"base":"The telephone line to the depot was down from 22:00 until dawn.","same":["Depot line down 22:00 to dawn.","From 22:00 the depot line was down, and it stayed down until dawn."],"changed":["The telephone line to the depot was down from 20:00 until dawn.","The telephone line to the depot was down from 22:00 until noon."]},{"night":4,"base":"The relief keeper is due on the 14th and will bring the new seals.","same":["Relief keeper due the 14th, bringing the new seals.","On the 14th the relief keeper comes, with the new seals."],"changed":["The relief keeper is due on the 4th and will bring the new seals.","The relief keeper is due on the 14th and will bring the new float."]},{"night":4,"base":"Two of the six batteries in the lamp room read low on the test.","same":["Lamp room batteries: two of six low on test.","The lamp room test left two of the six batteries reading low."],"changed":["Four of the six batteries in the lamp room read low on the test.","Two of the six batteries in the lamp room read high on the test."]},{"night":4,"base":"The north culvert was clear at the 16:00 check and running free.","same":["North culvert clear at the 16:00 check, running free.","At the 16:00 check the north culvert was clear and running free."],"changed":["The north culvert was clear at the 18:00 check and running free.","The south culvert was clear at the 16:00 check and running free."]},{"night":4,"base":"Nothing else to report; the log is signed and the lamp is lit.","same":["Nothing further. Log signed, lamp lit.","The lamp is lit, the log is signed, and there is nothing else to report."],"changed":["Nothing else to report; the log is signed and the lamp is out.","Nothing else to report; the log is unsigned and the lamp is lit."]}],
+"voice":{
+  "opening":["You kept the log. Then you were away.","Two copies of it are in front of you: the one you left in the drawer, and the one that is here now. They are the same log.","They are not the same."],
+  "rulesHeading":"WHAT YOU ARE LOOKING AT",
+  "rules":[{"key":"Five lines differ in what they say.","text":"A number, a name, a time, a direction. Something happened to the record."},{"key":"Four differ only in how they say it.","text":"The same fact, written another way. Nothing happened to the record."},{"key":"Mark the five.","text":"Every line you mark that had not changed costs you one that had."}],
+  "thenHead":"THE COPY YOU LEFT",
+  "nowHead":"THE COPY THAT IS HERE",
+  "reportRow":"File the report",
+  "startButton":"Compare them",
+  "again":"Read another copy",
+  "notHere":"The report is filed from the last row.",
+  "reportHead":"THE REPORT",
+  "missedHead":"WHAT YOU MISSED",
+  "falseHead":"WHAT YOU MARKED THAT HAD NOT CHANGED",
+  "nothingMissed":"Nothing. You found all five.",
+  "nothingFalse":"Nothing. Every mark was a change.",
+  "found":["You found none of five.","You found one of five.","You found two of five.","You found three of five.","You found four of five.","You found five of five."],
+  "marked":["You marked nothing.","You marked one line.","You marked two lines.","You marked three lines.","You marked four lines.","You marked five lines.","You marked six lines.","You marked seven lines.","You marked eight lines.","You marked nine lines.","You marked ten lines.","You marked eleven lines.","You marked twelve lines.","You marked thirteen lines.","You marked fourteen lines.","You marked fifteen lines.","You marked sixteen lines."],
+  "false":["No mark was wasted.","One of them had not changed.","Two of them had not changed.","Three of them had not changed.","Four of them had not changed.","Five of them had not changed.","Six of them had not changed.","Seven of them had not changed.","Eight of them had not changed.","Nine of them had not changed.","Ten of them had not changed.","Eleven of them had not changed.","Twelve of them had not changed.","Thirteen of them had not changed.","Fourteen of them had not changed.","Fifteen of them had not changed.","Sixteen of them had not changed."],
+  "missed":["Nothing. You found all five.","One change went past you.","Two changes went past you.","Three changes went past you.","Four changes went past you.","Five changes went past you."],
+  "worth":["The report is worth nothing.","The report is worth one.","The report is worth two.","The report is worth three.","The report is worth four.","The report is worth all five."],
+  "closing":["A copy you do not compare is a copy you are guessing about. You had two and you read one.","One. You found the one that shouted and walked past the ones that did not.","Two. Half of what moved, moved in the numbers. Numbers do not look wrong. They look like numbers.","Three. The record did not change much. It did not have to. It only had to change where nobody was looking.","Four of five. The one that got past you is in the numbers, or in a line you read twice and decided to believe.","You read the same log twice and it agreed with itself except where it did not. That is the whole job."]
+}
+}
+;
+
+//__MODEL_BEGIN__
+// The deal, ported. Counter-based, not a stream: every number is a pure
+// function of (seed, salt), so the phone and the desktop can compute the same
+// copy without either carrying an RNG position. The arithmetic is BigInt
+// because a double loses the low bits of a 64-bit Java long and the two builds
+// would diverge on the first draw.
+const MASK = (1n << 64n) - 1n;
+function mix(seed, salt) {
+  let z = (BigInt(seed) + 0x9E3779B97F4A7C15n * BigInt(salt + 1)) & MASK;
+  z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & MASK;
+  z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & MASK;
+  return (z ^ (z >> 31n)) & MASK;
+}
+function pick(seed, salt, n) {
+  if (n <= 1) return 0;
+  return Number(mix(seed, salt) % BigInt(n));
+}
+function deal(seed) {
+  const order = [];
+  for (let i = 0; i < C.lines; i++) order.push(i);
+  order.sort((a, b) => {
+    const ra = mix(seed, 1000 + a), rb = mix(seed, 1000 + b);
+    if (ra < rb) return -1;
+    if (ra > rb) return 1;
+    return a - b;
+  });
+  const kind = new Array(C.lines).fill('SAME');
+  for (let i = 0; i < C.changed; i++) kind[order[i]] = 'CHANGED';
+  for (let i = C.changed; i < C.changed + C.reworded; i++) kind[order[i]] = 'REWORDED';
+  const rows = [];
+  for (let i = 0; i < C.lines; i++) {
+    const ln = C.corpus[i];
+    let now = ln.base;
+    if (kind[i] === 'CHANGED') now = ln.changed[pick(seed, 200 + i, ln.changed.length)];
+    else if (kind[i] === 'REWORDED') now = ln.same[pick(seed, 300 + i, ln.same.length)];
+    rows.push({ index: i, night: ln.night, then: ln.base, now: now, kind: kind[i] });
+  }
+  return rows;
+}
+//__MODEL_END__
+
+const KEY = 'aside.drift.copy';
+let state = { seed: 0, marks: [], reported: false, rows: [] };
+let screen = 'open';
+let canStore = true;
+try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); }
+catch (e) { canStore = false; }
+
+function newSeed() { return Math.floor(Date.now() % 2147483647); }
+
+function boot(seed) {
+  state.seed = seed;
+  state.rows = deal(seed);
+  state.marks = new Array(C.lines).fill(false);
+  state.reported = false;
+}
+
+function load() {
+  if (!canStore) return false;
+  let t = null;
+  try { t = localStorage.getItem(KEY); } catch (e) { return false; }
+  if (!t) return false;
+  const parts = t.split('\n');
+  const seed = Number(parts[0]);
+  if (!isFinite(seed)) return false;
+  boot(seed);
+  const m = parts[1] || '';
+  for (let i = 0; i < C.lines && i < m.length; i++) state.marks[i] = m[i] === '1';
+  state.reported = parts[2] === '1';
+  return true;
+}
+
+function save() {
+  if (!canStore) return false;
+  try {
+    localStorage.setItem(KEY, state.seed + '\n'
+      + state.marks.map(m => (m ? '1' : '0')).join('') + '\n' + (state.reported ? '1' : '0'));
+    return true;
+  } catch (e) { return false; }
+}
+
+function hits() { return state.rows.filter(r => r.kind === 'CHANGED' && state.marks[r.index]).length; }
+function falseAlarms() { return state.rows.filter(r => r.kind !== 'CHANGED' && state.marks[r.index]).length; }
+function markedCount() { return state.marks.filter(Boolean).length; }
+function score() { return Math.max(0, hits() - falseAlarms()); }
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+const app = document.getElementById('app');
+
+function render() {
+  if (screen === 'open') renderOpen();
+  else if (screen === 'read') renderRead();
+  else renderReport();
+}
+
+function renderOpen() {
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.whereThen) + '</div>';
+  for (const p of C.voice.opening) h += '<p class="scene">' + esc(p) + '</p>';
+  h += '<div class="card"><h2>' + esc(C.voice.rulesHeading) + '</h2>';
+  for (const r of C.voice.rules) {
+    h += '<div class="rule"><div class="k">' + esc(r.key) + '</div><div class="t">' + esc(r.text) + '</div></div>';
+  }
+  h += '</div><button id="go">' + esc(C.voice.startButton) + '</button>';
+  if (!canStore) h += '<div class="note">This browser will not keep the copy. The report will be lost when you close the tab.</div>';
+  app.innerHTML = h;
+  document.getElementById('go').onclick = () => { screen = 'read'; render(); };
+}
+
+function renderRead() {
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.whereThen) + '</div>';
+  h += '<div class="heads"><div class="h">' + esc(C.voice.thenHead) + '</div>'
+     + '<div class="h">' + esc(C.voice.nowHead) + '</div></div>';
+  for (const r of state.rows) {
+    const first = r.index > 0 && C.corpus[r.index - 1].night !== r.night;
+    h += '<div class="row' + (state.marks[r.index] ? ' marked' : '') + (first ? ' night' : '')
+       + '" data-i="' + r.index + '">'
+       + '<div class="num">' + (r.index + 1) + '</div>'
+       + '<div class="txt"><div class="then">' + esc(r.then) + '</div>'
+       + '<div class="now">' + esc(r.now) + '</div></div>'
+       + '<div class="tick">' + (state.marks[r.index] ? '\u2713' : '') + '</div></div>';
+  }
+  h += '<div class="bar"><div class="in"><div class="n">' + markedCount() + ' marked</div>'
+     + '<button id="file">' + esc(C.voice.reportRow) + '</button></div></div>';
+  app.innerHTML = h;
+  for (const el of document.querySelectorAll('.row')) {
+    el.onclick = () => {
+      const i = Number(el.dataset.i);
+      state.marks[i] = !state.marks[i];
+      save();
+      render();
+    };
+  }
+  document.getElementById('file').onclick = () => {
+    state.reported = true;
+    save();
+    screen = 'report';
+    render();
+  };
+}
+
+function renderReport() {
+  const hit = hits(), fa = falseAlarms(), missed = C.changed - hit;
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.whereReport) + '</div>';
+  h += '<div class="big' + (hit === C.changed ? ' win' : '') + '">' + esc(C.voice.found[hit]) + '</div>';
+  h += '<div class="stat">' + esc(C.voice.marked[markedCount()]) + '</div>';
+  h += '<div class="stat ' + (fa === 0 ? 'good' : 'bad') + '">' + esc(C.voice.false[fa]) + '</div>';
+  h += '<div class="stat ' + (missed === 0 ? 'good' : 'bad') + '">' + esc(C.voice.missed[missed]) + '</div>';
+  h += '<div class="stat">' + esc(C.voice.worth[score()]) + '</div>';
+  h += '<div class="closing">' + esc(C.voice.closing[score()]) + '</div>';
+
+  h += '<div class="card"><h2>' + esc(C.voice.missedHead) + '</h2>';
+  if (missed === 0) h += '<div class="stat good">' + esc(C.voice.nothingMissed) + '</div>';
+  for (const r of state.rows) {
+    if (r.kind !== 'CHANGED' || state.marks[r.index]) continue;
+    h += '<div class="pair"><div class="n">' + (r.index + 1) + '</div>'
+       + '<div class="t">' + esc(r.then) + '</div><div class="w">' + esc(r.now) + '</div></div>';
+  }
+  h += '</div>';
+
+  h += '<div class="card"><h2>' + esc(C.voice.falseHead) + '</h2>';
+  if (fa === 0) h += '<div class="stat good">' + esc(C.voice.nothingFalse) + '</div>';
+  for (const r of state.rows) {
+    if (r.kind === 'CHANGED' || !state.marks[r.index]) continue;
+    h += '<div class="pair waste"><div class="n">' + (r.index + 1) + '</div>'
+       + '<div class="t">' + esc(r.then) + '</div><div class="w">' + esc(r.now) + '</div></div>';
+  }
+  h += '</div>';
+
+  h += '<button id="again">' + esc(C.voice.again) + '</button>';
+  app.innerHTML = h;
+  document.getElementById('again').onclick = () => {
+    boot(newSeed());
+    save();
+    screen = 'open';
+    render();
+  };
+}
+
+if (load()) screen = state.reported ? 'report' : 'read';
+else { boot(newSeed()); save(); screen = 'open'; }
+render();
+</script>
+</body>
+</html>
