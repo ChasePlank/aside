@@ -204,52 +204,92 @@ public class SelfTest {
                 hasher.signature(a).equals(hasher.signature(new Vn(s))));
 
         System.out.println("\n--- the library list ---");
-        // The library has now failed three times at a row count it had not
-        // seen: a fixed 88px pitch, a bar that reached into the row above at
-        // eleven rows, and titles drawn on top of the blurbs above them at
-        // thirteen. All three were arithmetic, all three were invisible in
-        // the code, and all three were found by rendering a frame.
-        // The library has failed twice at a row count it had not seen yet: a
-        // fixed 88px pitch that put the newest game at y=830 on a 720 canvas,
-        // and a selection bar that reached into the row above at eleven rows.
-        // Both were arithmetic, both were invisible in the code, and both were
-        // found by rendering a frame. This is the arithmetic, checked here so
-        // the next row count is not found the same way.
-        int probe = 24;
-        check("the last row is on the canvas",
+        // The library failed three times at a row count it had not seen: a
+        // fixed 88px pitch, a bar that reached into the row above at eleven
+        // rows, and titles drawn on top of the blurbs above them at thirteen.
+        // All three were arithmetic, all three were invisible in the code, and
+        // all three were found by rendering a frame.
+        //
+        // The fix was to derive the pitch and the type size from the row
+        // count, and that fix has now run out: at fifteen rows the titles are
+        // at their floor and the blurb-to-title gap is 0.7px. So the list
+        // scrolls, the row count stops being a cliff, and the property worth
+        // checking changes shape. It is no longer "does the last row fit" --
+        // it is "is the selected row always in the window", which is the one
+        // thing a scrolling list can get wrong in a way that hides a game.
+        int shown = LibraryLayout.visibleRows();
+        int probe = shown;
+        check("the last visible row is on the canvas",
                 LibraryLayout.rowY(probe - 1, probe) <= LibraryLayout.LIST_BOTTOM);
         check("the first row's bar clears the header",
                 LibraryLayout.barTop(0, probe) >= LibraryLayout.HEADER_BOTTOM);
-        check("the last row's bar is on the canvas",
+        check("the last visible row's bar is on the canvas",
                 LibraryLayout.barBottom(probe - 1, probe) <= LibraryLayout.CANVAS_H);
         // The footer is not the canvas edge. The volume notice is drawn at
         // CANVAS_H - 60, and a list that fits on 720 can still be drawn
         // through it -- which is what the third failure looked like from the
         // other end.
-        check("the last row clears the footer",
+        //
+        // It is the *blurb* that has to clear it, not the title. While the
+        // list had to fit, the last row was always Quit, and Quit has no
+        // blurb. The first render after the list started scrolling drew the
+        // last row's blurb straight through the notice.
+        check("the last visible row's blurb clears the footer",
+                LibraryLayout.blurbY(probe - 1, probe) + LibraryLayout.BLURB_DESCENT
+                        <= LibraryLayout.FOOTER_TOP);
+        check("the last visible row's title clears the footer",
                 LibraryLayout.rowY(probe - 1, probe)
                         + LibraryLayout.titleDescent(probe) <= LibraryLayout.FOOTER_TOP);
-        check("the bar never reaches the blurb above it, up to the limit",
-                LibraryLayout.clearance(LibraryLayout.maxRows()) > 0);
+        check("the bar never reaches the blurb above it",
+                LibraryLayout.clearance(probe) > 0);
         // The constraint that was never checked, and that the third failure
         // came through: the blurb of one row must not reach the title of the
         // row below it. The bar has 0.55 of a pitch to play with; the title
         // has a whole pitch minus the blurb's offset, so the title runs out
         // first and checking only the bar reports room that is not there.
-        check("the blurb never reaches the title below it, up to the limit",
-                LibraryLayout.rowGap(LibraryLayout.maxRows()) > 0);
+        check("the blurb never reaches the title below it",
+                LibraryLayout.rowGap(probe) > 0);
         check("the title never goes below its floor",
-                LibraryLayout.titleSize(LibraryLayout.maxRows())
-                        >= LibraryLayout.MIN_TITLE - 0.001);
-        int limit = LibraryLayout.maxRows();
-        check("the library holds at least fifteen rows", limit >= 15);
-        check("the limit is where the geometry actually stops",
-                LibraryLayout.clearance(limit + 1) <= 0
-                        || LibraryLayout.rowGap(limit + 1) <= 0);
-        System.out.println("       rows the geometry holds: " + limit
-                + "  (bar clearance " + round1(LibraryLayout.clearance(limit))
-                + "px, blurb-to-title gap " + round1(LibraryLayout.rowGap(limit))
-                + "px, title " + round1(LibraryLayout.titleSize(limit)) + "px)");
+                LibraryLayout.titleSize(probe) >= LibraryLayout.MIN_TITLE - 0.001);
+        check("the title is at its full size once the list scrolls",
+                LibraryLayout.titleSize(probe) >= LibraryLayout.MAX_TITLE - 0.001);
+        check("the list shows at least six rows at once", shown >= 6);
+        // The pitch is floored, so a long list does not close up: the pitch
+        // at sixty rows is the same as the pitch at the window size. That is
+        // the whole difference between scrolling and shrinking.
+        check("a long list does not pitch rows closer than the floor",
+                LibraryLayout.pitch(60) >= LibraryLayout.MIN_PITCH - 0.001);
+        check("a short list still spreads out",
+                LibraryLayout.pitch(4) > LibraryLayout.pitch(60));
+        // The invariant. Exhaustive, not sampled: every row count up to sixty
+        // and every selection in it, because "the window holds the selection"
+        // is exactly the kind of property that is true at the sizes you tried
+        // and false at the one you did not.
+        int bad = -1, badSel = -1;
+        for (int rows = 1; rows <= 60 && bad < 0; rows++) {
+            int win = Math.min(rows, shown);
+            for (int sel = 0; sel < rows; sel++) {
+                int start = LibraryLayout.windowStart(sel, rows);
+                boolean holds = start <= sel && sel < start + win;
+                boolean inside = start >= 0 && start + win <= rows;
+                if (!holds || !inside) { bad = rows; badSel = sel; break; }
+            }
+        }
+        check("the window holds the selection, for every count up to sixty"
+                        + (bad < 0 ? "" : " (failed at " + bad + " rows, selection " + badSel + ")"),
+                bad < 0);
+        // And the other half: a list that fits must not scroll at all, or the
+        // window would move under a player who has nothing to scroll to.
+        boolean shortScrolls = false;
+        for (int rows = 1; rows <= shown; rows++)
+            for (int sel = 0; sel < rows; sel++)
+                if (LibraryLayout.windowStart(sel, rows) != 0) shortScrolls = true;
+        check("a list that fits does not scroll", !shortScrolls);
+        System.out.println("       rows shown at once: " + shown
+                + "  (pitch " + round1(LibraryLayout.pitch(shown))
+                + "px, bar clearance " + round1(LibraryLayout.clearance(shown))
+                + "px, blurb-to-title gap " + round1(LibraryLayout.rowGap(shown))
+                + "px, title " + round1(LibraryLayout.titleSize(shown)) + "px)");
 
         System.out.println("\n--- the phone shelf ---");
         // Every web build is a generated file, and a generated file that has
