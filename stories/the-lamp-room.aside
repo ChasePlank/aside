@@ -8,7 +8,7 @@ author: Roxanne
 start: arrive
 
 == arrive ==
-bg office_dawn
+bg cliff_path
 music fan_hum
 The cliff path ends at a door that was painted white some decades ago.
 Sea on three sides. Wind that gets into your collar like it has been waiting for you.
@@ -45,7 +45,7 @@ keeper: Good. Nothing in this tower needs permission.
 -> meet
 
 == meet ==
-bg west_hall
+bg lamp_room
 show keeper neutral at left
 keeper: The lamp goes out at some point tonight. It always does, near the small hours.
 keeper: When it does, you will want to do something clever. Everybody does.
@@ -64,7 +64,7 @@ keeper: This does.
 -> lamp
 
 == lamp ==
-bg cove
+bg lamp_room
 music music_box
 The light stutters, browns, and goes.
 The sea outside does not react, because the sea has seen this before and is not impressed.
@@ -104,7 +104,7 @@ keeper: There. It only needed somebody in the room.
 -> dawn_together
 
 == dawn_book ==
-bg office_dawn
+bg cliff_dawn
 The morning comes the way mornings do: without ceremony and slightly early.
 She shows you where the oil lives and does not mention the book.
 
@@ -117,7 +117,7 @@ keeper: You just get better at the hours.
 -> END
 
 == dawn_together ==
-bg office_dawn
+bg cliff_dawn
 The morning comes the way mornings do: without ceremony and slightly early.
 She does not say anything for a while, and then she says the thing you will end up
 telling whoever comes after you.
