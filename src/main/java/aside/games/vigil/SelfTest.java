@@ -636,21 +636,27 @@ public final class SelfTest {
         ok(g.blurb() != null && g.blurb().length() > 20, "and it has a line for the library");
         eq(g.id(), "vigil", "and its id is its id");
 
-        // Adding a game is the thing that has twice broken the library list.
+        // Adding a game is the thing that has twice broken the library list,
+        // and this check has now been through three readings.
+        //
+        // It began as "there is room for one more", which was an aspiration
+        // rather than a fact. On 2026-09-30 Attribution spent the last of the
+        // room, so it became "the list still fits", with an alarm for the row
+        // that would break it -- a fact, but a fact about the canvas being the
+        // list. The list scrolls now, so neither question is the right one:
+        // the count of games is no longer a limit on anything.
+        //
+        // What is left is the property the other two were proxies for, and it
+        // is the one that actually matters -- that a game added to the registry
+        // is a row you can reach. A game that cannot be scrolled to is a game
+        // that is hidden, which is the failure the first check was written
+        // after.
         int rows = Games.all().size() + 1;
-        ok(rows <= LibraryLayout.maxRows(),
-                "the library holds " + rows + " rows (limit " + LibraryLayout.maxRows() + ")");
-        // This used to assert there was room for one more. On 2026-09-30 the
-        // fourteenth game -- Attribution -- used the last of it, so the
-        // assertion now says what is true: the list still fits, and the margin
-        // is zero. The alarm is kept, and it is the right alarm: it fires when
-        // a game is added past the limit, which is exactly when the library
-        // breaks. What is gone is the aspiration, because it is spent.
-        if (rows == LibraryLayout.maxRows()) {
-            System.out.println("NOTE  the library is at its limit: " + rows
-                    + " rows. The next game needs the list geometry reworked, not another entry.");
-        }
+        int shown = Math.min(rows, LibraryLayout.visibleRows());
+        ok(LibraryLayout.windowStart(rows - 1, rows) + shown == rows,
+                "the last row is reachable -- the window ends on it");
+        ok(shown >= 1 && shown <= rows, "the window shows rows that exist");
         System.out.println("       library: " + Games.all().size() + " games + Quit = " + rows
-                + " rows, limit " + LibraryLayout.maxRows());
+                + " rows, " + shown + " shown at once");
     }
 }

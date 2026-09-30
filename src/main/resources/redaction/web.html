@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0A0C">
+<title>Redaction</title>
+<style>
+  :root{
+    --bg:#0A0A0C; --paper:#131317; --edge:#26262E; --gold:#D8B45A;
+    --ink:#E9E9EF; --dim:#A2A2B0; --faint:#6B6B7C;
+    --bar:#2C2C36; --bar-sel:#3E3E4C; --red:#C4553F; --green:#7FA88A;
+    --sel:#1C1C24;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:16px/1.5 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:20px 16px 0}
+  header{display:flex; align-items:baseline; gap:12px; margin-bottom:18px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0}
+  .where{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.14em;
+         color:var(--faint); margin-left:auto; text-align:right}
+  p.para{color:var(--ink); margin:0 0 14px; font-size:17px}
+  .panel{background:var(--paper); border:1px solid var(--edge); border-radius:12px;
+         padding:14px 15px; margin:20px 0 0}
+  .ph{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.16em; color:var(--faint);
+      margin-bottom:14px}
+  .rule{display:flex; gap:12px; margin-bottom:11px; font-size:14px; color:var(--dim)}
+  .rule .k{flex:0 0 62px; font:13px/1.5 Consolas,Menlo,monospace; color:var(--gold)}
+  .label{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.16em; color:var(--faint);
+         margin:22px 0 10px}
+  .line{background:var(--paper); border:1px solid var(--edge); border-radius:12px;
+        padding:12px 14px; margin:0 0 8px; cursor:pointer}
+  .line.sel{border-color:var(--gold); background:var(--sel)}
+  .line .top{display:flex; gap:10px; align-items:baseline}
+  .line .n{font:13px/1.5 Consolas,Menlo,monospace; color:var(--faint); flex:0 0 16px}
+  .line.sel .n{color:var(--gold)}
+  .line .t{font-size:16px; color:var(--ink)}
+  /* The bar is the width of the line it covers -- colour is transparent, the
+     background is not, so the shape of the redaction is the shape of the text.
+     That is the whole subject of the game, drawn. */
+  .redacted{color:transparent; background:var(--bar); border-radius:3px;
+            box-shadow:0 0 0 1px var(--bar)}
+  .line.sel .redacted{background:var(--bar-sel); box-shadow:0 0 0 1px var(--bar-sel)}
+  .line .mark{font:11px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.1em;
+              margin:8px 0 0 26px}
+  .line .mark.held{color:var(--red)}
+  .line .mark.out{color:var(--faint)}
+  .status{font:12px/1.5 Arial,Helvetica,sans-serif; color:var(--dim); margin:0 0 4px}
+  .status .gold{color:var(--gold)}
+  .sendwarn{font:12px/1.5 Arial,Helvetica,sans-serif; color:var(--red); margin:0 0 12px}
+  .head{font-size:23px; color:var(--gold); margin:0 0 14px}
+  .head.bad{color:var(--red)} .head.good{color:var(--green)}
+  .find{font-size:17px; margin:0 0 6px}
+  .find.named{color:var(--red)} .find.safe{color:var(--green)}
+  .find.plain{color:var(--ink)}
+  .read{background:var(--paper); border:1px solid var(--edge); border-radius:12px;
+        padding:12px 14px; margin:6px 0 0}
+  .read .r{display:flex; gap:10px; align-items:baseline; margin-bottom:8px; font-size:15px}
+  .read .r:last-child{margin-bottom:0}
+  .read .n{font:12px/1.5 Consolas,Menlo,monospace; color:var(--gold); flex:0 0 16px}
+  .read .none{font:13px/1.5 Arial,Helvetica,sans-serif; color:var(--faint)}
+  .closing{color:#B0B0BE; font-size:16px; margin:16px 0 0}
+  .verdict{color:var(--ink); font-size:17px; margin:16px 0 0}
+  .standing{color:var(--gold); font-size:16px; margin:14px 0 0}
+  #bar{position:fixed; left:0; right:0; bottom:0; background:rgba(10,10,12,.94);
+       border-top:1px solid var(--edge); backdrop-filter:blur(6px);
+       padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  #bar .inner{max-width:640px; margin:0 auto; display:flex; align-items:center; gap:10px}
+  #bar .hint{font:12px/1.4 Arial,Helvetica,sans-serif; color:var(--faint)}
+  #bar .btns{margin-left:auto; display:flex; gap:8px}
+  button{font:15px/1 Georgia,serif; color:var(--ink); background:var(--paper);
+         border:1px solid var(--edge); border-radius:9px; padding:11px 14px; cursor:pointer;
+         white-space:nowrap}
+  button.go{color:var(--gold); border-color:var(--gold)}
+  button.held{color:var(--red); border-color:var(--red)}
+  button:disabled{opacity:.4; cursor:default}
+  .spacer{height:0}
+  .warn{color:var(--red); font:12px/1.6 Arial,Helvetica,sans-serif; margin:14px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap"><div id="app"></div><div class="spacer"></div></div>
+<div id="bar"><div class="inner"></div></div>
+<script>
+const C = /*__CONTENT__*/;
+
+// ------------------------------------------------------------------ the model
+// Sixteen lines, and one decision per line. The board reads the withheld ones
+// in file order until its questions are gone, and a line that refers to the
+// complainant buys it another question -- which is the only reason a bar can
+// be worse than no bar at all.
+//
+// These are pure functions of the withheld set, so the trace harness can call
+// them directly for all 65,536 filings instead of driving the buttons 65,536
+// times. See tools/redaction-trace.mjs.
+
+function reading(held) {
+  const out = [];
+  let digs = C.digs, extra = 0;
+  for (let i = 0; i < C.lines.length && digs > 0; i++) {
+    if (!held[i]) continue;
+    out.push(i);
+    digs--;
+    if (C.lines[i].refers) { digs++; extra++; }
+  }
+  return { read: out, extra: extra };
+}
+
+function known(line, i, held, read) {
+  return !held[i] || read.indexOf(i) >= 0;
+}
+
+function finding(held) {
+  const r = reading(held);
+  let nameOut = 0, failsOut = 0;
+  for (let i = 0; i < C.lines.length; i++) {
+    const k = C.lines[i].kind;
+    if (k === 'name' && known(C.lines[i], i, held, r.read)) nameOut = 1;
+    if (k === 'fail' && known(C.lines[i], i, held, r.read)) failsOut++;
+  }
+  const withheld = held.filter(Boolean).length;
+  // The prose is resolved, not ported: every combination the board can reach
+  // is in the table, and the build looks the answer up. See WebRedaction.
+  const key = (nameOut * 5 + failsOut) * (C.lines.length + 1) + withheld;
+  const t = C.finding[key];
+  return { nameOut: nameOut, failsOut: failsOut, withheld: withheld,
+           read: r.read, extra: r.extra, text: t };
+}
+
+function closing(f) {
+  const rec = f.read.length === 0 ? C.voice.recoveredNone
+    : C.voice.recoveredSome.replace('%lines%',
+        f.read.map(i => 'line ' + (i + 1) + '.').join(' '));
+  return C.voice.closingTemplate
+    .replace('%held%', f.withheld).replace('%read%', f.read.length)
+    .replace('%recovered%', rec);
+}
+
+// ------------------------------------------------------------- the save file
+// Sixteen characters and a flag. The file never changes, so there is nothing
+// else to keep.
+
+const KEY = 'aside.redaction.file';
+
+function serialize() {
+  return held.map(h => h ? '1' : '0').join('') + (sent ? ' 1' : ' 0') + '\n';
+}
+
+function deserialize(text) {
+  const s = String(text).split(/\r?\n/)[0].trim();
+  const bits = s.split(/\s+/)[0];
+  if (bits.length !== C.lines.length) return null;
+  return { held: bits.split('').map(c => c === '1'), sent: s.endsWith('1') };
+}
+
+const CAN_STORE = (() => {
+  try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); return true; }
+  catch (e) { return false; }
+})();
+
+function load() {
+  if (!CAN_STORE) return null;
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { text = null; }
+  return text === null ? null : deserialize(text);
+}
+
+function save() {
+  if (!CAN_STORE) return false;
+  try { localStorage.setItem(KEY, serialize()); return true; } catch (e) { return false; }
+}
+
+// ----------------------------------------------------------------- the screen
+
+let held = new Array(C.lines.length).fill(false);
+let sent = false;
+let phase = 'open';
+let sel = 0;
+let notice = '';
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar').querySelector('.inner');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function header() {
+  const where = phase === 'open' ? C.whereOpen
+    : phase === 'file' ? C.whereFile : C.whereReport;
+  return '<header><h1>' + esc(C.wordmark) + '</h1><div class="where">' + esc(where) + '</div></header>';
+}
+
+function drawOpen() {
+  let h = header();
+  for (const p of C.voice.opening) h += '<p class="para">' + esc(p) + '</p>';
+  h += '<div class="panel"><div class="ph">' + esc(C.voice.rulesHeading) + '</div>';
+  for (const r of C.voice.rules) {
+    h += '<div class="rule"><span class="k">' + esc(r.key) + '</span>'
+       + '<span>' + esc(r.text) + '</span></div>';
+  }
+  h += '</div>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="hint">' + esc(C.voice.startLine) + '</div>'
+    + '<div class="btns"><button class="go" id="go">' + esc(C.voice.startButton) + '</button></div>';
+  document.getElementById('go').onclick = () => { phase = 'file'; sel = 0; draw(); };
+}
+
+function drawFile() {
+  const f = finding(held);
+  let h = header()
+    + '<p class="status">' + esc(C.voice.heldLine.replace('%n%', f.withheld))
+    + (f.withheld === 0 ? '' : ' <span class="gold">'
+        + esc(C.voice.digsLine.replace('%n%', f.read.length)) + '</span>') + '</p>'
+    // The warning lives here, not in the bottom bar. At 360px the three
+    // buttons leave no room for a sentence beside them, and a sentence that
+    // wraps to four lines beside two buttons is worse than no sentence.
+    + '<p class="sendwarn">' + esc(C.voice.sendWarning) + '</p>';
+
+  C.lines.forEach((l, i) => {
+    h += '<div class="line' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">'
+       + '<div class="top"><span class="n">' + l.n + '</span>'
+       + '<span class="t">' + (held[i] ? '<span class="redacted">' + esc(l.text) + '</span>'
+                                       : esc(l.text)) + '</span></div>'
+       + '<div class="mark ' + (held[i] ? 'held' : 'out') + '">'
+       + esc(held[i] ? C.voice.withheldMark : C.voice.releasedMark) + '</div>'
+       + '</div>';
+  });
+  if (notice) h += '<p class="warn">' + esc(notice) + '</p>';
+  app.innerHTML = h;
+  app.querySelectorAll('.line').forEach(el => {
+    el.onclick = () => { sel = +el.dataset.i; notice = ''; draw(); };
+  });
+
+  bar.innerHTML = '<div class="btns">'
+    + '<button id="w"' + (held[sel] ? ' disabled' : '') + '>' + esc(C.voice.withholdBtn) + '</button>'
+    + '<button id="r"' + (held[sel] ? '' : ' disabled') + '>' + esc(C.voice.releaseBtn) + '</button>'
+    + '<button class="go" id="s">' + esc(C.voice.sendButton) + '</button>'
+    + '</div>';
+  document.getElementById('w').onclick = () => { held[sel] = true; save(); draw(); };
+  document.getElementById('r').onclick = () => { held[sel] = false; save(); draw(); };
+  document.getElementById('s').onclick = () => { sent = true; save(); phase = 'report'; draw(); };
+}
+
+function drawReport() {
+  const f = finding(held);
+  const t = f.text;
+  let h = header()
+    + '<div class="head' + (f.nameOut ? ' bad' : (f.failsOut === 0 ? ' good' : '')) + '">'
+    + esc(t.headline) + '</div>'
+    + '<p class="find ' + (f.nameOut ? 'named' : 'safe') + '">' + esc(t.person) + '</p>'
+    + '<p class="find plain">' + esc(t.record) + '</p>'
+    + '<p class="find plain">' + esc(t.held) + '</p>'
+    + '<div class="label">' + esc(C.voice.whatWasRead) + '</div><div class="read">';
+  if (f.read.length === 0) {
+    h += '<div class="r"><span class="none">' + esc(C.voice.nothingRead) + '</span></div>';
+  } else {
+    for (const i of f.read) {
+      h += '<div class="r"><span class="n">' + C.lines[i].n + '</span>'
+         + '<span>' + esc(C.lines[i].text) + '</span></div>';
+    }
+  }
+  h += '</div>'
+    + '<p class="closing">' + esc(closing(f)) + '</p>'
+    + '<p class="verdict">' + esc(t.verdict) + '</p>'
+    + '<p class="standing">' + esc(C.voice.standing) + '</p>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="btns"><button class="go" id="again">' + esc(C.voice.again) + '</button></div>';
+  document.getElementById('again').onclick = () => {
+    held = new Array(C.lines.length).fill(false); sent = false; sel = 0; notice = '';
+    phase = 'file'; save(); draw();
+  };
+}
+
+function draw() {
+  if (phase === 'open') drawOpen();
+  else if (phase === 'file') drawFile();
+  else drawReport();
+  const sp = app.parentElement.querySelector('.spacer');
+  if (sp) sp.style.height = (document.getElementById('bar').offsetHeight + 16) + 'px';
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('keydown', e => {
+  if (phase === 'file') {
+    const n = C.lines.length;
+    if (e.key === 'ArrowDown') { sel = (sel + 1) % n; draw(); }
+    else if (e.key === 'ArrowUp') { sel = (sel - 1 + n) % n; draw(); }
+    else if (e.key >= '1' && e.key <= '9') { const i = +e.key - 1; if (i < n) { sel = i; draw(); } }
+    else if (e.key === 'w' || e.key === 'W') { held[sel] = true; save(); draw(); }
+    else if (e.key === 'r' || e.key === 'R') { held[sel] = false; save(); draw(); }
+  }
+  if (e.key === 'Enter') {
+    const b = bar.querySelector('button.go') || bar.querySelector('button');
+    if (b && !b.disabled) b.click();
+  }
+});
+
+const saved = load();
+if (saved) { held = saved.held; sent = saved.sent; phase = sent ? 'report' : 'file'; }
+draw();
+</script>
+</body>
+</html>

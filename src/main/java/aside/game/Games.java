@@ -11,6 +11,7 @@ import aside.games.inventory.InventoryGame;
 import aside.games.ledger.LedgerGame;
 import aside.games.outside.OutsideGame;
 import aside.games.overtime.OvertimeGame;
+import aside.games.redaction.RedactionGame;
 import aside.games.residue.ResidueGame;
 import aside.games.testimony.TestimonyGame;
 import aside.games.vigil.VigilGame;
@@ -40,6 +41,7 @@ public final class Games {
         g.add(new VigilGame());
         g.add(new CorroborationGame());
         g.add(new AttributionGame());
+        g.add(new RedactionGame());
         return g;
     }
 

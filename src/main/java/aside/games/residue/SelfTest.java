@@ -371,9 +371,15 @@ public final class SelfTest {
         eq(g.title(), "Residue", "and it is called Residue");
         ok(g.blurb() != null && g.blurb().length() > 20, "and it has a line for the library");
 
+        // This used to assert that every game fits on the canvas, which was
+        // true while the list was drawn whole. The list scrolls now, so the
+        // count of games is not a limit on anything -- what is left to assert
+        // is that the last row can be reached, because a row that cannot be
+        // scrolled to is a game nobody can start. See aside.ui.LibraryLayout.
         int rows = Games.all().size() + 1;
-        ok(rows <= LibraryLayout.maxRows(),
-                "the library holds " + rows + " rows (limit " + LibraryLayout.maxRows() + ")");
+        int shown = Math.min(rows, LibraryLayout.visibleRows());
+        ok(LibraryLayout.windowStart(rows - 1, rows) + shown == rows,
+                "the last row is reachable -- the window ends on it");
     }
 
     // ------------------------------------------------------- the phone build
