@@ -16,20 +16,41 @@ package aside.ui;
  * screen means it can be checked without a window, so the next row count does
  * not have to be discovered the same way. See aside.engine.SelfTest.
  *
- * The binding constraint is not the canvas -- the pitch is derived from the
- * row count, so the last row always lands on LIST_BOTTOM. It is the gap
- * between the selection bar of one row and the blurb of the row above it.
- * That gap is pitch*(1 - BAR_FRACTION) - BLURB_OFFSET, so as rows go up and
- * pitch goes down, it shrinks, and at some row count it goes negative.
- * maxRows() is where that happens. It is 15 today.
+ * There are TWO binding constraints, not one, and checking only the first
+ * is how the third failure happened.
+ *
+ *   1. The selection bar of one row must not reach the blurb of the row
+ *      above it. That gap is pitch*(1 - BAR_FRACTION) - BLURB_OFFSET.
+ *   2. The blurb of one row must not reach the TITLE of the row below it.
+ *      That gap is pitch - BLURB_OFFSET - BLURB_DESCENT - titleAscent.
+ *
+ * The second is the tighter one, and it was never checked. At twelve rows
+ * the first constraint reported 5.5px of room while the second was already
+ * at 1px, and at thirteen -- FNAF 2 arriving -- the titles were drawn on
+ * top of the blurbs above them. Found by rendering the library, which is
+ * the third time this file has been written because of a frame.
+ *
+ * The fix is the same principle as the pitch: do not fix the type size
+ * either. titleSize(rows) shrinks the titles as the rows go up, so the
+ * second constraint holds by construction rather than by luck, and
+ * maxRows() is where it stops holding.
  */
 public final class LibraryLayout {
 
     public static final double CANVAS_W = 1280, CANVAS_H = 720;
 
     /** Baseline of the first row, and of the last one. */
-    public static final double LIST_TOP = 196;
-    public static final double LIST_BOTTOM = CANVAS_H - 62;
+    public static final double LIST_TOP = 178;
+    /**
+     * The last row's baseline. Derived from the footer rather than from the
+     * canvas edge: the volume notice is drawn at CANVAS_H - 60 and the hint
+     * at CANVAS_H - 28, and "the canvas is 720 tall" is not the same
+     * statement as "nothing is drawn below 648".
+     */
+    public static final double FOOTER_TOP = CANVAS_H - 72;
+    /** 5, not 3: the deepest a minimum-size title descends is 3.3px, and a
+     *  margin that is smaller than the thing it is a margin for is not one. */
+    public static final double LIST_BOTTOM = FOOTER_TOP - 5;
 
     /** Never pitch rows further apart than this, however few there are. */
     public static final double MAX_PITCH = 88;
@@ -42,6 +63,15 @@ public final class LibraryLayout {
     public static final double BLURB_OFFSET = 17;
     /** Nothing above this may be overlapped by the first row's bar. */
     public static final double HEADER_BOTTOM = 140;
+
+    /** Title font sizes. Georgia's ascent is about 0.77 of its size. */
+    public static final double MAX_TITLE = 26;
+    public static final double MIN_TITLE = 15;
+    public static final double TITLE_ASCENT_RATIO = 0.77;
+    /** Arial 13's descender, in pixels. */
+    public static final double BLURB_DESCENT = 4;
+    /** The least room to leave between a blurb and the title below it. */
+    public static final double ROW_GAP_MIN = 5;
 
     /** Row pitch for a given number of rows. Derived, never fixed. */
     public static double pitch(int rows) {
@@ -73,10 +103,39 @@ public final class LibraryLayout {
         return pitch(rows) * (1 - BAR_FRACTION) - BLURB_OFFSET;
     }
 
-    /** The most rows this geometry holds before the bar reaches the row above. */
+    /**
+     * Title size for a given row count.
+     *
+     * Derived, like the pitch, and for the same reason: a fixed size is a
+     * size that is right until the row count changes, and then it is wrong
+     * in a way nothing reports.
+     */
+    public static double titleSize(int rows) {
+        double room = pitch(rows) - BLURB_OFFSET - BLURB_DESCENT - ROW_GAP_MIN;
+        return Math.max(MIN_TITLE, Math.min(MAX_TITLE, room / TITLE_ASCENT_RATIO));
+    }
+
+    /** How far the last row's title descends below its baseline. */
+    public static double titleDescent(int rows) {
+        return titleSize(rows) * 0.22;
+    }
+
+    /** How much room is left between one row's blurb and the title below it. */
+    public static double rowGap(int rows) {
+        return pitch(rows) - BLURB_OFFSET - BLURB_DESCENT
+                - titleSize(rows) * TITLE_ASCENT_RATIO;
+    }
+
+    /**
+     * The most rows this geometry holds.
+     *
+     * The binding constraint is the blurb-to-title gap, not the bar: the bar
+     * has 0.55 of a pitch to play with and the title has a whole pitch minus
+     * the blurb's offset, so the title runs out first.
+     */
     public static int maxRows() {
         int n = 2;
-        while (n < 500 && clearance(n) > 0) n++;
+        while (n < 500 && clearance(n) > 0 && rowGap(n) > 0) n++;
         return n - 1;
     }
 

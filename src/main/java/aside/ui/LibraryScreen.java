@@ -20,7 +20,12 @@ public class LibraryScreen extends UiScreen {
 
     static final Font F_TITLE = Font.font("Georgia", 52);
     static final Font F_SUB = Font.font("Arial", 15);
-    static final Font F_ITEM = Font.font("Georgia", 26);
+    /** The row title font. Sized per frame from the row count -- see
+     *  LibraryLayout.titleSize. A fixed size is right until the row count
+     *  changes, and then it draws titles on top of the blurbs above them. */
+    static Font itemFont(int rows) {
+        return Font.font("Georgia", LibraryLayout.titleSize(rows));
+    }
     static final Font F_BLURB = Font.font("Arial", 13);
     static final Font F_TINY = Font.font("Arial", 12);
 
@@ -119,7 +124,7 @@ public class LibraryScreen extends UiScreen {
                         step - LibraryLayout.BAR_INSET, 10, 10);
             }
             gc.setFill(sel ? Color.web("#F2C14E") : Color.web("#B9B9C6"));
-            gc.setFont(F_ITEM);
+            gc.setFont(itemFont(rows));
             gc.fillText((sel ? ">  " : "   ") + title, 90, y);
             if (!blurb.isEmpty()) {
                 gc.setFill(Color.web("#6E6E86"));

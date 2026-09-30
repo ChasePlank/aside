@@ -20,6 +20,11 @@ import java.util.Set;
 public class SelfTest {
     static int pass = 0, fail = 0;
 
+    /** One decimal place, for a number a person has to read in a report. */
+
+    static double round1(double d) { return Math.round(d * 10) / 10.0; }
+
+
     static void check(String name, boolean ok) {
         if (ok) { pass++; System.out.println("  ok   " + name); }
         else    { fail++; System.out.println("  FAIL " + name); }
@@ -199,6 +204,11 @@ public class SelfTest {
                 hasher.signature(a).equals(hasher.signature(new Vn(s))));
 
         System.out.println("\n--- the library list ---");
+        // The library has now failed three times at a row count it had not
+        // seen: a fixed 88px pitch, a bar that reached into the row above at
+        // eleven rows, and titles drawn on top of the blurbs above them at
+        // thirteen. All three were arithmetic, all three were invisible in
+        // the code, and all three were found by rendering a frame.
         // The library has failed twice at a row count it had not seen yet: a
         // fixed 88px pitch that put the newest game at y=830 on a 720 canvas,
         // and a selection bar that reached into the row above at eleven rows.
@@ -212,15 +222,34 @@ public class SelfTest {
                 LibraryLayout.barTop(0, probe) >= LibraryLayout.HEADER_BOTTOM);
         check("the last row's bar is on the canvas",
                 LibraryLayout.barBottom(probe - 1, probe) <= LibraryLayout.CANVAS_H);
+        // The footer is not the canvas edge. The volume notice is drawn at
+        // CANVAS_H - 60, and a list that fits on 720 can still be drawn
+        // through it -- which is what the third failure looked like from the
+        // other end.
+        check("the last row clears the footer",
+                LibraryLayout.rowY(probe - 1, probe)
+                        + LibraryLayout.titleDescent(probe) <= LibraryLayout.FOOTER_TOP);
         check("the bar never reaches the blurb above it, up to the limit",
                 LibraryLayout.clearance(LibraryLayout.maxRows()) > 0);
+        // The constraint that was never checked, and that the third failure
+        // came through: the blurb of one row must not reach the title of the
+        // row below it. The bar has 0.55 of a pitch to play with; the title
+        // has a whole pitch minus the blurb's offset, so the title runs out
+        // first and checking only the bar reports room that is not there.
+        check("the blurb never reaches the title below it, up to the limit",
+                LibraryLayout.rowGap(LibraryLayout.maxRows()) > 0);
+        check("the title never goes below its floor",
+                LibraryLayout.titleSize(LibraryLayout.maxRows())
+                        >= LibraryLayout.MIN_TITLE - 0.001);
         int limit = LibraryLayout.maxRows();
         check("the library holds at least fifteen rows", limit >= 15);
         check("the limit is where the geometry actually stops",
-                LibraryLayout.clearance(limit + 1) <= 0);
-        System.out.println("       rows the bar geometry holds: " + limit
-                + "  (clearance at " + limit + " is "
-                + Math.round(LibraryLayout.clearance(limit) * 10) / 10.0 + "px)");
+                LibraryLayout.clearance(limit + 1) <= 0
+                        || LibraryLayout.rowGap(limit + 1) <= 0);
+        System.out.println("       rows the geometry holds: " + limit
+                + "  (bar clearance " + round1(LibraryLayout.clearance(limit))
+                + "px, blurb-to-title gap " + round1(LibraryLayout.rowGap(limit))
+                + "px, title " + round1(LibraryLayout.titleSize(limit)) + "px)");
 
         System.out.println("\n--- the phone shelf ---");
         // Every web build is a generated file, and a generated file that has
