@@ -40,6 +40,7 @@ public final class SelfTest {
         rules();
         clock();
         mouse();
+        cues();
         survival();
         System.out.println();
         System.out.println(checks + " checks, " + failed + " failed");
@@ -368,6 +369,94 @@ public final class SelfTest {
     }
 
     // ---------------------------------------------------------------- plumbing
+
+    /**
+     * Every cue the engine can emit has a file, and the three of them are
+     * not the same file.
+     *
+     * This is the check that was missing, and the game shipped without it.
+     * `GameScreen.play` falls back per family -- `here_*` to `at_door`,
+     * `step_*` to `footstep`, `lost_*` to `door_close` -- which is right,
+     * because a cue that resolves to nothing is worse than a cue that
+     * resolves to the wrong file. But the fallbacks are a safety net, and
+     * with no files behind them all three of these characters sounded
+     * identical. In a game whose three threats differ only in *what they
+     * follow*, and whose only channel for saying which one just walked in
+     * is the sound, that is not a rough edge -- it is the information the
+     * game is made of, missing.
+     *
+     * The cue names are derived from the threats rather than written down,
+     * so adding a fourth one fails here until it has a voice.
+     *
+     * Paths are relative to the working directory, like the engine's own
+     * `web/aside.html` check. Run it from the repository root.
+     */
+    static void cues() {
+        section("the voices");
+
+        java.io.File dir = new java.io.File("audio");
+        if (!dir.isDirectory()) {
+            check("audio/ is readable from here (run from the repository root)", false);
+            return;
+        }
+
+        Game g = new Game(1, 1);
+        java.util.List<String> heres = new java.util.ArrayList<>();
+        for (Threat t : g.threats) {
+            String here = "here_" + t.key;
+            String step = "step_" + t.key;
+            check(here + " has a file", hasCue(dir, here));
+            check(step + " has a file", hasCue(dir, step));
+            heres.add(here);
+            // Only a threat that can lose you needs a cue for losing you,
+            // and only one of the three can: Ballora is the one that gives
+            // up when the building has been quiet long enough.
+            if (t.rule == Threat.Rule.SOUND) {
+                check("lost_" + t.key + " has a file (it is the one that gives up)",
+                        hasCue(dir, "lost_" + t.key));
+            }
+        }
+        check("the shock has a file", hasCue(dir, "shock"));
+
+        // And the point of the whole section: three names, three files.
+        check("the three of them do not share one voice",
+                heres.stream().distinct().count() == g.threats.size());
+        for (int i = 0; i < heres.size(); i++) {
+            for (int j = i + 1; j < heres.size(); j++) {
+                check(heres.get(i) + " and " + heres.get(j) + " are different sounds",
+                        !sameFile(dir, heres.get(i), heres.get(j)));
+            }
+        }
+    }
+
+    /** Does `audio/<name>.<ext>` exist for any extension the loader reads? */
+    static boolean hasCue(java.io.File dir, String name) {
+        for (String ext : new String[]{".wav", ".mp3", ".aiff", ".aif", ".m4a", ".aac"}) {
+            if (new java.io.File(dir, name + ext).isFile()) return true;
+        }
+        return false;
+    }
+
+    /** The two names resolve to the same bytes on disk. */
+    static boolean sameFile(java.io.File dir, String a, String b) {
+        java.io.File fa = find(dir, a), fb = find(dir, b);
+        if (fa == null || fb == null) return false;
+        try {
+            return java.util.Arrays.equals(
+                    java.nio.file.Files.readAllBytes(fa.toPath()),
+                    java.nio.file.Files.readAllBytes(fb.toPath()));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    static java.io.File find(java.io.File dir, String name) {
+        for (String ext : new String[]{".wav", ".mp3", ".aiff", ".aif", ".m4a", ".aac"}) {
+            java.io.File f = new java.io.File(dir, name + ext);
+            if (f.isFile()) return f;
+        }
+        return null;
+    }
 
     static Threat byKey(Game g, String key) {
         for (Threat t : g.threats) if (t.key.equals(key)) return t;
