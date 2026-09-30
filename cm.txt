@@ -1,50 +1,23 @@
-Put Testimony on a phone, and move the prose out of the screen so it can
+Let the shelf say what is not on it
 
-The fourth code game with a single-file web build, after Vigil, Residue and
-Ledger. Testimony is the first of them whose whole shape is a conversation
-rather than a room or a ledger: it asks you eight questions and then reads
-your answers back as settled fact, so the phone build has to carry the
-interview itself and not just a rendering of it.
+The shelf was derived and honest about what it carried, and silent about what
+it did not. Six cards read as the whole library, and the games absent from
+them were exactly the ones a player could not tell were absent -- the four of
+mine that are still desktop-only, plus the two that are Roxanne's.
 
-WHAT IS NOT DUPLICATED. The template
-(src/main/resources/testimony/web.html) holds the layout and the rules. The
-content -- the evening, the eight questions, their options and phrases, the
-account lines, the four closings, the tally sentences and every heading the
-game says in its own voice -- is generated from Testimony.java, the same
-class the engine screen reads.
+So the same walk over Games.all() that fills the shelf now also produces the
+games with no phone build, and they are listed underneath under their own
+heading. Derived, not written down: a game that gets a build leaves that list
+and joins the shelf in the same edit, and nobody has to remember to move it.
 
-That last part was new work. The headings and the closing sentences were
-string literals inside TestimonyScreen; they moved into the model on this
-fire and the screen now reads them, so there is one copy of each sentence
-and the two builds cannot drift. The closings became templates carrying
-%wrong% / %plural% / %sure% rather than concatenation, for the same reason:
-the phone build fills them, and it must not own them. SelfTest.closings()
-covers the four branches and the singular, which is exactly the case a
-second copy of a sentence gets wrong.
+They are drawn as text and not as cards, because there is nothing on the other
+end of them on a phone, and a card that looks tappable and is not is worse
+than a list.
 
-WHAT IS WRITTEN TWICE. The interview's arithmetic: eight questions in a
-fixed order, an answer written into memory whether or not it was true,
-nothing anywhere recording which, propagation into the phrasing of later
-questions, and the four-way choice of closing. About sixty lines of
-JavaScript, checked rather than trusted -- SelfTest regenerates this file
-and fails if the checked-in copy has gone stale.
+Checked, because the failure mode is the one the orphan check was written for:
+the invariant is stated once -- every game in the library is exactly one of
+on-the-shelf or named-as-missing -- and it is asserted for all eleven. Engine
+suite 92 -> 116 checks.
 
-Verified by driving both builds through the same four playthroughs and
-diffing what they say: the account, the tally and the closing are identical
-in all four. The propagation was checked in the phone build directly -- say
-the coat was blue and the last question asks about the woman in the blue
-coat. The returning player lands on the verdict, not on the evening again.
-All five phases rendered in Chrome at 390x844, and the desktop screen
-re-rendered to confirm the constant move did not change it.
-
-The shelf picked it up without being told, which is the orphan check earning
-its keep: 6 builds, 206 KB. Engine suite 88 -> 92 checks.
-
-WHAT THE PORT FOUND, and did not fix. Question.note() is written for all
-eight questions -- eight paragraphs, and some of the best writing in the
-file -- and nothing has ever drawn it. Not the screen, not the verdict, not
-this build. It is left undrawn rather than drawn on one build only, because
-a note that appears on the phone and not on the desktop is a divergence
-dressed up as a feature. The verdict is where it belongs, and the desktop
-verdict has about 90px of canvas left below the closing, so drawing eight
-notes there is a layout change and not a one-line change. Recorded.
+Also: Testimony gets the note the other three persistent games have, since it
+does keep its account in the browser now.

@@ -31,6 +31,15 @@
   .card .n{color:var(--faint); font:12px/1.5 Arial,Helvetica,sans-serif; margin-top:8px}
   .card .m{color:var(--faint); font:11px/1.5 Consolas,Menlo,monospace; margin-top:9px}
   .fine{color:var(--faint); font:12px/1.7 Arial,Helvetica,sans-serif; margin-top:30px}
+  /* The games with no phone build. Text, not cards: there is nothing on the
+     other end of them here, and a card that looks tappable and is not is worse
+     than a list. */
+  #missing{margin-top:34px; padding-top:20px; border-top:1px solid var(--edge)}
+  .label{font:11px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.16em; color:var(--faint);
+         margin:0 0 14px}
+  .off{margin:0 0 13px}
+  .off .ot{font-size:17px; color:var(--dim)}
+  .off .ob{font:13px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin-top:2px}
   /* The stage covers the shelf rather than replacing it, so coming back is
      never a re-render and never a reload. The game is just hidden. */
   #stage{position:fixed; inset:0; display:none; flex-direction:column; background:var(--bg)}
@@ -49,9 +58,9 @@
   <div class="sub">THE GAMES, ON A PHONE</div>
   <p class="intro">Everything here is one file. Nothing to install.</p>
   <div id="list"></div>
+  <div id="missing"></div>
   <p class="fine">Each game is a whole document, kept to itself, so nothing here can
-  interfere with anything else. The rest of the library &mdash; the games with no
-  phone build yet &mdash; is on the desktop.</p>
+  interfere with anything else.</p>
 </div>
 <div id="stage">
   <div id="topbar">
@@ -62,6 +71,7 @@
 </div>
 <script>
 const SHELF = /*__SHELF__*/;
+const MISSING = /*__MISSING__*/;
 
 const list = document.getElementById('list');
 const shelfEl = document.getElementById('shelf');
@@ -94,6 +104,24 @@ function drawList() {
   list.querySelectorAll('.card').forEach(el => {
     el.onclick = () => { location.hash = '#/' + el.dataset.i; };
   });
+}
+
+/**
+ * The games that are not here. Derived from the library rather than written
+ * down, so a game that gets a phone build leaves this list and joins the shelf
+ * in the same edit, and nobody has to remember to move it.
+ */
+function drawMissing() {
+  const el = document.getElementById('missing');
+  if (MISSING.length === 0) {
+    el.innerHTML = '<p class="label">EVERY GAME IN THE LIBRARY IS ON THIS SHELF</p>';
+    return;
+  }
+  el.innerHTML = '<p class="label">NOT ON A PHONE YET</p>'
+    + MISSING.map(g => '<div class="off"><div class="ot">' + esc(g.title) + '</div>'
+        + '<div class="ob">' + esc(g.blurb) + '</div></div>').join('')
+    + '<p class="fine">These need the desktop, because the engine is JavaFX and '
+    + 'JavaFX does not run in a phone browser.</p>';
 }
 
 function open(i) {
@@ -131,6 +159,7 @@ document.getElementById('back').onclick = () => { location.hash = ''; };
 window.addEventListener('hashchange', route);
 
 drawList();
+drawMissing();
 route();
 </script>
 </body>

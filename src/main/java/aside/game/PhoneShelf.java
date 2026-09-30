@@ -29,6 +29,13 @@ import java.util.stream.Stream;
  * hand is the builds that are not games -- the demo story, which has no Game
  * module.
  *
+ * AND IT SAYS WHAT IS MISSING. The same walk produces the games with no phone
+ * build, and they are listed underneath the shelf under their own heading.
+ * Without that, a shelf of six reads as the whole library -- and the games
+ * absent from it are precisely the ones a player cannot tell are absent. They
+ * are drawn as text and not as cards, because there is nothing on the other
+ * end of them on a phone.
+ *
  * AND IT IS CHECKED. aside.engine.SelfTest fails if the shelf has gone stale,
  * if a file it lists is missing, or if web/ has a build the shelf does not
  * mention. That last one is the failure that would otherwise be silent: a new
@@ -40,6 +47,7 @@ import java.util.stream.Stream;
 public final class PhoneShelf {
 
     static final String MARKER = "/*__SHELF__*/";
+    static final String MISSING_MARKER = "/*__MISSING__*/";
     static final Path TEMPLATE = Path.of("src", "main", "resources", "web", "shelf.html");
     static final Path WEB = Path.of("web");
 
@@ -68,6 +76,7 @@ public final class PhoneShelf {
         return switch (id) {
             case "residue" -> "Keeps its room in this browser. Come back and it will have aged.";
             case "ledger" -> "Keeps its ledger in this browser. Six nights, and one sitting.";
+            case "testimony" -> "Keeps its account in this browser. Eight questions, and one sitting.";
             case "vigil" -> "Twelve days. One sitting.";
             case "overtime" -> "A visual novel. What you say carries.";
             default -> "";
@@ -88,6 +97,25 @@ public final class PhoneShelf {
             out.add(new Entry(file, g.title(), g.blurb(), noteFor(g.id())));
         }
         for (Entry e : STORIES) if (Files.exists(Path.of(e.file()))) out.add(e);
+        return out;
+    }
+
+    /**
+     * The games that have no phone build yet, in library order.
+     *
+     * The shelf's other half, and it was missing. A shelf of six looked like
+     * the whole library, and the games absent from it were exactly the ones
+     * nobody could tell were absent -- the four that are desktop-only because
+     * the engine is JavaFX. Derived from Games.all() the same way entries() is,
+     * so a game that gets a build leaves this list and joins the shelf in the
+     * same edit, with nothing to remember.
+     */
+    public static List<Entry> missing() {
+        List<Entry> out = new ArrayList<>();
+        for (Game g : Games.all()) {
+            if (Files.exists(Path.of("web", g.id() + ".html"))) continue;
+            out.add(new Entry("web/" + g.id() + ".html", g.title(), g.blurb(), ""));
+        }
         return out;
     }
 
@@ -113,7 +141,7 @@ public final class PhoneShelf {
         if (out.getParent() != null) Files.createDirectories(out.getParent());
         Files.writeString(out, html);
         System.out.println("wrote " + out + "  (" + html.length() / 1024 + " KB, "
-                + entries().size() + " on the shelf)");
+                + entries().size() + " on the shelf, " + missing().size() + " still on the desktop)");
     }
 
     /** The generated file, as a string, so a test can compare it to the checked-in one. */
@@ -123,9 +151,36 @@ public final class PhoneShelf {
                     + " -- run this from the repository root");
         }
         String t = Files.readString(TEMPLATE);
-        int at = t.indexOf(MARKER);
-        if (at < 0) throw new IllegalStateException("the template has no " + MARKER + " in it");
-        return t.substring(0, at) + shelf() + t.substring(at + MARKER.length());
+        for (String marker : List.of(MARKER, MISSING_MARKER)) {
+            if (t.indexOf(marker) < 0) {
+                throw new IllegalStateException("the template has no " + marker + " in it");
+            }
+        }
+        String out = t.substring(0, t.indexOf(MARKER)) + shelf()
+                   + t.substring(t.indexOf(MARKER) + MARKER.length());
+        int at = out.indexOf(MISSING_MARKER);
+        return out.substring(0, at) + missingJson() + out.substring(at + MISSING_MARKER.length());
+    }
+
+    /**
+     * The missing list, in the shelf's own shape minus the build.
+     *
+     * There is no file to inline, so these entries carry a title and a line and
+     * nothing else. They are not links and they are not buttons: there is
+     * nothing on the other end of them on a phone, and a card that looks
+     * tappable and is not is worse than a list.
+     */
+    static String missingJson() {
+        StringBuilder b = new StringBuilder("[\n");
+        List<Entry> m = missing();
+        for (int i = 0; i < m.size(); i++) {
+            Entry e = m.get(i);
+            b.append("  {\"title\":").append(str(e.title()))
+             .append(",\"blurb\":").append(str(e.blurb())).append('}');
+            if (i < m.size() - 1) b.append(',');
+            b.append('\n');
+        }
+        return b.append("]\n").toString();
     }
 
     // -------------------------------------------------------------- the shelf

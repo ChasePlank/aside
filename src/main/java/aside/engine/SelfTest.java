@@ -1,6 +1,8 @@
 package aside.engine;
 
 import aside.game.PhoneShelf;
+import aside.game.Game;
+import aside.game.Games;
 import aside.ui.LibraryLayout;
 
 import java.nio.file.Files;
@@ -254,7 +256,33 @@ public class SelfTest {
                 for (String f : onDisk) check("web/" + f + " is on the shelf", listed.contains(f));
                 check("and the shelf lists nothing that is not on disk",
                         listed.size() == onDisk.size());
+
+                // And the other half. A game with no phone build has to be
+                // NAMED as missing rather than simply absent: silence about a
+                // game is indistinguishable from not having it, which is how a
+                // shelf of six came to read as the whole library.
+                List<PhoneShelf.Entry> absent = PhoneShelf.missing();
+                Set<String> named = new HashSet<>();
+                for (PhoneShelf.Entry e : absent) {
+                    named.add(e.title());
+                    check("the shelf names " + e.title() + " as not on a phone",
+                            generated.contains(e.title()));
+                    check("the shelf carries the line for " + e.title(),
+                            generated.contains(e.blurb()));
+                }
+                // The invariant, stated once: every game in the library is
+                // exactly one of on-the-shelf or named-as-missing.
+                int accounted = 0;
+                for (Game g : Games.all()) {
+                    boolean on = listed.contains(g.id() + ".html");
+                    boolean off = named.contains(g.title());
+                    check(g.title() + " is on the shelf or named as missing, and not both", on != off);
+                    if (on || off) accounted++;
+                }
+                check("every game in the library is accounted for",
+                        accounted == Games.all().size());
                 System.out.println("       shelf: " + entries.size() + " builds, "
+                        + absent.size() + " still on the desktop, "
                         + (generated.length() / 1024) + " KB");
             }
         } catch (Exception e) {
