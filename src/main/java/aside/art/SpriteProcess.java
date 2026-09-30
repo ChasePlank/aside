@@ -53,6 +53,7 @@ public class SpriteProcess extends Application {
         NAMES.put("monty.quiet",   "monty-quiet");
 
         NAMES.put("roxy.smirk",    "roxanne-smirk");
+        NAMES.put("keeper.neutral", "keeper-neutral");   // The Lamp Room: generated, not drawn
         NAMES.put("roxy.happy",    "roxanne-laughs");
         NAMES.put("roxy.flat",     "roxanne-flat");
         NAMES.put("roxy.cold",     "roxanne-cold");
