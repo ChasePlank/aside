@@ -13,6 +13,7 @@ import aside.games.ledger.LedgerGame;
 import aside.games.outside.OutsideGame;
 import aside.games.overtime.OvertimeGame;
 import aside.games.redaction.RedactionGame;
+import aside.games.relay.RelayGame;
 import aside.games.residue.ResidueGame;
 import aside.games.testimony.TestimonyGame;
 import aside.games.vigil.VigilGame;
@@ -44,6 +45,7 @@ public final class Games {
         g.add(new AttributionGame());
         g.add(new RedactionGame());
         g.add(new DriftGame());
+        g.add(new RelayGame());
         return g;
     }
 
