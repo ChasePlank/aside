@@ -85,6 +85,7 @@ public final class PhoneShelf {
             case "corroboration" -> "Keeps the night in this browser. Two observers, and one sitting.";
             case "attribution" -> "Scored, and dealt fresh every night. Five calls, one sitting.";
             case "drift" -> "Scored, and dealt fresh every copy. Two records, one sitting.";
+            case "interval" -> "Keeps the season in this browser. Twelve days, six watches, one sitting.";
             case "overtime" -> "A visual novel. What you say carries.";
             default -> "";
         };

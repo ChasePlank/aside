@@ -8,6 +8,7 @@ import aside.games.fnaf.FnafGame;
 import aside.games.fnaf2.Fnaf2Game;
 import aside.games.fruitjump.FruitJumpGame;
 import aside.games.handoff.HandoffGame;
+import aside.games.interval.IntervalGame;
 import aside.games.inventory.InventoryGame;
 import aside.games.ledger.LedgerGame;
 import aside.games.outside.OutsideGame;
@@ -46,6 +47,7 @@ public final class Games {
         g.add(new RedactionGame());
         g.add(new DriftGame());
         g.add(new RelayGame());
+        g.add(new IntervalGame());
         return g;
     }
 

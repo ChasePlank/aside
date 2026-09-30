@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Interval</title>
+<style>
+  :root {
+    --bg: #070B12;
+    --sea: #0D1520;
+    --ink: #E8E8F0;
+    --dim: #9A9AAE;
+    --faint: #6E6E86;
+    --gold: #F2C14E;
+    --bad: #E94560;
+    --good: #6FCF97;
+    --watch: #7FB2E5;
+    --paper: #161C28;
+    --edge: #243040;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 0px) 0;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 104px; }
+  h1 { font-family: Georgia, serif; font-size: 34px; color: var(--gold); margin: 18px 0 2px; font-weight: 400; }
+  .sub { color: var(--faint); font-size: 12px; margin-bottom: 18px; }
+  p { margin: 0 0 14px; }
+  .scene { font-family: Georgia, serif; font-size: 17px; color: var(--ink); }
+  .card { background: var(--paper); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; margin: 0 0 16px; }
+  .card h2 { font-size: 12px; letter-spacing: .08em; color: var(--faint); margin: 0 0 12px; font-weight: 600; }
+  .rule { margin-bottom: 14px; }
+  .rule .k { color: var(--gold); font-size: 14px; }
+  .rule .t { color: var(--dim); font-size: 13px; }
+  button {
+    font: inherit; font-size: 15px; border: 0; border-radius: 10px; padding: 13px 18px;
+    background: var(--gold); color: #14141C; font-weight: 600; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--dim); border: 1px solid var(--edge); font-weight: 400; }
+  button[disabled] { opacity: .38; cursor: default; }
+  .rec { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--edge); font-size: 13px; }
+  .rec .n { color: var(--dim); }
+  .rec .o { color: var(--gold); }
+  .rec .o.none { color: var(--faint); }
+  .day { display: flex; gap: 10px; align-items: flex-start; padding: 9px 8px; border-radius: 10px; border-bottom: 1px solid var(--edge); }
+  .day.now { background: var(--paper); }
+  .day .num { width: 20px; flex: 0 0 20px; color: var(--faint); font-size: 12px; padding-top: 2px; }
+  .day.watched .num { color: var(--watch); }
+  .day .txt { flex: 1; min-width: 0; font-size: 13px; color: var(--ink); }
+  .day .txt.blank { color: var(--faint); }
+  .day .txt.now { color: var(--gold); }
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; background: rgba(7,11,18,.96);
+    border-top: 1px solid var(--edge); padding: 10px 16px calc(env(safe-area-inset-bottom) + 10px);
+  }
+  .bar .in { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+  .bar .n { color: var(--dim); font-size: 13px; flex: 1; }
+  .big { font-family: Georgia, serif; font-size: 24px; color: var(--gold); margin: 4px 0 14px; }
+  .big.win { color: var(--good); }
+  .big.bad { color: var(--bad); }
+  .stat { font-size: 14px; color: var(--dim); margin-bottom: 6px; }
+  .stat.good { color: var(--good); }
+  .closing { font-family: Georgia, serif; font-size: 16px; color: var(--ink); margin: 18px 0; }
+  .note { color: var(--faint); font-size: 12px; margin-top: 8px; }
+  .warn { color: var(--bad); font-size: 13px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const C = /*__CONTENT__*/;
+
+//__MODEL_BEGIN__
+// The deal, ported. Counter-based, not a stream: every number is a pure
+// function of (seed, salt), so the phone and the desktop can compute the same
+// season without either carrying an RNG position. The arithmetic is BigInt
+// because a double loses the low bits of a 64-bit Java long and the two builds
+// would diverge on the first draw.
+const MASK = (1n << 64n) - 1n;
+function mix(seed, salt) {
+  let z = (BigInt(seed) + 0x9E3779B97F4A7C15n * BigInt(salt + 1)) & MASK;
+  z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & MASK;
+  z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & MASK;
+  return (z ^ (z >> 31n)) & MASK;
+}
+function pick(seed, salt, n) {
+  if (n <= 1) return 0;
+  return Number(mix(seed, salt) % BigInt(n));
+}
+function totalWeight() {
+  let t = 0;
+  for (const w of C.weight) t += w;
+  return t;
+}
+// One draw from the table: 0 for "never", 1..days for the day. Cumulative
+// rather than a rejection loop, so the outcome is exact by construction.
+function draw(seed, salt) {
+  const r = pick(seed, salt, totalWeight());
+  let acc = 0;
+  for (let i = 0; i < C.weight.length; i++) {
+    acc += C.weight[i];
+    if (r < acc) return i;
+  }
+  return C.weight.length - 1;
+}
+function deal(seed) {
+  const record = [];
+  for (let i = 0; i < C.record; i++) record.push(draw(seed, 100 + i));
+  return { arrival: draw(seed, 1), record: record };
+}
+//__MODEL_END__
+
+const KEY = 'aside.interval.season';
+let state = { seed: 0, arrival: 0, record: [], picks: [], reported: false };
+let screen = 'open';
+let canStore = true;
+try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); }
+catch (e) { canStore = false; }
+
+function newSeed() { return Math.floor(Date.now() % 2147483647); }
+
+function boot(seed) {
+  state.seed = seed;
+  const d = deal(seed);
+  state.arrival = d.arrival;
+  state.record = d.record;
+  state.picks = new Array(C.days).fill(null);
+  state.reported = false;
+}
+
+function load() {
+  if (!canStore) return false;
+  let t = null;
+  try { t = localStorage.getItem(KEY); } catch (e) { return false; }
+  if (!t) return false;
+  const parts = t.split('\n');
+  const seed = Number(parts[0]);
+  if (!isFinite(seed)) return false;
+  boot(seed);
+  const p = parts[1] || '';
+  for (let i = 0; i < C.days && i < p.length; i++) state.picks[i] = p[i] === '-' ? null : p[i];
+  state.reported = parts[2] === '1';
+  return true;
+}
+
+function save() {
+  if (!canStore) return false;
+  try {
+    localStorage.setItem(KEY, state.seed + '\n'
+      + state.picks.map(p => (p === null ? '-' : p)).join('') + '\n' + (state.reported ? '1' : '0'));
+    return true;
+  } catch (e) { return false; }
+}
+
+function decided() { return state.picks.filter(p => p !== null).length; }
+function watchesUsed() { return state.picks.filter(p => p === 'w').length; }
+function runBefore(day) {
+  let n = 0;
+  for (let i = day - 1; i >= 0 && state.picks[i] === 'w'; i--) n++;
+  return n;
+}
+function canWatch(day) {
+  if (day < 0 || day >= C.days || day < decided()) return false;
+  if (watchesUsed() >= C.watches) return false;
+  return runBefore(day) < C.maxRun;
+}
+function ending() {
+  if (state.arrival === 0) return 'NEVER';
+  return state.picks[state.arrival - 1] === 'w' ? 'CAUGHT' : 'MISSED';
+}
+function wasted() {
+  const used = watchesUsed();
+  if (state.arrival === 0) return used;
+  return used - (state.picks[state.arrival - 1] === 'w' ? 1 : 0);
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+const app = document.getElementById('app');
+
+function render() {
+  if (screen === 'open') renderOpen();
+  else if (screen === 'play') renderPlay();
+  else renderReport();
+}
+
+function renderOpen() {
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.where) + '</div>';
+  for (const p of C.voice.opening) h += '<p class="scene">' + esc(p) + '</p>';
+  h += '<div class="card"><h2>' + esc(C.voice.rulesHeading) + '</h2>';
+  for (const r of C.voice.rules) {
+    h += '<div class="rule">' + (r.key ? '<div class="k">' + esc(r.key) + '</div>' : '')
+       + '<div class="t">' + esc(r.text) + '</div></div>';
+  }
+  h += '</div><button id="go">' + esc(C.voice.startButton) + '</button>';
+  if (!canStore) h += '<div class="note">This browser will not keep the season. The log will be lost when you close the tab.</div>';
+  app.innerHTML = h;
+  document.getElementById('go').onclick = () => { screen = 'play'; render(); };
+}
+
+function renderPlay() {
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.whereRecord) + '</div>';
+  h += '<div class="card"><h2>' + esc(C.voice.recordHead) + '</h2>';
+  for (let i = 0; i < state.record.length; i++) {
+    const o = state.record[i];
+    h += '<div class="rec"><span class="n">' + esc(C.names[i]) + '</span>'
+       + '<span class="o' + (o === 0 ? ' none' : '') + '">'
+       + (o === 0 ? 'never signalled' : 'signalled on the ' + esc(C.ordinal[o])) + '</span></div>';
+  }
+  h += '</div>';
+
+  h += '<div class="card"><h2>' + esc(C.voice.journalHead) + '</h2>';
+  const day = decided();
+  for (let i = 0; i < C.days; i++) {
+    const p = state.picks[i];
+    const now = i === day;
+    let cls = 'day' + (now ? ' now' : '') + (p === 'w' ? ' watched' : '');
+    let txt, tcls;
+    if (p === 'w') { txt = C.log[i]; tcls = ''; }
+    else if (p === 's') { txt = C.voice.journalBlank; tcls = 'blank'; }
+    else if (now) { txt = 'tonight'; tcls = 'now'; }
+    else { txt = '\u2014'; tcls = 'blank'; }
+    h += '<div class="' + cls + '"><div class="num">' + (i + 1) + '</div>'
+       + '<div class="txt ' + tcls + '">' + esc(txt) + '</div></div>';
+  }
+  h += '</div>';
+
+  if (day >= C.days) {
+    h += '<div class="bar"><div class="in"><div class="n">The season is over.</div>'
+       + '<button id="read">Read it back</button></div></div>';
+  } else {
+    const ok = canWatch(day);
+    h += '<div class="bar"><div class="in"><div class="n">' + watchesUsed() + ' of ' + C.watches + ' watches stood</div>'
+       + '<button id="watch"' + (ok ? '' : ' disabled') + '>' + esc(C.voice.watch) + '</button>'
+       + '<button class="ghost" id="sleep">' + esc(C.voice.sleep) + '</button></div></div>';
+  }
+  app.innerHTML = h;
+
+  const w = document.getElementById('watch');
+  if (w) w.onclick = () => {
+    const d = decided();
+    if (!canWatch(d)) { render(); return; }
+    state.picks[d] = 'w';
+    save();
+    render();
+  };
+  const s = document.getElementById('sleep');
+  if (s) s.onclick = () => {
+    state.picks[decided()] = 's';
+    save();
+    render();
+  };
+  const r = document.getElementById('read');
+  if (r) r.onclick = () => { state.reported = true; save(); screen = 'report'; render(); };
+}
+
+function renderReport() {
+  const end = ending(), w = wasted();
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.whereReport) + '</div>';
+  h += '<div class="big' + (end === 'CAUGHT' ? ' win' : (end === 'MISSED' ? ' bad' : '')) + '">'
+     + esc(end === 'NEVER' ? C.voice.outcome.NEVER : C.voice.outcome[end][state.arrival]) + '</div>';
+  h += '<div class="stat">' + esc(C.voice.watched[watchesUsed()]) + '</div>';
+  h += '<div class="stat' + (w === 0 ? ' good' : '') + '">' + esc(C.voice.wasted[end][w]) + '</div>';
+  h += '<div class="closing">' + esc(C.voice.closing[end][w]) + '</div>';
+
+  h += '<div class="card"><h2>' + esc(C.voice.journalHead) + '</h2>';
+  for (let i = 0; i < C.days; i++) {
+    const p = state.picks[i];
+    h += '<div class="day' + (p === 'w' ? ' watched' : '') + '"><div class="num">' + (i + 1) + '</div>'
+       + '<div class="txt' + (p === 'w' ? '' : ' blank') + '">'
+       + esc(p === 'w' ? C.log[i] : C.voice.journalBlank) + '</div></div>';
+  }
+  h += '</div>';
+
+  h += '<button id="again">' + esc(C.voice.again) + '</button>';
+  app.innerHTML = h;
+  document.getElementById('again').onclick = () => {
+    boot(newSeed());
+    save();
+    screen = 'open';
+    render();
+  };
+}
+
+if (load()) screen = state.reported ? 'report' : 'play';
+else { boot(newSeed()); save(); screen = 'open'; }
+render();
+</script>
+</body>
+</html>
