@@ -34,6 +34,69 @@ import java.util.List;
  */
 public final class Inventory {
 
+    // ------------------------------------------------------------- the voice
+
+    /**
+     * Every fixed line the game says, kept here and not in the screen.
+     *
+     * There are two builds now -- the JavaFX screen and the phone build -- and
+     * a sentence kept in {@link InventoryScreen} is a sentence the phone build
+     * does not have. Same rule as Testimony and Handoff: the prose lives in the
+     * model, and both windows read it. Edit a sentence here, never in a screen.
+     */
+    public static final String WORDMARK = "inventory";
+    public static final String WHERE_OPEN = "a workshop, cleared for sale";
+    public static final String WHERE_REPORT = "the collection has gone";
+
+    public static final List<String> OPENING = List.of(
+        "A workshop, and a man who is not in it any more. Everything in the room goes "
+      + "to the survey on Friday, and the survey will not see the room. It will see the "
+      + "inventory you write, and nothing else.",
+        "One card per object. One name per card. The objects do not come back once they "
+      + "are shelved -- what you write is what will be in front of you when you write "
+      + "the next one.",
+        "Some of these were kept in sets. A set was kept for one job, so both cards in a "
+      + "set should say the same thing.",
+        "The survey will use every card exactly as it is written.");
+
+    public static final String RULES_HEADING = "HOW IT GOES";
+
+    /** The rules panel: a key column and a sentence. The key is "" for the rest. */
+    public static final List<String[]> RULES = List.of(
+        new String[]{"1 / 2 / 3",
+            "Write the card. The name you choose is the only thing the survey will ever "
+          + "know about the object."},
+        new String[]{"",
+            "A card cannot be rewritten. The object is shelved and does not come back."},
+        new String[]{"",
+            "The catalogue is on the right. It is the only record of what you have "
+          + "already decided, and the readings you passed over are still on it."},
+        new String[]{"",
+            "A name is not a description. It is a claim about what the thing can be used "
+          + "for, and the survey will act on it."});
+
+    public static final String IN_FRONT = "IN FRONT OF YOU";
+    public static final String THE_NOTE = "THE NOTE IN THE BOX";
+    public static final String WHAT_DO_YOU_WRITE = "WHAT DO YOU WRITE ON THE CARD?";
+    public static final String THE_CATALOGUE = "THE CATALOGUE";
+    public static final String NOTHING_WRITTEN = "nothing written yet";
+    public static final String ALSO_READ_AS = "also read as ";
+    public static final String WHAT_YOU_WROTE = "WHAT YOU WROTE";
+    public static final String WHAT_THE_SURVEY_DID = "WHAT THE SURVEY DID WITH IT";
+    public static final String NOTHING_ON_BENCH =
+        "There is nothing on the bench to write about.";
+    public static final String START_LINE = "ENTER to start on the first object.";
+    /** The same thing as a button, for a build with no ENTER key. */
+    public static final String START_BUTTON = "Start on the first object";
+    public static final String NO_CARD = "There was no card, so it stayed in the crate.";
+    public static final String NOT_USED = "It was not used.";
+
+    /** "card 3 of 8" -- the header's right-hand line while the bench is full. */
+    public static String cardWhere(int n, int total) { return "card " + n + " of " + total; }
+
+    /** "3 of 8" -- the catalogue's own count. */
+    public static String writtenOf(int n, int total) { return n + " of " + total; }
+
     /** What a thing can be used for. Six words; four of them are in play. */
     public enum Use {
         VESSEL("a vessel", "it holds"),
@@ -245,80 +308,91 @@ public final class Inventory {
                 case BLADE -> "It cut the cord, and the twine, and the sacking.";
                 case VESSEL -> "Water was poured onto it. The water ran off the flat and onto the floor.";
                 case MEASURE -> "It was laid along the plank and marked. It was straight, and that was all it was.";
-                default -> "It was not used.";
+                default -> NOT_USED;
             };
             case 1 -> switch (named) {
                 case MEASURE -> "It was set against the core and read in the middle of the scale, where the marks still are.";
                 case SEAL -> "It was pressed into the jar's mouth. The mouth was wider than the disc.";
                 case VESSEL -> "It was set on the bench and filled. It held a spoonful, and then it did not.";
-                default -> "It was not used.";
+                default -> NOT_USED;
             };
             case 2 -> switch (named) {
                 case LAMP -> "It was filled and lit. It burned all night and had to be put out at dawn.";
                 case SEAL -> "It was set over the jar. The collar did not fit and the oil went over.";
                 case WEIGHT -> "It was put on the papers to hold them down. The glass broke on the second day.";
-                default -> "It was not used.";
+                default -> NOT_USED;
             };
             case 3 -> switch (named) {
                 case VESSEL -> "It carried the water up from the creek, twice a day, and did not lose any of it.";
                 case LAMP -> "It was filled with oil and a wick floated in it. It burned, and the solder let go.";
                 case SEAL -> "It was set over the tin. The lip was the wrong way round and the rain got in.";
-                default -> "It was not used.";
+                default -> NOT_USED;
             };
             case 4 -> switch (named) {
                 case BLADE -> "A blade was fitted into the slot and it held.";
                 case MEASURE -> "It was laid along the core and marked. There were no marks on it to read.";
                 case WEIGHT -> "It was put on the corner of the map. It was not heavy enough.";
-                default -> "It was not used.";
+                default -> NOT_USED;
             };
             case 5 -> switch (named) {
                 case MEASURE -> "It was laid on the bench and the bead was watched. The bead settled, and the bench was level.";
                 case VESSEL -> "It was filled. There was no way in and no way out.";
                 case BLADE -> "It was drawn across the cord. The glass broke and the cord was not cut.";
-                default -> "It was not used.";
+                default -> NOT_USED;
             };
             case 6 -> switch (named) {
                 case LAMP -> "The oil was poured into the bowl and burned, and the bowl was filled again.";
                 case VESSEL -> "It was filled with water. The lid would not close and it went over on the first slope.";
                 case MEASURE -> "It was set on the scale. The scale said eleven pounds and nothing else.";
-                default -> "It was not used.";
+                default -> NOT_USED;
             };
             case 7 -> switch (named) {
                 case VESSEL -> "It carried the water up from the creek whenever the pan was in use, and did not lose any of it.";
                 case WEIGHT -> "It held the door. The water was carried in a hat.";
                 case LAMP -> "It was filled with oil and lit. The oil burned, and the bucket burned with it.";
-                default -> "It was not used.";
+                default -> NOT_USED;
             };
-            default -> "It was not used.";
+            default -> NOT_USED;
         };
     }
 
     /** What the survey did with the card for thing {@code i}. */
     public String outcomeFor(int i) {
         Thing t = things.get(i);
-        if (!t.named()) return "There was no card, so it stayed in the crate.";
+        if (!t.named()) return NO_CARD;
         return outcome(i, t.written);
     }
 
     // ---- the report -------------------------------------------------------
 
-    public String headline() {
-        int r = right();
-        int n = things.size();
+    public String headline() { return headline(right(), things.size()); }
+
+    /**
+     * The report's three sentences, as functions of the counts alone.
+     *
+     * Split out from the instance methods so the phone build can be handed the
+     * answer for every count that can occur instead of a copy of the branches.
+     * The branches are four, nine and nine; the sentences are written once,
+     * here, and neither window decides which one applies.
+     */
+    public static String headline(int r, int n) {
         if (r == n) return "The survey got what it came for.";
         if (r >= n - 2) return "The survey got most of what it came for.";
         if (r >= n / 2) return "The survey got some of it.";
         return "The survey got what you wrote.";
     }
 
-    public String verdict() {
-        return Word(things.size()) + " cards, and " + word(right()) + " of them said what the "
+    public String verdict() { return verdict(right(), things.size()); }
+
+    public static String verdict(int r, int n) {
+        return Word(n) + " cards, and " + word(r) + " of them said what the "
                 + "thing was. The survey used every card exactly as it was written, because "
                 + "that is what a card is for.";
     }
 
-    public String closing() {
-        int w = wrong();
+    public String closing() { return closing(wrong(), things.size()); }
+
+    public static String closing(int w, int n) {
         if (w == 0) {
             return "Every card said what the thing was, and out of a dead man's workshop the "
                     + "survey got a collection that works. That is the whole of what an inventory "

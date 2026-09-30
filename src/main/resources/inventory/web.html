@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0C0A08">
+<title>inventory</title>
+<style>
+  :root{
+    --bg:#0C0A08; --paper:#15120E; --edge:#2A2419;
+    --gold:#D9A441; --ink:#EDE7DE; --dim:#A79C8E; --faint:#6E655A;
+    --note:#C9B98F; --red:#C4553F; --green:#7FA88A;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:17px/1.55 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:620px; margin:0 auto; padding:22px 18px 24px}
+  header{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
+  .where{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint)}
+  .label{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+         margin:26px 0 10px}
+  .para{font-size:17px; color:var(--ink); margin:0 0 16px}
+  .panel{background:var(--paper); border:1px solid var(--edge); border-radius:12px;
+         padding:14px 16px; margin:0}
+  .panel .ph{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint); margin:0 0 12px}
+  .rule{display:flex; gap:12px; margin:0 0 14px; font:13px/1.6 Arial,Helvetica,sans-serif;
+        color:var(--dim)}
+  .rule:last-child{margin:0}
+  .rule .k{flex:0 0 62px; color:var(--gold); font:12px/1.7 Consolas,Menlo,monospace}
+  .form{font-size:18px; color:var(--ink); margin:0}
+  .boxnote{border-left:3px solid var(--edge); padding:2px 0 2px 13px; margin:18px 0 0;
+           font-style:italic; font-size:17px; color:var(--note)}
+  .name{border:1px solid transparent; border-radius:10px; padding:12px 14px; margin:0 0 8px;
+        background:var(--paper); cursor:pointer; display:flex; align-items:baseline; gap:12px}
+  .name.sel{background:#221C12; border-color:#4A3F1C; box-shadow:inset 3px 0 0 var(--gold)}
+  .name .n{font:14px/1.6 Consolas,Menlo,monospace; color:var(--gold); flex:0 0 auto}
+  .name .l{font-size:18px; color:var(--ink)}
+  .name .d{font:12px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin-left:auto}
+  .cat{border:1px solid var(--edge); border-radius:12px; padding:14px 16px;
+       margin:26px 0 0; background:var(--paper)}
+  .cat .ch{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint); margin:0 0 12px;
+           display:flex; justify-content:space-between}
+  .cat .row{margin:0 0 14px}
+  .cat .row:last-child{margin:0}
+  .cat .row .rn{font:12px/1.6 Consolas,Menlo,monospace; color:var(--faint); margin-right:8px}
+  .cat .row .rl{font-size:16px; color:var(--ink)}
+  .cat .row .rr{display:block; font:12px/1.6 Arial,Helvetica,sans-serif; color:var(--faint);
+                margin-top:3px}
+  .head{font-size:23px; margin:26px 0 14px}
+  .head.good{color:var(--green)} .head.bad{color:var(--gold)}
+  .verdict{font-size:17px; color:var(--ink); margin:0 0 16px}
+  .rep{border-top:1px solid var(--edge); padding:13px 0}
+  .rep .rn{font:12px/1.6 Consolas,Menlo,monospace; color:var(--faint); margin-right:8px}
+  .rep .rl{font:14px/1.6 Arial,Helvetica,sans-serif}
+  .rep .rl.right{color:var(--green)} .rep .rl.wrong{color:var(--red)}
+  .rep .rr{display:block; font:15px/1.6 Georgia,serif; color:var(--dim);
+           margin:7px 0 0 20px}
+  .rep .rr.right{color:var(--dim)} .rep .rr.wrong{color:#D8C3B4}
+  .closing{font-size:17px; color:#B9AFA2; margin:22px 0 0}
+  .warn{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--red); margin:16px 0 0}
+  .bar{position:fixed; left:0; right:0; bottom:0; background:#0C0A08f2;
+       border-top:1px solid var(--edge); padding:9px 18px calc(9px + env(safe-area-inset-bottom))}
+  .bar .inner{max-width:620px; margin:0 auto}
+  .bar .hint{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin:0 0 8px}
+  .btns{display:flex; gap:9px}
+  button{flex:1; font:16px/1.2 Georgia,serif; padding:14px 10px; border-radius:10px;
+         background:var(--paper); color:var(--ink); border:1px solid var(--edge); cursor:pointer}
+  button.go{background:var(--gold); color:#1A1509; border-color:var(--gold)}
+  button:disabled{opacity:.4; cursor:default}
+  .spacer{height:0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar"></div>
+<script>
+const C = /*__CONTENT__*/;
+
+// ------------------------------------------------------------- the workshop
+// A port of aside.games.inventory.Inventory. The content above is generated
+// from the Java model, so the writing cannot drift.
+//
+// THE THING THIS BUILD IS NOT TOLD. There is no `truth` field in C. For each
+// object there are three names, three outcomes and three bits saying which of
+// the names was the true one -- so this build can say what the survey did and
+// can count how many cards were right, and it cannot say what any object *is*.
+// The game's subject is that a card is not a description of a thing, and the
+// phone build is not given the description either.
+//
+// AND THE REPORT IS NOT BUILT HERE. headline, verdict and closing are arrays
+// indexed by how many cards were right. The phone picks one. It cannot write a
+// different report than the desktop does, because it does not write one.
+
+const KEY = 'aside.inventory.bench';
+const N = C.count;
+
+const useById = id => C.uses.filter(u => u.id === id)[0] || null;
+const int = (s, d) => { const n = parseInt(s, 10); return isNaN(n) ? d : n; };
+
+/**
+ * The bench: one entry per object, -1 until the card is written.
+ *
+ * The entry is the *word* the card took -- an index into C.uses, which is in
+ * the model's own ordinal order -- and not the position of that word on the
+ * card. The save file is written in words (Inventory.save writes
+ * Use.ordinal()), so storing the position instead would make the phone's file
+ * mean something different from the desktop's for the same card. It did, for
+ * one fire.
+ */
+function fresh() { return new Array(N).fill(-1); }
+
+/** Where the word on object i's card sits among the names offered for it. */
+function slotOf(i) {
+  if (S[i] < 0) return -1;
+  return C.things[i].offered.indexOf(C.uses[S[i]].id);
+}
+
+/** The word a card would take if you pressed name `slot`. */
+function wordAt(i, slot) {
+  return C.uses.findIndex(u => u.id === C.things[i].offered[slot]);
+}
+
+const written = () => S.filter(x => x >= 0).length;
+const finished = () => S.every(x => x >= 0);
+const next = () => { const i = S.indexOf(-1); return i < 0 ? N : i; };
+
+/** Write the card for the object in front of you. Once. */
+function name(slot) {
+  const i = next();
+  if (i >= N || S[i] >= 0) return false;
+  if (slot < 0 || slot >= C.things[i].offered.length) return false;
+  S[i] = wordAt(i, slot);
+  return true;
+}
+
+function reset() { S = fresh(); }
+
+/** How many cards said what the thing was. The only thing the phone counts. */
+function right() {
+  let n = 0;
+  for (let i = 0; i < N; i++) if (S[i] >= 0 && C.things[i].said[slotOf(i)]) n++;
+  return n;
+}
+
+// ------------------------------------------------------------- the save file
+// Inventory.save() writes one line of ordinals and Inventory.load() reads it.
+// This is that exact format, kept in localStorage, so a half-written inventory
+// can be carried between the desktop and the phone by copying one line.
+
+function serialize() { return S.join(',') + '\n'; }
+
+function deserialize(text) {
+  const s = fresh();
+  const line = String(text).split(/\r?\n/)[0].trim();
+  if (!line) return s;
+  const parts = line.split(',');
+  for (let i = 0; i < N && i < parts.length; i++) {
+    const o = int(parts[i].trim(), -1);
+    if (o >= 0 && o < C.uses.length) s[i] = o;
+  }
+  return s;
+}
+
+const CAN_STORE = (() => {
+  try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); return true; }
+  catch (e) { return false; }
+})();
+
+function load() {
+  if (!CAN_STORE) return fresh();
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { text = null; }
+  return text === null ? fresh() : deserialize(text);
+}
+
+function save() {
+  if (!CAN_STORE) return false;
+  try { localStorage.setItem(KEY, serialize()); return true; } catch (e) { return false; }
+}
+
+// --------------------------------------------------------------- the screen
+
+let S = load();
+let phase = finished() ? 'report' : (written() > 0 ? 'card' : 'open');
+let sel = 0;
+let kept = true;
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function header() {
+  const where = phase === 'open' ? C.whereOpen
+    : phase === 'card' ? C.voice.cardWhere[next() + 1]
+    : C.whereReport;
+  return '<header><h1>' + esc(C.wordmark) + '</h1><div class="where">' + esc(where) + '</div></header>';
+}
+
+function drawOpen() {
+  let h = header();
+  for (const p of C.voice.opening) h += '<p class="para">' + esc(p) + '</p>';
+  h += '<div class="panel"><div class="ph">' + esc(C.voice.rulesHeading) + '</div>';
+  for (const r of C.voice.rules) {
+    h += '<div class="rule"><span class="k">' + esc(r.key) + '</span>'
+       + '<span>' + esc(r.text) + '</span></div>';
+  }
+  h += '</div><div class="spacer"></div>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="go">' + esc(C.voice.startButton) + '</button></div></div>';
+  document.getElementById('go').onclick = () => { phase = 'card'; sel = 0; draw(); };
+}
+
+function drawCard() {
+  const i = next();
+  if (i >= N) { phase = 'report'; draw(); return; }
+  const t = C.things[i];
+  let h = header()
+    + '<div class="label">' + esc(C.voice.inFront) + '</div>'
+    + '<p class="form">' + esc(t.form) + '</p>';
+  if (t.note) {
+    h += '<div class="label">' + esc(C.voice.theNote) + '</div>'
+       + '<p class="boxnote">' + esc(t.note) + '</p>';
+  }
+  h += '<div class="label">' + esc(C.voice.whatDoYouWrite) + '</div>';
+  t.offered.forEach((id, s) => {
+    const u = useById(id);
+    h += '<div class="name' + (s === sel ? ' sel' : '') + '" data-s="' + s + '">'
+       + '<span class="n">' + (s + 1) + '</span>'
+       + '<span class="l">' + esc(u.label) + '</span>'
+       + '<span class="d">' + esc(u.does) + '</span></div>';
+  });
+
+  // The catalogue, and where it goes.
+  //
+  // The desktop is two columns and the split is the design: the object on the
+  // left, everything you have already decided on the right, and the right is
+  // the one the player is least inclined to read. A phone cannot do two
+  // columns. Rather than move the catalogue somewhere convenient -- which
+  // would change the game, since not reading it is most of the difficulty --
+  // this folds the page: the whole left column, then the whole right column.
+  // What you get by scrolling is what you got by looking right.
+  // The heading is the panel's own, so it is not said twice.
+  h += '<div class="cat"><div class="ch"><span>' + esc(C.voice.theCatalogue) + '</span>'
+     + '<span>' + esc(C.voice.writtenOf[written()]) + '</span></div>';
+  const done = [];
+  for (let k = 0; k < N; k++) {
+    if (S[k] < 0) continue;
+    const o = C.things[k];
+    const chosen = useById(o.offered[slotOf(k)]);
+    const others = o.offered.filter((id, s) => s !== slotOf(k)).map(id => useById(id).label);
+    done.push('<div class="row"><span class="rn">' + o.number + '.</span>'
+      + '<span class="rl">' + esc(chosen.label) + '</span>'
+      + '<span class="rr">' + esc(C.voice.alsoReadAs + others.join(', ')) + '</span></div>');
+  }
+  h += done.length ? done.join('') : '<div class="row"><span class="rr">'
+     + esc(C.voice.nothingWritten) + '</span></div>';
+  h += '</div><div class="spacer"></div>';
+  if (!kept) h += '<p class="warn">The bench could not be written down, so it will not '
+    + 'be here next time. Everything above is still true.</p>';
+  app.innerHTML = h;
+  app.querySelectorAll('.name').forEach(el => {
+    el.onclick = () => { sel = +el.dataset.s; draw(); };
+  });
+  bar.innerHTML = '<div class="inner">'
+    + '<div class="hint">' + esc(C.voice.writtenOf[written()]) + '</div>'
+    + '<div class="btns"><button class="go" id="w">Write the card</button></div></div>';
+  document.getElementById('w').onclick = () => {
+    if (!name(sel)) return;
+    kept = save();
+    sel = 0;
+    phase = finished() ? 'report' : 'card';
+    draw();
+  };
+}
+
+function drawReport() {
+  const r = right();
+  let h = header()
+    + '<div class="head ' + (r === N ? 'good' : 'bad') + '">' + esc(C.headline[r]) + '</div>'
+    + '<p class="verdict">' + esc(C.verdict[r]) + '</p>'
+    + '<div class="label">' + esc(C.voice.whatYouWrote) + ' &nbsp;/&nbsp; '
+    + esc(C.voice.whatTheSurveyDid) + '</div>';
+  for (let i = 0; i < N; i++) {
+    const t = C.things[i];
+    if (S[i] < 0) {
+      h += '<div class="rep"><span class="rn">' + t.number + '.</span>'
+         + '<span class="rl">\u2014</span><span class="rr">' + esc(C.voice.noCard) + '</span></div>';
+      continue;
+    }
+    const good = !!t.said[slotOf(i)];
+    h += '<div class="rep"><span class="rn">' + t.number + '.</span>'
+       + '<span class="rl ' + (good ? 'right' : 'wrong') + '">'
+       + esc(useById(t.offered[slotOf(i)]).label) + '</span>'
+       + '<span class="rr ' + (good ? 'right' : 'wrong') + '">' + esc(t.outcomes[slotOf(i)])
+       + '</span></div>';
+  }
+  h += '<p class="closing">' + esc(C.closing[r]) + '</p><div class="spacer"></div>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="again">Clear the bench and start again</button></div></div>';
+  document.getElementById('again').onclick = () => {
+    reset(); kept = save(); phase = 'card'; sel = 0; draw();
+  };
+}
+
+function draw() {
+  if (phase === 'open') drawOpen();
+  else if (phase === 'card') drawCard();
+  else drawReport();
+  const sp = app.querySelector('.spacer');
+  if (sp) sp.style.height = (bar.offsetHeight + 16) + 'px';
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  if (phase === 'card') {
+    const n = C.things[next()].offered.length;
+    if (k === 'ArrowDown') { sel = (sel + 1) % n; draw(); }
+    else if (k === 'ArrowUp') { sel = (sel - 1 + n) % n; draw(); }
+    else if (k >= '1' && k <= '9') { const i = +k - 1; if (i < n) { sel = i; draw(); } }
+  }
+  if (k === 'Enter') {
+    const b = bar.querySelector('button.go') || bar.querySelector('button');
+    if (b && !b.disabled) b.click();
+  }
+});
+
+draw();
+</script>
+</body>
+</html>

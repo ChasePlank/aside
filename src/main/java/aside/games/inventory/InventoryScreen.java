@@ -126,7 +126,7 @@ public class InventoryScreen extends UiScreen {
         };
         if (slot == 0) return;
         if (!inv.nameBySlot(slot)) {
-            notice = "There is nothing on the bench to write about.";
+            notice = Inventory.NOTHING_ON_BENCH;
             noticeTimer = 4;
             sfx("door_close");
             return;
@@ -171,14 +171,14 @@ public class InventoryScreen extends UiScreen {
 
         gc.setFill(GOLD);
         gc.setFont(F_TITLE);
-        gc.fillText("inventory", M, 76);
+        gc.fillText(Inventory.WORDMARK, M, 76);
 
         gc.setFont(F_TINY);
         gc.setFill(FAINT);
         String right = switch (phase) {
-            case OPEN -> "a workshop, cleared for sale";
-            case CARD -> "card " + (inv.next + 1) + " of " + inv.things.size();
-            case REPORT -> "the collection has gone";
+            case OPEN -> Inventory.WHERE_OPEN;
+            case CARD -> Inventory.cardWhere(inv.next + 1, inv.things.size());
+            case REPORT -> Inventory.WHERE_REPORT;
         };
         gc.fillText(right, W - M - 200, 76);
 
@@ -199,16 +199,7 @@ public class InventoryScreen extends UiScreen {
 
     void drawOpen() {
         double y = 148;
-        for (String p : new String[]{
-                "A workshop, and a man who is not in it any more. Everything in the "
-                        + "room goes to the survey on Friday, and the survey will not see the "
-                        + "room. It will see the inventory you write, and nothing else.",
-                "One card per object. One name per card. The objects do not come back once "
-                        + "they are shelved -- what you write is what will be in front of you "
-                        + "when you write the next one.",
-                "Some of these were kept in sets. A set was kept for one job, so both "
-                        + "cards in a set should say the same thing.",
-                "The survey will use every card exactly as it is written."}) {
+        for (String p : Inventory.OPENING) {
             for (String line : wrap(p, F_SCENE, LEFT_W)) {
                 gc.setFont(F_SCENE);
                 gc.setFill(INK);
@@ -222,7 +213,7 @@ public class InventoryScreen extends UiScreen {
 
         gc.setFont(F_SMALL);
         gc.setFill(GOLD);
-        gc.fillText("ENTER to start on the first object.", M, H - 76);
+        gc.fillText(Inventory.START_LINE, M, H - 76);
     }
 
     void drawRulesPanel() {
@@ -230,16 +221,10 @@ public class InventoryScreen extends UiScreen {
         double x = RIGHT_X, y = 158;
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("HOW IT GOES", x, y);
+        gc.fillText(Inventory.RULES_HEADING, x, y);
         y += 28;
 
-        String[][] rules = {
-            {"1 / 2 / 3", "Write the card. The name you choose is the only thing the survey will ever know about the object."},
-            {"", "A card cannot be rewritten. The object is shelved and does not come back."},
-            {"", "The catalogue is on the right. It is the only record of what you have already decided, and the readings you passed over are still on it."},
-            {"", "A name is not a description. It is a claim about what the thing can be used for, and the survey will act on it."},
-        };
-        for (String[] r : rules) {
+        for (String[] r : Inventory.RULES) {
             if (!r[0].isEmpty()) {
                 gc.setFont(F_MONO_S);
                 gc.setFill(GOLD);
@@ -267,7 +252,7 @@ public class InventoryScreen extends UiScreen {
         double y = 168;
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("IN FRONT OF YOU", M, y);
+        gc.fillText(Inventory.IN_FRONT, M, y);
         y += 30;
 
         for (String line : wrap(t.form, F_SCENE, LEFT_W)) {
@@ -281,7 +266,7 @@ public class InventoryScreen extends UiScreen {
             y += 22;
             gc.setFont(F_SMALL);
             gc.setFill(FAINT);
-            gc.fillText("THE NOTE IN THE BOX", M, y);
+            gc.fillText(Inventory.THE_NOTE, M, y);
             y += 26;
             for (String line : wrap(t.note, F_NOTE, LEFT_W)) {
                 gc.setFont(F_NOTE);
@@ -294,7 +279,7 @@ public class InventoryScreen extends UiScreen {
         y += 30;
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("WHAT DO YOU WRITE ON THE CARD?", M, y);
+        gc.fillText(Inventory.WHAT_DO_YOU_WRITE, M, y);
         y += 38;
 
         for (int i = 0; i < t.offered.length; i++) {
@@ -320,14 +305,15 @@ public class InventoryScreen extends UiScreen {
         double x = RIGHT_X, y = 158;
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("THE CATALOGUE", x, y);
-        gc.fillText(inv.written() + " of " + inv.things.size(), x + RIGHT_W - 62, y);
+        gc.fillText(Inventory.THE_CATALOGUE, x, y);
+        gc.fillText(Inventory.writtenOf(inv.written(), inv.things.size()),
+                x + RIGHT_W - 62, y);
         y += 30;
 
         if (inv.written() == 0) {
             gc.setFont(F_SMALL);
             gc.setFill(FAINT);
-            gc.fillText("nothing written yet", x, y);
+            gc.fillText(Inventory.NOTHING_WRITTEN, x, y);
             return;
         }
 
@@ -346,7 +332,7 @@ public class InventoryScreen extends UiScreen {
             // is where that shows up.
             gc.setFont(F_TINY);
             gc.setFill(FAINT);
-            gc.fillText("also read as " + t.otherReadings(), x + 30, y);
+            gc.fillText(Inventory.ALSO_READ_AS + t.otherReadings(), x + 30, y);
             y += 30;
         }
     }
@@ -370,8 +356,8 @@ public class InventoryScreen extends UiScreen {
         y += 26;
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("WHAT YOU WROTE", M, y);
-        gc.fillText("WHAT THE SURVEY DID WITH IT", M + 320, y);
+        gc.fillText(Inventory.WHAT_YOU_WROTE, M, y);
+        gc.fillText(Inventory.WHAT_THE_SURVEY_DID, M + 320, y);
         y += 12;
         gc.setStroke(EDGE);
         gc.setLineWidth(1);

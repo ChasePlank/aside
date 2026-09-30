@@ -2,7 +2,9 @@ package aside.games.inventory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -48,6 +50,7 @@ public final class SelfTest {
         theReport();
         storage();
         determinism();
+        thePhoneBuild();
         System.out.println((checks - failed) + "/" + checks + " checks passed"
                 + (failed == 0 ? "" : "  --  " + failed + " FAILED"));
         if (failed > 0) System.exit(1);
@@ -353,5 +356,247 @@ public final class SelfTest {
         // And two inventories do not share their cards.
         a.nameBySlot(1);
         ok(!b.things.get(0).named(), "writing a card on one bench does not write it on another");
+    }
+
+    // ------------------------------------------------------- the phone build
+
+    /** Every fixed line of prose the game says, in one list. */
+    static List<String> fixedLines() {
+        List<String> out = new ArrayList<>(List.of(
+                Inventory.WORDMARK, Inventory.WHERE_OPEN, Inventory.WHERE_REPORT,
+                Inventory.RULES_HEADING, Inventory.IN_FRONT, Inventory.THE_NOTE,
+                Inventory.WHAT_DO_YOU_WRITE, Inventory.THE_CATALOGUE,
+                Inventory.NOTHING_WRITTEN, Inventory.ALSO_READ_AS,
+                Inventory.WHAT_YOU_WROTE, Inventory.WHAT_THE_SURVEY_DID,
+                Inventory.NOTHING_ON_BENCH, Inventory.START_LINE,
+                Inventory.START_BUTTON, Inventory.NO_CARD));
+        // NOT_USED is deliberately absent: it is the model's default for a use
+        // that is not on the card, and no card can name one, so the phone build
+        // has no branch that could reach it.
+        out.addAll(Inventory.OPENING);
+        for (String[] r : Inventory.RULES) out.add(r[1]);
+        // Slot 0 of both is blank on purpose -- the arrays are addressed by the
+        // number itself -- so the lines start at 1.
+        for (int i = 1; i <= 8; i++) {
+            out.add(Inventory.cardWhere(i, 8));
+            out.add(Inventory.writtenOf(i, 8));
+        }
+        return out;
+    }
+
+    /**
+     * The prose is the model's.
+     *
+     * There are two builds now -- the JavaFX screen and the phone build -- and
+     * a sentence kept in {@link InventoryScreen} is a sentence the phone build
+     * does not have. Same rule as Testimony and Handoff.
+     */
+    static void theVoice() {
+        Set<String> distinct = new HashSet<>();
+        for (String s : fixedLines()) {
+            ok(s != null && !s.isBlank(), "every fixed line is a line");
+            ok(distinct.add(s), "no fixed line is written twice: " + s);
+        }
+        String screen = source("src/main/java/aside/games/inventory/InventoryScreen.java");
+        if (screen == null) {
+            System.out.println("       (no InventoryScreen.java from here -- run from the repository root)");
+            return;
+        }
+        for (String s : fixedLines()) {
+            // The wordmark is the one word the screen may also spell, because
+            // the title is the game's name and not a sentence in it.
+            if (s.equals(Inventory.WORDMARK)) continue;
+            ok(!screen.contains("\"" + s + "\""),
+                    "the screen does not hold its own copy of: " + s);
+        }
+    }
+
+    /**
+     * The single-file build is generated, not written, and a generated file
+     * that has gone stale is worse than no file. Regenerate and compare; if
+     * this fails, run aside.games.inventory.WebInventory from the root.
+     */
+    static void thePhoneBuild() throws Exception {
+        theVoice();
+
+        Path out = Path.of("web", "inventory.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no web/inventory.html from here -- run from the repository root)");
+            return;
+        }
+        String generated;
+        try {
+            generated = WebInventory.html();
+        } catch (Exception e) {
+            System.out.println("       (no template from here: " + e.getMessage() + ")");
+            return;
+        }
+        ok(generated.equals(Files.readString(out)),
+                "web/inventory.html is current -- regenerate it with aside.games.inventory.WebInventory");
+
+        for (String s : fixedLines()) {
+            ok(generated.contains(WebInventory.str(s)), "the phone build carries: " + s);
+        }
+        for (Inventory.Use u : Inventory.Use.values()) {
+            ok(generated.contains(WebInventory.str(u.label)),
+                    "the phone build knows the word " + u.label);
+            ok(generated.contains(WebInventory.str(u.does)),
+                    "the phone build knows what " + u.label + " does");
+        }
+        Inventory inv = Inventory.of();
+        for (int i = 0; i < inv.things.size(); i++) {
+            Inventory.Thing t = inv.things.get(i);
+            ok(generated.contains(WebInventory.str(t.form)),
+                    "the phone build carries object " + t.number);
+            if (t.hasNote()) {
+                ok(generated.contains(WebInventory.str(t.note)),
+                        "the phone build carries the note with object " + t.number);
+            }
+            for (Inventory.Use u : t.offered) {
+                ok(generated.contains(WebInventory.str(Inventory.outcome(i, u))),
+                        "the phone build carries what the survey did with " + t.number
+                      + " named " + u.label);
+            }
+        }
+
+        theTruthIsNotInIt(generated);
+        theReportTables(generated);
+    }
+
+    /**
+     * The one thing the phone build is not told.
+     *
+     * The game's subject is that a card is not a description of a thing. The
+     * desktop model knows what each object is for and never shows it; this
+     * build is not given it at all. It gets, per object, the three names, the
+     * three outcomes and three bits saying which name was the true one -- so it
+     * can say what the survey did and count how many cards were right, and it
+     * cannot say what any object *is*.
+     *
+     * A check rather than a comment, because a future edit that adds `truth` to
+     * the content would be a one-line change that nothing else would notice.
+     */
+    static void theTruthIsNotInIt(String generated) {
+        ok(!generated.contains("\"truth\""), "the phone build has no truth field in it");
+        ok(!generated.contains("\"mate\""), "and does not know which objects are in a set");
+
+        // And what it does have is the answer bit, per offered name, and it
+        // agrees with the model about which name that is.
+        List<List<Integer>> said = saidBits(generated);
+        eq(said.size(), 8, "the phone build has an answer bit for each object");
+        Inventory inv = Inventory.of();
+        for (int i = 0; i < Math.min(said.size(), inv.things.size()); i++) {
+            Inventory.Thing t = inv.things.get(i);
+            eq(said.get(i).size(), t.offered.length,
+                    "object " + t.number + " has one bit per name on its card");
+            for (int s = 0; s < Math.min(said.get(i).size(), t.offered.length); s++) {
+                eq(said.get(i).get(s), t.offered[s] == t.truth ? 1 : 0,
+                        "the phone build knows whether " + t.number + "'s name " + (s + 1)
+                      + " was the true one");
+            }
+        }
+    }
+
+    /**
+     * The report, read back out of the build and checked against the model.
+     *
+     * The three sentences the survey writes depend on nothing but how many
+     * cards were right, so all nine answers of each are in the file and the
+     * phone picks one. A table can be indexed along the wrong axis and every
+     * entry can still be a real sentence -- that is the bug Outside shipped and
+     * then found by driving both builds -- so this parses the tables and
+     * compares them entry by entry rather than asking whether the file contains
+     * the right sentences.
+     */
+    static void theReportTables(String generated) {
+        int n = Inventory.of().things.size();
+        List<String> headline = stringsOf(section(generated, "\"headline\":["));
+        List<String> verdict = stringsOf(section(generated, "\"verdict\":["));
+        List<String> closing = stringsOf(section(generated, "\"closing\":["));
+        eq(headline.size(), n + 1, "the headline table covers every count");
+        eq(verdict.size(), n + 1, "the verdict table covers every count");
+        eq(closing.size(), n + 1, "the closing table covers every count");
+        for (int r = 0; r <= n; r++) {
+            if (r < headline.size()) {
+                eq(headline.get(r), Inventory.headline(r, n),
+                        "the phone build headlines " + r + " right the same way");
+            }
+            if (r < verdict.size()) {
+                eq(verdict.get(r), Inventory.verdict(r, n),
+                        "the phone build counts " + r + " right the same way");
+            }
+            if (r < closing.size()) {
+                eq(closing.get(r), Inventory.closing(n - r, n),
+                        "the phone build closes " + r + " right the same way");
+            }
+        }
+    }
+
+    /** The `said` arrays, in object order, read back out of the build. */
+    static List<List<Integer>> saidBits(String generated) {
+        List<List<Integer>> out = new ArrayList<>();
+        int at = 0;
+        while (true) {
+            int k = generated.indexOf("\"said\":[", at);
+            if (k < 0) break;
+            int end = generated.indexOf(']', k);
+            if (end < 0) break;
+            List<Integer> bits = new ArrayList<>();
+            for (String p : generated.substring(k + 8, end).split(",")) {
+                if (!p.isBlank()) bits.add(Integer.parseInt(p.trim()));
+            }
+            out.add(bits);
+            at = end;
+        }
+        return out;
+    }
+
+    /** The text between a marker and the first ']' after it. */
+    static String section(String generated, String marker) {
+        int at = generated.indexOf(marker);
+        if (at < 0) throw new IllegalStateException("the build has no " + marker);
+        int end = generated.indexOf(']', at);
+        if (end < 0) throw new IllegalStateException(marker + " is never closed");
+        return generated.substring(at + marker.length(), end);
+    }
+
+    /** The JSON strings in a fragment, unescaped, in order. */
+    static List<String> stringsOf(String s) {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) != '"') continue;
+            StringBuilder b = new StringBuilder();
+            i++;
+            while (i < s.length() && s.charAt(i) != '"') {
+                if (s.charAt(i) == '\\' && i + 1 < s.length()) {
+                    char e = s.charAt(i + 1);
+                    switch (e) {
+                        case 'n' -> b.append('\n');
+                        case 'r' -> b.append('\r');
+                        case 't' -> b.append('\t');
+                        case 'u' -> {
+                            b.append((char) Integer.parseInt(s.substring(i + 2, i + 6), 16));
+                            i += 4;
+                        }
+                        default -> b.append(e);
+                    }
+                    i += 2;
+                } else {
+                    b.append(s.charAt(i));
+                    i++;
+                }
+            }
+            out.add(b.toString());
+        }
+        return out;
+    }
+
+    static String source(String path) {
+        try {
+            Path p = Path.of(path);
+            return Files.exists(p) ? Files.readString(p) : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
