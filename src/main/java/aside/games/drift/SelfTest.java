@@ -2,6 +2,7 @@ package aside.games.drift;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +90,32 @@ public final class SelfTest {
         System.out.println("       " + Drift.LINES + " lines, "
                 + Drift.LOG.stream().mapToInt(l -> l.same().size()).sum() + " rewordings, "
                 + Drift.LOG.stream().mapToInt(l -> l.changed().size()).sum() + " changes declared");
+
+        // A row is one line and the column is 540px of Arial 13. DriftScreen
+        // clips a line that does not fit rather than wrapping it, because a
+        // wrapped row is two rows and the list stops being a list. That makes
+        // an over-long line a correctness bug and not a cosmetic one: half a
+        // line is a difference that is not there, or a sameness that is not.
+        //
+        // This is a proxy, and it is written down as one. The real check is the
+        // render -- all sixteen lines and all sixty-four variants fit at the
+        // current width, which is how the number below was chosen. What this
+        // catches is a later edit that writes a line twice as long.
+        final int COLUMN_CHARS = 80;
+        int longest = 0;
+        String longestText = "";
+        for (Drift.Line ln : Drift.LOG) {
+            List<Drift.Variant> all = new ArrayList<>();
+            all.add(ln.base());
+            all.addAll(ln.same());
+            all.addAll(ln.changed());
+            for (Drift.Variant v : all) {
+                if (v.text().length() > longest) { longest = v.text().length(); longestText = v.text(); }
+            }
+        }
+        ok(longest <= COLUMN_CHARS,
+                "no line is long enough to be clipped in its column (longest is "
+                        + longest + " chars: \"" + longestText + "\")");
 
         System.out.println("\n--- the deal ---");
         // The count is exact by construction, and this is the check that says
