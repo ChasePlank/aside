@@ -53,6 +53,13 @@ public class ShotVn extends Application {
         int steps = 0;
         if ("choice".equals(stopAt)) {
             while (vn.mode != Vn.Mode.CHOOSING && steps++ < 400) vn.advance();
+        } else if ("history".equals(stopAt) || "menu".equals(stopAt)) {
+            // Walk a little way into the story first, so the history has something in it and the menu is not
+            // opened on an empty screen.
+            for (int i = 0; i < 6 && steps++ < 400; i++) {
+                if (vn.mode == Vn.Mode.CHOOSING) vn.choose(0);
+                else vn.advance();
+            }
         } else {
             while (vn.shown.isEmpty() && steps++ < 400) {
                 if (vn.mode == Vn.Mode.CHOOSING) vn.choose(0);
@@ -68,6 +75,15 @@ public class ShotVn extends Application {
         stage.setScene(scene);
         stage.show();
         screen.enter();
+        // Press a key after entering, for the views that are opened rather than navigated to. Synthesised rather
+        // than clicked because the screen takes KeyEvents, and these two overlays have never been looked at.
+        if ("history".equals(stopAt) || "menu".equals(stopAt)) {
+            javafx.scene.input.KeyCode code = "history".equals(stopAt)
+                    ? javafx.scene.input.KeyCode.H : javafx.scene.input.KeyCode.ESCAPE;
+            screen.handleKey(new javafx.scene.input.KeyEvent(javafx.scene.input.KeyEvent.KEY_PRESSED, "", "",
+                    code, false, false, false, false));
+            System.out.println("DIAG pressed " + code);
+        }
 
         var t = new javafx.animation.PauseTransition(javafx.util.Duration.millis(500));
         t.setOnFinished(e -> {
@@ -86,7 +102,7 @@ public class ShotVn extends Application {
                     bi.setRGB(x, y, a);
                     if ((a & 0xFFFFFF) != 0) nonBlack++;
                 }
-                javax.imageio.ImageIO.write(bi, "png", new java.io.File("/root/downloads/" + story + "-vn.png"));
+                javax.imageio.ImageIO.write(bi, "png", new java.io.File("/root/downloads/" + story + "-vn-" + stopAt + ".png"));
                 System.out.println("PASS wrote " + story + "-vn-" + stopAt + ".png non-black=" + nonBlack);
             } catch (Exception ex) {
                 System.out.println("FAIL: " + ex);
