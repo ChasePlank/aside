@@ -64,6 +64,29 @@ public abstract class UiScreen {
      */
 
     public void handleKeyReleased(KeyEvent e) {}
+
+    /**
+     * Mouse input, in CANVAS coordinates - the same space everything is drawn
+     * in, so a screen can hit-test against the numbers it already uses to lay
+     * itself out. Default does nothing: a screen opts in by overriding.
+     *
+     * @param pressed true for a press, false for a move (hover).
+     */
+    public void handleMouse(double x, double y, boolean pressed) {}
+
+    /**
+     * Turn a point from window space into this screen's canvas space.
+     *
+     * The canvas is scaled to fit the window and centred by a translate, so
+     * window coordinates are not canvas coordinates and the gap between them
+     * depends on the window size. `sceneToLocal` inverts the canvas's own
+     * transform, including the scale, so this is exact for any window size and
+     * any canvas resolution - and it does not need to be re-derived if the
+     * fitting changes.
+     */
+    public javafx.geometry.Point2D toCanvas(double sceneX, double sceneY) {
+        return canvas.sceneToLocal(sceneX, sceneY);
+    }
     /** Called once per frame with seconds elapsed. */
     public abstract void tick(double dt);
 

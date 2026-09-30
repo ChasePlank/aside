@@ -332,6 +332,49 @@ public class VnScreen extends UiScreen {
         }
     }
 
+    /**
+     * Mouse: click to read on, click a choice to take it.
+     *
+     * A visual novel is a click-to-continue form, so this is the input it was
+     * always shaped for. Clicking anywhere advances - readers do not aim at the
+     * text box - but a click while choosing has to land on the choice, and the
+     * bands below are derived from the same numbers drawChoices() uses.
+     */
+    @Override
+    public void handleMouse(double x, double y, boolean pressed) {
+        if (!pressed) return;                    // the novel reacts to clicks only
+        if (menuOpen || historyOpen) return;     // overlays stay keyboard-driven
+
+        if (vn.mode == Vn.Mode.ENDED) { ui.replace(new LibraryScreen(ui)); return; }
+
+        if (vn.mode == Vn.Mode.CHOOSING) {
+            List<Choice> opts = vn.availableChoices();
+            if (opts.isEmpty()) return;
+            if (x < BOX_X || x > BOX_X + BOX_W) return;
+            double boxH = 34 + opts.size() * 46;
+            double firstBaseline = BOX_Y - boxH + 12;
+            for (int i = 0; i < opts.size(); i++) {
+                double base = firstBaseline + i * 46;
+                if (y < base - 32 || y > base + 14) continue;
+                choiceIndex = i;
+                Audio.A.sfx("choice_select");
+                vn.choose(i);
+                choiceIndex = 0;
+                return;
+            }
+            return;
+        }
+
+        // Reading: the first click finishes the line, the next one moves on.
+        if (!textComplete) {
+            revealed = shownText.length();
+            textComplete = true;
+        } else {
+            vn.advance();
+            syncText();
+        }
+    }
+
     void drawChoices() {
         List<Choice> opts = vn.availableChoices();
         gc.setFill(Color.rgb(8, 8, 14, 0.82));
@@ -354,8 +397,8 @@ public class VnScreen extends UiScreen {
         gc.setFont(F_SMALL);
         gc.setFill(Color.rgb(170, 170, 190, 0.55));
         String hint = vn.mode == Vn.Mode.CHOOSING
-                ? "↑↓ choose   ENTER confirm   H history   ESC menu"
-                : "SPACE advance   H history   F5 save   F9 load   ESC menu";
+                ? "↑↓ choose   ENTER or click confirm   H history   ESC menu"
+                : "SPACE or click advance   H history   F5 save   F9 load   ESC menu";
         gc.fillText(hint, BOX_X + 4, H - 14);
         gc.setFill(Color.rgb(170, 170, 190, 0.4));
         gc.fillText(title, W - 240, H - 14);

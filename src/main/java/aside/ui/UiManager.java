@@ -114,6 +114,20 @@ public class UiManager {
         }
     }
 
+    /**
+     * Route a mouse event to the top screen, in that screen's own coordinates.
+     *
+     * The conversion happens per-screen because each screen declares its own
+     * canvas size - the platformer renders at 1600x1200 while the library is
+     * 1280x720 - and the window-to-canvas scale is different for each.
+     */
+    public void handleMouse(double sceneX, double sceneY, boolean pressed) {
+        if (stack.isEmpty()) return;
+        UiScreen top = stack.peek();
+        javafx.geometry.Point2D p = top.toCanvas(sceneX, sceneY);
+        top.handleMouse(p.getX(), p.getY(), pressed);
+    }
+
     public void tick(double dt) {
         drawToast(dt);
         if (stack.isEmpty()) return;

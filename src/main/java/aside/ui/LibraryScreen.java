@@ -51,6 +51,38 @@ public class LibraryScreen extends UiScreen {
     /** How many rows the window shows: all of them, or as many as fit. */
     int shown() { return Math.min(rows(), LibraryLayout.visibleRows()); }
 
+    /**
+     * Mouse on the shelf: hover moves the selection, click opens the game.
+     *
+     * The hit test reuses LibraryLayout's own row geometry rather than
+     * recomputing it, so a click cannot land somewhere the highlight is not -
+     * the two are the same arithmetic. (That geometry is already checked
+     * exhaustively in SelfTest, so the click targets are covered by those
+     * checks too.)
+     */
+    @Override
+    public void handleMouse(double x, double y, boolean pressed) {
+        int shown = shown();
+        double step = LibraryLayout.pitch(shown);
+        for (int k = 0; k < shown; k++) {
+            double top = LibraryLayout.barTop(k, shown);
+            if (y < top || y > top + step - LibraryLayout.BAR_INSET) continue;
+            int row = scroll + k;
+            if (row >= rows()) return;
+            if (pressed) {
+                index = row;
+                follow();
+                select();
+            } else if (index != row) {
+                // Hovering follows the pointer, but only when it changes row -
+                // otherwise every mouse move would re-run follow().
+                index = row;
+                follow();
+            }
+            return;
+        }
+    }
+
     public LibraryScreen(UiManager ui) {
         super(ui);
     }
@@ -182,6 +214,6 @@ public class LibraryScreen extends UiScreen {
         String where = rows > shown
                 ? "    " + (start + 1) + "-" + (start + shown) + " of " + rows
                 : "";
-        gc.fillText("up/down select    ENTER start" + where, 72, H - 28);
+        gc.fillText("up/down or hover select    ENTER or click start" + where, 72, H - 28);
     }
 }

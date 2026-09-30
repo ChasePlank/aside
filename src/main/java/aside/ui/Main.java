@@ -39,6 +39,10 @@ public class Main extends Application {
         Scene scene = new Scene(host, w, h, Color.BLACK);
         scene.setOnKeyPressed(ui::handleKey);
         scene.setOnKeyReleased(ui::handleKeyReleased);
+        // Mouse, for the screens that want it. Scene coordinates; the manager
+        // converts them into whatever canvas the top screen is using.
+        scene.setOnMousePressed(e -> ui.handleMouse(e.getSceneX(), e.getSceneY(), true));
+        scene.setOnMouseMoved(e -> ui.handleMouse(e.getSceneX(), e.getSceneY(), false));
 
         // Screenshot mode: render N frames, write the frame to a file,
         // exit. Screen-grabbing the desktop proved unreliable (the
