@@ -1,6 +1,7 @@
-package aside.games.overtime;
+package aside.tools;
 
 import aside.engine.Script;
+import aside.games.overtime.VnScreen;
 import aside.engine.Vn;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -20,6 +21,8 @@ import java.nio.file.Path;
  * obvious in a frame - which is how the water drawn under the sky and the jumpscare border
  * were both found. So: advance the story to a beat that actually shows someone, then draw.
  *
+ * Usage:  DISPLAY=:99 java -cp out aside.tools.ShotVn [story-name]     (default: overtime)
+ *
  * Run from the repo root: Assets resolves art/backgrounds and art/sprites relatively.
  *
  * VERIFIED (Sept 28): Monty drawn on the office background, keyed and cropped onto the
@@ -37,7 +40,11 @@ public class ShotVn extends Application {
     @Override public void start(Stage stage) throws Exception {
         aside.ui.Assets.load(".");
         aside.ui.UiManager ui = new aside.ui.UiManager(".");
-        Script script = Script.load(Path.of("stories", "overtime.aside"));
+        // The story is an argument now, defaulting to overtime. It used to be hard-coded, and it lived in
+        // the overtime game's package - which is why I forgot it existed and nearly wrote it again. A tool
+        // for the engine does not belong inside one game.
+        String story = getParameters().getRaw().isEmpty() ? "overtime" : getParameters().getRaw().get(0);
+        Script script = Script.load(Path.of("stories", story + ".aside"));
         Vn vn = new Vn(script);
         // Walk to the first beat with someone standing in it.
         int steps = 0;
@@ -72,8 +79,8 @@ public class ShotVn extends Application {
                     bi.setRGB(x, y, a);
                     if ((a & 0xFFFFFF) != 0) nonBlack++;
                 }
-                javax.imageio.ImageIO.write(bi, "png", new java.io.File("/root/downloads/overtime-vn.png"));
-                System.out.println("PASS wrote overtime-vn.png non-black=" + nonBlack);
+                javax.imageio.ImageIO.write(bi, "png", new java.io.File("/root/downloads/" + story + "-vn.png"));
+                System.out.println("PASS wrote " + story + "-vn.png non-black=" + nonBlack);
             } catch (Exception ex) {
                 System.out.println("FAIL: " + ex);
             }
