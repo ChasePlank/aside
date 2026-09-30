@@ -361,6 +361,26 @@ public class Game {
      * animatronic standing in the doorway before you walked into it, so
      * the game tells you, and the information is free. What is not free is
      * the position it leaves you in.
+     *
+     * <p><b>OPEN, and deliberately not fixed (2026-09-30):</b> the refusal
+     * described above is <i>not implemented</i>. This method walks into an
+     * occupied room, and a probe confirms it (`step` into a room holding a
+     * threat returns true). It is written down here rather than fixed
+     * because it is not a one-line change: adding
+     * {@code if (standingIn(dest) != null) return false;} on its own takes
+     * <b>every</b> bot policy to 0% on every night of the week -- the
+     * building becomes walls, the player is pinned almost immediately, and
+     * the shock allowance is nowhere near enough to buy a way out. So the
+     * rule and the difficulty table have to move together, and that is a
+     * tuning job rather than a bug fix.
+     *
+     * <p>The related symptom, measured the same way: without the refusal
+     * the sweep's HOLD and REACT policies die to Funtime Freddy on every
+     * night (mean 60-90s) while PANIC survives 60-100%. That inverts what
+     * {@link Bot} says PANIC is for, and it means {@link SelfTest}'s "the
+     * week does not get easier" check is comparing an all-zero array and
+     * cannot fail. The instrument is broken, so the published table is not
+     * yet a reading of the game.
      */
     public boolean step(int direction) {
         if (status != Status.PLAYING) return false;
