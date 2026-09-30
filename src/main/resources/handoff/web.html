@@ -49,7 +49,10 @@
        background:var(--card); cursor:pointer; color:var(--dim); font-size:17px}
   .opt.sel{background:#1E1E2A; border-color:#3E3E54; box-shadow:inset 3px 0 0 var(--gold)}
   .opt .mark{color:var(--gold); font:13px/1.6 Consolas,Menlo,monospace; margin-right:8px}
-  .opt .tag{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin-left:8px}
+  /* nowrap, or "as written" breaks across two lines on a 360px phone and the
+     second half lands outside the card it belongs to. */
+  .opt .tag{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin-left:8px;
+            white-space:nowrap}
   .opt.sel .tag{color:#F2C14Eaa}
   .head{font-size:22px; margin:26px 0 12px}
   .head.good{color:var(--green)} .head.bad{color:var(--red)}
