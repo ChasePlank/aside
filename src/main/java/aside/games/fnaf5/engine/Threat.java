@@ -1,0 +1,215 @@
+package aside.games.fnaf5.engine;
+
+/**
+ * One thing in the building, and the rule that moves it.
+ *
+ * Every threat in FNAF 1 to 4 walked toward a <i>place</i>: a door, a
+ * station, a side of the room. They differed in speed and in which place,
+ * and the player's job was to be at the right place in time. Here they
+ * walk toward three different <b>kinds of thing</b>, and that is the whole
+ * difference:
+ *
+ * <pre>
+ *   SOUND      walks toward the last sound.        You move, it comes.
+ *   ATTENTION  walks toward the camera.            You look, it comes.
+ *   PURSUIT    walks toward you.                   You wait, it comes.
+ * </pre>
+ *
+ * The three demands contradict each other, and that is the design. Freddy
+ * punishes standing still. Ballora punishes moving. Foxy punishes looking.
+ * A player cannot satisfy all three, so the night is spent choosing which
+ * one to be wrong about, and the controlled shock is the only thing that
+ * answers all three at once -- which is why there are so few of them.
+ *
+ * Two of the three can be permanently evaded by a player who understands
+ * them, and that is deliberate. Ballora can never find you if you never
+ * move. Foxy can never reach you if you never park the camera. Neither of
+ * those is a winning strategy, because Freddy does not care what you do,
+ * and because the camera is the only way to know which room is safe to
+ * walk into. The counters exist so that the player has something to learn;
+ * Freddy exists so that learning it is not enough.
+ */
+public final class Threat {
+
+    /** What moves it. Three rules, three counters, and they disagree. */
+    public enum Rule {
+        /** Follows the last sound made in the building. Ballora. */
+        SOUND,
+        /** Follows the camera feed. Funtime Foxy. */
+        ATTENTION,
+        /** Follows you, and is never distracted. Funtime Freddy. */
+        PURSUIT
+    }
+
+    /** What the screen calls it. */
+    public final String name;
+    /** The short key every cue for this one is built from. */
+    public final String key;
+    /** What moves it. */
+    public final Rule rule;
+    /** Where it starts, and where the report says it belongs. */
+    public final Room.Where home;
+    /**
+     * How much faster or slower this one is than the night's baseline.
+     *
+     * Three threats on one interval arrive in lockstep and read as a
+     * metronome rather than as a building with things in it. The spread is
+     * small on purpose: it staggers them without letting one of them be
+     * the only one that matters.
+     */
+    public final double pace;
+
+    /** Which room it is standing in. */
+    public Room.Where room;
+    /** Seconds since its last move. */
+    public double timer;
+    /** Seconds it has been in the room you are standing in. */
+    public double hereFor;
+    /** Seconds since it last announced itself from your room. */
+    public double sinceCue;
+    /** How many times it has walked into the room you were standing in. */
+    public int visits;
+
+    public Threat(String name, String key, Rule rule, Room.Where home,
+                  double pace, Room.Where start) {
+        this.name = name;
+        this.key = key;
+        this.rule = rule;
+        this.home = home;
+        this.pace = pace;
+        this.room = start;
+    }
+
+    /** True when it is standing in the room you are standing in. */
+    public boolean inYourRoom(Game g) {
+        return room == g.where;
+    }
+
+    /** True when it is one room away, which is as close as a sound gets. */
+    public boolean nextDoor(Game g) {
+        return Room.adjacent(room, g.where);
+    }
+
+    public void update(double dt, Game g) {
+        if (g.status != Game.Status.PLAYING) return;
+
+        if (inYourRoom(g)) {
+            hereFor += dt;
+            sinceCue += dt;
+            // It keeps announcing itself while it waits. One cue on arrival
+            // would be enough to be fair and not enough to be frightening:
+            // what wears a player down is being told again.
+            if (sinceCue >= Game.CUE_EVERY) {
+                sinceCue = 0;
+                g.cue("here_" + key);
+            }
+
+            // Ballora is blind. The room she is standing in tells her
+            // nothing -- only sound does -- so if nothing has made a noise
+            // for as long as she has been here, she gives up and walks
+            // off. This is the one threat in the franchise that is
+            // survived by doing nothing, and it is why she is the one
+            // that makes moving expensive.
+            //
+            // Both halves of that test are load-bearing. The building
+            // being quiet is not enough on its own -- a player who has
+            // been standing still for a minute has not earned anything,
+            // she simply has not found them yet -- and her having been
+            // here a while is not enough on its own either, because a
+            // player who walks into the room she is standing in has just
+            // made a noise, and that noise is hers to follow.
+            if (rule == Rule.SOUND
+                    && hereFor >= Game.BALLORA_PATIENCE
+                    && g.soundAge >= Game.BALLORA_PATIENCE) {
+                g.cue("lost_" + key);
+                room = Room.stepAway(room, g.where);
+                hereFor = 0;
+                sinceCue = 0;
+                timer = 0;
+                return;
+            }
+
+            if (hereFor >= g.grace()) g.jumpscare(this);
+            // NOTE: no return here, and that is the whole reason the
+            // counters work. A thing standing in your room is still
+            // walking -- it is just also a clock. Funtime Foxy is following
+            // the camera, so the moment you put the camera somewhere else
+            // it turns and goes, and the grace is the time you have to do
+            // that in. Funtime Freddy is already where it was going, so it
+            // does not move at all and only the shock answers it. If this
+            // returned early instead, a thing in your room would be frozen
+            // there until it killed you, and two of the three counters
+            // would be decoration.
+        } else {
+            hereFor = 0;
+        }
+
+        timer += dt;
+        if (timer < g.interval(this)) return;
+        timer = 0;
+        step(g);
+    }
+
+    /**
+     * One room toward whatever this one is following.
+     *
+     * The cue is chosen by how close the move leaves it, and the gradient
+     * is the whole information model of the game: a footstep somewhere in
+     * the building, a named step when it is one door away, and its own
+     * voice when it is in the room with you. A player who learns the three
+     * voices can play this with their eyes shut, which is the point --
+     * because the camera is pointed at somewhere else.
+     */
+    void step(Game g) {
+        Room.Where target = target(g);
+        if (target == null) return;
+        Room.Where next = Room.stepToward(room, target);
+        if (next == room) return;
+        room = next;
+
+        if (inYourRoom(g)) {
+            hereFor = 0;
+            sinceCue = 0;
+            visits++;
+            g.cue("here_" + key);
+            g.arrived(this);
+        } else if (nextDoor(g)) {
+            g.cue("step_" + key);
+            g.heardNextDoor(this);
+        } else {
+            g.cue("footstep");
+        }
+    }
+
+    /**
+     * What it is walking toward right now, or null if nothing.
+     *
+     * Null is not a failure state -- it is the two ways a player can make
+     * one of these harmless. Ballora has no target once the building has
+     * been quiet longer than she can remember a sound, and Foxy has no
+     * target at all while the monitor is down, because it is following
+     * the feed and there is no feed to follow.
+     */
+    Room.Where target(Game g) {
+        return switch (rule) {
+            case PURSUIT -> g.where;
+            case ATTENTION -> {
+                if (!g.monitorOn || g.camera == null) yield null;
+                // It goes to what you are watching, and once it is there
+                // it turns around and comes for you. That two-stage rule
+                // is what stops "park the camera on the far end" from
+                // being a way to keep it busy forever.
+                yield room == g.camera ? g.where : g.camera;
+            }
+            case SOUND -> g.soundAge <= Game.SOUND_MEMORY ? g.lastSound : null;
+        };
+    }
+
+    /** Sent to one end of the building, by a controlled shock. */
+    void banished(Room.Where to) {
+        room = to;
+        timer = 0;
+        hereFor = 0;
+        sinceCue = 0;
+    }
+}
