@@ -61,6 +61,57 @@ public class GameScreen extends UiScreen {
         super(ui);
         this.night = night;
         this.game = new Game(night, System.nanoTime());
+        devHook();
+    }
+
+    /**
+     * Dev hooks, for verifying frames that a 90-frame snapshot cannot
+     * reach on its own.
+     *
+     *   -Daside.fnaf2.stage=<name>   put an animatronic in its opening
+     *   -Daside.fnaf2.scare=<name>   jump straight to the jumpscare
+     *   -Daside.fnaf2.win=1          jump straight to 6 AM
+     *   -Daside.fnaf2.freeze=1       stop the engine ticking
+     *
+     * The stage hook is the one that earns its keep: a threat that is
+     * only visible for a window is impossible to screenshot by playing,
+     * and "I could not see him" is exactly the report it answers.
+     *
+     * It needs the freeze to be worth anything. Without it the snapshot
+     * lands a second after the keys, by which time the hall light has
+     * already repelled Foxy and the frame proves nothing -- the first
+     * attempt at this looked like proof of a visual bug and was actually
+     * proof the repel worked.
+     */
+    boolean frozen = false;
+
+    void devHook() {
+        frozen = System.getProperty("aside.fnaf2.freeze") != null;
+        String stage = System.getProperty("aside.fnaf2.stage");
+        if (stage != null) {
+            for (Animatronic x : game.visitors()) {
+                if (matches(x.name, stage)) {
+                    x.pathIndex = x.path.length;
+                    x.officeTimer = 0;
+                }
+            }
+            if (matches("Withered Foxy", stage) || matches("Foxy", stage)) {
+                game.witheredFoxy.stages = 3;
+            }
+        }
+        String scare = System.getProperty("aside.fnaf2.scare");
+        if (scare != null) {
+            for (Animatronic x : game.cast()) {
+                if (matches(x.name, scare)) game.jumpscareBy = x;
+            }
+            if (game.jumpscareBy == null) game.jumpscareBy = game.puppet;
+            game.status = Game.Status.JUMPSCARED;
+            scareT = 2.0;
+        }
+        if (System.getProperty("aside.fnaf2.win") != null) {
+            game.status = Game.Status.SURVIVED;
+            game.hour = 6;
+        }
     }
 
     @Override public Parent getRoot() { return root; }
@@ -68,7 +119,7 @@ public class GameScreen extends UiScreen {
     @Override
     public void tick(double dt) {
         double frame = Math.min(dt, 0.25);
-        game.update(frame);
+        if (!frozen) game.update(frame);
         for (String cue : game.drainCues()) Audio.A.sfx(cue);
         if (game.status == Game.Status.JUMPSCARED) {
             scareT += frame;
@@ -112,6 +163,12 @@ public class GameScreen extends UiScreen {
     @Override
     public void handleKeyReleased(KeyEvent e) {
         if (e.getCode() == KeyCode.W) game.setWinding(false);
+    }
+
+    /** "Balloon Boy" matches "balloonboy" -- a dev hook should not make
+     *  you remember where the spaces are. */
+    static boolean matches(String name, String arg) {
+        return name.replace(" ", "").equalsIgnoreCase(arg.replace(" ", ""));
     }
 
     // ---- Rendering ----
@@ -159,6 +216,12 @@ public class GameScreen extends UiScreen {
                     if (x.atOpening() && x.opening == Animatronic.Opening.HALL) {
                         drawFigure(a, x.name, HALL_SRC);
                     }
+                }
+                // Foxy is staged rather than a visitor -- he does not walk
+                // a path to the office, he waits in the cove and then runs
+                // -- so he is not in visitors() and has to be drawn here.
+                if (game.witheredFoxy.stages >= 3) {
+                    drawFigure(a, game.witheredFoxy.name, HALL_SRC);
                 }
             } else if (game.ventLLightOn) {
                 for (Animatronic x : game.visitors()) {
