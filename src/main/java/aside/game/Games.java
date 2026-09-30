@@ -2,6 +2,7 @@ package aside.game;
 
 import aside.games.bearings.BearingsGame;
 import aside.games.fnaf.FnafGame;
+import aside.games.fnaf2.Fnaf2Game;
 import aside.games.fruitjump.FruitJumpGame;
 import aside.games.handoff.HandoffGame;
 import aside.games.inventory.InventoryGame;
@@ -25,6 +26,7 @@ public final class Games {
         List<Game> g = new ArrayList<>();
         g.add(new OvertimeGame());
         g.add(new FnafGame());
+        g.add(new Fnaf2Game());
         g.add(new FruitJumpGame());
         g.add(new ResidueGame());
         g.add(new LedgerGame());
