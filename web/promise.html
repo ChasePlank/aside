@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Promise</title>
+<style>
+  :root {
+    --bg: #0B0C10;
+    --ink: #E9E9F2;
+    --dim: #9C9CB0;
+    --faint: #6B6B82;
+    --gold: #E8B44A;
+    --bad: #E05A6B;
+    --good: #6FCF97;
+    --water: #6FA8CF;
+    --paper: #1A1B26;
+    --edge: #2C2D3E;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 0px) 0;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 96px; }
+  h1 { font-family: Georgia, serif; font-size: 34px; color: var(--gold); margin: 18px 0 2px; font-weight: 400; }
+  .sub { color: var(--faint); font-size: 12px; margin-bottom: 18px; }
+  p { margin: 0 0 14px; }
+  .scene { font-family: Georgia, serif; font-size: 17px; color: var(--ink); }
+  .card { background: var(--paper); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; margin: 0 0 16px; }
+  .card h2 { font-size: 12px; letter-spacing: .08em; color: var(--faint); margin: 0 0 12px; font-weight: 600; }
+  .rule { margin-bottom: 14px; }
+  .rule .k { color: var(--gold); font-size: 14px; }
+  .rule .t { color: var(--dim); font-size: 13px; }
+  button {
+    font: inherit; font-size: 15px; border: 0; border-radius: 10px; padding: 13px 18px;
+    background: var(--gold); color: #14141C; font-weight: 600; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--dim); border: 1px solid var(--edge); font-weight: 400; }
+  .pair { display: flex; gap: 10px; }
+  .pair button { flex: 1; }
+  .who { font-family: Georgia, serif; font-size: 26px; color: var(--gold); margin: 6px 0 2px; }
+  .say { font-family: Georgia, serif; font-size: 17px; color: var(--ink); margin-bottom: 10px; }
+  .cost { color: var(--water); font-size: 13px; margin-bottom: 16px; }
+  .big { font-family: Georgia, serif; font-size: 26px; color: var(--gold); margin: 4px 0 10px; }
+  .big.win { color: var(--good); }
+  .stat { font-size: 14px; color: var(--dim); margin-bottom: 6px; }
+  .stat.bad { color: var(--bad); }
+  .stat.good { color: var(--good); }
+  .water { font-family: Georgia, serif; font-size: 17px; color: var(--water); margin-bottom: 4px; }
+  .watercost { color: var(--water); font-size: 13px; margin-bottom: 16px; }
+  .due { padding: 12px 0; border-bottom: 1px solid var(--edge); }
+  .due .top { display: flex; gap: 10px; align-items: baseline; }
+  .due .who2 { color: var(--ink); font-size: 15px; flex: 1; }
+  .due .c { color: var(--dim); font-size: 13px; white-space: nowrap; }
+  .due .txt { color: var(--faint); font-size: 13px; }
+  .due button { margin-top: 8px; padding: 8px 12px; font-size: 13px; background: transparent; color: var(--bad); border: 1px solid var(--edge); font-weight: 400; }
+  .row { padding: 12px 0; border-bottom: 1px solid var(--edge); }
+  .row .top { display: flex; gap: 10px; align-items: baseline; }
+  .row .who2 { color: var(--ink); font-size: 14px; flex: 1; }
+  .row .w { font-size: 13px; white-space: nowrap; }
+  .row .w.carried { color: var(--good); }
+  .row .w.broken { color: var(--bad); }
+  .row .w.saidno { color: var(--faint); }
+  .row .txt { color: var(--faint); font-size: 13px; }
+  .closing { font-family: Georgia, serif; font-size: 16px; color: var(--ink); margin: 18px 0; }
+  .note { color: var(--faint); font-size: 12px; margin-top: 8px; }
+  .panel { background: var(--paper); border: 1px solid var(--edge); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; }
+  .panel h2 { font-size: 12px; letter-spacing: .08em; color: var(--faint); margin: 0 0 10px; font-weight: 600; }
+  .panel .p { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; }
+  .panel .p .n { color: var(--ink); font-size: 14px; flex: 1; }
+  .panel .p .d { color: var(--faint); font-size: 12px; white-space: nowrap; }
+  .panel .p .t { color: var(--gold); font-size: 12px; white-space: nowrap; }
+  .panel .none { color: var(--faint); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const C = {
+"wordmark":"Promise",
+"openTitle":"Promise",
+"openSub":"Five nights, eight people, and water that takes some of every one of them.",
+"openSituation":["You have the boat. There is a village on this shore and a town on the other, and between them there is water that does not care what anybody promised.","Over the first four nights, eight people ask you for something. Each one is a crossing, or two. You can say yes to all of them. Saying yes costs you nothing at all.","Then the night comes, and the water takes what it takes, and what is left is what you have."],
+"rulesHeading":"the rule",
+"rules":[{"key":"yes is free","text":"It costs you nothing to promise. That is the whole trouble with it."},{"key":"the water","text":"Every night the water takes something — a tide, a cough in the outboard, a stranger on the shingle. You will not know how much until it comes."},{"key":"four crossings","text":"You have four crossings in you a night. What is due tonight and what the water takes both come out of those four."},{"key":"breaking","text":"If it does not fit, you choose what to break. The water is never broken. A promise you break is worse than one you never made."}],
+"startButton":"open the season",
+"nights":5,
+"capacity":4,
+"max":6,
+"asks":[{"who":"Ivor","what":"The shop is out of everything. Take the crates across on the second.","cost":2,"due":2,"askedOn":1},{"who":"Nell","what":"Take me across on the third. My sister is ill.","cost":1,"due":3,"askedOn":1},{"who":"Tess","what":"Bring the doctor over on the fourth. She will have her bag with her.","cost":2,"due":4,"askedOn":2},{"who":"Bram","what":"Take me across on the third. I have a train to catch.","cost":1,"due":3,"askedOn":2},{"who":"Nell","what":"Bring me home on the fifth.","cost":1,"due":5,"askedOn":3},{"who":"the schoolmaster","what":"Take the children's things across on the fourth.","cost":2,"due":4,"askedOn":3},{"who":"Ivor","what":"One more run on the fifth. The last of it.","cost":1,"due":5,"askedOn":4},{"who":"Tess","what":"Bring the doctor back on the fifth.","cost":2,"due":5,"askedOn":4}],
+"water":[null,{"what":"The outboard is coughing. It costs you a crossing to coax it.","cost":1},{"what":"A stranger is on the shingle, soaked through. You take him over.","cost":1},{"what":"The tide is wrong tonight. Every crossing costs you double.","cost":2},{"what":"The lamp on the far jetty is out. You go and light it.","cost":1},{"what":"The wind gets up. You lose two crossings to it.","cost":2}],
+"nightLabel":[null,"night 1 of 5","night 2 of 5","night 3 of 5","night 4 of 5","night 5 of 5"],
+"ordinal":[null,"first","second","third","fourth","fifth"],
+"costWord":[null,"one crossing","two crossings"],
+"dueLine":["two crossings · due on the second","one crossing · due on the third","two crossings · due on the fourth","one crossing · due on the third","one crossing · due on the fifth","two crossings · due on the fourth","one crossing · due on the fifth","two crossings · due on the fifth"],
+"loadLine":["0 of 4 crossings","1 of 4 crossings","2 of 4 crossings","3 of 4 crossings","4 of 4 crossings","5 of 4 crossings","6 of 4 crossings","7 of 4 crossings","8 of 4 crossings","9 of 4 crossings","10 of 4 crossings","11 of 4 crossings","12 of 4 crossings"],
+"overLine":["0 over — choose what to break","1 over — choose what to break","2 over — choose what to break","3 over — choose what to break","4 over — choose what to break","5 over — choose what to break","6 over — choose what to break","7 over — choose what to break","8 over — choose what to break","9 over — choose what to break","10 over — choose what to break","11 over — choose what to break","12 over — choose what to break"],
+"breaksLine":["nothing was broken","one promise was made and not kept","2 promises were made and not kept","3 promises were made and not kept","4 promises were made and not kept","5 promises were made and not kept","6 promises were made and not kept","7 promises were made and not kept","8 promises were made and not kept"],
+"worthLine":["worth -8 of 6","worth -7 of 6","worth -6 of 6","worth -5 of 6","worth -4 of 6","worth -3 of 6","worth -2 of 6","worth -1 of 6","worth 0 of 6","worth 1 of 6","worth 2 of 6","worth 3 of 6","worth 4 of 6","worth 5 of 6","worth 6 of 6"],
+"closing":["You broke more than you carried. Every one of them was told yes, and every one of them was told it on a night that was already full. The water took what it always takes. Nothing here was bad luck.","You broke more than you carried. Every one of them was told yes, and every one of them was told it on a night that was already full. The water took what it always takes. Nothing here was bad luck.","You broke more than you carried. Every one of them was told yes, and every one of them was told it on a night that was already full. The water took what it always takes. Nothing here was bad luck.","You broke more than you carried. Every one of them was told yes, and every one of them was told it on a night that was already full. The water took what it always takes. Nothing here was bad luck.","You broke more than you carried. Every one of them was told yes, and every one of them was told it on a night that was already full. The water took what it always takes. Nothing here was bad luck.","You broke more than you carried. Every one of them was told yes, and every one of them was told it on a night that was already full. The water took what it always takes. Nothing here was bad luck.","You broke more than you carried. Every one of them was told yes, and every one of them was told it on a night that was already full. The water took what it always takes. Nothing here was bad luck.","You broke more than you carried. Every one of them was told yes, and every one of them was told it on a night that was already full. The water took what it always takes. Nothing here was bad luck.","You said yes to more than you had and then chose who to let down. The choosing happened on the night, but the promise happened on an earlier one, and that is where it was decided.","More was broken than carried. Every one of the breaks happened on a night that could not hold what was promised to it, and every one of those promises was free to make. That is the shape of it: the yes costs nothing, so you spent it, and the night sent the bill.","More was broken than carried. Every one of the breaks happened on a night that could not hold what was promised to it, and every one of those promises was free to make. That is the shape of it: the yes costs nothing, so you spent it, and the night sent the bill.","You carried most of them and you broke some. Look at when you said yes: the nights that broke were already full when you promised, and the water on them was the same water it always is. Nothing surprised you. You promised a night you had not counted.","You carried most of them and you broke some. Look at when you said yes: the nights that broke were already full when you promised, and the water on them was the same water it always is. Nothing surprised you. You promised a night you had not counted.","Nearly all of it. One promise went, and it went on a night that was already full — which is the only kind of night a promise ever goes on. Nobody was lied to. Somebody was told yes and then told nothing, and those are not the same thing.","Every promise you made, you kept. You said no twice, and you said it on the night they asked, before the water had a chance to say it for you. That is the whole of it: the no belongs to you, and a broken promise is what a no becomes when you give it away."],
+"closingEmpty":"You promised nobody, so nobody was let down. Nobody was carried either. The water took its crossings every night and you watched it, and the eight of them found another way across or they did not. That is a clean season and it is not the same as a good one.",
+"asksHead":"what you have promised",
+"nothingPromised":"nothing yet",
+"waterHead":"the water",
+"dueHead":"due tonight",
+"nothingDue":"nothing is due tonight",
+"fitsLine":"it fits",
+"breakKey":"ENTER  break this one",
+"goOn":"ENTER  go on",
+"breakButton":"break this one",
+"goOnButton":"go on",
+"brokenTag":"broken",
+"reportHead":"the season",
+"again":"run the season again",
+"keptHead":"carried",
+"brokenHead":"broken",
+"declinedHead":"said no",
+"sayYes":"Y  promise it",
+"sayNo":"N  say no",
+"yesButton":"promise it",
+"noButton":"say no",
+"rowWord":{"kept":"carried","broken":"broken","declined":"said no"}
+}
+;
+
+//__MODEL_BEGIN__
+// The rule, ported. What is due tonight and what the water takes both come out
+// of the same four crossings, so the phone has to compute the night itself --
+// the break screen depends on it. There is no deal here and no seed: the season
+// is the season, so the whole model is arithmetic over the content and the two
+// builds cannot diverge on anything but the arithmetic.
+// tools/promise-trace.mjs compares every answer set and every break choice.
+const FLOOR = -C.asks.length;
+
+function asking() {
+  return !state.reported && state.askAt < C.asks.length && C.asks[state.askAt].askedOn === state.night;
+}
+function dueTonight() {
+  const out = [];
+  for (let i = 0; i < C.asks.length; i++) {
+    if (state.answers[i] === 1 && !state.broken[i] && C.asks[i].due === state.night) out.push(i);
+  }
+  return out;
+}
+function outstanding() {
+  const out = [];
+  for (let i = 0; i < C.asks.length; i++) {
+    if (state.answers[i] === 1 && !state.broken[i] && C.asks[i].due > state.night) out.push(i);
+  }
+  return out;
+}
+function load() {
+  let l = C.water[state.night].cost;
+  for (const i of dueTonight()) l += C.asks[i].cost;
+  return l;
+}
+function over() { return Math.max(0, load() - C.capacity); }
+function kept() {
+  let n = 0;
+  for (let i = 0; i < C.asks.length; i++) if (state.answers[i] === 1 && !state.broken[i]) n++;
+  return n;
+}
+function breaks() {
+  let n = 0;
+  for (const b of state.broken) if (b) n++;
+  return n;
+}
+function declined() {
+  let n = 0;
+  for (const a of state.answers) if (a === 0) n++;
+  return n;
+}
+function score() { return kept() - breaks(); }
+function closingFor() {
+  if (kept() === 0 && breaks() === 0) return C.closingEmpty;
+  return C.closing[score() - FLOOR];
+}
+//__MODEL_END__
+
+const KEY = 'aside.promise.season';
+let state = { answers: [], broken: [], night: 1, askAt: 0, reported: false };
+let screen = 'open';
+let canStore = true;
+try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); }
+catch (e) { canStore = false; }
+
+function fresh() {
+  state.answers = new Array(C.asks.length).fill(-1);
+  state.broken = new Array(C.asks.length).fill(false);
+  state.night = 1;
+  state.askAt = 0;
+  state.reported = false;
+}
+
+// The desktop's own save format, so a season started on one can be finished on
+// the other. Same six lines, same shape.
+function serialize() {
+  return 'promise 1\n'
+    + 'night ' + state.night + '\n'
+    + 'askAt ' + state.askAt + '\n'
+    + 'answers ' + state.answers.join(' ') + '\n'
+    + 'broken ' + state.broken.map(b => (b ? 1 : 0)).join(' ') + '\n'
+    + 'reported ' + (state.reported ? 1 : 0) + '\n';
+}
+
+function deserialize(text) {
+  const lines = String(text).split('\n');
+  if (!lines.length || lines[0].trim().split(/\s+/)[0] !== 'promise') return false;
+  for (const line of lines) {
+    const p = line.trim().split(/\s+/);
+    if (p[0] === 'night' && p.length > 1) state.night = Number(p[1]);
+    else if (p[0] === 'askAt' && p.length > 1) state.askAt = Number(p[1]);
+    else if (p[0] === 'answers') {
+      for (let i = 0; i < C.asks.length && i + 1 < p.length; i++) state.answers[i] = Number(p[i + 1]);
+    } else if (p[0] === 'broken') {
+      for (let i = 0; i < C.asks.length && i + 1 < p.length; i++) state.broken[i] = p[i + 1] === '1';
+    } else if (p[0] === 'reported' && p.length > 1) state.reported = p[1] === '1';
+  }
+  return true;
+}
+
+function loadSave() {
+  if (!canStore) return false;
+  let t = null;
+  try { t = localStorage.getItem(KEY); } catch (e) { return false; }
+  if (!t) return false;
+  fresh();
+  return deserialize(t);
+}
+
+function save() {
+  if (!canStore) return false;
+  try { localStorage.setItem(KEY, serialize()); return true; }
+  catch (e) { return false; }
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+const app = document.getElementById('app');
+
+function render() {
+  if (screen === 'open') renderOpen();
+  else if (screen === 'ask') renderAsk();
+  else if (screen === 'night') renderNight();
+  else renderReport();
+}
+
+function renderOpen() {
+  let h = '<h1>' + esc(C.openTitle) + '</h1><div class="sub">' + esc(C.openSub) + '</div>';
+  for (const p of C.openSituation) h += '<p class="scene">' + esc(p) + '</p>';
+  h += '<div class="card"><h2>' + esc(C.rulesHeading) + '</h2>';
+  for (const r of C.rules) {
+    h += '<div class="rule"><div class="k">' + esc(r.key) + '</div><div class="t">' + esc(r.text) + '</div></div>';
+  }
+  h += '</div><button id="go">' + esc(C.startButton) + '</button>';
+  if (!canStore) h += '<div class="note">This browser will not keep the season. The report will be lost when you close the tab.</div>';
+  app.innerHTML = h;
+  document.getElementById('go').onclick = () => { screen = asking() ? 'ask' : 'night'; render(); };
+}
+
+function promisePanel() {
+  const standing = dueTonight().concat(outstanding());
+  let h = '<div class="panel"><h2>' + esc(C.asksHead) + '</h2>';
+  if (!standing.length) h += '<div class="none">' + esc(C.nothingPromised) + '</div>';
+  for (const i of standing) {
+    const a = C.asks[i];
+    h += '<div class="p"><div class="n">' + esc(a.who) + '</div>'
+       + '<div class="d">' + esc(C.costWord[a.cost]) + ' &middot; ' + esc(C.ordinal[a.due]) + '</div>'
+       + (a.due === state.night ? '<div class="t">tonight</div>' : '')
+       + '</div>';
+  }
+  return h + '</div>';
+}
+
+function renderAsk() {
+  const a = C.asks[state.askAt];
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.nightLabel[state.night]) + '</div>';
+  h += '<div class="who">' + esc(a.who) + '</div>';
+  h += '<div class="say">' + esc(a.what) + '</div>';
+  h += '<div class="cost">' + esc(C.dueLine[state.askAt]) + '</div>';
+  h += '<div class="pair"><button id="yes">' + esc(C.yesButton) + '</button>'
+     + '<button class="ghost" id="no">' + esc(C.noButton) + '</button></div>';
+  h += promisePanel();
+  app.innerHTML = h;
+  document.getElementById('yes').onclick = () => { state.answers[state.askAt] = 1; state.askAt++; after(); };
+  document.getElementById('no').onclick = () => { state.answers[state.askAt] = 0; state.askAt++; after(); };
+}
+
+function after() {
+  save();
+  screen = asking() ? 'ask' : 'night';
+  render();
+}
+
+function renderNight() {
+  const w = C.water[state.night];
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.nightLabel[state.night]) + '</div>';
+  h += '<div class="card"><h2>' + esc(C.waterHead) + '</h2>'
+     + '<div class="water">' + esc(w.what) + '</div>'
+     + '<div class="watercost">' + esc(C.costWord[w.cost]) + '</div></div>';
+
+  const due = dueTonight();
+  h += '<div class="card"><h2>' + esc(C.dueHead) + '</h2>';
+  if (!due.length) h += '<div class="none">' + esc(C.nothingDue) + '</div>';
+  for (const i of due) {
+    const a = C.asks[i];
+    h += '<div class="due"><div class="top"><div class="who2">' + esc(a.who) + '</div>'
+       + '<div class="c">' + esc(C.costWord[a.cost]) + '</div></div>'
+       + '<div class="txt">' + esc(a.what) + '</div>'
+       + (over() > 0 ? '<button data-break="' + i + '">' + esc(C.breakButton) + '</button>' : '')
+       + '</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="big' + (over() > 0 ? '' : ' win') + '">' + esc(C.loadLine[load()]) + '</div>';
+  h += '<div class="stat ' + (over() > 0 ? 'bad' : 'good') + '">'
+     + esc(over() > 0 ? C.overLine[over()] : C.fitsLine) + '</div>';
+  if (over() === 0) h += '<button id="on">' + esc(C.goOnButton) + '</button>';
+  h += promisePanel();
+  app.innerHTML = h;
+
+  for (const el of document.querySelectorAll('[data-break]')) {
+    el.onclick = () => { state.broken[Number(el.dataset.break)] = true; save(); render(); };
+  }
+  const on = document.getElementById('on');
+  if (on) on.onclick = () => {
+    if (state.night >= C.nights) { state.reported = true; screen = 'report'; }
+    else { state.night++; screen = asking() ? 'ask' : 'night'; }
+    save();
+    render();
+  };
+}
+
+function rowWord(i) {
+  if (state.answers[i] === 1) return state.broken[i] ? C.rowWord.broken : C.rowWord.kept;
+  if (state.answers[i] === 0) return C.rowWord.declined;
+  return '\u2014';
+}
+
+function renderReport() {
+  const s = score();
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.reportHead) + '</div>';
+  h += '<div class="big' + (s >= C.max ? ' win' : '') + '">' + esc(C.worthLine[s - FLOOR]) + '</div>';
+  h += '<div class="stat ' + (breaks() === 0 ? 'good' : 'bad') + '">' + esc(C.breaksLine[breaks()]) + '</div>';
+  h += '<div class="stat">' + esc(C.keptHead) + ' ' + kept()
+     + ' &nbsp; ' + esc(C.brokenHead) + ' ' + breaks()
+     + ' &nbsp; ' + esc(C.declinedHead) + ' ' + declined() + '</div>';
+
+  for (let i = 0; i < C.asks.length; i++) {
+    const a = C.asks[i];
+    const word = rowWord(i);
+    const cls = state.answers[i] === 1 ? (state.broken[i] ? 'broken' : 'carried') : 'saidno';
+    h += '<div class="row"><div class="top">'
+       + '<div class="who2">' + esc(a.who) + '</div>'
+       + '<div class="w ' + cls + '">' + esc(word) + '</div></div>'
+       + '<div class="txt">' + esc(C.ordinal[a.due]) + ' &middot; ' + esc(C.costWord[a.cost])
+       + ' &middot; ' + esc(a.what) + '</div></div>';
+  }
+
+  h += '<div class="closing">' + esc(closingFor()) + '</div>';
+  h += '<button id="again">' + esc(C.again) + '</button>';
+  app.innerHTML = h;
+  document.getElementById('again').onclick = () => { fresh(); save(); screen = 'open'; render(); };
+}
+
+if (loadSave()) screen = state.reported ? 'report' : (asking() ? 'ask' : 'night');
+else { fresh(); save(); screen = 'open'; }
+render();
+</script>
+</body>
+</html>

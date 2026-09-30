@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Promise</title>
+<style>
+  :root {
+    --bg: #0B0C10;
+    --ink: #E9E9F2;
+    --dim: #9C9CB0;
+    --faint: #6B6B82;
+    --gold: #E8B44A;
+    --bad: #E05A6B;
+    --good: #6FCF97;
+    --water: #6FA8CF;
+    --paper: #1A1B26;
+    --edge: #2C2D3E;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 0px) 0;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 96px; }
+  h1 { font-family: Georgia, serif; font-size: 34px; color: var(--gold); margin: 18px 0 2px; font-weight: 400; }
+  .sub { color: var(--faint); font-size: 12px; margin-bottom: 18px; }
+  p { margin: 0 0 14px; }
+  .scene { font-family: Georgia, serif; font-size: 17px; color: var(--ink); }
+  .card { background: var(--paper); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; margin: 0 0 16px; }
+  .card h2 { font-size: 12px; letter-spacing: .08em; color: var(--faint); margin: 0 0 12px; font-weight: 600; }
+  .rule { margin-bottom: 14px; }
+  .rule .k { color: var(--gold); font-size: 14px; }
+  .rule .t { color: var(--dim); font-size: 13px; }
+  button {
+    font: inherit; font-size: 15px; border: 0; border-radius: 10px; padding: 13px 18px;
+    background: var(--gold); color: #14141C; font-weight: 600; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--dim); border: 1px solid var(--edge); font-weight: 400; }
+  .pair { display: flex; gap: 10px; }
+  .pair button { flex: 1; }
+  .who { font-family: Georgia, serif; font-size: 26px; color: var(--gold); margin: 6px 0 2px; }
+  .say { font-family: Georgia, serif; font-size: 17px; color: var(--ink); margin-bottom: 10px; }
+  .cost { color: var(--water); font-size: 13px; margin-bottom: 16px; }
+  .big { font-family: Georgia, serif; font-size: 26px; color: var(--gold); margin: 4px 0 10px; }
+  .big.win { color: var(--good); }
+  .stat { font-size: 14px; color: var(--dim); margin-bottom: 6px; }
+  .stat.bad { color: var(--bad); }
+  .stat.good { color: var(--good); }
+  .water { font-family: Georgia, serif; font-size: 17px; color: var(--water); margin-bottom: 4px; }
+  .watercost { color: var(--water); font-size: 13px; margin-bottom: 16px; }
+  .due { padding: 12px 0; border-bottom: 1px solid var(--edge); }
+  .due .top { display: flex; gap: 10px; align-items: baseline; }
+  .due .who2 { color: var(--ink); font-size: 15px; flex: 1; }
+  .due .c { color: var(--dim); font-size: 13px; white-space: nowrap; }
+  .due .txt { color: var(--faint); font-size: 13px; }
+  .due button { margin-top: 8px; padding: 8px 12px; font-size: 13px; background: transparent; color: var(--bad); border: 1px solid var(--edge); font-weight: 400; }
+  .row { padding: 12px 0; border-bottom: 1px solid var(--edge); }
+  .row .top { display: flex; gap: 10px; align-items: baseline; }
+  .row .who2 { color: var(--ink); font-size: 14px; flex: 1; }
+  .row .w { font-size: 13px; white-space: nowrap; }
+  .row .w.carried { color: var(--good); }
+  .row .w.broken { color: var(--bad); }
+  .row .w.saidno { color: var(--faint); }
+  .row .txt { color: var(--faint); font-size: 13px; }
+  .closing { font-family: Georgia, serif; font-size: 16px; color: var(--ink); margin: 18px 0; }
+  .note { color: var(--faint); font-size: 12px; margin-top: 8px; }
+  .panel { background: var(--paper); border: 1px solid var(--edge); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; }
+  .panel h2 { font-size: 12px; letter-spacing: .08em; color: var(--faint); margin: 0 0 10px; font-weight: 600; }
+  .panel .p { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; }
+  .panel .p .n { color: var(--ink); font-size: 14px; flex: 1; }
+  .panel .p .d { color: var(--faint); font-size: 12px; white-space: nowrap; }
+  .panel .p .t { color: var(--gold); font-size: 12px; white-space: nowrap; }
+  .panel .none { color: var(--faint); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const C = /*__CONTENT__*/;
+
+//__MODEL_BEGIN__
+// The rule, ported. What is due tonight and what the water takes both come out
+// of the same four crossings, so the phone has to compute the night itself --
+// the break screen depends on it. There is no deal here and no seed: the season
+// is the season, so the whole model is arithmetic over the content and the two
+// builds cannot diverge on anything but the arithmetic.
+// tools/promise-trace.mjs compares every answer set and every break choice.
+const FLOOR = -C.asks.length;
+
+function asking() {
+  return !state.reported && state.askAt < C.asks.length && C.asks[state.askAt].askedOn === state.night;
+}
+function dueTonight() {
+  const out = [];
+  for (let i = 0; i < C.asks.length; i++) {
+    if (state.answers[i] === 1 && !state.broken[i] && C.asks[i].due === state.night) out.push(i);
+  }
+  return out;
+}
+function outstanding() {
+  const out = [];
+  for (let i = 0; i < C.asks.length; i++) {
+    if (state.answers[i] === 1 && !state.broken[i] && C.asks[i].due > state.night) out.push(i);
+  }
+  return out;
+}
+function load() {
+  let l = C.water[state.night].cost;
+  for (const i of dueTonight()) l += C.asks[i].cost;
+  return l;
+}
+function over() { return Math.max(0, load() - C.capacity); }
+function kept() {
+  let n = 0;
+  for (let i = 0; i < C.asks.length; i++) if (state.answers[i] === 1 && !state.broken[i]) n++;
+  return n;
+}
+function breaks() {
+  let n = 0;
+  for (const b of state.broken) if (b) n++;
+  return n;
+}
+function declined() {
+  let n = 0;
+  for (const a of state.answers) if (a === 0) n++;
+  return n;
+}
+function score() { return kept() - breaks(); }
+function closingFor() {
+  if (kept() === 0 && breaks() === 0) return C.closingEmpty;
+  return C.closing[score() - FLOOR];
+}
+//__MODEL_END__
+
+const KEY = 'aside.promise.season';
+let state = { answers: [], broken: [], night: 1, askAt: 0, reported: false };
+let screen = 'open';
+let canStore = true;
+try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); }
+catch (e) { canStore = false; }
+
+function fresh() {
+  state.answers = new Array(C.asks.length).fill(-1);
+  state.broken = new Array(C.asks.length).fill(false);
+  state.night = 1;
+  state.askAt = 0;
+  state.reported = false;
+}
+
+// The desktop's own save format, so a season started on one can be finished on
+// the other. Same six lines, same shape.
+function serialize() {
+  return 'promise 1\n'
+    + 'night ' + state.night + '\n'
+    + 'askAt ' + state.askAt + '\n'
+    + 'answers ' + state.answers.join(' ') + '\n'
+    + 'broken ' + state.broken.map(b => (b ? 1 : 0)).join(' ') + '\n'
+    + 'reported ' + (state.reported ? 1 : 0) + '\n';
+}
+
+function deserialize(text) {
+  const lines = String(text).split('\n');
+  if (!lines.length || lines[0].trim().split(/\s+/)[0] !== 'promise') return false;
+  for (const line of lines) {
+    const p = line.trim().split(/\s+/);
+    if (p[0] === 'night' && p.length > 1) state.night = Number(p[1]);
+    else if (p[0] === 'askAt' && p.length > 1) state.askAt = Number(p[1]);
+    else if (p[0] === 'answers') {
+      for (let i = 0; i < C.asks.length && i + 1 < p.length; i++) state.answers[i] = Number(p[i + 1]);
+    } else if (p[0] === 'broken') {
+      for (let i = 0; i < C.asks.length && i + 1 < p.length; i++) state.broken[i] = p[i + 1] === '1';
+    } else if (p[0] === 'reported' && p.length > 1) state.reported = p[1] === '1';
+  }
+  return true;
+}
+
+function loadSave() {
+  if (!canStore) return false;
+  let t = null;
+  try { t = localStorage.getItem(KEY); } catch (e) { return false; }
+  if (!t) return false;
+  fresh();
+  return deserialize(t);
+}
+
+function save() {
+  if (!canStore) return false;
+  try { localStorage.setItem(KEY, serialize()); return true; }
+  catch (e) { return false; }
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+const app = document.getElementById('app');
+
+function render() {
+  if (screen === 'open') renderOpen();
+  else if (screen === 'ask') renderAsk();
+  else if (screen === 'night') renderNight();
+  else renderReport();
+}
+
+function renderOpen() {
+  let h = '<h1>' + esc(C.openTitle) + '</h1><div class="sub">' + esc(C.openSub) + '</div>';
+  for (const p of C.openSituation) h += '<p class="scene">' + esc(p) + '</p>';
+  h += '<div class="card"><h2>' + esc(C.rulesHeading) + '</h2>';
+  for (const r of C.rules) {
+    h += '<div class="rule"><div class="k">' + esc(r.key) + '</div><div class="t">' + esc(r.text) + '</div></div>';
+  }
+  h += '</div><button id="go">' + esc(C.startButton) + '</button>';
+  if (!canStore) h += '<div class="note">This browser will not keep the season. The report will be lost when you close the tab.</div>';
+  app.innerHTML = h;
+  document.getElementById('go').onclick = () => { screen = asking() ? 'ask' : 'night'; render(); };
+}
+
+function promisePanel() {
+  const standing = dueTonight().concat(outstanding());
+  let h = '<div class="panel"><h2>' + esc(C.asksHead) + '</h2>';
+  if (!standing.length) h += '<div class="none">' + esc(C.nothingPromised) + '</div>';
+  for (const i of standing) {
+    const a = C.asks[i];
+    h += '<div class="p"><div class="n">' + esc(a.who) + '</div>'
+       + '<div class="d">' + esc(C.costWord[a.cost]) + ' &middot; ' + esc(C.ordinal[a.due]) + '</div>'
+       + (a.due === state.night ? '<div class="t">tonight</div>' : '')
+       + '</div>';
+  }
+  return h + '</div>';
+}
+
+function renderAsk() {
+  const a = C.asks[state.askAt];
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.nightLabel[state.night]) + '</div>';
+  h += '<div class="who">' + esc(a.who) + '</div>';
+  h += '<div class="say">' + esc(a.what) + '</div>';
+  h += '<div class="cost">' + esc(C.dueLine[state.askAt]) + '</div>';
+  h += '<div class="pair"><button id="yes">' + esc(C.yesButton) + '</button>'
+     + '<button class="ghost" id="no">' + esc(C.noButton) + '</button></div>';
+  h += promisePanel();
+  app.innerHTML = h;
+  document.getElementById('yes').onclick = () => { state.answers[state.askAt] = 1; state.askAt++; after(); };
+  document.getElementById('no').onclick = () => { state.answers[state.askAt] = 0; state.askAt++; after(); };
+}
+
+function after() {
+  save();
+  screen = asking() ? 'ask' : 'night';
+  render();
+}
+
+function renderNight() {
+  const w = C.water[state.night];
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.nightLabel[state.night]) + '</div>';
+  h += '<div class="card"><h2>' + esc(C.waterHead) + '</h2>'
+     + '<div class="water">' + esc(w.what) + '</div>'
+     + '<div class="watercost">' + esc(C.costWord[w.cost]) + '</div></div>';
+
+  const due = dueTonight();
+  h += '<div class="card"><h2>' + esc(C.dueHead) + '</h2>';
+  if (!due.length) h += '<div class="none">' + esc(C.nothingDue) + '</div>';
+  for (const i of due) {
+    const a = C.asks[i];
+    h += '<div class="due"><div class="top"><div class="who2">' + esc(a.who) + '</div>'
+       + '<div class="c">' + esc(C.costWord[a.cost]) + '</div></div>'
+       + '<div class="txt">' + esc(a.what) + '</div>'
+       + (over() > 0 ? '<button data-break="' + i + '">' + esc(C.breakButton) + '</button>' : '')
+       + '</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="big' + (over() > 0 ? '' : ' win') + '">' + esc(C.loadLine[load()]) + '</div>';
+  h += '<div class="stat ' + (over() > 0 ? 'bad' : 'good') + '">'
+     + esc(over() > 0 ? C.overLine[over()] : C.fitsLine) + '</div>';
+  if (over() === 0) h += '<button id="on">' + esc(C.goOnButton) + '</button>';
+  h += promisePanel();
+  app.innerHTML = h;
+
+  for (const el of document.querySelectorAll('[data-break]')) {
+    el.onclick = () => { state.broken[Number(el.dataset.break)] = true; save(); render(); };
+  }
+  const on = document.getElementById('on');
+  if (on) on.onclick = () => {
+    if (state.night >= C.nights) { state.reported = true; screen = 'report'; }
+    else { state.night++; screen = asking() ? 'ask' : 'night'; }
+    save();
+    render();
+  };
+}
+
+function rowWord(i) {
+  if (state.answers[i] === 1) return state.broken[i] ? C.rowWord.broken : C.rowWord.kept;
+  if (state.answers[i] === 0) return C.rowWord.declined;
+  return '\u2014';
+}
+
+function renderReport() {
+  const s = score();
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.reportHead) + '</div>';
+  h += '<div class="big' + (s >= C.max ? ' win' : '') + '">' + esc(C.worthLine[s - FLOOR]) + '</div>';
+  h += '<div class="stat ' + (breaks() === 0 ? 'good' : 'bad') + '">' + esc(C.breaksLine[breaks()]) + '</div>';
+  h += '<div class="stat">' + esc(C.keptHead) + ' ' + kept()
+     + ' &nbsp; ' + esc(C.brokenHead) + ' ' + breaks()
+     + ' &nbsp; ' + esc(C.declinedHead) + ' ' + declined() + '</div>';
+
+  for (let i = 0; i < C.asks.length; i++) {
+    const a = C.asks[i];
+    const word = rowWord(i);
+    const cls = state.answers[i] === 1 ? (state.broken[i] ? 'broken' : 'carried') : 'saidno';
+    h += '<div class="row"><div class="top">'
+       + '<div class="who2">' + esc(a.who) + '</div>'
+       + '<div class="w ' + cls + '">' + esc(word) + '</div></div>'
+       + '<div class="txt">' + esc(C.ordinal[a.due]) + ' &middot; ' + esc(C.costWord[a.cost])
+       + ' &middot; ' + esc(a.what) + '</div></div>';
+  }
+
+  h += '<div class="closing">' + esc(closingFor()) + '</div>';
+  h += '<button id="again">' + esc(C.again) + '</button>';
+  app.innerHTML = h;
+  document.getElementById('again').onclick = () => { fresh(); save(); screen = 'open'; render(); };
+}
+
+if (loadSave()) screen = state.reported ? 'report' : (asking() ? 'ask' : 'night');
+else { fresh(); save(); screen = 'open'; }
+render();
+</script>
+</body>
+</html>

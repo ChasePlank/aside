@@ -14,6 +14,7 @@ import aside.games.ledger.LedgerGame;
 import aside.games.lesson.LessonGame;
 import aside.games.outside.OutsideGame;
 import aside.games.overtime.OvertimeGame;
+import aside.games.promise.PromiseGame;
 import aside.games.redaction.RedactionGame;
 import aside.games.relay.RelayGame;
 import aside.games.residue.ResidueGame;
@@ -50,6 +51,7 @@ public final class Games {
         g.add(new RelayGame());
         g.add(new IntervalGame());
         g.add(new LessonGame());
+        g.add(new PromiseGame());
         return g;
     }
 
