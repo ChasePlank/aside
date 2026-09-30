@@ -18,6 +18,7 @@ public final class Games {
         g.add(new OvertimeGame());
         g.add(new FnafGame());
         g.add(new FruitJumpGame());
+        g.add(new aside.games.lamproom.LampRoomGame());
         return g;
     }
 
