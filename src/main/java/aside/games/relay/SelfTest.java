@@ -161,6 +161,16 @@ public class SelfTest {
                 Relay.load(tmp.resolveSibling("nothing-here.state")).next() == 0);
         Files.deleteIfExists(tmp);
 
+        System.out.println("\n--- the phone build ---");
+        Path out = Path.of("web", "relay.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no web/relay.html from here -- run from the repository root)");
+        } else {
+            String generated = WebRelay.html();
+            check("web/relay.html is current -- regenerate it with aside.games.relay.WebRelay",
+                    generated.equals(Files.readString(out)));
+        }
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
     }

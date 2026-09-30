@@ -339,11 +339,15 @@ public final class Relay {
 
     public static final String PROGRESS = "message %d of %d";
     public static final String FROM_TO = "%s \u2192 %s";
+    public static final String ARROW = "\u2192";
     public static final String CHOOSE = "ENTER to carry it";
     public static final String CARRIED = "carried";
+    /** The phone has buttons, not keys, so it gets its own line. */
+    public static final String START_BUTTON = "take the first message";
+    public static final String CARRY_NOTE = "Once it is carried it is carried.";
 
     public static final String REPORT_HEAD = "what arrived";
-    public static final String REPORT_AGAIN = "R carry them again    ENTER for the library";
+    public static final String AGAIN = "carry them again";
     public static final String KEPT_HEAD = "kept";
     public static final String LOST_HEAD = "lost";
     public static final String NOTHING_LOST = "nothing \u2014 all of it arrived";
