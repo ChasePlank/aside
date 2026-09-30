@@ -83,21 +83,15 @@ public class LibraryScreen extends UiScreen {
         gc.setFont(F_SUB);
         gc.fillText("a small engine, and the games built on it", 72, 128);
 
-        // The row pitch is derived from how many rows there are, not fixed.
-        // At seven games the fixed 88 put the last row at y=830 on a 720
-        // canvas, so the newest game was simply not on screen. A library
-        // that silently hides its last entry is worse than a tight one.
-        double top = 196;
-        double bottom = H - 62;
-        double step = Math.min(88, (bottom - top) / Math.max(1, rows() - 1));
-        // The selection bar and the row below it have to share the same
-        // pitch. At eleven rows the derived step is 46px, and a bar centred
-        // on its own row (y - step*0.56) reached up into the previous row's
-        // blurb -- the highlight of the newest game sat on top of the
-        // second-newest game's description. The bar hangs lower and the
-        // blurb sits closer to its title, which clears at any row count.
-        double y = top;
-        for (int i = 0; i < rows(); i++) {
+        // The row pitch is derived from how many rows there are, not fixed,
+        // and the bar geometry is derived from the pitch. Both live in
+        // LibraryLayout, which has no JavaFX in it, so the arithmetic that
+        // has twice broken at a row count nobody had tried yet can be
+        // checked without a window. See aside.engine.SelfTest.
+        int rows = rows();
+        double step = LibraryLayout.pitch(rows);
+        double y = LibraryLayout.LIST_TOP;
+        for (int i = 0; i < rows; i++) {
             boolean sel = i == index;
             boolean isQuit = i == quitRow();
             String title = isQuit ? "Quit" : games.get(i).title();
@@ -105,7 +99,8 @@ public class LibraryScreen extends UiScreen {
 
             if (sel) {
                 gc.setFill(Color.rgb(30, 30, 46, 0.85));
-                gc.fillRoundRect(60, y - step * 0.45, W - 120, step - 4, 10, 10);
+                gc.fillRoundRect(60, LibraryLayout.barTop(i, rows), W - 120,
+                        step - LibraryLayout.BAR_INSET, 10, 10);
             }
             gc.setFill(sel ? Color.web("#F2C14E") : Color.web("#B9B9C6"));
             gc.setFont(F_ITEM);
@@ -113,7 +108,7 @@ public class LibraryScreen extends UiScreen {
             if (!blurb.isEmpty()) {
                 gc.setFill(Color.web("#6E6E86"));
                 gc.setFont(F_BLURB);
-                gc.fillText(blurb, 122, y + 17);
+                gc.fillText(blurb, 122, LibraryLayout.blurbY(i, rows));
             }
             y += step;
         }

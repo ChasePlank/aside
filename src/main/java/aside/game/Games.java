@@ -10,6 +10,7 @@ import aside.games.outside.OutsideGame;
 import aside.games.overtime.OvertimeGame;
 import aside.games.residue.ResidueGame;
 import aside.games.testimony.TestimonyGame;
+import aside.games.vigil.VigilGame;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -32,6 +33,7 @@ public final class Games {
         g.add(new OutsideGame());
         g.add(new BearingsGame());
         g.add(new InventoryGame());
+        g.add(new VigilGame());
         return g;
     }
 

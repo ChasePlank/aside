@@ -1,5 +1,7 @@
 package aside.engine;
 
+import aside.ui.LibraryLayout;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -190,6 +192,30 @@ public class SelfTest {
                 hasher.signatureHash(a) != hasher.signatureHash(c));
         check("the signature itself is unchanged by hashing",
                 hasher.signature(a).equals(hasher.signature(new Vn(s))));
+
+        System.out.println("\n--- the library list ---");
+        // The library has failed twice at a row count it had not seen yet: a
+        // fixed 88px pitch that put the newest game at y=830 on a 720 canvas,
+        // and a selection bar that reached into the row above at eleven rows.
+        // Both were arithmetic, both were invisible in the code, and both were
+        // found by rendering a frame. This is the arithmetic, checked here so
+        // the next row count is not found the same way.
+        int probe = 24;
+        check("the last row is on the canvas",
+                LibraryLayout.rowY(probe - 1, probe) <= LibraryLayout.LIST_BOTTOM);
+        check("the first row's bar clears the header",
+                LibraryLayout.barTop(0, probe) >= LibraryLayout.HEADER_BOTTOM);
+        check("the last row's bar is on the canvas",
+                LibraryLayout.barBottom(probe - 1, probe) <= LibraryLayout.CANVAS_H);
+        check("the bar never reaches the blurb above it, up to the limit",
+                LibraryLayout.clearance(LibraryLayout.maxRows()) > 0);
+        int limit = LibraryLayout.maxRows();
+        check("the library holds at least fifteen rows", limit >= 15);
+        check("the limit is where the geometry actually stops",
+                LibraryLayout.clearance(limit + 1) <= 0);
+        System.out.println("       rows the bar geometry holds: " + limit
+                + "  (clearance at " + limit + " is "
+                + Math.round(LibraryLayout.clearance(limit) * 10) / 10.0 + "px)");
 
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
