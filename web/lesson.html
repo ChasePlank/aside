@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lesson</title>
+<style>
+  :root {
+    --bg: #0A0906;
+    --iron: #12110D;
+    --ink: #EDE9E0;
+    --dim: #A29C8E;
+    --faint: #6E6A60;
+    --gold: #E8B44A;
+    --bad: #D9534F;
+    --good: #7FBF7F;
+    --shown: #7FB2E5;
+    --paper: #181611;
+    --edge: #2C2A22;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 0px) 0;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 148px; }
+  h1 { font-family: Georgia, serif; font-size: 34px; color: var(--gold); margin: 18px 0 2px; font-weight: 400; }
+  .sub { color: var(--faint); font-size: 12px; margin-bottom: 18px; }
+  p { margin: 0 0 14px; }
+  .scene { font-family: Georgia, serif; font-size: 17px; color: var(--ink); }
+  .card { background: var(--paper); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; margin: 0 0 16px; }
+  .card h2 { font-size: 12px; letter-spacing: .08em; color: var(--faint); margin: 0 0 12px; font-weight: 600; }
+  .rule { margin-bottom: 14px; }
+  .rule .k { color: var(--gold); font-size: 14px; }
+  .rule .t { color: var(--dim); font-size: 13px; }
+  button {
+    font: inherit; font-size: 15px; border: 0; border-radius: 10px; padding: 13px 18px;
+    background: var(--gold); color: #14110A; font-weight: 600; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--dim); border: 1px solid var(--edge); font-weight: 400; }
+  button[disabled] { opacity: .38; cursor: default; }
+  .row {
+    display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left;
+    background: transparent; color: var(--ink); border: 0; border-bottom: 1px solid var(--edge);
+    border-radius: 0; padding: 9px 6px; font-weight: 400; font-size: 14px;
+  }
+  .row .n { width: 22px; flex: 0 0 22px; color: var(--faint); font-size: 12px; }
+  .row .g { color: var(--ink); }
+  .row .v { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .row .tag { margin-left: auto; color: var(--shown); font-size: 11px; letter-spacing: .06em; }
+  .row.sel { background: var(--paper); border-radius: 10px; }
+  .row.sel .n { color: var(--gold); }
+  .row.done .g, .row.done .v { color: var(--dim); }
+  .row.done .n { color: var(--shown); }
+  .tonight { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: 14px; }
+  .tonight .v { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .said { font-family: Georgia, serif; font-size: 17px; color: var(--ink); margin: 0 0 10px; }
+  .said.dull { color: var(--dim); }
+  .count { color: var(--faint); font-size: 12px; margin-bottom: 8px; }
+  .fits { color: var(--dim); font-size: 12px; }
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; background: rgba(10,9,6,.96);
+    border-top: 1px solid var(--edge); padding: 10px 16px calc(env(safe-area-inset-bottom) + 10px);
+  }
+  .bar .in { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+  .bar .n { color: var(--dim); font-size: 13px; flex: 1; }
+  .big { font-family: Georgia, serif; font-size: 23px; color: var(--good); margin: 4px 0 14px; }
+  .big.bad { color: var(--bad); }
+  .stat { font-size: 14px; color: var(--dim); margin-bottom: 6px; }
+  .closing { font-family: Georgia, serif; font-size: 16px; color: var(--ink); margin: 18px 0; }
+  .note { color: var(--faint); font-size: 12px; margin-top: 8px; }
+  .warn { color: var(--bad); font-size: 13px; margin-bottom: 10px; }
+  .shift { display: flex; align-items: baseline; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--edge); font-size: 14px; }
+  .shift .t { flex: 1; min-width: 0; }
+  .shift .s { color: var(--faint); font-size: 12px; white-space: nowrap; }
+  .shift .m { font-size: 12px; letter-spacing: .04em; white-space: nowrap; }
+  .shift .m.ok { color: var(--good); }
+  .shift .m.no { color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const C = {
+"wordmark":"Lesson",
+"where":"the boiler house",
+"whereBoard":"the board",
+"whereTonight":"tonight",
+"whereReport":"the handover",
+"pressureUp":40,
+"heatUp":60,
+"board":12,
+"shows":3,
+"shift":3,
+"boardCount":[4,4,2,2],
+"boardPool":[[[78,84],[52,66],[41,61],[90,95],[67,73],[44,88]],[[86,22],[63,44],[44,58],[95,9],[71,31],[49,51]],[[18,91],[33,72],[39,62],[7,84],[24,66],[36,97]],[[12,15],[27,38],[38,59],[4,6],[31,22],[19,47]]],
+"shiftPool":[[[83,69],[58,92],[46,64],[72,81]],[[91,27],[54,36],[42,55],[69,49]],[[14,78],[37,88],[29,64],[11,73]],[[9,21],[35,41],[22,53],[16,34]]],
+"rules":["the pressure is up","the pressure is down","it is hot","it is cool","the pressure is up and it is hot","either one of them is up","the pressure is down and it is cool","either one of them is down"],
+"belief":["I have nothing to go on.","You open it when the pressure is up. That is all of it.","You open it when the pressure is down. That is all of it.","You open it when the pressure is up, or when the pressure is down. I cannot tell which.","You open it when it is hot. That is all of it.","You open it when the pressure is up, or when it is hot. I cannot tell which.","You open it when the pressure is down, or when it is hot. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. I cannot tell which.","You open it when it is cool. That is all of it.","You open it when the pressure is up, or when it is cool. I cannot tell which.","You open it when the pressure is down, or when it is cool. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. I cannot tell which.","You open it when it is hot, or when it is cool. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There is one more. I cannot tell which.","You open it when the pressure is up and it is hot. That is all of it.","You open it when the pressure is up, or when the pressure is up and it is hot. I cannot tell which.","You open it when the pressure is down, or when the pressure is up and it is hot. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is up and it is hot. I cannot tell which.","You open it when it is hot, or when the pressure is up and it is hot. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is up and it is hot. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is up and it is hot. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There is one more. I cannot tell which.","You open it when it is cool, or when the pressure is up and it is hot. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is up and it is hot. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is up and it is hot. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There is one more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is up and it is hot. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when either one of them is up. That is all of it.","You open it when the pressure is up, or when either one of them is up. I cannot tell which.","You open it when the pressure is down, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when either one of them is up. I cannot tell which.","You open it when it is hot, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when either one of them is up. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There is one more. I cannot tell which.","You open it when it is cool, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when either one of them is up. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There is one more. I cannot tell which.","You open it when it is hot, or when it is cool, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when the pressure is up and it is hot, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when the pressure is up and it is hot, or when either one of them is up. I cannot tell which.","You open it when the pressure is down, or when the pressure is up and it is hot, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when it is hot, or when the pressure is up and it is hot, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when it is cool, or when the pressure is up and it is hot, or when either one of them is up. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are two more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when the pressure is down and it is cool. That is all of it.","You open it when the pressure is up, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is down, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is down and it is cool. I cannot tell which.","You open it when it is hot, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There is one more. I cannot tell which.","You open it when it is cool, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There is one more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when the pressure is up and it is hot, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when the pressure is up and it is hot, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is down, or when the pressure is up and it is hot, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when it is hot, or when the pressure is up and it is hot, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when it is cool, or when the pressure is up and it is hot, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are two more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when either one of them is up, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when either one of them is up, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is down, or when either one of them is up, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when either one of them is up. There is one more. I cannot tell which.","You open it when it is hot, or when either one of them is up, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when it is cool, or when either one of them is up, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are two more. I cannot tell which.","You open it when it is hot, or when it is cool, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when the pressure is up and it is hot, or when either one of them is up, or when the pressure is down and it is cool. I cannot tell which.","You open it when the pressure is up, or when the pressure is up and it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is down, or when the pressure is up and it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when it is hot, or when the pressure is up and it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when it is cool, or when the pressure is up and it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are three more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are three more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are three more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are four more. I cannot tell which.","You open it when either one of them is down. That is all of it.","You open it when the pressure is up, or when either one of them is down. I cannot tell which.","You open it when the pressure is down, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when either one of them is down. I cannot tell which.","You open it when it is hot, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when either one of them is down. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There is one more. I cannot tell which.","You open it when it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There is one more. I cannot tell which.","You open it when it is hot, or when it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when the pressure is up and it is hot, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is up and it is hot, or when either one of them is down. I cannot tell which.","You open it when the pressure is down, or when the pressure is up and it is hot, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when it is hot, or when the pressure is up and it is hot, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when it is cool, or when the pressure is up and it is hot, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are two more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is up and it is hot. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when either one of them is up, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when either one of them is up, or when either one of them is down. I cannot tell which.","You open it when the pressure is down, or when either one of them is up, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when either one of them is up. There is one more. I cannot tell which.","You open it when it is hot, or when either one of them is up, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when it is cool, or when either one of them is up, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are two more. I cannot tell which.","You open it when it is hot, or when it is cool, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when the pressure is up and it is hot, or when either one of them is up, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is up and it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is down, or when the pressure is up and it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when it is hot, or when the pressure is up and it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when it is cool, or when the pressure is up and it is hot, or when either one of them is up. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are three more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are three more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are three more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are four more. I cannot tell which.","You open it when the pressure is down and it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is down and it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is down, or when the pressure is down and it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when it is hot, or when the pressure is down and it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are two more. I cannot tell which.","You open it when it is cool, or when the pressure is down and it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are two more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when the pressure is up and it is hot, or when the pressure is down and it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when the pressure is up and it is hot, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is down, or when the pressure is up and it is hot, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when it is hot, or when the pressure is up and it is hot, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when it is cool, or when the pressure is up and it is hot, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are three more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is up and it is hot. There are two more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are three more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are three more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are four more. I cannot tell which.","You open it when either one of them is up, or when the pressure is down and it is cool, or when either one of them is down. I cannot tell which.","You open it when the pressure is up, or when either one of them is up, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is down, or when either one of them is up, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when either one of them is up. There are two more. I cannot tell which.","You open it when it is hot, or when either one of them is up, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when either one of them is up. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when either one of them is up. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are three more. I cannot tell which.","You open it when it is cool, or when either one of them is up, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when either one of them is up. There are two more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when either one of them is up. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are three more. I cannot tell which.","You open it when it is hot, or when it is cool, or when either one of them is up. There are two more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are three more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are three more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are four more. I cannot tell which.","You open it when the pressure is up and it is hot, or when either one of them is up, or when the pressure is down and it is cool. There is one more. I cannot tell which.","You open it when the pressure is up, or when the pressure is up and it is hot, or when either one of them is up. There are two more. I cannot tell which.","You open it when the pressure is down, or when the pressure is up and it is hot, or when either one of them is up. There are two more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when the pressure is up and it is hot. There are three more. I cannot tell which.","You open it when it is hot, or when the pressure is up and it is hot, or when either one of them is up. There are two more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when the pressure is up and it is hot. There are three more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when the pressure is up and it is hot. There are three more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are four more. I cannot tell which.","You open it when it is cool, or when the pressure is up and it is hot, or when either one of them is up. There are two more. I cannot tell which.","You open it when the pressure is up, or when it is cool, or when the pressure is up and it is hot. There are three more. I cannot tell which.","You open it when the pressure is down, or when it is cool, or when the pressure is up and it is hot. There are three more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is cool. There are four more. I cannot tell which.","You open it when it is hot, or when it is cool, or when the pressure is up and it is hot. There are three more. I cannot tell which.","You open it when the pressure is up, or when it is hot, or when it is cool. There are four more. I cannot tell which.","You open it when the pressure is down, or when it is hot, or when it is cool. There are four more. I cannot tell which.","You open it when the pressure is up, or when the pressure is down, or when it is hot. There are five more. I cannot tell which."],
+"confidence":["nothing","one rule fits","two rules fit","three rules fit","four rules fit","five rules fit","six rules fit","seven rules fit","eight rules fit"],
+"corner":["when the pressure is up and it is hot","when the pressure is up and it is cool","when the pressure is down and it is hot","when the pressure is down and it is cool"],
+"verdict":{
+  "certain":"They know the machine. Every corner of it, and they will not need you again.",
+  "unsure":["The night was safe. They are still guessing about one corner — when the pressure is up and it is hot — because you never had a night to show them, and tonight it did not come up.","The night was safe. They are still guessing about one corner — when the pressure is up and it is cool — because you never had a night to show them, and tonight it did not come up.","The night was safe. They are still guessing about one corner — when the pressure is down and it is hot — because you never had a night to show them, and tonight it did not come up.","The night was safe. They are still guessing about one corner — when the pressure is down and it is cool — because you never had a night to show them, and tonight it did not come up."],
+  "unsafe":["They did what you taught them. What you taught them was wrong for when the pressure is up and it is hot, and that is not their mistake.","They did what you taught them. What you taught them was wrong for when the pressure is up and it is cool, and that is not their mistake.","They did what you taught them. What you taught them was wrong for when the pressure is down and it is hot, and that is not their mistake.","They did what you taught them. What you taught them was wrong for when the pressure is down and it is cool, and that is not their mistake."]
+},
+"closing":{
+  "certain":"You showed them the whole board, one corner at a time, and there is nothing left for them to find out the hard way.",
+  "certainRedundant":"You showed them a corner twice and it did not cost you, because three corners were all tonight needed. It will not always be three.",
+  "unsure":"You taught them what tonight needed and no more. The rest is theirs to find out, and they will find it out the hard way or not at all.",
+  "unsafe":"Three nights, and the corner that mattered was not one of them. A state only ever teaches its own corner, and you showed them three states that were not the one you needed."
+},
+"voice":{
+  "opening":["You have run this boiler for eleven years. In three nights you hand it to somebody else.","The machine is two gauges and a vent. When the vent is open the boiler breathes; when it is shut it holds. You open it when the pressure is up. You have never had to say why, because you have never had to tell anybody.","The board is what the machine has been doing lately: twelve states it has sat in. Three nights is three states you can walk them through. What you do not show them, they will not know."],
+  "rulesHeading":"THE MACHINE",
+  "rules":[{"key":"UP","text":"The pressure is up at 40 and above. The heat is up at 60 and above."},{"key":"OPEN","text":"You open the vent when the pressure is up. That is the rule, and it is the whole of the rule."},{"key":"","text":"Three nights. Each night you walk them through one state on the board."},{"key":"","text":"Then they take the shift. The shift is three states, and none of them is on the board."}],
+  "boardHead":"THE BOARD",
+  "tonightHead":"TONIGHT",
+  "keeperHead":"THE NEW KEEPER",
+  "pressure":"pressure",
+  "heat":"heat",
+  "nightsLeft":"nights left",
+  "night":"night",
+  "of":"of",
+  "show":"Walk them through it",
+  "shown":"shown",
+  "startButton":"Take the first night",
+  "again":"Another handover",
+  "watching":"They are watching. Nobody has shown them anything yet.",
+  "nothingNew":"That is the same corner as before. I already had that one.",
+  "handOver":"Three nights gone.",
+  "handOverButton":"They take the shift",
+  "alreadyShown":"You have already walked them through that one.",
+  "reportHead":"THE HANDOVER",
+  "shiftHead":"THE SHIFT",
+  "beliefHead":"WHAT THEY BELIEVED",
+  "opened":"opened the vent",
+  "shut":"left it shut",
+  "right":"right",
+  "wrong":"wrong",
+  "shouldOpen":"should have been open",
+  "shouldShut":"should have been shut",
+  "nothingShown":"You showed them nothing."
+}
+}
+;
+
+//__MODEL_BEGIN__
+// The deal, ported. Counter-based, not a stream: every number is a pure
+// function of (seed, salt), so the phone and the desktop can deal the same
+// board without either carrying an RNG position. The arithmetic is BigInt
+// because a double loses the low bits of a 64-bit Java long and the two builds
+// would diverge on the first draw.
+const MASK = (1n << 64n) - 1n;
+function mix(seed, salt) {
+  let z = (BigInt(seed) + 0x9E3779B97F4A7C15n * BigInt(salt + 1)) & MASK;
+  z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & MASK;
+  z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & MASK;
+  return (z ^ (z >> 31n)) & MASK;
+}
+function pick(seed, salt, n) {
+  if (n <= 1) return 0;
+  return Number(mix(seed, salt) % BigInt(n));
+}
+// n distinct indices out of poolSize, in a shuffled order -- the same partial
+// Fisher-Yates the model runs, in the same order, or the board would differ.
+function dealIdx(seed, salt, poolSize, n) {
+  const idx = [];
+  for (let i = 0; i < poolSize; i++) idx.push(i);
+  for (let i = 0; i < n; i++) {
+    const j = i + pick(seed, salt + i, poolSize - i);
+    const t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+  }
+  return idx.slice(0, n);
+}
+function quad(r) {
+  return (r[0] >= C.pressureUp ? 0 : 2) + (r[1] >= C.heatUp ? 0 : 1);
+}
+function dealBoard(seed) {
+  const raw = [];
+  for (let q = 0; q < 4; q++) {
+    const pool = C.boardPool[q];
+    for (const i of dealIdx(seed, 200 + q * 20, pool.length, C.boardCount[q])) raw.push(pool[i]);
+  }
+  const order = dealIdx(seed, 400, raw.length, raw.length);
+  return order.map(i => raw[i]);
+}
+function dealShift(seed) {
+  const pickQ = dealIdx(seed, 500, 4, C.shift);
+  const out = [];
+  for (let k = 0; k < C.shift; k++) {
+    const pool = C.shiftPool[pickQ[k]];
+    out.push(pool[pick(seed, 600 + k, pool.length)]);
+  }
+  out.sort((a, b) => quad(a) - quad(b));
+  return out;
+}
+// The eight rules, in the order the model declares them.
+function opens(rule, r) {
+  const p = r[0] >= C.pressureUp, h = r[1] >= C.heatUp;
+  switch (rule) {
+    case 0: return p;
+    case 1: return !p;
+    case 2: return h;
+    case 3: return !h;
+    case 4: return p && h;
+    case 5: return p || h;
+    case 6: return !p && !h;
+    default: return !p || !h;
+  }
+}
+// A canonical state in each corner, for asking what a rule would do there.
+const PROBE = [[50, 70], [50, 50], [30, 70], [30, 50]];
+//__MODEL_END__
+
+const KEY = 'aside.lesson.handover';
+let state = { seed: 0, rule: 0, board: [], shift: [], shown: [], handedOver: false, redundant: false };
+let screen = 'open';
+let sel = 0;
+let canStore = true;
+try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); }
+catch (e) { canStore = false; }
+
+function newSeed() { return Math.floor(Date.now() % 2147483647); }
+
+function boot(seed) {
+  state.seed = seed;
+  state.rule = pick(seed, 1, 8);
+  state.board = dealBoard(seed);
+  state.shift = dealShift(seed);
+  state.shown = [];
+  state.handedOver = false;
+  state.redundant = false;
+  sel = 0;
+}
+
+function load() {
+  if (!canStore) return false;
+  let t = null;
+  try { t = localStorage.getItem(KEY); } catch (e) { return false; }
+  if (!t) return false;
+  const parts = t.split('\n');
+  const seed = Number(parts[0]);
+  if (!isFinite(seed)) return false;
+  boot(seed);
+  const d = (parts[1] || '').trim();
+  if (d) for (const p of d.split(',')) { const i = Number(p); if (isFinite(i)) show(i); }
+  state.handedOver = parts[2] === '1';
+  return true;
+}
+
+function save() {
+  if (!canStore) return false;
+  try {
+    localStorage.setItem(KEY, state.seed + '\n' + state.shown.join(',') + '\n'
+      + (state.handedOver ? '1' : '0'));
+    return true;
+  } catch (e) { return false; }
+}
+
+function standing() {
+  const out = [];
+  for (let r = 0; r < 8; r++) {
+    let ok = true;
+    for (const i of state.shown) {
+      const x = state.board[i];
+      if (opens(r, x) !== opens(state.rule, x)) { ok = false; break; }
+    }
+    if (ok) out.push(r);
+  }
+  return out;
+}
+function maskOf(list) { let m = 0; for (const r of list) m |= 1 << r; return m; }
+function preferred() { const s = standing(); return s.length ? s[0] : state.rule; }
+function nightsLeft() { return C.shows - state.shown.length; }
+function canShow(i) {
+  return !state.handedOver && nightsLeft() > 0 && i >= 0 && i < state.board.length
+    && state.shown.indexOf(i) < 0;
+}
+function show(i) {
+  if (!canShow(i)) return false;
+  const before = maskOf(standing());
+  state.shown.push(i);
+  state.redundant = maskOf(standing()) === before;
+  return true;
+}
+function actsOn(x) { return opens(preferred(), x); }
+function safe() { return state.shift.every(x => actsOn(x) === opens(state.rule, x)); }
+function certain() { return standing().length === 1; }
+function unsure() {
+  const s = standing();
+  const out = [];
+  for (let q = 0; q < 4; q++) {
+    const v = opens(s[0], PROBE[q]);
+    for (const r of s) if (opens(r, PROBE[q]) !== v) { out.push(q); break; }
+  }
+  return out;
+}
+function wrongCorners() {
+  const out = [];
+  for (const x of state.shift) {
+    if (actsOn(x) !== opens(state.rule, x)) {
+      const q = quad(x);
+      if (out.indexOf(q) < 0) out.push(q);
+    }
+  }
+  return out;
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+function readingLine(r) {
+  return esc(C.voice.pressure) + ' ' + r[0] + ', ' + esc(C.voice.heat) + ' ' + r[1];
+}
+
+const app = document.getElementById('app');
+
+function render() {
+  if (screen === 'open') renderOpen();
+  else if (screen === 'teach') renderTeach();
+  else renderReport();
+}
+
+function renderOpen() {
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.where) + '</div>';
+  for (const p of C.voice.opening) h += '<p class="scene">' + esc(p) + '</p>';
+  h += '<div class="card"><h2>' + esc(C.voice.rulesHeading) + '</h2>';
+  for (const r of C.voice.rules) {
+    h += '<div class="rule">' + (r.key ? '<div class="k">' + esc(r.key) + '</div>' : '')
+       + '<div class="t">' + esc(r.text) + '</div></div>';
+  }
+  h += '</div><button id="go">' + esc(C.voice.startButton) + '</button>';
+  if (!canStore) h += '<div class="note">This browser will not keep the handover. The three nights will be lost when you close the tab.</div>';
+  app.innerHTML = h;
+  document.getElementById('go').onclick = () => { screen = 'teach'; render(); };
+}
+
+function renderTeach() {
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.whereBoard)
+        + ' &middot; up: ' + esc(C.voice.pressure) + ' ' + C.pressureUp + '+ &nbsp; '
+        + esc(C.voice.heat) + ' ' + C.heatUp + '+</div>';
+
+  h += '<div class="card"><h2>' + esc(C.voice.boardHead) + '</h2>';
+  for (let i = 0; i < state.board.length; i++) {
+    const r = state.board[i];
+    const done = state.shown.indexOf(i) >= 0;
+    const cls = 'row' + (done ? ' done' : '') + (!done && i === sel && nightsLeft() > 0 ? ' sel' : '');
+    h += '<button class="' + cls + '" data-i="' + i + '"' + (done ? ' disabled' : '') + '>'
+       + '<span class="n">' + String(i + 1).padStart(2, '0') + '</span>'
+       + '<span class="g">' + esc(C.voice.pressure) + '</span><span class="v">' + r[0] + '</span>'
+       + '<span class="g">' + esc(C.voice.heat) + '</span><span class="v">' + r[1] + '</span>'
+       + (done ? '<span class="tag">' + esc(C.voice.shown) + '</span>' : '')
+       + '</button>';
+  }
+  h += '</div>';
+
+  h += '<div class="card"><h2>' + esc(C.voice.tonightHead) + '</h2>';
+  for (const r of state.shift) h += '<div class="tonight"><span class="v">' + readingLine(r) + '</span></div>';
+  h += '</div>';
+
+  const s = standing();
+  const said = state.shown.length === 0 ? C.voice.watching
+    : (state.redundant ? C.voice.nothingNew : C.belief[maskOf(s)]);
+  h += '<div class="card"><h2>' + esc(C.voice.keeperHead) + '</h2>'
+     + '<p class="said' + (state.redundant ? ' dull' : '') + '">' + esc(said) + '</p>'
+     + '<div class="count">' + esc(C.confidence[s.length]) + '</div>';
+  for (let i = 0; i < s.length && i < 4; i++) {
+    h += '<div class="fits">&mdash; when ' + esc(C.rules[s[i]]) + '</div>';
+  }
+  if (s.length > 4) h += '<div class="fits">and ' + (s.length - 4) + ' more</div>';
+  h += '</div>';
+
+  if (nightsLeft() <= 0) {
+    h += '<div class="bar"><div class="in"><div class="n">' + esc(C.voice.handOver) + '</div>'
+       + '<button id="hand">' + esc(C.voice.handOverButton) + '</button></div></div>';
+  } else {
+    const ok = canShow(sel);
+    h += '<div class="bar"><div class="in"><div class="n">' + nightsLeft() + ' '
+       + esc(C.voice.nightsLeft) + '</div>'
+       + '<button id="walk"' + (ok ? '' : ' disabled') + '>' + esc(C.voice.show) + '</button></div></div>';
+  }
+  app.innerHTML = h;
+
+  for (const b of app.querySelectorAll('.row')) {
+    b.onclick = () => { sel = Number(b.dataset.i); render(); };
+  }
+  const w = document.getElementById('walk');
+  if (w) w.onclick = () => {
+    if (!show(sel)) { render(); return; }
+    for (let i = 1; i <= state.board.length; i++) {
+      const j = (sel + i) % state.board.length;
+      if (state.shown.indexOf(j) < 0) { sel = j; break; }
+    }
+    save();
+    render();
+  };
+  const hd = document.getElementById('hand');
+  if (hd) hd.onclick = () => { state.handedOver = true; save(); screen = 'report'; render(); };
+}
+
+function renderReport() {
+  const ok = safe(), sure = certain();
+  const corners = ok ? unsure() : wrongCorners();
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.whereReport) + '</div>';
+
+  h += '<div class="card"><h2>' + esc(C.voice.shiftHead) + '</h2>';
+  for (const r of state.shift) {
+    const acts = actsOn(r), right = acts === opens(state.rule, r);
+    h += '<div class="shift"><span class="t">' + readingLine(r) + ' &mdash; '
+       + (acts ? esc(C.voice.opened) : esc(C.voice.shut)) + '</span>'
+       + (right ? '' : '<span class="s">' + esc(opens(state.rule, r) ? C.voice.shouldOpen : C.voice.shouldShut) + '</span>')
+       + '<span class="m ' + (right ? 'ok' : 'no') + '">' + esc(right ? C.voice.right : C.voice.wrong) + '</span></div>';
+  }
+  h += '</div>';
+
+  h += '<div class="big' + (ok ? '' : ' bad') + '">'
+     + esc(ok && sure ? C.verdict.certain
+           : (ok ? C.verdict.unsure[corners[0]] : C.verdict.unsafe[corners[0]])) + '</div>';
+  h += '<div class="closing">'
+     + esc(ok && sure ? (state.redundant ? C.closing.certainRedundant : C.closing.certain)
+           : (ok ? C.closing.unsure : C.closing.unsafe)) + '</div>';
+
+  const s = standing();
+  h += '<div class="card"><h2>' + esc(C.voice.beliefHead) + '</h2>'
+     + '<p class="said">' + esc(state.shown.length === 0 ? C.voice.nothingShown : C.belief[maskOf(s)]) + '</p>'
+     + '<div class="count">' + esc(C.confidence[s.length]) + '</div></div>';
+
+  h += '<div class="card"><h2>' + esc(C.voice.boardHead) + '</h2>';
+  for (let i = 0; i < state.board.length; i++) {
+    const done = state.shown.indexOf(i) >= 0;
+    h += '<div class="row' + (done ? ' done' : '') + '" style="border-bottom:1px solid var(--edge)">'
+       + '<span class="n">' + String(i + 1).padStart(2, '0') + '</span>'
+       + '<span class="v">' + readingLine(state.board[i]) + '</span>'
+       + (done ? '<span class="tag">' + esc(C.voice.shown) + '</span>' : '') + '</div>';
+  }
+  h += '</div>';
+
+  h += '<button id="again">' + esc(C.voice.again) + '</button>';
+  app.innerHTML = h;
+  document.getElementById('again').onclick = () => {
+    boot(newSeed());
+    save();
+    screen = 'open';
+    render();
+  };
+}
+
+if (load()) screen = state.handedOver ? 'report' : 'teach';
+else { boot(newSeed()); save(); screen = 'open'; }
+render();
+</script>
+</body>
+</html>

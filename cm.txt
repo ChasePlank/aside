@@ -1,23 +1,47 @@
-Let the shelf say what is not on it
+Add Lesson, where a state only ever teaches its own corner
 
-The shelf was derived and honest about what it carried, and silent about what
-it did not. Six cards read as the whole library, and the games absent from
-them were exactly the ones a player could not tell were absent -- the four of
-mine that are still desktop-only, plus the two that are Roxanne's.
+The fifteenth verb is teaching, and it is the one the other fourteen
+assume. Residue leaves, Ledger records, Testimony recalls, Handoff hands
+over, Outside tells, Bearings checks, Inventory names, Vigil keeps,
+Corroboration believes, Attribution credits, Drift compares, Redaction
+bars, Relay carries, Interval waits -- and every one of them is about
+what happens to something after somebody already knows how to do it.
+This one is about the part before that.
 
-So the same walk over Games.all() that fills the shelf now also produces the
-games with no phone build, and they are listed underneath under their own
-heading. Derived, not written down: a game that gets a build leaves that list
-and joins the shelf in the same edit, and nobody has to remember to move it.
+You have run a boiler for eleven years and in three nights you hand it
+to somebody else. Two gauges and a vent, and the rule is one line: you
+open the vent when the pressure is up. You have never had to say why,
+because you have never had to tell anybody.
 
-They are drawn as text and not as cards, because there is nothing on the other
-end of them on a phone, and a card that looks tappable and is not is worse
-than a list.
+The rule the whole thing rests on: a state only ever teaches its own
+corner. The board has four of them -- pressure up or down, heat up or
+down -- and a state in one corner says nothing whatever about the other
+three. Three nights spent in one corner is one corner taught three
+times, and the student's belief is exactly as wide after the third night
+as it was after the first. That is the failure the game exists to make
+legible: it does not look like a failure while it is happening. Every
+demonstration feels like teaching, the student keeps saying something,
+and the nights keep going.
 
-Checked, because the failure mode is the one the orphan check was written for:
-the invariant is stated once -- every game in the library is exactly one of
-on-the-shelf or named-as-missing -- and it is asserted for all eleven. Engine
-suite 92 -> 116 checks.
+The eight rules the student considers are declared, and so is the order
+they try them in, so their belief is a fact about the demonstrations
+rather than a guess about the student. No two of the eight agree on all
+four corners, which is why a demonstration in a new corner always
+narrows the field and a demonstration in a corner they have already seen
+never does -- and the game says so, on the screen, while it is still
+happening, because the whole difficulty is that it does not feel like
+one.
 
-Also: Testimony gets the note the other three persistent games have, since it
-does keep its account in the browser now.
+Measured: covering the shift's three corners is safe on 2000 of 2000
+seeds and leaves the student certain about half the time. Showing the
+first three states on the board is safe 66.5% of the time, which is the
+number that says the game is not free. Three nights in one corner are
+safe 30% of the time, which is the number that says the trap is real.
+
+Lesson suite 624 checks. Engine suite 170. The phone build deals the
+same board and the same shift as the desktop over 200 seeds, and agrees
+about the standing set after the same three nights -- which is the
+number the game turns on, and the one a ported model could get wrong on
+both sides at once without either side noticing.
+tools/lesson-play.mjs plays the shipped file through its own buttons,
+including the claim the rule rests on.
