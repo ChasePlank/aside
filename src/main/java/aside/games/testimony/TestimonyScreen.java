@@ -59,7 +59,7 @@ public class TestimonyScreen extends UiScreen {
     static final Color GREEN = Color.web("#7FD1AE");
     static final Color AMBER = Color.web("#F2C14E");
 
-    enum Phase { WITNESS, INTERVIEW, CONFIDENCE, ACCOUNT, VERDICT }
+    enum Phase { WITNESS, INTERVIEW, CONFIDENCE, ACCOUNT, VERDICT, NOTES }
 
     final Testimony t;
     final Path save;
@@ -103,6 +103,10 @@ public class TestimonyScreen extends UiScreen {
                 if (c == KeyCode.ENTER || c == KeyCode.SPACE) phase = Phase.VERDICT;
             }
             case VERDICT -> {
+                if (c == KeyCode.R) restart();
+                else if (c == KeyCode.ENTER || c == KeyCode.SPACE) phase = Phase.NOTES;
+            }
+            case NOTES -> {
                 if (c == KeyCode.R) restart();
                 else if (c == KeyCode.ENTER || c == KeyCode.SPACE) ui.replace(new LibraryScreen(ui));
             }
@@ -158,6 +162,7 @@ public class TestimonyScreen extends UiScreen {
             case INTERVIEW, CONFIDENCE -> drawInterview();
             case ACCOUNT -> drawAccount();
             case VERDICT -> drawVerdict();
+            case NOTES -> drawNotes();
         }
     }
 
@@ -412,7 +417,75 @@ public class TestimonyScreen extends UiScreen {
             y += 27;
         }
 
+        hint("ENTER  what was there     R  start again     ESC  leave");
+    }
+
+    // ---------------------------------------------------------------- notes
+
+    /**
+     * The page after the verdict: what each answer was doing in the evening.
+     *
+     * Two columns of four, because eight entries stacked would run off the
+     * canvas and because the notes are short enough to read as a list. The
+     * question is drawn above its note so the note has something to be about.
+     */
+    void drawNotes() {
+        gc.setFont(F_SMALL);
+        gc.setFill(FAINT);
+        gc.fillText("TESTIMONY", M, 60);
+
+        gc.setFont(F_HEAD);
+        gc.setFill(STEEL);
+        gc.fillText(Testimony.NOTES_HEAD, M, 96);
+
+        double y = 128;
+        gc.setFont(F_LINE);
+        gc.setFill(DIM);
+        for (String line : wrap(Testimony.NOTES_LEAD, F_LINE, W - M * 2)) {
+            gc.fillText(line, M, y);
+            y += 24;
+        }
+
+        // Two columns of four. The height of an entry depends on how its prose
+        // wraps, so each column walks its own entries and stacks them, rather
+        // than assuming a fixed row height and overlapping the long ones.
+        double colW = 520;
+        double rx = M + colW + 70;
+        double top = 196;
+        int half = (Testimony.QUESTIONS.size() + 1) / 2;
+        for (int i = 0; i < Testimony.QUESTIONS.size(); i++) {
+            boolean left = i < half;
+            double x = left ? M : rx;
+            double cy = top;
+            for (int j = left ? 0 : half; j < i; j++) {
+                cy += entryHeight(Testimony.QUESTIONS.get(j), colW);
+            }
+            drawNote(Testimony.QUESTIONS.get(i), x, cy, colW);
+        }
+
         hint("ENTER  back to the library     R  start again     ESC  leave");
+    }
+
+    /**
+     * One question and what its answer was doing there.
+     *
+     * The prompt goes through promptFor(), not prompt(): the last question
+     * quotes the player's own answer back at them ("the woman in the %coat%
+     * coat"), and drawing the raw template put a %coat% on the screen. Found by
+     * rendering this page, which is the only way that shows up.
+     */
+    void drawNote(Testimony.Question q, double x, double y, double colW) {
+        gc.setFont(F_LINE);
+        gc.setFill(STEEL);
+        for (String line : wrap(t.promptFor(q), F_LINE, colW)) { gc.fillText(line, x, y); y += 23; }
+        gc.setFill(Color.rgb(190, 190, 205, 0.88));
+        for (String line : wrap(q.note(), F_LINE, colW)) { gc.fillText(line, x, y); y += 23; }
+    }
+
+    /** How tall one notes entry is, so the column can be laid out without overlap. */
+    double entryHeight(Testimony.Question q, double colW) {
+        int lines = wrap(t.promptFor(q), F_LINE, colW).size() + wrap(q.note(), F_LINE, colW).size();
+        return lines * 23 + 22;
     }
 
     // -------------------------------------------------------------- helpers

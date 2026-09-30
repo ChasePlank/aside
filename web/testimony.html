@@ -64,6 +64,10 @@
   .legend .l1{color:var(--steel)}
   .legend .l2{color:var(--faint)}
   .item{border-left:3px solid var(--edge); padding:0 0 0 12px; margin:0 0 18px}
+  .noteitem{border-left:3px solid var(--edge); padding:0 0 0 12px; margin:0 0 20px}
+  .noteitem .q{color:var(--steel); font-size:16px; margin:0 0 4px}
+  .noteitem .n{color:rgba(200,200,215,.9); font-size:15px}
+  .lead{color:var(--dim); font-size:16px; margin:16px 0 24px}
   .item.right{border-left-color:var(--green)}
   .item.wrong.sure{border-left-color:var(--red)}
   .item.wrong.doubt{border-left-color:var(--amber)}
@@ -117,6 +121,8 @@ const C = {
 "verdictHead":"The evening, next to your account.",
 "verdictSaid":"WHAT YOU SAID",
 "verdictHappened":"WHAT HAPPENED",
+"notesHead":"What was there.",
+"notesLead":"Every answer on the last page was in the evening. This is what each one was doing there, and why it was that one and not another.",
 "closing":{"nothing":"You answered nothing. An account that says nothing cannot be wrong, and it cannot be any use either.","perfect":"You saw it, you kept it, and you did not add to it. Almost nobody does.","honest":"You were wrong %wrong% time%plural%, and every time you said you were not sure. That is not the same as being right -- but it is the honest half of it, and it is the half that can be worked with.","certain":"You were wrong %wrong% time%plural%. You were sure %sure% of those. The second number is the one that matters: the wrong things you doubted will be checked, and the wrong things you were certain of are already in the account."},
 "verdictTrue":"%correct% of %total% lines were true.",
 "verdictTally":"%wrongSure% of them you were sure of.  %wrongUnsure% you doubted.  %correctSure% true and certain.",
@@ -424,6 +430,29 @@ function drawVerdict() {
      + '<p class="closing">' + esc(closing()) + '</p>';
   app.innerHTML = h;
 
+  inner.innerHTML = '<button id="w">what was there</button>'
+    + '<button class="ghost" id="r">start again</button>';
+  document.getElementById('w').onclick = () => { phase = 'notes'; draw(); };
+  document.getElementById('r').onclick = restart;
+}
+
+/**
+ * The page after the verdict: what each answer was doing in the evening.
+ *
+ * Question.note() was written for all eight questions when the game was made
+ * and nothing drew it -- not this build, not the desktop. It is a page of its
+ * own on both, because eight notes do not fit under the verdict, and because
+ * drawing them only for the wrong answers would have made the notes a
+ * punishment. They are not. They are what was there.
+ */
+function drawNotes() {
+  let h = kicker('TESTIMONY') + '<h1>' + esc(C.notesHead) + '</h1>'
+    + '<p class="lead">' + esc(C.notesLead) + '</p>';
+  for (const q of C.questions) {
+    h += '<div class="noteitem"><div class="q">' + esc(promptFor(q)) + '</div>'
+       + '<div class="n">' + esc(q.note) + '</div></div>';
+  }
+  app.innerHTML = h;
   inner.innerHTML = '<button class="ghost" id="r">start again</button>';
   document.getElementById('r').onclick = restart;
 }
@@ -440,6 +469,7 @@ function draw() {
   if (phase === 'witness') drawWitness();
   else if (phase === 'interview') drawInterview();
   else if (phase === 'account') drawAccount();
+  else if (phase === 'notes') drawNotes();
   else drawVerdict();
   bar.style.display = inner.innerHTML.trim() === '' ? 'none' : '';
   window.scrollTo(0, 0);

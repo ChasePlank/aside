@@ -94,6 +94,8 @@ public final class WebTestimony {
         b.append("\"verdictHead\":").append(str(Testimony.VERDICT_HEAD)).append(",\n");
         b.append("\"verdictSaid\":").append(str(Testimony.VERDICT_SAID)).append(",\n");
         b.append("\"verdictHappened\":").append(str(Testimony.VERDICT_HAPPENED)).append(",\n");
+        b.append("\"notesHead\":").append(str(Testimony.NOTES_HEAD)).append(",\n");
+        b.append("\"notesLead\":").append(str(Testimony.NOTES_LEAD)).append(",\n");
 
         // The closings ship with their placeholders intact. The phone build
         // fills them, because it is the one that knows the counts; what it must

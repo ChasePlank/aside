@@ -425,6 +425,31 @@ public final class SelfTest {
         ok(generated.contains(Testimony.MEMORY_HEAD), "the phone build carries the memory panel's head");
         ok(generated.contains("\\u003c") || !generated.contains("<script>\"<"),
                 "nothing in the prose can end the script block early");
+
+        // The notes page. Question.note() was written for all eight questions
+        // when the game was made and nothing drew it for months -- not the
+        // verdict, not this build. It is drawn on both now, and these are the
+        // checks that keep it that way: the page exists on the phone, the
+        // desktop has a phase for it, and every note is carried.
+        ok(generated.contains(Testimony.NOTES_HEAD), "the phone build carries the notes page's head");
+        ok(generated.contains(Testimony.NOTES_LEAD), "and its lead");
+        ok(generated.contains("function drawNotes()"), "the phone build draws the notes page");
+        ok(generated.contains("phase === 'notes'"), "and reaches it from the verdict");
+        for (Testimony.Question q : Testimony.QUESTIONS) {
+            ok(generated.contains(q.note()), "the phone build carries the note for " + q.id());
+        }
+        // The desktop side of the same page is not checkable from here and is
+        // not pretended to be: TestimonyScreen is JavaFX, and the whole point
+        // of this suite is that it runs without a window. A screen is verified
+        // by rendering it. What can be checked here is that the notes are worth
+        // drawing -- eight paragraphs, none of them a repeat of another.
+        Set<String> notes = new HashSet<>();
+        for (Testimony.Question q : Testimony.QUESTIONS) {
+            ok(notes.add(q.note()), "the note for " + q.id() + " is not a repeat of another");
+            ok(q.note().length() > q.truth().length(),
+                    "the note for " + q.id() + " says more than the answer does");
+        }
+        eq(notes.size(), Testimony.QUESTIONS.size(), "every question has its own note");
         System.out.println("       phone build: " + (generated.length() / 1024) + " KB, current");
     }
 

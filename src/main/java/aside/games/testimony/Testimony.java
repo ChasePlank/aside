@@ -126,6 +126,27 @@ public final class Testimony {
     public static final String VERDICT_SAID = "WHAT YOU SAID";
     public static final String VERDICT_HAPPENED = "WHAT HAPPENED";
 
+    /**
+     * The page after the verdict, and the reason it exists.
+     *
+     * Question.note() has been written for all eight questions since the game
+     * was made and nothing has ever drawn it -- not the verdict, not the phone
+     * build. Eight paragraphs, some of the best writing in the file, sitting in
+     * the model unread. It was left undrawn for a while rather than drawn on
+     * the phone only, because a note that appears on the phone and not on the
+     * desktop is a divergence dressed up as a feature.
+     *
+     * It is a page of its own rather than a line under each verdict row because
+     * it does not fit: the verdict already runs to about 530 of the 720 canvas,
+     * and eight notes at two lines each is another 370. The alternative was to
+     * draw them only for the answers that were wrong, which would have made the
+     * notes a punishment. They are not. They are what was there.
+     */
+    public static final String NOTES_HEAD = "What was there.";
+    public static final String NOTES_LEAD =
+            "Every answer on the last page was in the evening. This is what each one "
+                    + "was doing there, and why it was that one and not another.";
+
     public static final List<Question> QUESTIONS = List.of(
 
         new Question("coat",
