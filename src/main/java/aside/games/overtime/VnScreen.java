@@ -204,11 +204,12 @@ public class VnScreen extends UiScreen {
         if (!textComplete) {
             revealed += dt * CHARS_PER_SEC;
             if (revealed >= shownText.length()) { revealed = shownText.length(); textComplete = true; }
-            // Typewriter blip, every few characters rather than each one
+            // Typewriter blip. blip() throttles by time and retriggers one voice;
+            // calling sfx() per character stacked copies and crunched.
             int shown = (int) revealed;
             if (shown >= lastBlipAt + 3 && shown < shownText.length()) {
                 lastBlipAt = shown;
-                Audio.A.sfx("text_blip");
+                Audio.A.blip("text_blip");
             }
         }
         draw();

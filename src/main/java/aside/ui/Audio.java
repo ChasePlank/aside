@@ -59,6 +59,20 @@ public class Audio {
     public double sfxVolume = 0.8;
     public boolean enabled = true;
 
+    /** Where the volume settings are remembered between runs. */
+    static final String SETTINGS_FILE =
+            System.getProperty("user.home") + "/.aside-audio.txt";
+
+    /**
+     * Typewriter blips are throttled by TIME, not by how many characters have
+     * appeared. Firing the shared sfx() every third character stacked ten to
+     * fifteen overlapping copies a second, which is what "overlapping itself
+     * and crunchy" was.
+     */
+    static final long BLIP_MIN_GAP_NANOS = 62_000_000L;   // ~16 per second
+    static final double BLIP_VOLUME = 0.5;                // sit under the music
+    private long lastBlipNanos = 0;
+
     /** Cues the script asked for that have no file. */
     public final Set<String> missing = new LinkedHashSet<>();
     public final List<String> notes = new ArrayList<>();
@@ -84,6 +98,108 @@ public class Audio {
         }
         A.notes.add("audio: found " + A.files.size() + " cue(s)"
                 + (A.files.isEmpty() ? " (silent)" : ""));
+        A.readSettings();
+    }
+
+    // ---------------- settings ----------------
+
+    void readSettings() {
+        try {
+            File f = new File(SETTINGS_FILE);
+            if (!f.exists()) return;
+            for (String line : java.nio.file.Files.readAllLines(f.toPath())) {
+                String[] kv = line.split("=", 2);
+                if (kv.length != 2) continue;
+                String v = kv[1].trim();
+                switch (kv[0].trim()) {
+                    case "music" -> musicVolume = Double.parseDouble(v);
+                    case "sfx" -> sfxVolume = Double.parseDouble(v);
+                    case "enabled" -> enabled = Boolean.parseBoolean(v);
+                    default -> { }
+                }
+            }
+        } catch (Exception ignored) { }
+    }
+
+    void writeSettings() {
+        try {
+            java.nio.file.Files.writeString(new File(SETTINGS_FILE).toPath(),
+                    "music=" + musicVolume + "\n"
+                  + "sfx=" + sfxVolume + "\n"
+                  + "enabled=" + enabled + "\n");
+        } catch (Exception ignored) { }
+    }
+
+    /** Volume up/down, or mute. Applies live to whatever is playing. */
+    public String volume(boolean up) {
+        double v = Math.max(0.0, Math.min(1.0, musicVolume + (up ? 0.1 : -0.1)));
+        musicVolume = v;
+        sfxVolume = Math.min(1.0, v + 0.2);
+        enabled = musicVolume > 0;
+        if (music != null) {
+            try { music.setVolume(musicVolume); } catch (Exception ignored) { }
+        }
+        writeSettings();
+        return describe();
+    }
+
+    public String toggleMute() {
+        enabled = !enabled;
+        if (music != null) {
+            try { music.setVolume(enabled ? musicVolume : 0.0); } catch (Exception ignored) { }
+        }
+        writeSettings();
+        return describe();
+    }
+
+    /** What the on-screen indicator should say. */
+    public String describe() {
+        if (!enabled) return "SOUND OFF   (M to unmute)";
+        int pct = (int) Math.round(musicVolume * 100);
+        StringBuilder bar = new StringBuilder();
+        int filled = (int) Math.round(musicVolume * 10);
+        for (int i = 0; i < 10; i++) bar.append(i < filled ? '#' : '-');
+        return "VOLUME " + pct + "%  [" + bar + "]";
+    }
+
+    // ---------------- silencing ----------------
+
+    /**
+     * Stop everything: the looping music and every effect clip.
+     *
+     * Called when the player returns to the library. Without it a game's
+     * ambience outlives the game - leaving FNAF left the fan running, because
+     * nothing owned the job of turning it off (playtest, Sept 29).
+     */
+    public void stopAll() {
+        stopMusic();
+        for (AudioClip c : clips.values()) {
+            try { c.stop(); } catch (Exception ignored) { }
+        }
+    }
+
+    /**
+     * A typewriter blip: throttled, and RESTARTED rather than layered.
+     *
+     * Overlapping copies of the same sample at 15/s is both the crunch and the
+     * apparent echo. One voice, retriggered, is what a blip should sound like.
+     */
+    public void blip(String... candidates) {
+        if (!enabled) return;
+        long now = System.nanoTime();
+        if (now - lastBlipNanos < BLIP_MIN_GAP_NANOS) return;
+        lastBlipNanos = now;
+        File f = resolve(candidates);
+        if (f == null) { if (candidates.length > 0) missing.add(candidates[0]); return; }
+        try {
+            AudioClip c = clips.computeIfAbsent(f.getAbsolutePath(),
+                    k -> new AudioClip(f.toURI().toString()));
+            c.stop();
+            c.setVolume(sfxVolume * BLIP_VOLUME);
+            c.play();
+        } catch (Exception e) {
+            notes.add("blip '" + candidates[0] + "' failed: " + e.getMessage());
+        }
     }
 
     /** First candidate that has a file, or null. */

@@ -37,6 +37,22 @@ public class LibraryScreen extends UiScreen {
         super(ui);
     }
 
+    /**
+     * Arriving at the shelf silences whatever the last game was doing.
+     *
+     * Nothing owned this job before: a game's ambience just kept running, so
+     * leaving FNAF left its fan humming over the library (playtest, Sept 29).
+     * Every route back here goes through replace(new LibraryScreen(...)), so
+     * this one hook covers all of them.
+     */
+    @Override
+    public void enter() {
+        Audio a = Audio.A;
+        if (a != null) a.stopAll();
+        notice = "M mute    [ quieter    ] louder    - works in every game";
+        noticeTimer = 5.0;
+    }
+
     @Override
     public void handleKey(KeyEvent e) {
         KeyCode c = e.getCode();
