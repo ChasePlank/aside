@@ -180,9 +180,7 @@ public class OutsideScreen extends UiScreen {
 
         gc.setFont(F_TINY);
         gc.setFill(FAINT);
-        String right = outside.finished
-                ? "the week is over"
-                : "day " + Math.min(outside.day + 1, Outside.DAYS.size()) + " of " + Outside.DAYS.size();
+        String right = Outside.where(outside.day, outside.finished);
         gc.fillText(right, W - M - 110, 76);
 
         switch (phase) {
@@ -206,24 +204,12 @@ public class OutsideScreen extends UiScreen {
 
         gc.setFont(F_MONO);
         gc.setFill(FAINT);
-        gc.fillText("THE RIDGE", M, y);
+        gc.fillText(Outside.THE_RIDGE, M, y);
         y += 40;
-
-        String[] paras = {
-            "There is a haul road down the ridge to the river, and a yard at the "
-          + "bottom of it, and in the yard a dispatcher sits in a room with no window.",
-
-            "It routes the trucks. It cannot see the road, or the water, or the weather. "
-          + "Everything it has ever known about the world outside that room, it knows "
-          + "because somebody on the ridge told it.",
-
-            "That is you. You get one report a day: one thing, or nothing at all. Then "
-          + "it acts on what it has, and you watch what it does.",
-        };
 
         gc.setFont(F_SCENE);
         gc.setFill(Color.rgb(200, 200, 215, 0.78));
-        for (String p : paras) {
+        for (String p : Outside.OPENING) {
             for (String line : wrap(p, F_SCENE, LEFT_W)) {
                 gc.fillText(line, M, y);
                 y += 28;
@@ -243,24 +229,11 @@ public class OutsideScreen extends UiScreen {
 
         gc.setFont(F_MONO);
         gc.setFill(GOLD);
-        gc.fillText("HOW IT DECIDES", x, y);
+        gc.fillText(Outside.RULES_HEADING, x, y);
         y += 34;
 
-        String[] rules = {
-            "It has no clock. A thing it heard on the first day and a thing it heard "
-          + "on the last are the same age to it.",
-
-            "For each thing it has to decide, it does what the FIRST thing it ever "
-          + "heard about that thing said.",
-
-            "So a new report is not a correction. It is one more thing it believes, "
-          + "ranked behind everything you said before it.",
-
-            "The only way to keep a decision open is to say nothing about it.",
-        };
-
         gc.setFont(F_SMALL);
-        for (String r : rules) {
+        for (String r : Outside.RULES) {
             gc.setFill(Color.rgb(190, 190, 205, 0.8));
             for (String line : wrap(r, F_SMALL, RIGHT_W)) {
                 gc.fillText(line, x, y);
@@ -297,7 +270,7 @@ public class OutsideScreen extends UiScreen {
         y += 24;
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("WHAT YOU CAN SEE", M, y);
+        gc.fillText(Outside.WHAT_YOU_CAN_SEE, M, y);
         y += 32;
 
         for (int i = 0; i < d.facts.size(); i++) {
@@ -316,7 +289,7 @@ public class OutsideScreen extends UiScreen {
         gc.setFont(F_FACT);
         boolean none = index < 0;
         gc.setFill(none ? GOLD : DIM);
-        gc.fillText((none ? "\u25B6  " : "   ") + "0.  Say nothing today.", M + 6, y + 8);
+        gc.fillText((none ? "\u25B6  " : "   ") + "0.  " + Outside.SAY_NOTHING, M + 6, y + 8);
 
         drawHoldsPanel();
         hint("1-4  choose a report     0  say nothing     ENTER  file it     ESC  leave");
@@ -336,7 +309,7 @@ public class OutsideScreen extends UiScreen {
 
         gc.setFont(F_MONO);
         gc.setFill(GOLD);
-        gc.fillText("WHAT IT HOLDS", x, y);
+        gc.fillText(Outside.WHAT_IT_HOLDS, x, y);
         gc.setFont(F_TINY);
         gc.setFill(FAINT);
         gc.fillText(outside.heard.size() + " of " + (Outside.DAYS.size() * 4), x + RIGHT_W - 70, y);
@@ -362,14 +335,14 @@ public class OutsideScreen extends UiScreen {
                 }
                 gc.setFont(F_TINY);
                 gc.setFill(first ? GOLD : FAINT);
-                gc.fillText("day " + h.day, x + RIGHT_W - 52, y);
+                gc.fillText(Outside.dayLabel(h.day), x + RIGHT_W - 52, y);
                 y = ly + 4;
             }
 
             if (!any) {
                 gc.setFont(F_SMALL);
                 gc.setFill(Color.rgb(110, 110, 134, 0.6));
-                gc.fillText("nothing", x + 16, y);
+                gc.fillText(Outside.NOTHING, x + 16, y);
                 y += 22;
             }
             y += 12;
@@ -377,8 +350,7 @@ public class OutsideScreen extends UiScreen {
 
         gc.setFont(F_TINY);
         gc.setFill(Color.rgb(150, 150, 170, 0.7));
-        for (String line : wrap("The first line under each heading is the one it acts on.",
-                F_TINY, RIGHT_W)) {
+        for (String line : wrap(Outside.FIRST_LINE_NOTE, F_TINY, RIGHT_W)) {
             gc.fillText(line, x, y);
             y += 17;
         }
@@ -393,12 +365,12 @@ public class OutsideScreen extends UiScreen {
         double y = 138;
         gc.setFont(F_MONO);
         gc.setFill(FAINT);
-        gc.fillText("THE DISPATCHER", M, y);
+        gc.fillText(Outside.THE_DISPATCHER, M, y);
         y += 34;
 
         gc.setFont(F_HEAD);
         gc.setFill(r.ran ? INK : RED);
-        gc.fillText(r.ran ? "The truck went down." : "The truck did not go.", M, y);
+        gc.fillText(r.ran ? Outside.TRUCK_WENT : Outside.TRUCK_DID_NOT_GO, M, y);
         y += 40;
 
         for (Outside.Decision dec : r.decisions) {
@@ -409,18 +381,18 @@ public class OutsideScreen extends UiScreen {
 
             gc.setFont(F_SMALL);
             gc.setFill(FAINT);
-            gc.fillText("the world", M + 16, y);
+            gc.fillText(Outside.THE_WORLD, M + 16, y);
             gc.setFill(Color.rgb(190, 190, 205, 0.85));
             gc.fillText(Outside.valueLabel(dec.truth), M + 130, y);
 
             gc.setFill(FAINT);
-            gc.fillText("it did", M + 430, y);
+            gc.fillText(Outside.IT_DID, M + 430, y);
             gc.setFill(dec.did == null ? RED : (dec.right() ? GREEN : RED));
-            gc.fillText(dec.did == null ? "nothing" : Outside.valueLabel(dec.did), M + 510, y);
+            gc.fillText(dec.did == null ? Outside.NOTHING : Outside.valueLabel(dec.did), M + 510, y);
 
             gc.setFont(F_TINY);
             gc.setFill(dec.fromDay == 0 ? FAINT : GOLD);
-            gc.fillText(dec.fromDay == 0 ? "no report" : "from day " + dec.fromDay, M + 900, y);
+            gc.fillText(dec.fromDay == 0 ? Outside.NO_REPORT : Outside.fromDay(dec.fromDay), M + 900, y);
 
             y += 34;
         }
@@ -431,7 +403,7 @@ public class OutsideScreen extends UiScreen {
         y += 4;
         gc.setFont(F_SMALL);
         gc.setFill(!r.ran ? RED : (r.correct() == 3 ? GREEN : DIM));
-        gc.fillText(r.ran ? r.correct() + " of 3 right today." : "Nothing was routed today.", M, y);
+        gc.fillText(r.ran ? Outside.rightToday(r.correct()) : Outside.NOTHING_ROUTED, M, y);
         y += 30;
 
         // On the seventh day the report you just made is still sitting there,
@@ -441,8 +413,8 @@ public class OutsideScreen extends UiScreen {
             gc.setFont(F_SMALL);
             gc.setFill(Color.rgb(150, 150, 170, 0.85));
             String said = filed == null
-                    ? "You said nothing today."
-                    : "You said today: \"" + filed.words + "\"";
+                    ? Outside.SAID_NOTHING_TODAY
+                    : Outside.saidToday(filed.words);
             for (String line : wrap(said, F_SMALL, LEFT_W)) {
                 gc.fillText(line, M, y);
                 y += 20;
@@ -450,13 +422,10 @@ public class OutsideScreen extends UiScreen {
             boolean ignored = filed != null && outside.lastReportIgnored(filed);
             gc.setFill(ignored ? RED : DIM);
             String verdict = filed == null
-                    ? "It acted on what it already had, which is all it ever does."
+                    ? Outside.ACTED_ON_WHAT_IT_HAD
                     : (ignored
-                        ? "It acted on day " + outside.earliest(filed.concern).day
-                          + " instead, because day " + outside.earliest(filed.concern).day
-                          + " got there first."
-                        : "That one reached it, because nothing had been said about "
-                          + filed.concern.label + " before.");
+                        ? Outside.actedOnEarlier(outside.earliest(filed.concern).day)
+                        : Outside.reachedIt(filed.concern));
             for (String line : wrap(verdict, F_SMALL, LEFT_W)) {
                 gc.fillText(line, M, y);
                 y += 20;
@@ -473,18 +442,17 @@ public class OutsideScreen extends UiScreen {
 
         gc.setFont(F_HEAD);
         gc.setFill(INK);
-        gc.fillText("The week is over.", M, y);
+        gc.fillText(Outside.WEEK_OVER, M, y);
         y += 38;
 
         gc.setFont(F_SCENE);
         gc.setFill(Color.rgb(200, 200, 215, 0.8));
-        gc.fillText(outside.correct + " of " + Outside.DECISIONS
-                + " decisions came out right. The truck ran on " + outside.ranDays
-                + " of " + Outside.DAYS.size() + " days.", M, y);
+        gc.fillText(Outside.scoreLine(outside.correct, outside.ranDays), M, y);
         y += 32;
 
         gc.setFill(DIM);
-        for (String line : wrap(closing(), F_SCENE, LEFT_W)) {
+        for (String line : wrap(Outside.closing(outside.correct, outside.heard.size()),
+                F_SCENE, LEFT_W)) {
             gc.fillText(line, M, y);
             y += 26;
         }
@@ -494,7 +462,7 @@ public class OutsideScreen extends UiScreen {
         y += 26;
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("WHAT IT BELIEVED, AND WHEN YOU SAID IT", M, y);
+        gc.fillText(Outside.BELIEVED_HEADING, M, y);
         y += 28;
 
         for (Outside.Concern c : Outside.Concern.values()) {
@@ -504,55 +472,23 @@ public class OutsideScreen extends UiScreen {
             gc.fillText(c.label, M, y);
             gc.setFont(F_SMALL);
             gc.setFill(e == null ? RED : Color.rgb(190, 190, 205, 0.85));
-            gc.fillText(e == null ? "nothing" : Outside.valueLabel(e.value), M + 150, y);
+            gc.fillText(e == null ? Outside.NOTHING : Outside.valueLabel(e.value), M + 150, y);
             gc.setFont(F_TINY);
             gc.setFill(e == null ? FAINT : GOLD);
-            gc.fillText(e == null ? "never said" : "day " + e.day, M + 470, y);
+            gc.fillText(e == null ? Outside.NEVER_SAID : Outside.dayLabel(e.day), M + 470, y);
             y += 26;
         }
 
         y += 22;
         gc.setFont(F_SMALL);
         gc.setFill(GOLD);
-        for (String line : wrap("It has no clock. Everything you ever told it is the same "
-                + "age, and the first thing is the loudest.", F_SMALL, LEFT_W)) {
+        for (String line : wrap(Outside.NO_CLOCK_LINE, F_SMALL, LEFT_W)) {
             gc.fillText(line, M, y);
             y += 20;
         }
 
         drawRecordPanel();
         hint("ENTER  back to the library     R  start again     ESC  leave");
-    }
-
-    /** The closing line, chosen from how the week actually went. */
-    String closing() {
-        int said = outside.heard.size();
-        if (said == 0) {
-            return "You never told it anything. It never moved. A room with no window "
-                 + "and no reports is not careful, it is empty.";
-        }
-        if (outside.correct >= Outside.bestPossible()) {
-            return "You held things back until they were worth saying, and it still "
-                 + "could not tell this week from last week. That is the best week "
-                 + "there is, and it is not a good one.";
-        }
-        if (said >= Outside.DAYS.size()) {
-            return "You told it everything you saw, every day. It kept all of it, and "
-                 + "it acted on the first of it. Nothing you said after the first day "
-                 + "could reach the decisions you had already made for it.";
-        }
-        if (outside.correct >= 8) {
-            return "You said most of the right things in most of the right order. The "
-                 + "days it got wrong are the days it was still holding your earliest "
-                 + "words about something that had moved.";
-        }
-        if (outside.correct >= 5) {
-            return "It was right about as often as it was wrong, which is what a room "
-                 + "with no window and a week of secondhand weather looks like.";
-        }
-        return "It spent the week acting on things that were true when you said them. "
-             + "None of them were true by the end. That is not carelessness on either "
-             + "of your parts. It is what a fixed mind does with a moving world.";
     }
 
     /** The right column at the end: everything said, in the order it landed. */
@@ -563,20 +499,20 @@ public class OutsideScreen extends UiScreen {
 
         gc.setFont(F_MONO);
         gc.setFill(GOLD);
-        gc.fillText("THE RIDGE LOG", x, y);
+        gc.fillText(Outside.THE_RIDGE_LOG, x, y);
         y += 30;
 
         if (outside.heard.isEmpty()) {
             gc.setFont(F_SMALL);
             gc.setFill(FAINT);
-            gc.fillText("nothing was ever said", x, y);
+            gc.fillText(Outside.NOTHING_WAS_EVER_SAID, x, y);
             return;
         }
 
         for (Outside.Fact h : outside.heard) {
             gc.setFont(F_TINY);
             gc.setFill(GOLD);
-            gc.fillText("day " + h.day, x, y);
+            gc.fillText(Outside.dayLabel(h.day), x, y);
             gc.setFont(F_SMALL);
             gc.setFill(Color.rgb(180, 180, 196, 0.85));
             double ly = y;
@@ -590,8 +526,7 @@ public class OutsideScreen extends UiScreen {
         y += 8;
         gc.setFont(F_TINY);
         gc.setFill(Color.rgb(150, 150, 170, 0.7));
-        for (String line : wrap(Outside.DAYS.size() * 4 + " things were visible. "
-                + outside.heard.size() + " of them were ever said.", F_TINY, RIGHT_W)) {
+        for (String line : wrap(Outside.visibleLine(outside.heard.size()), F_TINY, RIGHT_W)) {
             gc.fillText(line, x, y);
             y += 17;
         }

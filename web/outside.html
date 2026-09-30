@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0A11">
+<title>outside</title>
+<style>
+  :root{
+    --bg:#0A0A11; --ink:#E8E8EF; --dim:#9A9AAE; --faint:#6E6E86;
+    --gold:#F2C14E; --edge:#22222E; --card:#14141C;
+    --red:#E94560; --green:#7FD1AE; --blue:#8FB8DE;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:17px/1.55 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:620px; margin:0 auto; padding:22px 18px 24px}
+  header{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
+  .where{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint)}
+  .label{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+         margin:28px 0 10px}
+  .dayhead{font:12px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+           margin:26px 0 4px}
+  .daytitle{font-size:21px; color:var(--gold); margin:0 0 12px}
+  .scene{font-size:17px; color:var(--dim); margin:0}
+  .para{font-size:17px; color:var(--dim); margin:0 0 16px}
+  .rules{background:var(--card); border:1px solid var(--edge); border-radius:12px;
+         padding:14px 16px; margin:0}
+  .rules .rh{font:12px/1.4 Consolas,Menlo,monospace; color:var(--gold); margin:0 0 10px}
+  .rules p{font:14px/1.6 Arial,Helvetica,sans-serif; color:#BEBECD; margin:0 0 12px}
+  .rules p:last-child{margin:0}
+  .fact{border:1px solid transparent; border-radius:10px; padding:11px 13px; margin:0 0 7px;
+        background:var(--card); cursor:pointer; color:var(--dim); font-size:17px}
+  .fact.sel{background:#1E1E2A; border-color:#3E3E54; box-shadow:inset 3px 0 0 var(--gold)}
+  .fact .mark{color:var(--gold); font:13px/1.6 Consolas,Menlo,monospace; margin-right:8px}
+  .fact.none{font-style:italic; color:var(--faint)}
+  .fact.none.sel{color:var(--ink)}
+  .head{font-size:22px; margin:26px 0 12px}
+  .head.good{color:var(--green)} .head.bad{color:var(--red)}
+  .tally{font-size:17px; color:var(--dim); margin:16px 0 0}
+  .tally.warn{color:var(--red)}
+  .said{color:var(--dim); font-size:16px; margin:0 0 12px}
+  .verdict{font-size:16px; margin:0; color:var(--dim)}
+  .verdict.ignored{color:var(--red)}
+  .count{font-size:17px; color:var(--dim); margin:0 0 14px}
+  .closing{font-size:17px; color:var(--dim); margin:0}
+  .goldline{font-size:15px; color:var(--gold); margin:22px 0 0}
+  .dec{background:var(--card); border:1px solid var(--edge); border-radius:10px;
+       padding:10px 13px; margin:0 0 8px}
+  .dec .cn{font:12px/1.6 Consolas,Menlo,monospace; color:var(--blue); margin:0 0 6px}
+  .dec .row{display:flex; gap:8px; font-size:15px; align-items:baseline}
+  .dec .row .k{color:var(--faint); flex:0 0 74px; font:12px/1.6 Arial,Helvetica,sans-serif}
+  .dec .row .v{color:var(--dim)}
+  .dec .row .v.right{color:var(--green)} .dec .row .v.wrong{color:var(--red)}
+  .dec .row .d{margin-left:auto; font:11px/1.6 Consolas,Menlo,monospace; color:var(--gold)}
+  .dec .row .d.none{color:var(--faint)}
+  .list{margin:0}
+  .list .row{display:flex; gap:9px; padding:6px 0; border-bottom:1px solid #17171F; font-size:15px}
+  .list .row:last-child{border-bottom:0}
+  .list .row .mk{color:var(--gold); font:12px/1.7 Consolas,Menlo,monospace; flex:0 0 auto}
+  .list .row .tx{color:var(--dim)}
+  /* The right column of the desktop is what it holds, and the whole design is
+     that you keep looking back at it while the ridge keeps offering more. A
+     phone cannot do two columns, so the same thing lives in a fixed strip
+     under the thumb -- the same tension in one dimension, not a simplification
+     of it. It is on the report screen only, because that is the only screen
+     where a decision is being made; the desktop does the same. */
+  .bar{position:fixed; left:0; right:0; bottom:0; background:#0A0A11f2;
+       border-top:1px solid var(--edge); padding:9px 18px calc(9px + env(safe-area-inset-bottom))}
+  .bar .inner{max-width:620px; margin:0 auto}
+  .holds{margin:0 0 9px}
+  .holds .hh{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+             margin:0 0 5px}
+  .holds .grp{display:flex; gap:8px; align-items:baseline; font:12px/1.7 Consolas,Menlo,monospace}
+  .holds .grp .cn{color:var(--blue); flex:0 0 96px}
+  .holds .grp .v{color:var(--ink)}
+  .holds .grp .v.none{color:var(--faint)}
+  .holds .grp .d{margin-left:auto; color:var(--gold)}
+  .holds .grp .d.none{color:var(--faint)}
+  .holds .fn{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin:6px 0 0}
+  .btns{display:flex; gap:9px}
+  button{flex:1; font:16px/1.2 Georgia,serif; padding:14px 10px; border-radius:10px;
+         background:var(--card); color:var(--ink); border:1px solid var(--edge); cursor:pointer}
+  button.go{background:var(--gold); color:#171410; border-color:var(--gold)}
+  .warn{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--red); margin:16px 0 0}
+  .spacer{height:0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar"></div>
+<script>
+const C = {
+"decisions":21,
+"daysCount":7,
+"days":[
+  {"heading":"Day one","title":"First light","scene":"You are on the ridge before the sun. Below you the haul road runs down through the cut to the river, and the yard is a lit square at the bottom of it. The dispatcher's window has been boarded since the yard was built. It will hear whatever you say to it, and nothing else.","facts":[{"id":"d1a","concern":"CROSSING","value":"ford","day":1,"words":"The river is down to the shingle. A truck could cross at the ford."},{"id":"d1b","concern":"CROSSING","value":"bridge","day":1,"words":"The bridge planks are sound. The survey was done in spring."},{"id":"d1c","concern":"LOAD","value":"full","day":1,"words":"The truck is loaded to the boards and the driver is fresh."},{"id":"d1d","concern":"HOUR","value":"dawn","day":1,"words":"The light comes up clean and the road down is dry."}],"truth":{"CROSSING":"ford","LOAD":"full","HOUR":"dawn"}},
+  {"heading":"Day two","title":"Rain upstream","scene":"It rained hard in the hills in the night, but the river has not turned yet. The road down is greasy where the cut shadows it.","facts":[{"id":"d2a","concern":"HOUR","value":"noon","day":2,"words":"The road is greasy in the shade until the sun is high."},{"id":"d2b","concern":"CROSSING","value":"wait","day":2,"words":"The river is carrying colour and the first of the driftwood. It will be over the shingle by tomorrow."},{"id":"d2c","concern":"LOAD","value":"full","day":2,"words":"The truck is loaded to the boards and the driver is fresh."},{"id":"d2d","concern":"CROSSING","value":"ford","day":2,"words":"The river is up a foot. The shingle is still there under it."}],"truth":{"CROSSING":"ford","LOAD":"full","HOUR":"dawn"}},
+  {"heading":"Day three","title":"The river comes up","scene":"The ford is gone. The water is over the shingle and still climbing, and the bridge is taking the whole of it.","facts":[{"id":"d3a","concern":"CROSSING","value":"wait","day":3,"words":"The ford is gone and the river is still rising."},{"id":"d3b","concern":"CROSSING","value":"bridge","day":3,"words":"The bridge is the only way over and it is holding."},{"id":"d3c","concern":"LOAD","value":"light","day":3,"words":"The cut face moved in the night. The ore is coming off wet and heavy."},{"id":"d3d","concern":"HOUR","value":"dawn","day":3,"words":"The road is dry again at first light."}],"truth":{"CROSSING":"wait","LOAD":"light","HOUR":"noon"}},
+  {"heading":"Day four","title":"The bridge","scene":"There is a sound in the bridge you can hear from the ridge, a plank working. The cut has started running trucks of its own.","facts":[{"id":"d4a","concern":"LOAD","value":"light","day":4,"words":"The cut is sending wet ore down and the road is taking it, half a truck at a time."},{"id":"d4b","concern":"LOAD","value":"empty","day":4,"words":"The truck's springs are gone. It should go down light or not at all."},{"id":"d4c","concern":"CROSSING","value":"wait","day":4,"words":"The bridge is moving in the current. Nobody should be on it."},{"id":"d4d","concern":"HOUR","value":"dark","day":4,"words":"The road is only clear of the cut's traffic after dark."}],"truth":{"CROSSING":"wait","LOAD":"light","HOUR":"noon"}},
+  {"heading":"Day five","title":"Half loads","scene":"The cut is working again and half loads are going down all day. The river has not fallen.","facts":[{"id":"d5a","concern":"HOUR","value":"noon","day":5,"words":"The sun is high and the shade is off the road."},{"id":"d5b","concern":"LOAD","value":"light","day":5,"words":"The cut is sending half loads down and the road is taking them."},{"id":"d5c","concern":"CROSSING","value":"wait","day":5,"words":"The river is still over the shingle and the bridge is still working."},{"id":"d5d","concern":"HOUR","value":"dark","day":5,"words":"The cut's trucks are still on the road until dark, and they take the middle of it."}],"truth":{"CROSSING":"wait","LOAD":"light","HOUR":"noon"}},
+  {"heading":"Day six","title":"The last report","scene":"Frost on the road until the sun is on it. The yard has been asking for ore for four days.","facts":[{"id":"d6a","concern":"CROSSING","value":"wait","day":6,"words":"The river has not fallen. It will not fall tonight."},{"id":"d6b","concern":"LOAD","value":"light","day":6,"words":"The yard needs what the truck can bring safely and no more."},{"id":"d6c","concern":"HOUR","value":"noon","day":6,"words":"The road is at its best at midday and the light holds until six."},{"id":"d6d","concern":"HOUR","value":"dawn","day":6,"words":"There is frost on the road until the sun is on it."}],"truth":{"CROSSING":"wait","LOAD":"light","HOUR":"noon"}},
+  {"heading":"Day seven","title":"The river falls","scene":"In the night the river came down. The shingle is showing, the bridge has stopped working, and the frost is off the road. You are still on the ridge, and you have one more report to make.","facts":[{"id":"d7a","concern":"CROSSING","value":"bridge","day":7,"words":"The river has fallen. The bridge is quiet. It can cross."},{"id":"d7b","concern":"CROSSING","value":"ford","day":7,"words":"The ford is passable again, but the bridge is the better line today."},{"id":"d7c","concern":"LOAD","value":"full","day":7,"words":"The springs have been replaced. The truck can take a full load."},{"id":"d7d","concern":"HOUR","value":"dawn","day":7,"words":"The frost is gone and the first light is clean."}],"truth":{"CROSSING":"bridge","LOAD":"full","HOUR":"dawn"}}
+],
+"concerns":[{"id":"CROSSING","label":"the crossing"},{"id":"LOAD","label":"the load"},{"id":"HOUR","label":"the hour"}],
+"values":{"ford":"cross at the ford","bridge":"cross by the bridge","wait":"do not cross","full":"take the full load","light":"take a light load","empty":"go down empty","dawn":"go at first light","noon":"go at midday","dark":"go after dark"},
+"voice":{
+  "theRidge":"THE RIDGE",
+  "opening":["There is a haul road down the ridge to the river, and a yard at the bottom of it, and in the yard a dispatcher sits in a room with no window.","It routes the trucks. It cannot see the road, or the water, or the weather. Everything it has ever known about the world outside that room, it knows because somebody on the ridge told it.","That is you. You get one report a day: one thing, or nothing at all. Then it acts on what it has, and you watch what it does."],
+  "rulesHeading":"HOW IT DECIDES",
+  "rules":["It has no clock. A thing it heard on the first day and a thing it heard on the last are the same age to it.","For each thing it has to decide, it does what the FIRST thing it ever heard about that thing said.","So a new report is not a correction. It is one more thing it believes, ranked behind everything you said before it.","The only way to keep a decision open is to say nothing about it."],
+  "whatYouCanSee":"WHAT YOU CAN SEE",
+  "sayNothing":"Say nothing today.",
+  "whatItHolds":"WHAT IT HOLDS",
+  "nothing":"nothing",
+  "firstLineNote":"The first line under each heading is the one it acts on.",
+  "stripNote":"It acts on the first thing it ever heard about each of these.",
+  "theDispatcher":"THE DISPATCHER",
+  "truckWent":"The truck went down.",
+  "truckDidNotGo":"The truck did not go.",
+  "theWorld":"the world",
+  "itDid":"it did",
+  "noReport":"no report",
+  "nothingRouted":"Nothing was routed today.",
+  "weekOver":"The week is over.",
+  "believedHeading":"WHAT IT BELIEVED, AND WHEN YOU SAID IT",
+  "neverSaid":"never said",
+  "noClockLine":"It has no clock. Everything you ever told it is the same age, and the first thing is the loudest.",
+  "theRidgeLog":"THE RIDGE LOG",
+  "nothingWasEverSaid":"nothing was ever said",
+  "weekIsOver":"the week is over",
+  "saidNothingToday":"You said nothing today.",
+  "actedOnWhatItHad":"It acted on what it already had, which is all it ever does.",
+  "dayLabel":["","day 1","day 2","day 3","day 4","day 5","day 6","day 7"],
+  "fromDay":["","from day 1","from day 2","from day 3","from day 4","from day 5","from day 6","from day 7"],
+  "rightToday":["","1 of 3 right today.","2 of 3 right today.","3 of 3 right today."],
+  "actedOnEarlier":["","It acted on day 1 instead, because day 1 got there first.","It acted on day 2 instead, because day 2 got there first.","It acted on day 3 instead, because day 3 got there first.","It acted on day 4 instead, because day 4 got there first.","It acted on day 5 instead, because day 5 got there first.","It acted on day 6 instead, because day 6 got there first.","It acted on day 7 instead, because day 7 got there first."],
+  "where":["day 1 of 7","day 2 of 7","day 3 of 7","day 4 of 7","day 5 of 7","day 6 of 7","day 7 of 7","the week is over"],
+  "saidToday":{"d1a":"You said today: \"The river is down to the shingle. A truck could cross at the ford.\"","d1b":"You said today: \"The bridge planks are sound. The survey was done in spring.\"","d1c":"You said today: \"The truck is loaded to the boards and the driver is fresh.\"","d1d":"You said today: \"The light comes up clean and the road down is dry.\"","d2a":"You said today: \"The road is greasy in the shade until the sun is high.\"","d2b":"You said today: \"The river is carrying colour and the first of the driftwood. It will be over the shingle by tomorrow.\"","d2c":"You said today: \"The truck is loaded to the boards and the driver is fresh.\"","d2d":"You said today: \"The river is up a foot. The shingle is still there under it.\"","d3a":"You said today: \"The ford is gone and the river is still rising.\"","d3b":"You said today: \"The bridge is the only way over and it is holding.\"","d3c":"You said today: \"The cut face moved in the night. The ore is coming off wet and heavy.\"","d3d":"You said today: \"The road is dry again at first light.\"","d4a":"You said today: \"The cut is sending wet ore down and the road is taking it, half a truck at a time.\"","d4b":"You said today: \"The truck's springs are gone. It should go down light or not at all.\"","d4c":"You said today: \"The bridge is moving in the current. Nobody should be on it.\"","d4d":"You said today: \"The road is only clear of the cut's traffic after dark.\"","d5a":"You said today: \"The sun is high and the shade is off the road.\"","d5b":"You said today: \"The cut is sending half loads down and the road is taking them.\"","d5c":"You said today: \"The river is still over the shingle and the bridge is still working.\"","d5d":"You said today: \"The cut's trucks are still on the road until dark, and they take the middle of it.\"","d6a":"You said today: \"The river has not fallen. It will not fall tonight.\"","d6b":"You said today: \"The yard needs what the truck can bring safely and no more.\"","d6c":"You said today: \"The road is at its best at midday and the light holds until six.\"","d6d":"You said today: \"There is frost on the road until the sun is on it.\"","d7a":"You said today: \"The river has fallen. The bridge is quiet. It can cross.\"","d7b":"You said today: \"The ford is passable again, but the bridge is the better line today.\"","d7c":"You said today: \"The springs have been replaced. The truck can take a full load.\"","d7d":"You said today: \"The frost is gone and the first light is clean.\""},
+  "reachedIt":{"CROSSING":"That one reached it, because nothing had been said about the crossing before.","LOAD":"That one reached it, because nothing had been said about the load before.","HOUR":"That one reached it, because nothing had been said about the hour before."},
+  "visibleLine":["28 things were visible. 0 of them were ever said.","28 things were visible. 1 of them were ever said.","28 things were visible. 2 of them were ever said.","28 things were visible. 3 of them were ever said.","28 things were visible. 4 of them were ever said.","28 things were visible. 5 of them were ever said.","28 things were visible. 6 of them were ever said.","28 things were visible. 7 of them were ever said.","28 things were visible. 8 of them were ever said.","28 things were visible. 9 of them were ever said.","28 things were visible. 10 of them were ever said.","28 things were visible. 11 of them were ever said.","28 things were visible. 12 of them were ever said.","28 things were visible. 13 of them were ever said.","28 things were visible. 14 of them were ever said.","28 things were visible. 15 of them were ever said.","28 things were visible. 16 of them were ever said.","28 things were visible. 17 of them were ever said.","28 things were visible. 18 of them were ever said.","28 things were visible. 19 of them were ever said.","28 things were visible. 20 of them were ever said.","28 things were visible. 21 of them were ever said.","28 things were visible. 22 of them were ever said.","28 things were visible. 23 of them were ever said.","28 things were visible. 24 of them were ever said.","28 things were visible. 25 of them were ever said.","28 things were visible. 26 of them were ever said.","28 things were visible. 27 of them were ever said.","28 things were visible. 28 of them were ever said."],
+  "scoreLine":[
+    "0 of 21 decisions came out right. The truck ran on 0 of 7 days.","1 of 21 decisions came out right. The truck ran on 0 of 7 days.","2 of 21 decisions came out right. The truck ran on 0 of 7 days.","3 of 21 decisions came out right. The truck ran on 0 of 7 days.","4 of 21 decisions came out right. The truck ran on 0 of 7 days.","5 of 21 decisions came out right. The truck ran on 0 of 7 days.","6 of 21 decisions came out right. The truck ran on 0 of 7 days.","7 of 21 decisions came out right. The truck ran on 0 of 7 days.","8 of 21 decisions came out right. The truck ran on 0 of 7 days.","9 of 21 decisions came out right. The truck ran on 0 of 7 days.","10 of 21 decisions came out right. The truck ran on 0 of 7 days.","11 of 21 decisions came out right. The truck ran on 0 of 7 days.","12 of 21 decisions came out right. The truck ran on 0 of 7 days.","13 of 21 decisions came out right. The truck ran on 0 of 7 days.","14 of 21 decisions came out right. The truck ran on 0 of 7 days.","15 of 21 decisions came out right. The truck ran on 0 of 7 days.","16 of 21 decisions came out right. The truck ran on 0 of 7 days.","17 of 21 decisions came out right. The truck ran on 0 of 7 days.","18 of 21 decisions came out right. The truck ran on 0 of 7 days.","19 of 21 decisions came out right. The truck ran on 0 of 7 days.","20 of 21 decisions came out right. The truck ran on 0 of 7 days.","21 of 21 decisions came out right. The truck ran on 0 of 7 days.",
+    "0 of 21 decisions came out right. The truck ran on 1 of 7 days.","1 of 21 decisions came out right. The truck ran on 1 of 7 days.","2 of 21 decisions came out right. The truck ran on 1 of 7 days.","3 of 21 decisions came out right. The truck ran on 1 of 7 days.","4 of 21 decisions came out right. The truck ran on 1 of 7 days.","5 of 21 decisions came out right. The truck ran on 1 of 7 days.","6 of 21 decisions came out right. The truck ran on 1 of 7 days.","7 of 21 decisions came out right. The truck ran on 1 of 7 days.","8 of 21 decisions came out right. The truck ran on 1 of 7 days.","9 of 21 decisions came out right. The truck ran on 1 of 7 days.","10 of 21 decisions came out right. The truck ran on 1 of 7 days.","11 of 21 decisions came out right. The truck ran on 1 of 7 days.","12 of 21 decisions came out right. The truck ran on 1 of 7 days.","13 of 21 decisions came out right. The truck ran on 1 of 7 days.","14 of 21 decisions came out right. The truck ran on 1 of 7 days.","15 of 21 decisions came out right. The truck ran on 1 of 7 days.","16 of 21 decisions came out right. The truck ran on 1 of 7 days.","17 of 21 decisions came out right. The truck ran on 1 of 7 days.","18 of 21 decisions came out right. The truck ran on 1 of 7 days.","19 of 21 decisions came out right. The truck ran on 1 of 7 days.","20 of 21 decisions came out right. The truck ran on 1 of 7 days.","21 of 21 decisions came out right. The truck ran on 1 of 7 days.",
+    "0 of 21 decisions came out right. The truck ran on 2 of 7 days.","1 of 21 decisions came out right. The truck ran on 2 of 7 days.","2 of 21 decisions came out right. The truck ran on 2 of 7 days.","3 of 21 decisions came out right. The truck ran on 2 of 7 days.","4 of 21 decisions came out right. The truck ran on 2 of 7 days.","5 of 21 decisions came out right. The truck ran on 2 of 7 days.","6 of 21 decisions came out right. The truck ran on 2 of 7 days.","7 of 21 decisions came out right. The truck ran on 2 of 7 days.","8 of 21 decisions came out right. The truck ran on 2 of 7 days.","9 of 21 decisions came out right. The truck ran on 2 of 7 days.","10 of 21 decisions came out right. The truck ran on 2 of 7 days.","11 of 21 decisions came out right. The truck ran on 2 of 7 days.","12 of 21 decisions came out right. The truck ran on 2 of 7 days.","13 of 21 decisions came out right. The truck ran on 2 of 7 days.","14 of 21 decisions came out right. The truck ran on 2 of 7 days.","15 of 21 decisions came out right. The truck ran on 2 of 7 days.","16 of 21 decisions came out right. The truck ran on 2 of 7 days.","17 of 21 decisions came out right. The truck ran on 2 of 7 days.","18 of 21 decisions came out right. The truck ran on 2 of 7 days.","19 of 21 decisions came out right. The truck ran on 2 of 7 days.","20 of 21 decisions came out right. The truck ran on 2 of 7 days.","21 of 21 decisions came out right. The truck ran on 2 of 7 days.",
+    "0 of 21 decisions came out right. The truck ran on 3 of 7 days.","1 of 21 decisions came out right. The truck ran on 3 of 7 days.","2 of 21 decisions came out right. The truck ran on 3 of 7 days.","3 of 21 decisions came out right. The truck ran on 3 of 7 days.","4 of 21 decisions came out right. The truck ran on 3 of 7 days.","5 of 21 decisions came out right. The truck ran on 3 of 7 days.","6 of 21 decisions came out right. The truck ran on 3 of 7 days.","7 of 21 decisions came out right. The truck ran on 3 of 7 days.","8 of 21 decisions came out right. The truck ran on 3 of 7 days.","9 of 21 decisions came out right. The truck ran on 3 of 7 days.","10 of 21 decisions came out right. The truck ran on 3 of 7 days.","11 of 21 decisions came out right. The truck ran on 3 of 7 days.","12 of 21 decisions came out right. The truck ran on 3 of 7 days.","13 of 21 decisions came out right. The truck ran on 3 of 7 days.","14 of 21 decisions came out right. The truck ran on 3 of 7 days.","15 of 21 decisions came out right. The truck ran on 3 of 7 days.","16 of 21 decisions came out right. The truck ran on 3 of 7 days.","17 of 21 decisions came out right. The truck ran on 3 of 7 days.","18 of 21 decisions came out right. The truck ran on 3 of 7 days.","19 of 21 decisions came out right. The truck ran on 3 of 7 days.","20 of 21 decisions came out right. The truck ran on 3 of 7 days.","21 of 21 decisions came out right. The truck ran on 3 of 7 days.",
+    "0 of 21 decisions came out right. The truck ran on 4 of 7 days.","1 of 21 decisions came out right. The truck ran on 4 of 7 days.","2 of 21 decisions came out right. The truck ran on 4 of 7 days.","3 of 21 decisions came out right. The truck ran on 4 of 7 days.","4 of 21 decisions came out right. The truck ran on 4 of 7 days.","5 of 21 decisions came out right. The truck ran on 4 of 7 days.","6 of 21 decisions came out right. The truck ran on 4 of 7 days.","7 of 21 decisions came out right. The truck ran on 4 of 7 days.","8 of 21 decisions came out right. The truck ran on 4 of 7 days.","9 of 21 decisions came out right. The truck ran on 4 of 7 days.","10 of 21 decisions came out right. The truck ran on 4 of 7 days.","11 of 21 decisions came out right. The truck ran on 4 of 7 days.","12 of 21 decisions came out right. The truck ran on 4 of 7 days.","13 of 21 decisions came out right. The truck ran on 4 of 7 days.","14 of 21 decisions came out right. The truck ran on 4 of 7 days.","15 of 21 decisions came out right. The truck ran on 4 of 7 days.","16 of 21 decisions came out right. The truck ran on 4 of 7 days.","17 of 21 decisions came out right. The truck ran on 4 of 7 days.","18 of 21 decisions came out right. The truck ran on 4 of 7 days.","19 of 21 decisions came out right. The truck ran on 4 of 7 days.","20 of 21 decisions came out right. The truck ran on 4 of 7 days.","21 of 21 decisions came out right. The truck ran on 4 of 7 days.",
+    "0 of 21 decisions came out right. The truck ran on 5 of 7 days.","1 of 21 decisions came out right. The truck ran on 5 of 7 days.","2 of 21 decisions came out right. The truck ran on 5 of 7 days.","3 of 21 decisions came out right. The truck ran on 5 of 7 days.","4 of 21 decisions came out right. The truck ran on 5 of 7 days.","5 of 21 decisions came out right. The truck ran on 5 of 7 days.","6 of 21 decisions came out right. The truck ran on 5 of 7 days.","7 of 21 decisions came out right. The truck ran on 5 of 7 days.","8 of 21 decisions came out right. The truck ran on 5 of 7 days.","9 of 21 decisions came out right. The truck ran on 5 of 7 days.","10 of 21 decisions came out right. The truck ran on 5 of 7 days.","11 of 21 decisions came out right. The truck ran on 5 of 7 days.","12 of 21 decisions came out right. The truck ran on 5 of 7 days.","13 of 21 decisions came out right. The truck ran on 5 of 7 days.","14 of 21 decisions came out right. The truck ran on 5 of 7 days.","15 of 21 decisions came out right. The truck ran on 5 of 7 days.","16 of 21 decisions came out right. The truck ran on 5 of 7 days.","17 of 21 decisions came out right. The truck ran on 5 of 7 days.","18 of 21 decisions came out right. The truck ran on 5 of 7 days.","19 of 21 decisions came out right. The truck ran on 5 of 7 days.","20 of 21 decisions came out right. The truck ran on 5 of 7 days.","21 of 21 decisions came out right. The truck ran on 5 of 7 days.",
+    "0 of 21 decisions came out right. The truck ran on 6 of 7 days.","1 of 21 decisions came out right. The truck ran on 6 of 7 days.","2 of 21 decisions came out right. The truck ran on 6 of 7 days.","3 of 21 decisions came out right. The truck ran on 6 of 7 days.","4 of 21 decisions came out right. The truck ran on 6 of 7 days.","5 of 21 decisions came out right. The truck ran on 6 of 7 days.","6 of 21 decisions came out right. The truck ran on 6 of 7 days.","7 of 21 decisions came out right. The truck ran on 6 of 7 days.","8 of 21 decisions came out right. The truck ran on 6 of 7 days.","9 of 21 decisions came out right. The truck ran on 6 of 7 days.","10 of 21 decisions came out right. The truck ran on 6 of 7 days.","11 of 21 decisions came out right. The truck ran on 6 of 7 days.","12 of 21 decisions came out right. The truck ran on 6 of 7 days.","13 of 21 decisions came out right. The truck ran on 6 of 7 days.","14 of 21 decisions came out right. The truck ran on 6 of 7 days.","15 of 21 decisions came out right. The truck ran on 6 of 7 days.","16 of 21 decisions came out right. The truck ran on 6 of 7 days.","17 of 21 decisions came out right. The truck ran on 6 of 7 days.","18 of 21 decisions came out right. The truck ran on 6 of 7 days.","19 of 21 decisions came out right. The truck ran on 6 of 7 days.","20 of 21 decisions came out right. The truck ran on 6 of 7 days.","21 of 21 decisions came out right. The truck ran on 6 of 7 days.",
+    "0 of 21 decisions came out right. The truck ran on 7 of 7 days.","1 of 21 decisions came out right. The truck ran on 7 of 7 days.","2 of 21 decisions came out right. The truck ran on 7 of 7 days.","3 of 21 decisions came out right. The truck ran on 7 of 7 days.","4 of 21 decisions came out right. The truck ran on 7 of 7 days.","5 of 21 decisions came out right. The truck ran on 7 of 7 days.","6 of 21 decisions came out right. The truck ran on 7 of 7 days.","7 of 21 decisions came out right. The truck ran on 7 of 7 days.","8 of 21 decisions came out right. The truck ran on 7 of 7 days.","9 of 21 decisions came out right. The truck ran on 7 of 7 days.","10 of 21 decisions came out right. The truck ran on 7 of 7 days.","11 of 21 decisions came out right. The truck ran on 7 of 7 days.","12 of 21 decisions came out right. The truck ran on 7 of 7 days.","13 of 21 decisions came out right. The truck ran on 7 of 7 days.","14 of 21 decisions came out right. The truck ran on 7 of 7 days.","15 of 21 decisions came out right. The truck ran on 7 of 7 days.","16 of 21 decisions came out right. The truck ran on 7 of 7 days.","17 of 21 decisions came out right. The truck ran on 7 of 7 days.","18 of 21 decisions came out right. The truck ran on 7 of 7 days.","19 of 21 decisions came out right. The truck ran on 7 of 7 days.","20 of 21 decisions came out right. The truck ran on 7 of 7 days.","21 of 21 decisions came out right. The truck ran on 7 of 7 days."
+  ],
+  "closing":["You never told it anything. It never moved. A room with no window and no reports is not careful, it is empty.","It spent the week acting on things that were true when you said them. None of them were true by the end. That is not carelessness on either of your parts. It is what a fixed mind does with a moving world.","It was right about as often as it was wrong, which is what a room with no window and a week of secondhand weather looks like.","You said most of the right things in most of the right order. The days it got wrong are the days it was still holding your earliest words about something that had moved.","You held things back until they were worth saying, and it still could not tell this week from last week. That is the best week there is, and it is not a good one.","You told it everything you saw, every day. It kept all of it, and it acted on the first of it. Nothing you said after the first day could reach the decisions you had already made for it."],
+  "closingPick":[
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    1,1,1,1,1,2,2,2,3,3,3,4,4,4,4,4,4,4,4,4,4,4,
+    1,1,1,1,1,2,2,2,3,3,3,4,4,4,4,4,4,4,4,4,4,4,
+    1,1,1,1,1,2,2,2,3,3,3,4,4,4,4,4,4,4,4,4,4,4,
+    1,1,1,1,1,2,2,2,3,3,3,4,4,4,4,4,4,4,4,4,4,4,
+    1,1,1,1,1,2,2,2,3,3,3,4,4,4,4,4,4,4,4,4,4,4,
+    1,1,1,1,1,2,2,2,3,3,3,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4
+  ]
+}
+}
+;
+
+// --------------------------------------------------------------- the room
+// A port of aside.games.outside.Outside. The content above is generated from
+// the Java model, so the writing cannot drift; this is the dispatcher's rule
+// written a second time in a language a phone can run.
+
+const KEY = 'aside.outside.ridge';
+
+const factById = id => {
+  for (const d of C.days) for (const f of d.facts) if (f.id === id) return f;
+  return null;
+};
+const valueLabel = v => C.values[v] || v;
+const int = (s, d) => { const n = parseInt(s, 10); return isNaN(n) ? d : n; };
+
+function fresh() { return { day: 0, correct: 0, ran: 0, finished: false, heard: [] }; }
+
+/** The first thing it ever heard about a concern, as of the end of a day. */
+function earliest(l, concern, upToDay) {
+  for (const id of l.heard) {
+    const f = factById(id);
+    if (f && f.concern === concern && f.day <= upToDay) return f;
+  }
+  return null;
+}
+
+/** What it would do on a day, without filing anything. */
+function route(l, dayIndex) {
+  const d = C.days[dayIndex];
+  const upTo = dayIndex + 1;
+  const decisions = C.concerns.map(c => {
+    const f = earliest(l, c.id, upTo);
+    const truth = d.truth[c.id];
+    return { concern: c.id, truth: truth, did: f ? f.value : null,
+             fromDay: f ? f.day : 0, right: f ? f.value === truth : false };
+  });
+  return { day: dayIndex + 1, decisions: decisions,
+           ran: earliest(l, 'CROSSING', upTo) !== null };
+}
+
+// A day the truck does not go is a day of nothing, whatever the dispatcher
+// happened to be right about in its head. The yard measures the week in ore.
+const correctOf = r => r.ran ? r.decisions.filter(x => x.right).length : 0;
+
+function report(l, id) {
+  if (!id || l.heard.indexOf(id) >= 0) return;
+  if (factById(id)) l.heard.push(id);
+}
+
+function file(l) {
+  const r = route(l, l.day);
+  l.correct += correctOf(r);
+  if (r.ran) l.ran++;
+  return r;
+}
+
+function advance(l) {
+  l.day++;
+  if (l.day >= C.daysCount) { l.day = C.daysCount; l.finished = true; }
+}
+
+const lastReportIgnored = (l, id) => {
+  const f = factById(id);
+  if (!f) return false;
+  return earliest(l, f.concern, C.daysCount) !== f;
+};
+
+// ------------------------------------------------------------- the save file
+// Outside.serialize() writes the ridge log as plain text and
+// Outside.deserialize() reads it. This is that exact format, kept in
+// localStorage, so a week can be carried between the desktop and the phone by
+// copying a few lines.
+
+function serialize(l) {
+  let s = '# outside v1\n';
+  s += 'day\t' + l.day + '\n';
+  s += 'correct\t' + l.correct + '\n';
+  s += 'ran\t' + l.ran + '\n';
+  s += 'finished\t' + (l.finished ? 1 : 0) + '\n';
+  for (const id of l.heard) s += 'heard\t' + id + '\n';
+  return s;
+}
+
+function deserialize(text) {
+  const l = fresh();
+  for (const raw of String(text).split(/\r?\n/)) {
+    if (!raw || raw.charAt(0) === '#') continue;
+    const p = raw.split('\t');
+    if (p[0] === 'day') l.day = int(p[1], 0);
+    else if (p[0] === 'correct') l.correct = int(p[1], 0);
+    else if (p[0] === 'ran') l.ran = int(p[1], 0);
+    else if (p[0] === 'finished') l.finished = int(p[1], 0) === 1;
+    else if (p[0] === 'heard') { if (factById(p[1]) && l.heard.indexOf(p[1]) < 0) l.heard.push(p[1]); }
+  }
+  if (l.day > C.daysCount) l.day = C.daysCount;
+  if (l.correct > C.decisions) l.correct = C.decisions;
+  if (l.ran > C.daysCount) l.ran = C.daysCount;
+  return l;
+}
+
+const CAN_STORE = (() => {
+  try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); return true; }
+  catch (e) { return false; }
+})();
+
+function load() {
+  if (!CAN_STORE) return fresh();
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { text = null; }
+  return text === null ? fresh() : deserialize(text);
+}
+
+function save(l) {
+  if (!CAN_STORE) return false;
+  try { localStorage.setItem(KEY, serialize(l)); return true; } catch (e) { return false; }
+}
+
+// --------------------------------------------------------------- the screen
+
+let L = load();
+let phase = L.finished ? 'end' : 'open';
+let sel = 0;
+let filed = null;      // the fact reported on the day just filed, or null
+let last = null;       // the routing of the day just filed
+let kept = true;
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function header() {
+  const where = C.voice.where[L.finished ? C.daysCount : L.day];
+  return '<header><h1>outside</h1><div class="where">' + esc(where) + '</div></header>';
+}
+
+/** One row per concern: the line it will act on, and the day it heard it. */
+function holdsStrip() {
+  let h = '<div class="holds"><div class="hh">' + esc(C.voice.whatItHolds)
+        + ' ' + L.heard.length + ' of ' + (C.daysCount * 4) + '</div>';
+  for (const c of C.concerns) {
+    const f = earliest(L, c.id, C.daysCount);
+    h += '<div class="grp"><span class="cn">' + esc(c.label) + '</span>'
+       + '<span class="v' + (f ? '' : ' none') + '">'
+       + esc(f ? valueLabel(f.value) : C.voice.nothing) + '</span>'
+       + '<span class="d' + (f ? '' : ' none') + '">'
+       + esc(f ? C.voice.dayLabel[f.day] : '') + '</span></div>';
+  }
+  return h + '<div class="fn">' + esc(C.voice.stripNote) + '</div></div>';
+}
+
+function drawOpen() {
+  let h = header() + '<div class="label">' + esc(C.voice.theRidge) + '</div>';
+  for (const p of C.voice.opening) h += '<p class="para">' + esc(p) + '</p>';
+  h += '<div class="rules"><div class="rh">' + esc(C.voice.rulesHeading) + '</div>';
+  for (const r of C.voice.rules) h += '<p>' + esc(r) + '</p>';
+  h += '</div><div class="spacer"></div>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="go">Go up to the ridge</button></div></div>';
+  document.getElementById('go').onclick = () => { phase = 'report'; sel = 0; draw(); };
+}
+
+function drawReport() {
+  const d = C.days[L.day];
+  if (!d) { phase = 'end'; draw(); return; }
+  let h = header()
+    + '<div class="dayhead">' + esc(d.heading.toUpperCase()) + '</div>'
+    + '<div class="daytitle">' + esc(d.title) + '</div>'
+    + '<p class="scene">' + esc(d.scene) + '</p>'
+    + '<div class="label">' + esc(C.voice.whatYouCanSee) + '</div>';
+  d.facts.forEach((f, i) => {
+    h += '<div class="fact' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">'
+       + '<span class="mark">' + (i + 1) + '.</span>' + esc(f.words) + '</div>';
+  });
+  const noneIdx = d.facts.length;
+  h += '<div class="fact none' + (sel === noneIdx ? ' sel' : '') + '" data-i="' + noneIdx + '">'
+     + '<span class="mark">0.</span>' + esc(C.voice.sayNothing) + '</div>';
+  h += '<div class="spacer"></div>';
+  if (!CAN_STORE) h += '<p class="warn">This browser will not keep the ridge log. '
+    + 'It will be gone when you close the page.</p>';
+  app.innerHTML = h;
+  app.querySelectorAll('.fact').forEach(el => {
+    el.onclick = () => { sel = +el.dataset.i; draw(); };
+  });
+  bar.innerHTML = '<div class="inner">' + holdsStrip()
+    + '<div class="btns"><button class="go" id="f">File it</button></div></div>';
+  document.getElementById('f').onclick = () => {
+    const day = C.days[L.day];
+    filed = sel >= day.facts.length ? null : day.facts[sel];
+    report(L, filed ? filed.id : null);
+    last = file(L);
+    kept = save(L);
+    phase = 'routing';
+    draw();
+  };
+}
+
+function drawRouting() {
+  if (!last) { phase = 'report'; draw(); return; }
+  let h = header() + '<div class="label">' + esc(C.voice.theDispatcher) + '</div>'
+    + '<div class="head ' + (last.ran ? 'good' : 'bad') + '">'
+    + esc(last.ran ? C.voice.truckWent : C.voice.truckDidNotGo) + '</div>';
+  for (const dec of last.decisions) {
+    const c = C.concerns.filter(x => x.id === dec.concern)[0];
+    h += '<div class="dec"><div class="cn">' + esc(c ? c.label : dec.concern) + '</div>'
+       + '<div class="row"><span class="k">' + esc(C.voice.theWorld) + '</span>'
+       + '<span class="v">' + esc(valueLabel(dec.truth)) + '</span></div>'
+       + '<div class="row"><span class="k">' + esc(C.voice.itDid) + '</span>'
+       + '<span class="v ' + (dec.did === null ? '' : (dec.right ? 'right' : 'wrong')) + '">'
+       + esc(dec.did === null ? C.voice.nothing : valueLabel(dec.did)) + '</span>'
+       + '<span class="d' + (dec.fromDay === 0 ? ' none' : '') + '">'
+       + esc(dec.fromDay === 0 ? C.voice.noReport : C.voice.fromDay[dec.fromDay])
+       + '</span></div></div>';
+  }
+  h += '<p class="tally' + (last.ran ? '' : ' warn') + '">'
+     + esc(last.ran ? C.voice.rightToday[correctOf(last)] : C.voice.nothingRouted) + '</p>';
+
+  // On the seventh day the report you just made is still sitting there,
+  // unheard. Naming that out loud is the whole ending, so it gets its own
+  // paragraph rather than a footnote.
+  if (L.day === C.daysCount - 1) {
+    h += '<p class="said">'
+       + esc(filed === null ? C.voice.saidNothingToday : C.voice.saidToday[filed.id]) + '</p>';
+    const ignored = filed !== null && lastReportIgnored(L, filed.id);
+    const verdict = filed === null ? C.voice.actedOnWhatItHad
+      : (ignored ? C.voice.actedOnEarlier[earliest(L, filed.concern, C.daysCount).day]
+                 : C.voice.reachedIt[filed.concern]);
+    h += '<p class="verdict' + (ignored ? ' ignored' : '') + '">' + esc(verdict) + '</p>';
+  }
+  h += '<div class="spacer"></div>';
+  if (!kept) h += '<p class="warn">The ridge log could not be written down, so this week '
+    + 'will not be here next time. Everything above is still true.</p>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="n">The next day</button></div></div>';
+  document.getElementById('n').onclick = () => {
+    advance(L);
+    kept = save(L);
+    phase = L.finished ? 'end' : 'report';
+    sel = 0;
+    filed = null;
+    draw();
+  };
+}
+
+function drawEnd() {
+  // Two indices, not one. The score line is chosen by how many days the truck
+  // ran; the closing line is chosen by how many things were ever said. Those
+  // are different numbers -- seven days of saying nothing is a week the truck
+  // never ran and nothing was said -- and the first version of this screen
+  // used one index for both, which the trace against the Java model caught.
+  const scoreIdx = L.ran * (C.decisions + 1) + L.correct;
+  const closeIdx = L.heard.length * (C.decisions + 1) + L.correct;
+  let h = header()
+    + '<div class="head">' + esc(C.voice.weekOver) + '</div>'
+    + '<p class="count">' + esc(C.voice.scoreLine[scoreIdx]) + '</p>'
+    + '<p class="closing">' + esc(C.voice.closing[C.voice.closingPick[closeIdx]]) + '</p>'
+    + '<div class="label">' + esc(C.voice.believedHeading) + '</div><div class="list">';
+  for (const c of C.concerns) {
+    const f = earliest(L, c.id, C.daysCount);
+    h += '<div class="row"><span class="mk">' + esc(c.label) + '</span>'
+       + '<span class="tx">' + esc(f ? valueLabel(f.value) : C.voice.nothing) + '</span>'
+       + '<span class="mk" style="margin-left:auto">'
+       + esc(f ? C.voice.dayLabel[f.day] : C.voice.neverSaid) + '</span></div>';
+  }
+  h += '</div><p class="goldline">' + esc(C.voice.noClockLine) + '</p>'
+    + '<div class="label">' + esc(C.voice.theRidgeLog) + '</div><div class="list">';
+  if (L.heard.length === 0) {
+    h += '<div class="row"><span class="tx">' + esc(C.voice.nothingWasEverSaid) + '</span></div>';
+  } else {
+    for (const id of L.heard) {
+      const f = factById(id);
+      h += '<div class="row"><span class="mk">' + esc(C.voice.dayLabel[f.day]) + '</span>'
+         + '<span class="tx">' + esc(f.words) + '</span></div>';
+    }
+  }
+  h += '</div><p class="said">' + esc(C.voice.visibleLine[L.heard.length]) + '</p>'
+    + '<div class="spacer"></div>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="r">Start again</button></div></div>';
+  document.getElementById('r').onclick = () => {
+    L = fresh();
+    kept = save(L);
+    phase = 'open';
+    sel = 0;
+    filed = null;
+    last = null;
+    draw();
+  };
+}
+
+function draw() {
+  if (phase === 'open') drawOpen();
+  else if (phase === 'report') drawReport();
+  else if (phase === 'routing') drawRouting();
+  else drawEnd();
+  // The bar is fixed, so the content needs exactly its height of clearance and
+  // no more. It is measured rather than guessed, the way the ledger's is.
+  const sp = app.querySelector('.spacer');
+  if (sp) sp.style.height = (bar.offsetHeight + 16) + 'px';
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  const rows = phase === 'report' ? C.days[L.day].facts.length + 1 : 0;
+  if (rows > 0) {
+    if (k === 'ArrowDown') { sel = (sel + 1) % rows; draw(); }
+    else if (k === 'ArrowUp') { sel = (sel - 1 + rows) % rows; draw(); }
+    else if (k >= '0' && k <= '9') { const i = +k; if (i < rows) { sel = i; draw(); } }
+  }
+  if (k === 'Enter') {
+    const b = bar.querySelector('button.go') || bar.querySelector('button');
+    if (b) b.click();
+  }
+});
+
+draw();
+</script>
+</body>
+</html>

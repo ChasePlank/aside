@@ -67,6 +67,150 @@ public final class Outside {
         };
     }
 
+    // ------------------------------------------------------------- the voice
+
+    /**
+     * Every fixed line the game says, in one place.
+     *
+     * There are two builds now -- the JavaFX screen and the phone build -- and
+     * a sentence kept in the screen is a sentence the phone build does not
+     * have. So the model holds the writing and the screens hold the layout,
+     * which is the same split ledger, residue, testimony and vigil were moved
+     * to, and SelfTest enforces it: the screen may not hold a second copy of
+     * any line in here.
+     *
+     * The lines that depend on state are methods rather than constants, and
+     * they take the state as arguments rather than reading it. That is not
+     * tidiness -- the phone build has its own copy of the state, and the only
+     * way to be sure it prints the same sentence is for the sentence to be
+     * built from numbers on both sides.
+     */
+
+    public static final String THE_RIDGE = "THE RIDGE";
+    public static final String RULES_HEADING = "HOW IT DECIDES";
+    public static final String WHAT_YOU_CAN_SEE = "WHAT YOU CAN SEE";
+    public static final String SAY_NOTHING = "Say nothing today.";
+    public static final String WHAT_IT_HOLDS = "WHAT IT HOLDS";
+    public static final String NOTHING = "nothing";
+    public static final String FIRST_LINE_NOTE =
+            "The first line under each heading is the one it acts on.";
+    /** The phone's version of the same note, where there is one line per heading. */
+    public static final String STRIP_NOTE =
+            "It acts on the first thing it ever heard about each of these.";
+    public static final String THE_DISPATCHER = "THE DISPATCHER";
+    public static final String TRUCK_WENT = "The truck went down.";
+    public static final String TRUCK_DID_NOT_GO = "The truck did not go.";
+    public static final String THE_WORLD = "the world";
+    public static final String IT_DID = "it did";
+    public static final String NO_REPORT = "no report";
+    public static final String NOTHING_ROUTED = "Nothing was routed today.";
+    public static final String WEEK_OVER = "The week is over.";
+    public static final String BELIEVED_HEADING = "WHAT IT BELIEVED, AND WHEN YOU SAID IT";
+    public static final String NEVER_SAID = "never said";
+    public static final String NO_CLOCK_LINE = "It has no clock. Everything you ever told it is "
+            + "the same age, and the first thing is the loudest.";
+    public static final String THE_RIDGE_LOG = "THE RIDGE LOG";
+    public static final String NOTHING_WAS_EVER_SAID = "nothing was ever said";
+    public static final String WEEK_IS_OVER = "the week is over";
+    public static final String SAID_NOTHING_TODAY = "You said nothing today.";
+    public static final String ACTED_ON_WHAT_IT_HAD =
+            "It acted on what it already had, which is all it ever does.";
+
+    /** The premise, once, before the first day. */
+    public static final List<String> OPENING = List.of(
+            "There is a haul road down the ridge to the river, and a yard at the "
+          + "bottom of it, and in the yard a dispatcher sits in a room with no window.",
+
+            "It routes the trucks. It cannot see the road, or the water, or the weather. "
+          + "Everything it has ever known about the world outside that room, it knows "
+          + "because somebody on the ridge told it.",
+
+            "That is you. You get one report a day: one thing, or nothing at all. Then "
+          + "it acts on what it has, and you watch what it does.");
+
+    /** The one thing the player has to understand before the first day. */
+    public static final List<String> RULES = List.of(
+            "It has no clock. A thing it heard on the first day and a thing it heard "
+          + "on the last are the same age to it.",
+
+            "For each thing it has to decide, it does what the FIRST thing it ever "
+          + "heard about that thing said.",
+
+            "So a new report is not a correction. It is one more thing it believes, "
+          + "ranked behind everything you said before it.",
+
+            "The only way to keep a decision open is to say nothing about it.");
+
+    /** The header's right-hand line, on both builds. */
+    public static String where(int day, boolean finished) {
+        return finished ? WEEK_IS_OVER
+                : "day " + Math.min(day + 1, DAYS.size()) + " of " + DAYS.size();
+    }
+
+    public static String dayLabel(int day) { return "day " + day; }
+
+    public static String fromDay(int day) { return "from day " + day; }
+
+    public static String rightToday(int n) { return n + " of 3 right today."; }
+
+    public static String saidToday(String words) {
+        return "You said today: \"" + words + "\"";
+    }
+
+    public static String actedOnEarlier(int day) {
+        return "It acted on day " + day + " instead, because day " + day + " got there first.";
+    }
+
+    public static String reachedIt(Concern c) {
+        return "That one reached it, because nothing had been said about " + c.label + " before.";
+    }
+
+    /** The week, as a sentence. */
+    public static String scoreLine(int correct, int ranDays) {
+        return correct + " of " + DECISIONS + " decisions came out right. The truck ran on "
+                + ranDays + " of " + DAYS.size() + " days.";
+    }
+
+    /** How many things were ever visible, and how many of them were said. */
+    public static String visibleLine(int said) {
+        return DAYS.size() * 4 + " things were visible. " + said + " of them were ever said.";
+    }
+
+    /**
+     * The closing line, chosen from how the week actually went.
+     *
+     * Takes the two numbers instead of reading the state, so the phone build
+     * can ask the same question of its own week and get the same answer.
+     */
+    public static String closing(int correct, int said) {
+        if (said == 0) {
+            return "You never told it anything. It never moved. A room with no window "
+                 + "and no reports is not careful, it is empty.";
+        }
+        if (correct >= bestPossible()) {
+            return "You held things back until they were worth saying, and it still "
+                 + "could not tell this week from last week. That is the best week "
+                 + "there is, and it is not a good one.";
+        }
+        if (said >= DAYS.size()) {
+            return "You told it everything you saw, every day. It kept all of it, and "
+                 + "it acted on the first of it. Nothing you said after the first day "
+                 + "could reach the decisions you had already made for it.";
+        }
+        if (correct >= 8) {
+            return "You said most of the right things in most of the right order. The "
+                 + "days it got wrong are the days it was still holding your earliest "
+                 + "words about something that had moved.";
+        }
+        if (correct >= 5) {
+            return "It was right about as often as it was wrong, which is what a room "
+                 + "with no window and a week of secondhand weather looks like.";
+        }
+        return "It spent the week acting on things that were true when you said them. "
+             + "None of them were true by the end. That is not carelessness on either "
+             + "of your parts. It is what a fixed mind does with a moving world.";
+    }
+
     // --------------------------------------------------------------- content
 
     /** One thing you can see, in the words you would use to say it. */

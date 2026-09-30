@@ -3,7 +3,9 @@ package aside.games.outside;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Headless checks for outside.
@@ -39,9 +41,292 @@ public final class SelfTest {
         scoring();
         storage();
         playthrough();
+        theVoice();
+        thePhoneBuild();
         System.out.println((checks - failed) + "/" + checks + " checks passed"
                 + (failed == 0 ? "" : "  --  " + failed + " FAILED"));
         if (failed > 0) System.exit(1);
+    }
+
+    // ------------------------------------------------------------- the voice
+
+    /** Every fixed line of prose the game says, in one list. */
+    static List<String> fixedLines() {
+        List<String> out = new ArrayList<>(List.of(
+                Outside.THE_RIDGE, Outside.RULES_HEADING, Outside.WHAT_YOU_CAN_SEE,
+                Outside.SAY_NOTHING, Outside.WHAT_IT_HOLDS, Outside.NOTHING,
+                Outside.FIRST_LINE_NOTE, Outside.STRIP_NOTE, Outside.THE_DISPATCHER,
+                Outside.TRUCK_WENT, Outside.TRUCK_DID_NOT_GO, Outside.THE_WORLD,
+                Outside.IT_DID, Outside.NO_REPORT, Outside.NOTHING_ROUTED,
+                Outside.WEEK_OVER, Outside.BELIEVED_HEADING, Outside.NEVER_SAID,
+                Outside.NO_CLOCK_LINE, Outside.THE_RIDGE_LOG, Outside.NOTHING_WAS_EVER_SAID,
+                Outside.WEEK_IS_OVER, Outside.SAID_NOTHING_TODAY, Outside.ACTED_ON_WHAT_IT_HAD));
+        out.addAll(Outside.OPENING);
+        out.addAll(Outside.RULES);
+        return out;
+    }
+
+    /**
+     * The prose is the model's.
+     *
+     * There are two builds now -- the JavaFX screen and the phone build -- and
+     * a sentence kept in OutsideScreen is a sentence the phone build does not
+     * have. Every fixed line has to be reachable from Outside, and the screen
+     * may not hold a second copy of any of them.
+     */
+    static void theVoice() {
+        Set<String> distinct = new HashSet<>();
+        for (String s : fixedLines()) {
+            ok(s != null && !s.isBlank(), "every fixed line is a line: " + s);
+            ok(distinct.add(s), "and no two of them are the same line: " + s);
+        }
+
+        // The lines that depend on a number are the model's too, and there is
+        // one for every number that can occur.
+        for (int d = 1; d <= Outside.DAYS.size(); d++) {
+            ok(Outside.dayLabel(d).contains(String.valueOf(d)), "day " + d + " reads back");
+            ok(Outside.fromDay(d).contains(String.valueOf(d)), "from day " + d + " reads back");
+            ok(Outside.actedOnEarlier(d).contains(String.valueOf(d)),
+                    "acting on day " + d + " names it");
+        }
+        for (int n = 0; n <= 3; n++) {
+            ok(Outside.rightToday(n).contains(String.valueOf(n)), "the tally reads back " + n);
+        }
+        for (Outside.Concern c : Outside.Concern.values()) {
+            ok(Outside.reachedIt(c).contains(c.label), "reaching it names " + c.label);
+        }
+        for (Outside.Day d : Outside.DAYS) {
+            for (Outside.Fact x : d.facts) {
+                ok(Outside.saidToday(x.words).contains(x.words), "saying " + x.id + " quotes it");
+            }
+        }
+        for (int said = 0; said <= WebOutside.SAID; said++) {
+            ok(Outside.visibleLine(said).contains(String.valueOf(said)),
+                    "the visible line reads back " + said);
+        }
+        ok(Outside.where(0, true).equals(Outside.WEEK_IS_OVER), "a finished week says so");
+        ok(Outside.where(0, false).contains("1"), "the first day is day one");
+
+        String screen = screenSource();
+        if (screen == null) return;
+
+        // The screen's string literals, joined end to end. A sentence split
+        // across a `+` concatenation is still the same sentence, so matching
+        // against the join catches a copy however it was typed -- which the
+        // exact-literal check the other games use would miss.
+        List<String> literals = literalsOf(screen);
+        String joined = String.join("", literals);
+        for (String s : fixedLines()) {
+            // A short line is checked as a whole literal and not as a
+            // substring, because short lines are words: "nothing" is a word
+            // this game uses in prose and in the hint at the bottom of the
+            // screen, and a check that cannot tell a line from a word fails
+            // for the wrong reason. This is the same distinction ledger's
+            // check draws, for the same reason.
+            boolean held = s.length() < 20 && !s.contains(" ")
+                    ? literals.contains(s)
+                    : joined.contains(s);
+            ok(!held, "the screen does not hold its own copy of: " + s);
+        }
+    }
+
+    /**
+     * Every string literal in a Java source file.
+     *
+     * Comments are stripped first, because a quotation mark in a comment is
+     * not a literal and would otherwise start one that runs to the next quote
+     * in the file. Char literals are skipped for the same reason.
+     */
+    static List<String> literalsOf(String src) {
+        StringBuilder code = new StringBuilder();
+        for (int i = 0; i < src.length(); i++) {
+            char c = src.charAt(i);
+            if (c == '/' && i + 1 < src.length() && src.charAt(i + 1) == '/') {
+                while (i < src.length() && src.charAt(i) != '\n') i++;
+                code.append('\n');
+            } else if (c == '/' && i + 1 < src.length() && src.charAt(i + 1) == '*') {
+                i += 2;
+                while (i + 1 < src.length()
+                        && !(src.charAt(i) == '*' && src.charAt(i + 1) == '/')) i++;
+                i++;
+                code.append(' ');
+            } else {
+                code.append(c);
+            }
+        }
+        List<String> out = new ArrayList<>();
+        String s = code.toString();
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) != '"') continue;
+            StringBuilder lit = new StringBuilder();
+            i++;
+            while (i < s.length() && s.charAt(i) != '"') {
+                if (s.charAt(i) == '\\' && i + 1 < s.length()) {
+                    lit.append(s.charAt(i)).append(s.charAt(i + 1));
+                    i += 2;
+                } else {
+                    lit.append(s.charAt(i));
+                    i++;
+                }
+            }
+            out.add(lit.toString());
+        }
+        return out;
+    }
+
+    /** The screen's source, if this is being run from a checkout. */
+    static String screenSource() {
+        Path p = Path.of("src", "main", "java", "aside", "games", "outside", "OutsideScreen.java");
+        try {
+            return Files.exists(p) ? Files.readString(p) : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * The single-file build is generated, not written, and a generated file
+     * that has gone stale is worse than no file: it is a second copy of the
+     * game quietly disagreeing with the first. So the test regenerates it and
+     * compares. If this fails, run aside.games.outside.WebOutside from the
+     * repository root.
+     */
+    static void thePhoneBuild() throws Exception {
+        Path out = Path.of("web", "outside.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no web/outside.html from here -- run from the repository root)");
+            return;
+        }
+        String generated;
+        try {
+            generated = WebOutside.html();
+        } catch (Exception e) {
+            System.out.println("       (no template from here: " + e.getMessage() + ")");
+            return;
+        }
+        ok(generated.equals(Files.readString(out)),
+                "web/outside.html is current -- regenerate it with aside.games.outside.WebOutside");
+
+        // And it has to carry the writing, not just be the right size. The
+        // prose goes through the same JSON writer the build uses, because a
+        // line containing a quotation mark is escaped in the file and would
+        // otherwise look absent.
+        for (String s : fixedLines()) {
+            ok(generated.contains(WebOutside.str(s)), "the phone build carries: " + s);
+        }
+        for (Outside.Day d : Outside.DAYS) {
+            ok(generated.contains(WebOutside.str(d.heading)), "the phone build carries " + d.heading);
+            ok(generated.contains(WebOutside.str(d.title)), "the phone build carries its title");
+            ok(generated.contains(WebOutside.str(d.scene)), "the phone build carries its scene");
+            for (Outside.Fact x : d.facts) {
+                ok(generated.contains(WebOutside.str(x.words)),
+                        "the phone build carries what " + x.id + " says");
+            }
+        }
+
+        // The end is resolved rather than decided, so the build has to agree
+        // with the model about every one of them -- not just the ones a
+        // playthrough happens to reach.
+        for (int ran = 0; ran <= Outside.DAYS.size(); ran++) {
+            for (int right = 0; right < WebOutside.STRIDE; right++) {
+                ok(generated.contains(WebOutside.str(Outside.scoreLine(right, ran))),
+                        "the phone build can score " + right + " of " + ran);
+            }
+        }
+        for (int said = 0; said <= WebOutside.SAID; said++) {
+            for (int right = 0; right < WebOutside.STRIDE; right++) {
+                ok(generated.contains(WebOutside.str(Outside.closing(right, said))),
+                        "the phone build can close " + right + " of " + said);
+            }
+        }
+
+        theEndTables(generated);
+    }
+
+    /**
+     * The end tables, read back out of the build and checked entry by entry.
+     *
+     * The score line and the closing line are tables now, and a table is the
+     * kind of thing that can be silently indexed along the wrong axis -- which
+     * is exactly what happened: the closing line was tabulated by days the
+     * truck ran instead of by things said, and every entry was a real sentence,
+     * so nothing about the file looked wrong. It was found by driving both
+     * builds through the same eight weeks and diffing the traces.
+     *
+     * A check that only asks whether the file contains the right sentences
+     * cannot catch that, so this one parses the tables and compares them
+     * element by element against the model.
+     */
+    static void theEndTables(String generated) {
+        List<String> closings = WebOutside.distinctClosings();
+        int[] pick = intsOf(section(generated, "\"closingPick\":["));
+        eq(pick.length, (WebOutside.SAID + 1) * WebOutside.STRIDE,
+                "the closing table covers every week that can happen");
+        for (int said = 0; said <= WebOutside.SAID; said++) {
+            for (int right = 0; right < WebOutside.STRIDE; right++) {
+                int want = closings.indexOf(Outside.closing(right, said));
+                eq(pick[said * WebOutside.STRIDE + right], want,
+                        "the phone build closes " + right + " of " + said + " with the right line");
+            }
+        }
+
+        List<String> scores = stringsOf(section(generated, "\"scoreLine\":["));
+        eq(scores.size(), (Outside.DAYS.size() + 1) * WebOutside.STRIDE,
+                "the score table covers every week that can happen");
+        for (int ran = 0; ran <= Outside.DAYS.size(); ran++) {
+            for (int right = 0; right < WebOutside.STRIDE; right++) {
+                eq(scores.get(ran * WebOutside.STRIDE + right), Outside.scoreLine(right, ran),
+                        "the phone build scores " + right + " of " + ran + " the same way");
+            }
+        }
+    }
+
+    /** The text between a marker and the first ']' after it. */
+    static String section(String generated, String marker) {
+        int at = generated.indexOf(marker);
+        if (at < 0) throw new IllegalStateException("the build has no " + marker);
+        int end = generated.indexOf(']', at);
+        if (end < 0) throw new IllegalStateException(marker + " is never closed");
+        return generated.substring(at + marker.length(), end);
+    }
+
+    static int[] intsOf(String s) {
+        List<String> parts = new ArrayList<>();
+        for (String p : s.split(",")) if (!p.isBlank()) parts.add(p.trim());
+        int[] out = new int[parts.size()];
+        for (int i = 0; i < out.length; i++) out[i] = Integer.parseInt(parts.get(i));
+        return out;
+    }
+
+    /** The JSON strings in a fragment, unescaped, in order. */
+    static List<String> stringsOf(String s) {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) != '"') continue;
+            StringBuilder b = new StringBuilder();
+            i++;
+            while (i < s.length() && s.charAt(i) != '"') {
+                if (s.charAt(i) == '\\' && i + 1 < s.length()) {
+                    char e = s.charAt(i + 1);
+                    switch (e) {
+                        case 'n' -> b.append('\n');
+                        case 'r' -> b.append('\r');
+                        case 't' -> b.append('\t');
+                        case 'u' -> {
+                            b.append((char) Integer.parseInt(s.substring(i + 2, i + 6), 16));
+                            i += 4;
+                        }
+                        default -> b.append(e);
+                    }
+                    i += 2;
+                } else {
+                    b.append(s.charAt(i));
+                    i++;
+                }
+            }
+            out.add(b.toString());
+        }
+        return out;
     }
 
     static boolean legal(Outside.Concern c, String v) {
