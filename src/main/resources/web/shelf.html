@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0A12">
+<title>aside</title>
+<style>
+  :root{
+    --bg:#0A0A12; --ink:#E8E8EF; --dim:#9A9AAE; --faint:#6E6E86;
+    --gold:#F2C14E; --edge:#22222E; --card:#14141C;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:16px/1.5 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:28px 18px 44px}
+  h1{font-size:30px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
+  .sub{font:11px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.16em; color:var(--faint); margin-top:6px}
+  .intro{color:var(--dim); margin:24px 0 18px; font-size:17px}
+  .card{display:block; width:100%; text-align:left; background:var(--card);
+        border:1px solid var(--edge); border-radius:12px; padding:15px 16px; margin:0 0 10px;
+        color:var(--ink); font:inherit; cursor:pointer}
+  .card:active{background:#1D1D28}
+  .card .t{font-size:20px; color:var(--gold)}
+  .card .b{color:var(--dim); font-size:15px; margin-top:4px}
+  .card .n{color:var(--faint); font:12px/1.5 Arial,Helvetica,sans-serif; margin-top:8px}
+  .card .m{color:var(--faint); font:11px/1.5 Consolas,Menlo,monospace; margin-top:9px}
+  .fine{color:var(--faint); font:12px/1.7 Arial,Helvetica,sans-serif; margin-top:30px}
+  /* The stage covers the shelf rather than replacing it, so coming back is
+     never a re-render and never a reload. The game is just hidden. */
+  #stage{position:fixed; inset:0; display:none; flex-direction:column; background:var(--bg)}
+  #stage.on{display:flex}
+  #topbar{flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:7px 12px;
+          border-bottom:1px solid var(--edge); background:var(--bg)}
+  #topbar button{background:transparent; border:0; color:var(--gold);
+                 font:15px/1 Georgia,serif; padding:9px 4px; cursor:pointer}
+  #topbar .now{color:var(--faint); font:12px/1.4 Arial,Helvetica,sans-serif; margin-left:auto}
+  #frame{flex:1 1 auto; width:100%; border:0; background:#07070B}
+</style>
+</head>
+<body>
+<div class="wrap" id="shelf">
+  <h1>aside</h1>
+  <div class="sub">THE GAMES, ON A PHONE</div>
+  <p class="intro">Everything here is one file. Nothing to install.</p>
+  <div id="list"></div>
+  <p class="fine">Each game is a whole document, kept to itself, so nothing here can
+  interfere with anything else. The rest of the library &mdash; the games with no
+  phone build yet &mdash; is on the desktop.</p>
+</div>
+<div id="stage">
+  <div id="topbar">
+    <button id="back">&larr; the shelf</button>
+    <span class="now" id="now"></span>
+  </div>
+  <iframe id="frame" title="game"></iframe>
+</div>
+<script>
+const SHELF = /*__SHELF__*/;
+
+const list = document.getElementById('list');
+const shelfEl = document.getElementById('shelf');
+const stage = document.getElementById('stage');
+const frame = document.getElementById('frame');
+const now = document.getElementById('now');
+
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * The builds are base64 in the shelf, because they are whole HTML documents
+ * with their own script tags in them, and there is exactly one sequence that
+ * can end a script block early. Base64 has no angle brackets in it at all.
+ */
+function decode(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function drawList() {
+  list.innerHTML = SHELF.map((g, i) =>
+    '<button class="card" data-i="' + i + '">'
+    + '<div class="t">' + esc(g.title) + '</div>'
+    + '<div class="b">' + esc(g.blurb) + '</div>'
+    + (g.note ? '<div class="n">' + esc(g.note) + '</div>' : '')
+    + '<div class="m">' + esc(g.file) + '  \u00b7  ' + g.kb + ' KB</div>'
+    + '</button>').join('');
+  list.querySelectorAll('.card').forEach(el => {
+    el.onclick = () => { location.hash = '#/' + el.dataset.i; };
+  });
+}
+
+function open(i) {
+  const g = SHELF[i];
+  now.textContent = g.title;
+  frame.title = g.title;
+  // srcdoc, not a blob and not a link: a srcdoc document inherits this page's
+  // origin, so a game that wants to remember something -- residue keeps its
+  // room in the browser -- is allowed to, and one that does not is unaffected.
+  frame.srcdoc = decode(g.html);
+  shelfEl.style.display = 'none';
+  stage.classList.add('on');
+  document.title = g.title + ' \u2014 aside';
+  window.scrollTo(0, 0);
+}
+
+function close() {
+  frame.srcdoc = '';          // stop whatever it was doing
+  stage.classList.remove('on');
+  shelfEl.style.display = '';
+  document.title = 'aside';
+}
+
+/**
+ * The hash is the route, so the phone's own back button works and a game is a
+ * place you can be rather than a modal you are in.
+ */
+function route() {
+  const m = /^#\/(\d+)$/.exec(location.hash);
+  if (m && SHELF[+m[1]]) open(+m[1]);
+  else close();
+}
+
+document.getElementById('back').onclick = () => { location.hash = ''; };
+window.addEventListener('hashchange', route);
+
+drawList();
+route();
+</script>
+</body>
+</html>

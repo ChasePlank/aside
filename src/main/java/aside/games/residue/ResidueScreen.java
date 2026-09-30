@@ -125,7 +125,7 @@ public class ResidueScreen extends UiScreen {
         if (departed) {
             String next = t.describeNext();
             departureLine = next == null
-                    ? "By the next visit there will be nothing left of it."
+                    ? Room.DEPARTURE_NOTHING_LEFT
                     : next;
         }
         phase = Phase.DEPARTURE;
@@ -225,7 +225,7 @@ public class ResidueScreen extends UiScreen {
         y += 30;
         gc.setFont(F_BODY);
         gc.setFill(Color.web("#E8E8EF"));
-        gc.fillText("Leave something.", MARGIN, y);
+        gc.fillText(Room.HEAD_PICK, MARGIN, y);
         y += 42;
 
         List<Thing> things = List.of(Thing.values());
@@ -239,7 +239,7 @@ public class ResidueScreen extends UiScreen {
             if (here) {
                 gc.setFont(F_TINY);
                 gc.setFill(Color.rgb(150, 150, 170, 0.75));
-                gc.fillText("already here — you would be changing it", MARGIN + 250, y - 2);
+                gc.fillText(Room.ALREADY_HERE, MARGIN + 250, y - 2);
                 gc.setFont(F_ITEM);
             }
             y += 37;
@@ -251,7 +251,7 @@ public class ResidueScreen extends UiScreen {
     void drawPickGesture() {
         gc.setFont(F_BODY);
         gc.setFill(Color.rgb(200, 200, 215, 0.62));
-        gc.fillText("You are leaving the " + chosen.id + ".", MARGIN, 168);
+        gc.fillText(Room.headLeaving(chosen), MARGIN, 168);
 
         double y = 236;
         gc.setFont(F_ITEM);
@@ -269,26 +269,15 @@ public class ResidueScreen extends UiScreen {
 
         gc.setFont(F_TINY);
         gc.setFill(Color.rgb(150, 150, 170, 0.75));
-        gc.fillText(kindNote(chosen), MARGIN + 8, y + 6);
+        gc.fillText(chosen.kindNote(), MARGIN + 8, y + 6);
 
         hint("\u2191\u2193 choose     ENTER leave it     BACKSPACE pick again");
-    }
-
-    /** One line telling the player what kind of evidence they just chose. */
-    static String kindNote(Thing t) {
-        return switch (t.kind) {
-            case UNINTENTIONAL -> "This is not a message. It will last about "
-                    + t.decay + " visits, because nobody meant anything by it.";
-            case DELIBERATE -> "This is a message. It will be gone in about "
-                    + t.decay + " visits, because a message is about the one who wrote it.";
-            case STATE -> "This is not left, it is set. It stays until somebody changes it.";
-        };
     }
 
     void drawDeparture() {
         gc.setFont(F_ARRIVAL);
         gc.setFill(Color.web("#E8E8EF"));
-        gc.fillText("You go.", MARGIN, 288);
+        gc.fillText(Room.HEAD_DEPARTURE, MARGIN, 288);
 
         gc.setFont(F_BODY);
         gc.setFill(Color.rgb(200, 200, 215, 0.85));
@@ -301,10 +290,7 @@ public class ResidueScreen extends UiScreen {
         y += 30;
         gc.setFont(F_TINY);
         gc.setFill(Color.rgb(150, 150, 170, 0.7));
-        String closing = room.traces.size() >= Room.CAPACITY
-                ? "The room is full. Nothing else fits without something going."
-                : room.traces.size() + " of " + Room.CAPACITY + " places taken.";
-        gc.fillText("Visit " + room.visits + ". " + closing, MARGIN, y);
+        gc.fillText("Visit " + room.visits + ". " + room.closing(), MARGIN, y);
 
         hint("ENTER — back to the library");
     }
@@ -319,7 +305,7 @@ public class ResidueScreen extends UiScreen {
         if (room.isEmpty()) {
             gc.setFont(F_BODY);
             gc.setFill(Color.rgb(150, 150, 165, 0.7));
-            gc.fillText("Nothing has survived to now.", MARGIN, y);
+            gc.fillText(Room.NOTHING_SURVIVED, MARGIN, y);
             return y + 30;
         }
 

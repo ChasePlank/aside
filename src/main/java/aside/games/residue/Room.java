@@ -32,6 +32,72 @@ public final class Room {
      */
     public static final int CAPACITY = 3;
 
+    // -------------------------------------------------------------- the voice
+    //
+    // Every fixed line the game says lives here rather than in a screen.
+    //
+    // Not for tidiness: there are two builds now. The desktop screen draws
+    // these and the phone build prints them, and a sentence kept in one of the
+    // two is a sentence the other one does not have. Edit a line here and both
+    // builds change together; edit it in a screen and they drift.
+    //
+    // The lines that vary with the room's state are the ones below that
+    // arrival() chooses between. The rest are the beats.
+
+    /** First visit: the room was already lived in before you got here. */
+    public static final String ARRIVAL_FIRST =
+            "You are not the first one in here. Somebody left the chair out, "
+          + "and a book open, and did not come back for either.";
+
+    /** Nothing is left. */
+    public static final String ARRIVAL_EMPTY =
+            "Nothing is here. Whatever was, it has finished. You arrive with nothing to answer.";
+
+    /** Somebody left the lamp on. */
+    public static final String ARRIVAL_LAMP_ON =
+            "The lamp is on. Either somebody left it on for whoever came next, or forgot. "
+          + "You cannot tell which, and that is the point.";
+
+    /** Somebody left the lamp off. */
+    public static final String ARRIVAL_LAMP_OFF =
+            "The lamp is off. You stand in the doorway a moment before you touch anything.";
+
+    /** Something of yours is here and has been here long enough to have started going. */
+    public static final String ARRIVAL_MINE_AGING =
+            "Something in here is yours, and you do not remember leaving it.";
+
+    /** Something of yours is here from last time. */
+    public static final String ARRIVAL_MINE =
+            "Something in here is still yours from last time. It has already started to go.";
+
+    /** Something is here and none of it is yours. */
+    public static final String ARRIVAL_SOMEONE =
+            "There is something in here that somebody left. You are not the first, "
+          + "and the room is not surprised to see you.";
+
+    /** The room is full and something has to go for anything to be left. */
+    public static final String CLOSING_FULL =
+            "The room is full. Nothing else fits without something going.";
+
+    /** What is here when nothing has outlasted the gap. */
+    public static final String NOTHING_SURVIVED = "Nothing has survived to now.";
+
+    /** Told to the player when the thing they just left will not outlast the gap. */
+    public static final String DEPARTURE_NOTHING_LEFT =
+            "By the next visit there will be nothing left of it.";
+
+    /** The beat heads. */
+    public static final String HEAD_PICK = "Leave something.";
+    public static final String HEAD_DEPARTURE = "You go.";
+
+    /** Marked against a thing that is already in the room. */
+    public static final String ALREADY_HERE = "already here \u2014 you would be changing it";
+
+    /** "You are leaving the cup." -- per thing, so the two builds cannot word it differently. */
+    public static String headLeaving(Thing t) {
+        return "You are leaving the " + t.id + ".";
+    }
+
     /** How many times anyone has been in here. Starts at 0; the first
      *  arrival makes it 1. */
     public int visits = 0;
@@ -112,33 +178,28 @@ public final class Room {
      * room and a room someone lit are different arrivals.
      */
     public String arrival() {
-        if (visits <= 1) {
-            return "You are not the first one in here. Somebody left the chair out, "
-                 + "and a book open, and did not come back for either.";
-        }
-        if (traces.isEmpty()) {
-            return "Nothing is here. Whatever was, it has finished. You arrive with nothing to answer.";
-        }
+        if (visits <= 1) return ARRIVAL_FIRST;
+        if (traces.isEmpty()) return ARRIVAL_EMPTY;
         Trace lamp = traceOf(Thing.LAMP);
-        if (lamp != null && lamp.gesture.equals("on")) {
-            return "The lamp is on. Either somebody left it on for whoever came next, or forgot. "
-                 + "You cannot tell which, and that is the point.";
-        }
-        if (lamp != null && lamp.gesture.equals("off")) {
-            return "The lamp is off. You stand in the doorway a moment before you touch anything.";
-        }
-        for (Trace t : traces) {
-            if (t.mine && t.age >= 2) {
-                return "Something in here is yours, and you do not remember leaving it.";
-            }
-        }
-        for (Trace t : traces) {
-            if (t.mine) {
-                return "Something in here is still yours from last time. It has already started to go.";
-            }
-        }
-        return "There is something in here that somebody left. You are not the first, "
-             + "and the room is not surprised to see you.";
+        if (lamp != null && lamp.gesture.equals("on")) return ARRIVAL_LAMP_ON;
+        if (lamp != null && lamp.gesture.equals("off")) return ARRIVAL_LAMP_OFF;
+        for (Trace t : traces) if (t.mine && t.age >= 2) return ARRIVAL_MINE_AGING;
+        for (Trace t : traces) if (t.mine) return ARRIVAL_MINE;
+        return ARRIVAL_SOMEONE;
+    }
+
+    /**
+     * What the player is told about the room as they leave it: one sentence,
+     * and it is the model's because both builds print it.
+     *
+     * The full case is the interesting one. A room at capacity does not say
+     * "3 of 3 places taken" -- it says what that means, which is that the next
+     * person's choice is already partly made for them.
+     */
+    public String closing() {
+        return traces.size() >= CAPACITY
+                ? CLOSING_FULL
+                : traces.size() + " of " + CAPACITY + " places taken.";
     }
 
     // ------------------------------------------------------------- storage

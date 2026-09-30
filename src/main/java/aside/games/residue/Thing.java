@@ -128,4 +128,22 @@ public enum Thing {
         for (Thing t : values()) if (t.id.equals(id)) return t;
         return null;
     }
+
+    /**
+     * One line telling the player what kind of evidence they just chose.
+     *
+     * This is in the model rather than in the screen because there are two
+     * builds now: the desktop screen and the phone build both print it, and a
+     * sentence kept in one of them is a sentence the other one does not have.
+     * See aside.games.residue.WebResidue.
+     */
+    public String kindNote() {
+        return switch (kind) {
+            case UNINTENTIONAL -> "This is not a message. It will last about "
+                    + decay + " visits, because nobody meant anything by it.";
+            case DELIBERATE -> "This is a message. It will be gone in about "
+                    + decay + " visits, because a message is about the one who wrote it.";
+            case STATE -> "This is not left, it is set. It stays until somebody changes it.";
+        };
+    }
 }

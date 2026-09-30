@@ -1,11 +1,14 @@
 package aside.engine;
 
+import aside.game.PhoneShelf;
 import aside.ui.LibraryLayout;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Headless checks. The engine is deliberately free of JavaFX so it can
@@ -217,8 +220,70 @@ public class SelfTest {
                 + "  (clearance at " + limit + " is "
                 + Math.round(LibraryLayout.clearance(limit) * 10) / 10.0 + "px)");
 
+        System.out.println("\n--- the phone shelf ---");
+        // Every web build is a generated file, and a generated file that has
+        // gone stale is worse than no file: it is a second copy of the game
+        // quietly disagreeing with the first. The shelf is the worst case of
+        // that, because it is a copy of every game at once -- and it fails in
+        // the other direction too, by not mentioning a build that exists.
+        try {
+            Path shelfFile = Path.of("web", PhoneShelf.SHELF_FILE);
+            if (!Files.exists(shelfFile)) {
+                System.out.println("       (no web/" + PhoneShelf.SHELF_FILE
+                        + " from here -- run from the repository root)");
+            } else {
+                String generated = PhoneShelf.html();
+                check("web/" + PhoneShelf.SHELF_FILE
+                                + " is current -- regenerate it with aside.game.PhoneShelf",
+                        generated.equals(Files.readString(shelfFile)));
+
+                List<PhoneShelf.Entry> entries = PhoneShelf.entries();
+                check("the shelf has something on it", !entries.isEmpty());
+                Set<String> listed = new HashSet<>();
+                for (PhoneShelf.Entry e : entries) {
+                    String name = Path.of(e.file()).getFileName().toString();
+                    listed.add(name);
+                    check("the shelf lists something that is there: " + e.file(),
+                            Files.exists(Path.of(e.file())));
+                    check("the shelf carries the title " + e.title(), generated.contains(e.title()));
+                    check("the shelf carries the line for " + e.title(), generated.contains(e.blurb()));
+                }
+                // The failure that would otherwise be silent: a game gets a
+                // phone build and the shelf quietly does not know about it.
+                List<String> onDisk = PhoneShelf.webBuilds();
+                for (String f : onDisk) check("web/" + f + " is on the shelf", listed.contains(f));
+                check("and the shelf lists nothing that is not on disk",
+                        listed.size() == onDisk.size());
+                System.out.println("       shelf: " + entries.size() + " builds, "
+                        + (generated.length() / 1024) + " KB");
+            }
+        } catch (Exception e) {
+            check("the shelf can be generated from here (" + e.getMessage() + ")", false);
+        }
+
+        System.out.println("\n--- the story exports ---");
+        // The two .aside stories have had a web export since WebExport existed,
+        // and nothing has ever checked that the exports are current. Same rule
+        // as the games: regenerate and compare. A story edited in stories/ and
+        // not re-exported is a phone build of a story that no longer exists.
+        storyExport("night-shift");
+        storyExport("overtime");
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
+    }
+
+    /** Regenerate one story's web export and compare it to the checked-in one. */
+    static void storyExport(String name) throws Exception {
+        Path story = Path.of("stories", name + ".aside");
+        Path out = Path.of("web", name + ".html");
+        if (!Files.exists(story) || !Files.exists(out)) {
+            System.out.println("       (no " + story + " or " + out + " from here)");
+            return;
+        }
+        String generated = WebExport.convert(Files.readString(story));
+        check("web/" + name + ".html is current -- regenerate it with aside.engine.WebExport",
+                generated.equals(Files.readString(out)));
     }
 
     static void runUntilBlocked(Vn vn) {

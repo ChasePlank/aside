@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#07070B">
+<title>residue</title>
+<style>
+  :root{
+    --bg:#07070B; --ink:#E8E8EF; --dim:#B9B9C6; --faint:#6E6E86;
+    --gold:#F2C14E; --edge:#22222E; --card:#14141C;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:17px/1.55 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  /* The lamp is the only thing in the room you can see from the door, so it is
+     the only thing that changes the light. Nothing else in here is drawn. */
+  #glow{
+    position:fixed; inset:0; pointer-events:none; opacity:0;
+    background:radial-gradient(60% 42% at 72% 26%, rgba(242,193,78,.20), rgba(242,193,78,0) 70%);
+    transition:opacity .6s;
+  }
+  .wrap{position:relative; max-width:620px; margin:0 auto; padding:22px 18px 128px}
+  header{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
+  .visit{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint)}
+  .arrival{font-size:19px; line-height:1.5; margin:24px 0 0}
+  .arrival.dim{color:var(--dim); font-size:16px}
+  .label{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+         margin:30px 0 10px}
+  .trace{margin:0 0 14px}
+  .trace .who{font:11px/1.6 Arial,Helvetica,sans-serif; letter-spacing:.1em; text-transform:uppercase;
+              color:var(--faint); display:block}
+  .trace.mine .who{color:var(--gold)}
+  .trace .what{font-size:17px; color:var(--dim)}
+  .trace.mine .what{color:var(--ink)}
+  .empty{color:var(--faint); font-style:italic}
+  .head{font-size:19px; margin:30px 0 12px}
+  .thing, .gesture{border:1px solid transparent; border-radius:10px; padding:11px 13px; margin:0 0 7px;
+                   cursor:pointer; background:var(--card)}
+  /* The selected card has to be obvious at a glance and in daylight, on a
+     phone, one-handed. A slightly lighter card was not enough: the gold rule
+     down the left is the same cue the desktop uses for the selected row. */
+  .thing.sel, .gesture.sel{background:#1E1E2A; border-color:#3E3E54;
+                           box-shadow:inset 3px 0 0 var(--gold)}
+  .thing .top{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+  .thing .n{font:13px/1.6 Consolas,Menlo,monospace; color:var(--faint); min-width:12px}
+  .thing.sel .n{color:var(--gold)}
+  .thing .name{font-size:18px}
+  .thing .here{font:11px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin-left:auto}
+  .gesture{font-size:17px; color:var(--dim)}
+  .gesture.sel{color:var(--ink)}
+  .note{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin:14px 0 0}
+  .bar{position:fixed; left:0; right:0; bottom:0; background:#07070Bee;
+       border-top:1px solid var(--edge); padding:10px 18px calc(10px + env(safe-area-inset-bottom))}
+  .bar .inner{max-width:620px; margin:0 auto; display:flex; gap:9px}
+  button{flex:1; font:16px/1.2 Georgia,serif; padding:15px 10px; border-radius:10px;
+         background:var(--card); color:var(--ink); border:1px solid var(--edge); cursor:pointer}
+  button.go{background:var(--gold); color:#171410; border-color:var(--gold)}
+  button.ghost{background:transparent; color:var(--faint); border-color:transparent; flex:0 0 auto;
+               padding-left:6px; padding-right:6px}
+  button:disabled{opacity:.35}
+  .warn{font:13px/1.6 Arial,Helvetica,sans-serif; color:#C4553F; margin:16px 0 0}
+  .fine{font:12px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin:22px 0 0}
+</style>
+</head>
+<body>
+<div id="glow"></div>
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar"></div>
+<script>
+const C = {
+"capacity":3,
+"things":[
+  {"id":"cup","kind":"UNINTENTIONAL","decay":4,"leavingHead":"You are leaving the cup.","kindNote":"This is not a message. It will last about 4 visits, because nobody meant anything by it.","gestures":[{"id":"half","text":"A cup, half full. You drank from it and left the rest."},{"id":"empty","text":"A cup, empty, set down where you were standing."},{"id":"full","text":"A cup, filled and untouched. You poured it and did not drink."}],"decayLines":{"1":"It has been sitting there a while.","2":"Dust has gathered in it.","3":"Someone has moved it to the shelf."}},
+  {"id":"chair","kind":"UNINTENTIONAL","decay":5,"leavingHead":"You are leaving the chair.","kindNote":"This is not a message. It will last about 5 visits, because nobody meant anything by it.","gestures":[{"id":"pulled","text":"The chair, pulled out from the wall."},{"id":"turned","text":"The chair, turned to face the window."},{"id":"unmoved","text":"The chair, exactly as you found it. You sat on the floor."}],"decayLines":{"1":"It has not moved.","2":"Somebody has been in here since.","3":"It is back against the wall. Almost.","4":"You cannot tell any more whether it moved."}},
+  {"id":"window","kind":"DELIBERATE","decay":2,"leavingHead":"You are leaving the window.","kindNote":"This is a message. It will be gone in about 2 visits, because a message is about the one who wrote it.","gestures":[{"id":"mark","text":"A mark in the condensation. One line, drawn and left."},{"id":"name","text":"Your name, written in the condensation."},{"id":"hand","text":"A handprint, pressed flat and held there."}],"decayLines":{"1":"It has fogged over. You can see that it was a mark."}},
+  {"id":"lamp","kind":"STATE","decay":99,"leavingHead":"You are leaving the lamp.","kindNote":"This is not left, it is set. It stays until somebody changes it.","gestures":[{"id":"on","text":"The lamp, on."},{"id":"low","text":"The lamp, turned down to the lowest it goes."},{"id":"off","text":"The lamp, off."}],"decayLines":{"1":"Nobody has come to change it.","2":"It is still on. It has been on for a while now."}},
+  {"id":"book","kind":"DELIBERATE","decay":3,"leavingHead":"You are leaving the book.","kindNote":"This is a message. It will be gone in about 3 visits, because a message is about the one who wrote it.","gestures":[{"id":"ownpage","text":"The book, open at the page you stopped at."},{"id":"firstpage","text":"The book, open at the first page."},{"id":"held","text":"The book, closed, something holding a place inside."}],"decayLines":{"1":"The page has curled.","2":"The pages have settled. Nobody has touched it in a while."}}
+],
+"seeded":[{"thing":"chair","gesture":"pulled","age":2,"mine":false,"bornVisit":0},{"thing":"book","gesture":"ownpage","age":1,"mine":false,"bornVisit":0}],
+"arrivals":{"first":"You are not the first one in here. Somebody left the chair out, and a book open, and did not come back for either.","empty":"Nothing is here. Whatever was, it has finished. You arrive with nothing to answer.","lampOn":"The lamp is on. Either somebody left it on for whoever came next, or forgot. You cannot tell which, and that is the point.","lampOff":"The lamp is off. You stand in the doorway a moment before you touch anything.","mineAging":"Something in here is yours, and you do not remember leaving it.","mine":"Something in here is still yours from last time. It has already started to go.","someone":"There is something in here that somebody left. You are not the first, and the room is not surprised to see you."},
+"closingFull":"The room is full. Nothing else fits without something going.",
+"nothingSurvived":"Nothing has survived to now.",
+"departureNothingLeft":"By the next visit there will be nothing left of it.",
+"headPick":"Leave something.",
+"headDeparture":"You go.",
+"alreadyHere":"already here — you would be changing it"
+}
+;
+
+// ---------------------------------------------------------------- the room
+// A port of aside.games.residue.Room. The content above is generated from the
+// Java model, so the writing cannot drift; this logic is the same rules
+// written a second time in a language a phone can run.
+
+const KEY = 'aside.residue.room';
+
+const byId = id => C.things.find(t => t.id === id);
+const int = (s, d) => { const n = parseInt(s, 10); return isNaN(n) ? d : n; };
+
+function seeded() { return { visits: 0, traces: C.seeded.map(t => Object.assign({}, t)) }; }
+
+function describe(t) {
+  const th = byId(t.thing);
+  if (!th) return null;
+  if (t.age >= th.decay) return null;
+  const g = th.gestures.find(x => x.id === t.gesture);
+  if (!g) return null;
+  if (t.age === 0) return g.text;
+  const suffix = th.decayLines[String(t.age)];
+  return suffix ? g.text + ' ' + suffix : g.text;
+}
+
+/** The same words, one visit later. What the next person will find. */
+function describeNext(t) {
+  const th = byId(t.thing);
+  if (!th) return null;
+  if (t.age + 1 >= th.decay) return null;
+  const g = th.gestures.find(x => x.id === t.gesture);
+  if (!g) return null;
+  const suffix = th.decayLines[String(t.age + 1)];
+  return suffix ? g.text + ' ' + suffix : g.text;
+}
+
+/** Age the room by one visit and clear out whatever has finished decaying. */
+function advance(r) {
+  r.visits++;
+  r.traces.forEach(t => t.age++);
+  r.traces = r.traces.filter(t => describe(t) !== null);
+}
+
+/**
+ * Leave something. There is only one of each thing in the room, so leaving a
+ * thing that is already here changes it rather than adding a second one -- you
+ * cannot have two chairs, and the lamp has one switch. Leaving a thing that is
+ * NOT here displaces the oldest trace when the room is full.
+ */
+function leave(r, thingId, gestureId) {
+  r.traces = r.traces.filter(t => t.thing !== thingId);
+  if (r.traces.length >= C.capacity) r.traces.shift();
+  const t = { thing: thingId, gesture: gestureId, age: 0, mine: true, bornVisit: r.visits };
+  r.traces.push(t);
+  return t;
+}
+
+function arrival(r) {
+  if (r.visits <= 1) return C.arrivals.first;
+  if (r.traces.length === 0) return C.arrivals.empty;
+  const lamp = r.traces.find(t => t.thing === 'lamp');
+  if (lamp && lamp.gesture === 'on') return C.arrivals.lampOn;
+  if (lamp && lamp.gesture === 'off') return C.arrivals.lampOff;
+  if (r.traces.some(t => t.mine && t.age >= 2)) return C.arrivals.mineAging;
+  if (r.traces.some(t => t.mine)) return C.arrivals.mine;
+  return C.arrivals.someone;
+}
+
+function closing(r) {
+  return r.traces.length >= C.capacity
+    ? C.closingFull
+    : r.traces.length + ' of ' + C.capacity + ' places taken.';
+}
+
+// ------------------------------------------------------------- the save file
+// Room.serialize() writes a small plain-text room and Room.deserialize() reads
+// it. This is that exact format, kept in localStorage. So the room can be
+// carried between the desktop and the phone by copying six lines of text --
+// which is the cheapest kind of portability and the only kind this game needs.
+
+function serialize(r) {
+  let s = '# residue room v1\nvisits\t' + r.visits + '\n';
+  for (const t of r.traces) {
+    s += 'trace\t' + t.thing + '\t' + t.gesture + '\t' + t.age + '\t'
+       + (t.mine ? 'you' : 'someone') + '\t' + t.bornVisit + '\n';
+  }
+  return s;
+}
+
+function deserialize(text) {
+  const r = { visits: 0, traces: [] };
+  for (const line of String(text).split(/\r?\n/)) {
+    if (!line || line.charAt(0) === '#') continue;
+    const p = line.split('\t');
+    if (p[0] === 'visits') r.visits = int(p[1], 0);
+    else if (p[0] === 'trace') {
+      if (!byId(p[1])) continue;          // unknown thing: drop it, do not crash
+      r.traces.push({ thing: p[1], gesture: p[2], age: int(p[3], 0),
+                      mine: p[4] === 'you', bornVisit: int(p[5], 0) });
+    }
+  }
+  return r;
+}
+
+// A browser that will not keep the room is not a reason to refuse to play. It
+// is a reason to say so, before the player has left anything.
+const CAN_STORE = (() => {
+  try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); return true; }
+  catch (e) { return false; }
+})();
+
+function load() {
+  if (!CAN_STORE) return seeded();
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { text = null; }
+  return text === null ? seeded() : deserialize(text);
+}
+
+function save(r) {
+  if (!CAN_STORE) return false;
+  try { localStorage.setItem(KEY, serialize(r)); return true; } catch (e) { return false; }
+}
+
+// ---------------------------------------------------------------- the screen
+
+let R = load();
+advance(R);          // in memory only, exactly as ResidueGame.create() does:
+                     // walking in and walking out again costs the room nothing
+let phase = 'arrival';
+let sel = 0;
+let chosen = null;
+let departureLine = '';
+let kept = true;
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const glow = document.getElementById('glow');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function lampStrength() {
+  const lamp = R.traces.find(t => t.thing === 'lamp');
+  if (!lamp) return 0;
+  return lamp.gesture === 'on' ? 1 : lamp.gesture === 'low' ? 0.5 : 0;
+}
+
+function contentsHtml() {
+  let h = '<div class="label">IN THE ROOM</div>';
+  if (R.traces.length === 0) return h + '<p class="empty">' + esc(C.nothingSurvived) + '</p>';
+  for (const t of R.traces) {
+    const d = describe(t);
+    if (d === null) continue;
+    h += '<div class="trace' + (t.mine ? ' mine' : '') + '">'
+       + '<span class="who">' + (t.mine ? 'yours' : 'someone') + '</span>'
+       + '<span class="what">' + esc(d) + '</span></div>';
+  }
+  return h;
+}
+
+function header() {
+  return '<header><h1>residue</h1><div class="visit">visit ' + R.visits + '</div></header>';
+}
+
+function drawArrival() {
+  app.innerHTML = header()
+    + '<p class="arrival">' + esc(arrival(R)) + '</p>'
+    + contentsHtml()
+    + (CAN_STORE ? '' : '<p class="warn">This browser will not keep the room. '
+        + 'Whatever you leave here will be gone when you close the page.</p>')
+    + '<p class="fine">Leave one thing. Come back and the room will have aged '
+    + 'without you.</p>';
+  bar.innerHTML = '<div class="inner"><button class="go" id="a">Stay a while</button></div>';
+  document.getElementById('a').onclick = () => { phase = 'pick'; sel = 0; draw(); };
+}
+
+function drawPick() {
+  let h = header()
+    + '<p class="arrival dim">' + esc(arrival(R)) + '</p>'
+    + contentsHtml()
+    + '<p class="head">' + esc(C.headPick) + '</p>';
+  C.things.forEach((t, i) => {
+    const here = R.traces.some(x => x.thing === t.id);
+    h += '<div class="thing' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">'
+       + '<div class="top"><span class="n">' + (i + 1) + '</span>'
+       + '<span class="name">' + esc(t.id) + '</span>'
+       + (here ? '<span class="here">' + esc(C.alreadyHere) + '</span>' : '')
+       + '</div></div>';
+  });
+  app.innerHTML = h;
+  app.querySelectorAll('.thing').forEach(el => {
+    el.onclick = () => { sel = +el.dataset.i; draw(); };
+  });
+  bar.innerHTML = '<div class="inner">'
+    + '<button class="go" id="n">Leave the ' + esc(C.things[sel].id) + '</button>'
+    + '<button class="ghost" id="b">Back</button></div>';
+  document.getElementById('n').onclick = () => { chosen = C.things[sel]; sel = 0; phase = 'gesture'; draw(); };
+  document.getElementById('b').onclick = () => { phase = 'arrival'; draw(); };
+}
+
+function drawGesture() {
+  let h = header()
+    + '<p class="arrival dim">' + esc(chosen.leavingHead) + '</p>';
+  chosen.gestures.forEach((g, i) => {
+    h += '<div class="gesture' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">'
+       + esc(g.text) + '</div>';
+  });
+  h += '<p class="note">' + esc(chosen.kindNote) + '</p>';
+  app.innerHTML = h;
+  app.querySelectorAll('.gesture').forEach(el => {
+    el.onclick = () => { sel = +el.dataset.i; draw(); };
+  });
+  bar.innerHTML = '<div class="inner">'
+    + '<button class="go" id="l">Leave it</button>'
+    + '<button class="ghost" id="b">Pick again</button></div>';
+  document.getElementById('l').onclick = () => doLeave(chosen.gestures[sel].id);
+  document.getElementById('b').onclick = () => { phase = 'pick'; sel = 0; draw(); };
+}
+
+function doLeave(gestureId) {
+  const t = leave(R, chosen.id, gestureId);
+  kept = save(R);
+  const next = describeNext(t);
+  departureLine = next === null ? C.departureNothingLeft : next;
+  phase = 'departure';
+  draw();
+}
+
+function drawDeparture() {
+  app.innerHTML = header()
+    + '<p class="arrival">' + esc(C.headDeparture) + '</p>'
+    + '<p class="arrival dim">' + esc(departureLine) + '</p>'
+    + contentsHtml()
+    + (kept ? '' : '<p class="warn">The room could not be written down, so it '
+        + 'will not be here next time. Everything above is still true.</p>')
+    + '<p class="fine">Visit ' + R.visits + '. ' + esc(closing(R)) + '</p>';
+  bar.innerHTML = '<div class="inner"><button class="go" id="c">Come back in</button></div>';
+  document.getElementById('c').onclick = () => {
+    // Coming back in is the whole game, so the button does exactly that: it
+    // reloads the room from the save and ages it by one visit, which is what
+    // re-entering does on the desktop.
+    R = load();
+    advance(R);
+    phase = 'arrival';
+    sel = 0;
+    draw();
+  };
+}
+
+function draw() {
+  glow.style.opacity = lampStrength() * 0.9;
+  if (phase === 'arrival') drawArrival();
+  else if (phase === 'pick') drawPick();
+  else if (phase === 'gesture') drawGesture();
+  else drawDeparture();
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  if (phase === 'pick') {
+    if (k >= '1' && k <= '5') { sel = Math.min(+k - 1, C.things.length - 1); draw(); }
+    else if (k === 'Enter') document.getElementById('n').click();
+  } else if (phase === 'gesture') {
+    if (k >= '1' && k <= '3') { sel = Math.min(+k - 1, chosen.gestures.length - 1); draw(); }
+    else if (k === 'Enter') document.getElementById('l').click();
+  } else if (k === 'Enter') {
+    const b = bar.querySelector('button');
+    if (b) b.click();
+  }
+});
+
+draw();
+</script>
+</body>
+</html>
