@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#07080D">
+<title>bearings</title>
+<style>
+  :root{
+    --bg:#07080D; --panel:#0E1119; --edge:#1E2433;
+    --gold:#D9A441; --ink:#E6E8EF; --dim:#A2A9BC; --faint:#6B7390;
+    --blue:#7FA8D9; --red:#C4553F; --green:#7FA88A;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:17px/1.55 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:620px; margin:0 auto; padding:22px 18px 120px}
+  header{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
+  .where{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint)}
+  .para{font-size:17px; color:var(--ink); margin:0 0 15px}
+  .label{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+         margin:26px 0 10px}
+  .panel{background:var(--panel); border:1px solid var(--edge); border-radius:12px;
+         padding:14px 16px}
+  .panel .ph{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint); margin:0 0 12px}
+  .rule{display:flex; gap:12px; margin:0 0 14px; font:13px/1.6 Arial,Helvetica,sans-serif;
+        color:var(--dim)}
+  .rule:last-child{margin:0}
+  /* 78px, not 62: "1 / 2" in Consolas 12 is 65px, and at 62 the label wrapped
+     onto a second line and ran into the sentence it was labelling. */
+  .rule .k{flex:0 0 78px; color:var(--gold); font:12px/1.7 Consolas,Menlo,monospace}
+  .weather{font-size:19px; color:var(--ink); margin:0 0 6px}
+  .prose{font-size:17px; color:#B9B9CC; margin:14px 0 0}
+  .opt{display:block; width:100%; text-align:left; background:var(--panel);
+       border:1px solid var(--edge); border-radius:11px; padding:13px 15px; margin:0 0 9px;
+       color:var(--ink); font:17px/1.4 Georgia,serif; cursor:pointer}
+  .opt .row1{display:flex; align-items:baseline; gap:11px}
+  .opt .k{font:14px/1.6 Consolas,Menlo,monospace; color:var(--gold); flex:0 0 auto}
+  .opt .n{flex:1 1 auto}
+  .opt .v{font:15px/1.6 Consolas,Menlo,monospace; color:var(--blue); flex:0 0 auto}
+  .opt .r{display:block; font:12px/1.6 Arial,Helvetica,sans-serif; color:var(--faint);
+          margin:5px 0 0 25px}
+  .opt:disabled{opacity:.42; cursor:default}
+  .opt.sight .n{color:var(--gold)}
+  .opt.sight .r.open{color:var(--green)}
+  .book{margin:26px 0 0}
+  .book .big{font:24px/1.2 Consolas,Menlo,monospace; color:var(--ink)}
+  .book .of{font:13px/1.4 Arial,Helvetica,sans-serif; color:var(--faint); margin-left:9px}
+  .bar{height:5px; background:#1B2233; border-radius:3px; margin:11px 0 18px; overflow:hidden}
+  .bar i{display:block; height:100%; background:var(--gold)}
+  .kv{display:flex; justify-content:space-between; gap:12px; padding:3px 0;
+      font:13px/1.6 Arial,Helvetica,sans-serif}
+  .kv .k{color:var(--faint)} .kv .v{font:13px/1.6 Consolas,Menlo,monospace; color:var(--ink)}
+  .clockrow{display:flex; gap:11px; align-items:baseline; padding:4px 0;
+            font:13px/1.6 Consolas,Menlo,monospace}
+  .clockrow .n{color:var(--blue)} .clockrow .r{color:var(--ink); min-width:34px}
+  .clockrow .w{font:12px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin-left:auto}
+  .note{font:12px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin:14px 0 0}
+  .head{font-size:23px; margin:22px 0 12px}
+  .head.good{color:var(--green)} .head.bad{color:var(--red)}
+  .verdict{font-size:17px; color:var(--ink); margin:0 0 16px}
+  .voy{font:12px/1.7 Consolas,Menlo,monospace; color:var(--dim); white-space:pre;
+       overflow-x:auto; margin:0}
+  .closing{font-size:17px; color:#B9AFA2; margin:20px 0 0; white-space:pre-line}
+  .bar-fixed{position:fixed; left:0; right:0; bottom:0; background:#07080DF2;
+             border-top:1px solid var(--edge);
+             padding:10px 18px calc(10px + env(safe-area-inset-bottom))}
+  .bar-fixed .inner{max-width:620px; margin:0 auto}
+  .bar-fixed .hint{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin:0 0 8px}
+  button.go{width:100%; font:17px/1.2 Georgia,serif; padding:15px 12px; border-radius:11px;
+            background:var(--gold); color:#1A1509; border:1px solid var(--gold); cursor:pointer}
+  button.plain{width:100%; font:16px/1.2 Georgia,serif; padding:14px 12px; border-radius:11px;
+               background:var(--panel); color:var(--ink); border:1px solid var(--edge);
+               cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="bar-fixed" id="bar" hidden><div class="inner" id="barinner"></div></div>
+
+<script>
+const C = /*__CONTENT__*/;
+
+/* ------------------------------------------------------------------ model
+ *
+ * A port of aside.games.bearings.Bearings, and it has to stay one.
+ *
+ * The draw is counter-based, not a stream: every number is a pure
+ * function of (seed, day, salt). That is what makes this portable at all
+ * -- there is no RNG position to carry, so a seed replays a voyage
+ * exactly, here and in Java. The arithmetic is BigInt because Java's
+ * `long` is 64-bit and a JS number is not; a double would lose the low
+ * bits and the two builds would diverge on the first roll.
+ */
+const M64 = (1n << 64n) - 1n;
+const TWO53 = 9007199254740992;
+
+function rand(seed, day, salt){
+  let h = (BigInt(seed) + 0x9E3779B97F4A7C15n * BigInt(day + 1)
+           + 0xBF58476D1CE4E5B9n * BigInt(salt)) & M64;
+  h = (h ^ (h >> 30n)) & M64;
+  h = (h * 0xBF58476D1CE4E5B9n) & M64;
+  h = (h ^ (h >> 27n)) & M64;
+  h = (h * 0x94D049BB133111EBn) & M64;
+  h = (h ^ (h >> 31n)) & M64;
+  return Number(h >> 11n) / TWO53;
+}
+
+const DRIFT_VALUE  = [0, 7, -7, 18, -18];
+const DRIFT_WEIGHT = [0.32, 0.20, 0.20, 0.14, 0.14];
+
+function newDrift(seed, day, salt){
+  const r = rand(seed, day, salt);
+  let acc = 0;
+  for (let i = 0; i < DRIFT_VALUE.length; i++){
+    acc += DRIFT_WEIGHT[i];
+    if (r < acc) return DRIFT_VALUE[i];
+  }
+  return 0;
+}
+
+function run(w){ return w === 'FAIR' ? 68 : w === 'CLEAR' ? 50 : 32; }
+
+function Voyage(seed){
+  this.seed = seed;
+  this.clocks = [
+    {name:'A', drift:newDrift(seed, 0, 11), rated:0, ratedOn:-1},
+    {name:'B', drift:newDrift(seed, 0, 12), rated:0, ratedOn:-1},
+  ];
+  for (const c of this.clocks) c.rated = c.drift;
+  this.day = 0; this.trueRun = 0; this.book = 0;
+  this.sightings = 0; this.lastSightDay = -1; this.lastCorrected = 0;
+  this.everLooked = false; this.finished = false; this.found = false;
+  this.finalTrue = 0; this.ending = ''; this.clearDays = 0; this.lastClearDay = -1;
+  this.days = [];
+  this.startDay();
+}
+
+Voyage.prototype.rollWeather = function(){
+  const r = rand(this.seed, this.day, 1);
+  let w = r < 0.25 ? 'CLEAR' : r < 0.85 ? 'FAIR' : 'FOUL';
+  // A voyage with no clear day is not a game, and a navigator who has not
+  // been able to look for a week is being punished by the weather rather
+  // than by their own choices. The sky opens on its own schedule.
+  if (w !== 'CLEAR' && this.day >= 4){
+    if (this.clearDays === 0) w = 'CLEAR';
+    else if (this.day - this.lastClearDay >= 6) w = 'CLEAR';
+  }
+  if (w === 'CLEAR'){ this.clearDays++; this.lastClearDay = this.day; }
+  return w;
+};
+
+Voyage.prototype.startDay = function(){
+  this.weather = this.rollWeather();
+  // Being lost costs you way, not just accuracy: a navigator steering for
+  // a landfall that is not where the book says it is makes less ground.
+  const penalty = Math.min(0.45, Math.abs(this.error()) / 250.0);
+  this.todayRun = run(this.weather) * (1 - penalty);
+};
+
+Voyage.prototype.error = function(){ return this.book - this.trueRun; };
+Voyage.prototype.reading = function(i){ return this.todayRun + this.clocks[i].drift; };
+Voyage.prototype.estimate = function(i){ return this.reading(i) - this.clocks[i].rated; };
+Voyage.prototype.canSight = function(){ return !this.finished && this.weather === 'CLEAR'; };
+Voyage.prototype.progress = function(){ return Math.min(1, this.book / C.needed); };
+Voyage.prototype.miss = function(){ return this.finalTrue - C.needed; };
+
+Voyage.prototype.rollDrift = function(){
+  // A shared cause fires first: the same heat, the same knock, the same bad
+  // night in a wooden box. When it does, both clocks take the same new rate
+  // -- so they agree, and their agreement is the one thing a navigator
+  // cannot use.
+  if (rand(this.seed, this.day, 2) < 0.10){
+    const d = newDrift(this.seed, this.day, 7);
+    for (const c of this.clocks) c.drift = d;
+    return;
+  }
+  if (rand(this.seed, this.day, 3) < 0.22)
+    this.clocks[0].drift = newDrift(this.seed, this.day, 5);
+  if (rand(this.seed, this.day, 4) < 0.22)
+    this.clocks[1].drift = newDrift(this.seed, this.day, 6);
+};
+
+Voyage.prototype.choose = function(pick){
+  if (this.finished) return false;
+  if (pick === 'SIGHT' && !this.canSight()) return false;
+
+  const d = {index:this.day, weather:this.weather, pick:pick,
+             clockA:this.reading(0), clockB:this.reading(1)};
+
+  if (pick === 'SIGHT'){
+    this.lastCorrected = this.error();
+    this.lastSightDay = this.day;
+    this.everLooked = true;
+    this.sightings++;
+    const kept = this.todayRun * (1 - C.sightCost);
+    this.trueRun += kept;
+    this.book = this.trueRun;              // the error is gone, not hidden
+    for (const c of this.clocks){ c.rated = c.drift; c.ratedOn = this.day; }
+    d.recorded = kept; d.actual = kept;
+  } else {
+    const c = this.clocks[pick === 'A' ? 0 : 1];
+    const recorded = this.todayRun + c.drift - c.rated;
+    this.trueRun += this.todayRun;
+    this.book += recorded;
+    d.recorded = recorded; d.actual = this.todayRun;
+  }
+
+  d.bookAfter = this.book; d.trueAfter = this.trueRun;
+  this.days.push(d);
+
+  this.day++;
+  if (this.day < C.days) this.rollDrift();
+  this.settle();
+  return true;
+};
+
+Voyage.prototype.settle = function(){
+  if (this.book >= C.needed){ this.finish(true); return; }
+  if (this.day >= C.days){ this.finish(false); return; }
+  this.startDay();
+};
+
+Voyage.prototype.finish = function(calledLand){
+  this.finished = true;
+  this.finalTrue = this.trueRun;
+  if (calledLand){
+    const m = this.finalTrue - C.needed;
+    this.found = Math.abs(m) <= C.tolerance;
+    this.ending = this.found ? 'found' : (m < 0 ? 'short' : 'past');
+  } else {
+    this.found = false;
+    this.ending = 'season';
+  }
+};
+
+/* ------------------------------------------------------------- the words */
+
+const fmt = (t, ...a) => t.replace(/%s/g, () => a.shift());
+
+function ageLabel(days){
+  if (days <= 0) return C.voice.ageToday;
+  if (days === 1) return C.voice.ageYesterday;
+  return fmt(C.voice.ageDays, days);
+}
+const rateLabel = c => (c.rated > 0 ? '+' : '') + Math.round(c.rated);
+
+/** Days since this clock was last rated, counting the day in progress. */
+function clockAge(c, day){ return c.ratedOn < 0 ? day + 1 : day - c.ratedOn; }
+
+function dayProse(v){
+  const pool = C.voice.dayProse[v.weather];
+  const i = Math.floor(rand(v.seed, v.day, 90) * pool.length) % pool.length;
+  return pool[i];
+}
+
+function dayPrompt(v){
+  if (!v.everLooked) return C.voice.promptNever;
+  if (v.day - v.lastSightDay >= 5)
+    return fmt(C.voice.promptLong, ageLabel(v.day - v.lastSightDay));
+  return C.voice.promptDefault;
+}
+
+function dayLabel(onSightScreen){
+  if (v.finished) return C.voice.voyageOver;
+  const shown = onSightScreen ? v.day : v.day + 1;
+  return fmt(C.voice.dayOf, Math.min(shown, C.days), C.days);
+}
+
+function foundLine(off){
+  if (off === 0) return '0' + C.voice.miles;
+  return Math.round(Math.abs(off)) + C.voice.miles + ' '
+       + (off > 0 ? C.voice.ahead : C.voice.behind);
+}
+
+function headline(v){
+  return {found:C.voice.headFound, short:C.voice.headShort,
+          past:C.voice.headPast}[v.ending] || C.voice.headSeason;
+}
+
+function verdict(v){
+  const here = Math.round(v.finalTrue), called = Math.round(v.book);
+  const off = Math.round(Math.abs(v.miss()));
+  switch (v.ending){
+    case 'found':  return fmt(C.voice.verdictFound, called, here, off, off);
+    case 'short':  return fmt(C.voice.verdictShort, called, here, off);
+    case 'past':   return fmt(C.voice.verdictPast, called, here, off);
+    default:       return fmt(C.voice.verdictSeason, C.needed, here, off);
+  }
+}
+
+function closing(v){
+  const n = v.sightings;
+  const first = n === 0 ? C.voice.closingNone
+              : n === 1 ? C.voice.closingOne
+              : n === 2 ? C.voice.closingTwo
+              : fmt(C.voice.closingMany, n);
+  return first + "\n\n" + C.voice.closingShared;
+}
+
+function sightWas(off){
+  if (off === 0) return C.voice.sightExact;
+  return fmt(C.voice.sightWas, Math.round(Math.abs(off)),
+             off > 0 ? C.voice.sightAhead : C.voice.sightBehind);
+}
+
+/* ------------------------------------------------------------- the screen */
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const barinner = document.getElementById('barinner');
+const esc = s => String(s).replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let v = null;
+let phase = 'OPEN';
+
+function header(right){
+  return `<header><h1>${esc(C.wordmark)}</h1>
+    <span class="where">${esc(right)}</span></header>`;
+}
+
+function setBar(hint, label, fn, plain){
+  bar.hidden = false;
+  barinner.innerHTML = (hint ? `<p class="hint">${esc(hint)}</p>` : '')
+    + `<button class="${plain ? 'plain' : 'go'}" id="go">${esc(label)}</button>`;
+  document.getElementById('go').onclick = fn;
+}
+
+function render(){
+  if (phase === 'OPEN') return renderOpen();
+  if (phase === 'DAY')  return renderDay();
+  if (phase === 'SIGHT') return renderSight();
+  return renderEnd();
+}
+
+function renderOpen(){
+  v = null;
+  bar.hidden = true;
+  app.innerHTML = header(C.where)
+    + C.voice.opening.map(p => `<p class="para">${esc(p)}</p>`).join('')
+    + `<p class="label">${esc(C.voice.rulesHeading)}</p>`
+    + `<div class="panel">` + C.voice.rules.map(r =>
+        `<div class="rule">${r.key ? `<span class="k">${esc(r.key)}</span>` : ''}`
+        + `<span>${esc(r.text)}</span></div>`).join('') + `</div>`;
+  setBar('', C.voice.btnBegin, () => {
+    v = new Voyage(Math.floor(Math.random() * 9007199254740991));
+    phase = 'DAY';
+    render();
+  });
+}
+
+function bookPanel(){
+  const c = v.clocks;
+  const off = v.lastCorrected;
+  return `<p class="label">${esc(C.voice.bookHead)}</p>
+    <div class="book">
+      <span class="big">${Math.round(v.book)}</span>
+      <span class="of">${esc(C.voice.ofMiles)}</span>
+      <div class="bar"><i style="width:${(v.progress()*100).toFixed(1)}%"></i></div>
+      <div class="kv"><span class="k">${esc(C.voice.rowLastLooked)}</span>
+        <span class="v">${esc(v.everLooked ? ageLabel(v.day - v.lastSightDay) : C.voice.never)}</span></div>
+      ${v.everLooked ? `<div class="kv"><span class="k">${esc(C.voice.rowAndFound)}</span>
+        <span class="v">${esc(foundLine(off))}</span></div>` : ''}
+      <div class="kv"><span class="k">${esc(C.voice.rowLooksUsed)}</span>
+        <span class="v">${v.sightings}</span></div>
+      <div class="kv"><span class="k">${esc(C.voice.rowDaysLeft)}</span>
+        <span class="v">${Math.max(0, C.days - v.day)}</span></div>
+    </div>
+    <p class="label">${esc(C.voice.clocksHead)}</p>
+    <div class="panel">
+      ${c.map(x => `<div class="clockrow"><span class="n">${esc(x.name)}</span>
+        <span class="r">${esc(rateLabel(x))}</span>
+        <span class="w">${esc(x.ratedOn < 0 ? C.voice.inPort : ageLabel(clockAge(x, v.day)))}</span>
+      </div>`).join('')}
+      <p class="note">${esc(C.voice.rateNote)}</p>
+    </div>`;
+}
+
+function renderDay(){
+  const open = v.canSight();
+  app.innerHTML = header(dayLabel(false))
+    + `<p class="weather">${esc(C.voice.weather[v.weather])}</p>`
+    + `<p class="label">${esc(C.voice.whatEachClock)}</p>`
+    + `<button class="opt" id="a"><span class="row1"><span class="k">1</span>
+        <span class="n">${esc(C.voice.clockA)}</span>
+        <span class="v">${Math.round(v.estimate(0))}${esc(C.voice.miles)}</span></span>
+        <span class="r">${esc(fmt(C.voice.ratedAt, rateLabel(v.clocks[0]),
+              v.clocks[0].ratedOn < 0 ? C.voice.inPort : ageLabel(clockAge(v.clocks[0], v.day))))}</span></button>`
+    + `<button class="opt" id="b"><span class="row1"><span class="k">2</span>
+        <span class="n">${esc(C.voice.clockB)}</span>
+        <span class="v">${Math.round(v.estimate(1))}${esc(C.voice.miles)}</span></span>
+        <span class="r">${esc(fmt(C.voice.ratedAt, rateLabel(v.clocks[1]),
+              v.clocks[1].ratedOn < 0 ? C.voice.inPort : ageLabel(clockAge(v.clocks[1], v.day))))}</span></button>`
+    + `<button class="opt sight" id="s" ${open ? '' : 'disabled'}>
+        <span class="row1"><span class="k">3</span>
+        <span class="n">${esc(C.voice.takeSight)}</span></span>
+        <span class="r ${open ? 'open' : ''}">${esc(open ? C.voice.skyOpen : C.voice.skyClosed)}</span></button>`
+    + `<p class="prose">${esc(dayPrompt(v))}</p>`
+    + `<p class="prose">${esc(dayProse(v))}</p>`
+    + bookPanel();
+  document.getElementById('a').onclick = () => { v.choose('A'); afterDay(); };
+  document.getElementById('b').onclick = () => { v.choose('B'); afterDay(); };
+  document.getElementById('s').onclick = () => { if (v.choose('SIGHT')) { phase = 'SIGHT'; render(); } };
+  bar.hidden = true;
+}
+
+function afterDay(){
+  if (v.finished) phase = 'END';
+  render();
+}
+
+function renderSight(){
+  const c = v.clocks;
+  app.innerHTML = header(dayLabel(true))
+    + `<p class="head" style="color:var(--gold)">${esc(C.voice.sightHead)}</p>`
+    + `<p class="verdict">${esc(sightWas(v.lastCorrected))}</p>`
+    + c.map(x => `<p class="verdict">${esc(fmt(C.voice.sightRerated, x.name, rateLabel(x)))}</p>`).join('')
+    + `<p class="prose">${esc(C.voice.sightProse)}</p>`
+    + bookPanel();
+  setBar('', C.voice.btnGoOn, () => {
+    phase = v.finished ? 'END' : 'DAY';
+    render();
+  });
+}
+
+function renderEnd(){
+  // Plain text, not markup: the whole block is escaped on the way in, and
+  // a table whose columns are padded by hand cannot survive a tag inside a
+  // cell. The columns are the desktop's, character for character.
+  const rows = v.days.map(d => {
+    const off = d.bookAfter - d.trueAfter;
+    const wrote = d.pick === 'SIGHT' ? C.voice.looked : String(Math.round(d.recorded));
+    return String(d.index + 1).padEnd(9)
+      + C.voice.weatherName[d.weather].padEnd(9)
+      + wrote.padEnd(11)
+      + String(Math.round(d.actual)).padEnd(9)
+      + (off >= 0 ? '+' : '') + Math.round(off);
+  });
+  app.innerHTML = header('')
+    + `<p class="head ${v.found ? 'good' : 'bad'}">${esc(headline(v))}</p>`
+    + `<p class="verdict">${esc(verdict(v))}</p>`
+    + `<p class="label">${esc(C.voice.voyageHead)}</p>`
+    + `<p class="voy">${esc(C.voice.voyageCols + "\n" + rows.join("\n"))}</p>`
+    + `<p class="closing">${esc(closing(v))}</p>`;
+  setBar('', C.voice.btnAgain, () => {
+    v = new Voyage(Math.floor(Math.random() * 9007199254740991));
+    phase = 'DAY';
+    render();
+  });
+}
+
+render();
+
+/* Hooks for the trace harness and for screenshots: drive the model directly,
+ * read it back, and put any phase on screen without playing to it. A frame
+ * that cannot be reached in a snapshot is a frame nobody has looked at. */
+window.__bearings = {
+  Voyage: Voyage,
+  rand: rand,
+  newDrift: newDrift,
+  content: C,
+  showDay(voyage){ v = voyage; phase = 'DAY'; render(); },
+  showSight(voyage){ v = voyage; phase = 'SIGHT'; render(); },
+  showEnd(voyage){ v = voyage; phase = 'END'; render(); },
+  play(seed, picks){
+    const v = new Voyage(seed);
+    const out = [];
+    for (const p of picks){
+      if (v.finished) break;
+      if (!v.choose(p)) break;
+      out.push({day:v.day, weather:v.weather, book:v.book, trueRun:v.trueRun,
+                ending:v.ending, finished:v.finished});
+    }
+    return {ending:v.ending, found:v.found, book:v.book, trueRun:v.trueRun,
+            sightings:v.sightings, days:out};
+  }
+};
+</script>
+</body>
+</html>

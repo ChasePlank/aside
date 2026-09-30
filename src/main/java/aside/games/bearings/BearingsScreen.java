@@ -191,13 +191,8 @@ public class BearingsScreen extends UiScreen {
 
         gc.setFont(F_TINY);
         gc.setFill(FAINT);
-        // After a sighting the day has already turned over, and the screen is
-        // still showing the day the look was taken on.
-        int shown = phase == Phase.SIGHT ? b.day : b.day + 1;
-        String right = b.finished
-                ? "the voyage is over"
-                : "day " + Math.min(shown, Bearings.DAYS) + " of " + Bearings.DAYS;
-        gc.fillText(right, W - M - 130, 76);
+        gc.fillText(Bearings.dayLabel(b.day, phase == Phase.SIGHT, b.finished),
+                W - M - 130, 76);
 
         switch (phase) {
             case OPEN -> drawOpen();
@@ -217,16 +212,7 @@ public class BearingsScreen extends UiScreen {
 
     void drawOpen() {
         double y = 150;
-        for (String p : new String[]{
-                "You are the navigator, and the island is " + (int) Bearings.NEEDED
-                        + " miles east of you, and there is nothing between you and it "
-                        + "but open water and two chronometers.",
-                "Every day you write the day's run into the ship's book. The book is what you steer by. "
-                        + "You cannot write down where you are -- only how far you believe you have run -- "
-                        + "and the two clocks will not agree about it.",
-                "Both were rated in port. A rate does not stay rated. It moves at night, and nothing says so.",
-                "The only instrument on board that reports the truth is the sky. It has to be clear, and "
-                        + "looking costs you most of the day."}) {
+        for (String p : Bearings.OPENING) {
             for (String line : wrap(p, F_SCENE, LEFT_W)) {
                 gc.setFont(F_SCENE);
                 gc.setFill(INK);
@@ -240,23 +226,17 @@ public class BearingsScreen extends UiScreen {
 
         gc.setFont(F_SMALL);
         gc.setFill(GOLD);
-        gc.fillText("ENTER to begin.", M, H - 76);
+        gc.fillText(Bearings.START_LINE, M, H - 76);
     }
 
     void drawRulesPanel() {
         double x = RIGHT_X, y = 150;
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("HOW IT GOES", x, y);
+        gc.fillText(Bearings.RULES_HEADING, x, y);
         y += 26;
 
-        String[][] rules = {
-            {"1 / 2", "Write the day's run into the book from Clock A or Clock B. You will steer by what you write."},
-            {"3", "Heave to and take a sighting. Clear days only. Puts the book back on the sea and re-rates both clocks. Costs most of the day."},
-            {"", "When the book reaches " + (int) Bearings.NEEDED + " you call for land. Whether you are there is not up to the book."},
-            {"", "When the two clocks disagree, one of them has moved. When they agree, you have learned nothing."},
-        };
-        for (String[] r : rules) {
+        for (String[] r : Bearings.RULES) {
             if (!r[0].isEmpty()) {
                 gc.setFont(F_MONO);
                 gc.setFill(GOLD);
@@ -278,17 +258,17 @@ public class BearingsScreen extends UiScreen {
         double y = 150;
         gc.setFont(F_SCENE);
         gc.setFill(INK);
-        gc.fillText(weatherLine(), M, y);
+        gc.fillText(Bearings.weatherLine(b.weather), M, y);
 
         y = 206;
         gc.setFont(F_SMALL);
         gc.setFill(DIM);
-        gc.fillText("What each clock would have you write:", M, y);
+        gc.fillText(Bearings.WHAT_EACH_CLOCK, M, y);
 
         y = 252;
-        option(y, "1", "Clock A", b.estimate(0), 0);
+        option(y, "1", Bearings.CLOCK_A, b.estimate(0), 0);
         y += 46;
-        option(y, "2", "Clock B", b.estimate(1), 1);
+        option(y, "2", Bearings.CLOCK_B, b.estimate(1), 1);
 
         y += 62;
         boolean open = b.canSight();
@@ -297,14 +277,13 @@ public class BearingsScreen extends UiScreen {
         gc.fillText("3", M, y);
         gc.setFont(F_ITEM);
         gc.setFill(open ? INK : FAINT);
-        gc.fillText(open ? "Take a sighting" : "Take a sighting", 120, y);
+        gc.fillText(Bearings.TAKE_SIGHT, 120, y);
         gc.setFont(F_SMALL);
         gc.setFill(open ? GREEN : FAINT);
-        gc.fillText(open ? "the sky is open -- this is the only honest reading on board"
-                        : "the sky is closed", 340, y);
+        gc.fillText(open ? Bearings.SKY_OPEN : Bearings.SKY_CLOSED, 340, y);
 
         y += 60;
-        for (String line : wrap(dayPrompt(), F_SMALL, LEFT_W)) {
+        for (String line : wrap(b.dayPrompt(), F_SMALL, LEFT_W)) {
             gc.setFont(F_SMALL);
             gc.setFill(DIM);
             gc.fillText(line, M, y);
@@ -312,7 +291,7 @@ public class BearingsScreen extends UiScreen {
         }
 
         y += 16;
-        for (String line : wrap(dayProse(), F_SCENE, LEFT_W)) {
+        for (String line : wrap(b.dayProse(), F_SCENE, LEFT_W)) {
             gc.setFont(F_SCENE);
             gc.setFill(Color.web("#B9B9CC"));
             gc.fillText(line, M, y);
@@ -320,7 +299,7 @@ public class BearingsScreen extends UiScreen {
         }
 
         drawBookPanel();
-        hint("1 / 2 to write the run, 3 to look. ESC for the library.");
+        hint(Bearings.DAY_HINT);
     }
 
     void option(double y, String key, String name, double reading, int i) {
@@ -332,83 +311,26 @@ public class BearingsScreen extends UiScreen {
         gc.fillText(name, 120, y);
         gc.setFont(F_MONO);
         gc.setFill(BLUE);
-        gc.fillText(Math.round(reading) + " miles", 300, y);
+        gc.fillText(Math.round(reading) + Bearings.MILES, 300, y);
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
         gc.fillText(ratingLabel(i), 520, y);
     }
 
+    // The words live in Bearings. These are the screen's names for them,
+    // so the phone build and this screen cannot drift apart.
+
     String ratingLabel(int i) {
         Bearings.Clock c = b.clocks.get(i);
-        return "rated " + rateLabel(c) + ", " + ratedWhenLabel(c);
-    }
-
-    /** A rate with its sign, because the sign is the whole point of it. */
-    static String rateLabel(Bearings.Clock c) {
-        return (c.rated > 0 ? "+" : "") + Math.round(c.rated);
-    }
-
-    /**
-     * When a clock was last rated. A rating made before the ship sailed is
-     * not "yesterday" -- it is the one the voyage is spending.
-     */
-    String ratedWhenLabel(Bearings.Clock c) {
-        return c.ratedOn < 0 ? "in port" : ageLabel(c.ageOn(b.day));
-    }
-
-    static String ageLabel(int days) {
-        if (days <= 0) return "today";
-        if (days == 1) return "yesterday";
-        return days + " days ago";
-    }
-
-    String weatherLine() {
-        return switch (b.weather) {
-            case FAIR -> "Fair wind, and the sea is working with you.";
-            case CLEAR -> "Clear. Nothing between the glass and the sun.";
-            case FOUL -> "Foul. Grey from rail to rail.";
-        };
-    }
-
-    String dayProse() {
-        String[] pool = switch (b.weather) {
-            case FAIR -> new String[]{
-                "The wind holds all day and the sea runs with you. Nobody on board has anything to say about the clocks.",
-                "Good going, and the log line straight behind. The two brass faces sit side by side in their box and neither of them is talking.",
-                "A steady day. You write the run in the book, and the book gets a little further from the sea.",
-                "The ship works well. The clocks work. Nothing about the day tells you anything you did not already believe.",
-            };
-            case CLEAR -> new String[]{
-                "Not a cloud. The horizon is a ruled line and the sun is where the almanac says it should be, which is the only honest thing on board.",
-                "Clear from rail to rail. You could have the truth off the glass in an hour, and you would lose the afternoon's run doing it.",
-                "The sky is open. Everything you have written in the book is checkable today, and none of it has been checked.",
-            };
-            case FOUL -> new String[]{
-                "Grey from rail to rail and the sea coming over the bow. You make what you can and you write it down.",
-                "No sun, no stars, no horizon. The book is the only world there is today.",
-                "Bad weather. The clocks are in their box, and the box is the only thing on board that claims to know anything.",
-            };
-        };
-        return pool[(int) Math.floor(b.rand(90) * pool.length) % pool.length];
-    }
-
-    String dayPrompt() {
-        if (!b.everLooked) {
-            return "You have not looked at anything outside this ship yet. Everything on the right is what you "
-                    + "wrote down, and none of it has been checked.";
-        }
-        if (b.day - b.lastSightDay >= 5) {
-            return "It has been " + ageLabel(b.day - b.lastSightDay) + " since anything on the right was checked "
-                    + "against something that was not a clock.";
-        }
-        return "Write one of these into the book. The book is what you steer by, and it will not be checked today.";
+        return Bearings.RATED_AT.formatted(Bearings.rateLabel(c),
+                Bearings.ratedWhenLabel(c, b.day));
     }
 
     void drawBookPanel() {
         double x = RIGHT_X, y = 150;
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("THE SHIP'S BOOK", x, y);
+        gc.fillText(Bearings.BOOK_HEAD, x, y);
         y += 28;
 
         gc.setFont(F_MONO);
@@ -416,7 +338,7 @@ public class BearingsScreen extends UiScreen {
         gc.fillText(String.valueOf(Math.round(b.book)), x, y);
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("of " + (int) Bearings.NEEDED + " miles", x + 74, y);
+        gc.fillText(Bearings.OF_MILES, x + 74, y);
         y += 16;
 
         // The bar is the book's confidence, which is not the same thing as
@@ -427,22 +349,22 @@ public class BearingsScreen extends UiScreen {
         gc.fillRect(x, y, RIGHT_W * b.progress(), 5);
         y += 34;
 
-        row(x, y, "last looked", b.everLooked ? ageLabel(b.day - b.lastSightDay) : "never");
+        row(x, y, Bearings.ROW_LAST_LOOKED,
+                b.everLooked ? Bearings.ageLabel(b.day - b.lastSightDay) : Bearings.NEVER);
         y += 22;
         if (b.everLooked) {
             double off = b.lastCorrected;
-            String dir = off > 0 ? "ahead of the sea" : "behind the sea";
-            row(x, y, "and found", Math.round(Math.abs(off)) + " miles " + dir);
+            row(x, y, Bearings.ROW_AND_FOUND, Bearings.foundLine(off));
             y += 22;
         }
-        row(x, y, "looks used", String.valueOf(b.sightings));
+        row(x, y, Bearings.ROW_LOOKS_USED, String.valueOf(b.sightings));
         y += 22;
-        row(x, y, "days left", String.valueOf(Math.max(0, Bearings.DAYS - b.day)));
+        row(x, y, Bearings.ROW_DAYS_LEFT, String.valueOf(Math.max(0, Bearings.DAYS - b.day)));
         y += 40;
 
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("THE CLOCKS", x, y);
+        gc.fillText(Bearings.CLOCKS_HEAD, x, y);
         y += 26;
         for (int i = 0; i < 2; i++) {
             Bearings.Clock c = b.clocks.get(i);
@@ -451,16 +373,15 @@ public class BearingsScreen extends UiScreen {
             gc.fillText(c.name, x, y);
             gc.setFont(F_MONO_S);
             gc.setFill(INK);
-            gc.fillText(rateLabel(c), x + 34, y);
+            gc.fillText(Bearings.rateLabel(c), x + 34, y);
             gc.setFont(F_SMALL);
             gc.setFill(FAINT);
-            gc.fillText(ratedWhenLabel(c), x + 92, y);
+            gc.fillText(Bearings.ratedWhenLabel(c, b.day), x + 92, y);
             y += 24;
         }
 
         y += 10;
-        for (String line : wrap("A rate is only as good as the day it was written. The clocks do not tell you when they have moved.",
-                F_SMALL, RIGHT_W)) {
+        for (String line : wrap(Bearings.RATE_NOTE, F_SMALL, RIGHT_W)) {
             gc.setFont(F_SMALL);
             gc.setFill(FAINT);
             gc.fillText(line, x, y);
@@ -483,17 +404,10 @@ public class BearingsScreen extends UiScreen {
         double y = 150;
         gc.setFont(F_HEAD);
         gc.setFill(GOLD);
-        gc.fillText("You have the sun.", M, y);
+        gc.fillText(Bearings.SIGHT_HEAD, M, y);
         y += 56;
 
-        double off = b.lastCorrected;
-        String was = off > 0
-                ? "Your book was " + Math.round(Math.abs(off)) + " miles ahead of the sea."
-                : (off < 0
-                    ? "Your book was " + Math.round(Math.abs(off)) + " miles behind the sea."
-                    : "Your book was exactly on the sea. It has happened once before, to somebody else.");
-
-        for (String line : wrap(was, F_SCENE, LEFT_W)) {
+        for (String line : wrap(Bearings.sightWas(b.lastCorrected), F_SCENE, LEFT_W)) {
             gc.setFont(F_SCENE);
             gc.setFill(INK);
             gc.fillText(line, M, y);
@@ -508,13 +422,13 @@ public class BearingsScreen extends UiScreen {
             gc.fillText(c.name, M, y);
             gc.setFont(F_SCENE);
             gc.setFill(INK);
-            gc.fillText("is running " + (c.rated > 0 ? "+" : "") + Math.round(c.rated)
-                    + " miles a day, and the book now says so.", M + 40, y);
+            gc.fillText(Bearings.SIGHT_RERATED.formatted(c.name, Bearings.rateLabel(c)),
+                    M + 40, y);
             y += 32;
         }
 
         y += 12;
-        for (String line : wrap(sightProse(), F_SCENE, LEFT_W)) {
+        for (String line : wrap(Bearings.SIGHT_PROSE, F_SCENE, LEFT_W)) {
             gc.setFont(F_SCENE);
             gc.setFill(Color.web("#B9B9CC"));
             gc.fillText(line, M, y);
@@ -524,13 +438,7 @@ public class BearingsScreen extends UiScreen {
         drawBookPanel();
         gc.setFont(F_SMALL);
         gc.setFill(GOLD);
-        gc.fillText("ENTER to go on.", M, H - 76);
-    }
-
-    String sightProse() {
-        return "The correction is written into the book and both clocks are re-rated, and you have spent most "
-                + "of the day doing it. What you know now is true today. Nothing about it says anything about "
-                + "tomorrow, and tonight the rates will move again.";
+        gc.fillText(Bearings.GO_ON, M, H - 76);
     }
 
     // ---------------------------------------------------------------- end
@@ -539,10 +447,10 @@ public class BearingsScreen extends UiScreen {
         double y = 128;
         gc.setFont(F_HEAD);
         gc.setFill(b.found ? GREEN : RED);
-        gc.fillText(headline(), M, y);
+        gc.fillText(b.headline(), M, y);
 
         y = 184;
-        for (String line : wrap(verdict(), F_SCENE, W - 2 * M)) {
+        for (String line : wrap(b.verdict(), F_SCENE, W - 2 * M)) {
             gc.setFont(F_SCENE);
             gc.setFill(INK);
             gc.fillText(line, M, y);
@@ -551,13 +459,13 @@ public class BearingsScreen extends UiScreen {
 
         gc.setFont(F_SMALL);
         gc.setFill(FAINT);
-        gc.fillText("THE VOYAGE", M, 288);
+        gc.fillText(Bearings.VOYAGE_HEAD, M, 288);
         gc.setFont(F_TINY);
-        gc.fillText("day     sky      wrote      had      off by", M, 310);
+        gc.fillText(Bearings.VOYAGE_COLS, M, 310);
         drawVoyage(328);
 
         double cy = 494;
-        for (String line : wrap(closing(), F_SCENE, W - 2 * M)) {
+        for (String line : wrap(b.closing(), F_SCENE, W - 2 * M)) {
             if (line.isEmpty()) { cy += 12; continue; }   // a paragraph break is not a line
             gc.setFont(F_SCENE);
             gc.setFill(Color.web("#B9B9CC"));
@@ -567,36 +475,7 @@ public class BearingsScreen extends UiScreen {
 
         gc.setFont(F_SMALL);
         gc.setFill(GOLD);
-        gc.fillText("R to sail it again.  ENTER for the library.", M, H - 76);
-    }
-
-    String headline() {
-        return switch (b.ending) {
-            case "found" -> "You raise the island at dawn.";
-            case "short" -> "You call for land, and there is no land.";
-            case "past" -> "You call for land, and you are already past it.";
-            default -> "The season turns before you get there.";
-        };
-    }
-
-    String verdict() {
-        long here = Math.round(b.finalTrue);
-        long called = Math.round(b.book);
-        long off = Math.round(Math.abs(b.miss()));
-        return switch (b.ending) {
-            case "found" -> "You called for land at " + called + " miles by the book, and you were at "
-                    + here + ". The book was " + off + " miles out, and " + off + " miles is inside the "
-                    + "error a landfall can absorb.";
-            case "short" -> "You called for land at " + called + " miles by the book. You were at " + here
-                    + " -- " + off + " miles short, with nothing on the horizon in any direction and no "
-                    + "way to know which way to beat.";
-            case "past" -> "You called for land at " + called + " miles by the book. You were at " + here
-                    + " -- " + off + " miles beyond the island, which is now somewhere behind you in a "
-                    + "great deal of water.";
-            default -> "The book never reached " + (long) Bearings.NEEDED + ". The season turned, and you "
-                    + "put the helm over and went back. You were at " + here + " miles, which is " + off
-                    + " miles short of where you needed to be.";
-        };
+        gc.fillText(Bearings.AGAIN, M, H - 76);
     }
 
     void drawVoyage(double top) {
@@ -616,7 +495,8 @@ public class BearingsScreen extends UiScreen {
             gc.setFill(DIM);
             gc.fillText(Bearings.weatherName(d.weather), x + 44, y);
 
-            String wrote = d.pick == Bearings.Pick.SIGHT ? "looked" : String.valueOf(Math.round(d.recorded));
+            String wrote = d.pick == Bearings.Pick.SIGHT ? Bearings.LOOKED
+                    : String.valueOf(Math.round(d.recorded));
             gc.setFill(d.pick == Bearings.Pick.SIGHT ? GOLD : INK);
             gc.fillText(wrote, x + 116, y);
 
@@ -626,26 +506,6 @@ public class BearingsScreen extends UiScreen {
             gc.setFill(Math.abs(off) <= Bearings.TOLERANCE ? DIM : RED);
             gc.fillText((off >= 0 ? "+" : "") + Math.round(off), x + 286, y);
         }
-    }
-
-    String closing() {
-        int looks = b.sightings;
-        String first = switch (Math.min(looks, 3)) {
-            case 0 -> "You never looked. The book was a perfectly consistent account of a voyage that was "
-                    + "happening somewhere else, and there was nothing in it that could have told you so.";
-            case 1 -> "You looked once. One honest reading in sixteen days, and the whole voyage after it "
-                    + "rested on a rate that was true on the afternoon you took it.";
-            case 2 -> "You looked twice. Two afternoons of truth in sixteen days, and between them the book "
-                    + "ran on its own, which is what a book does.";
-            default -> "You looked " + looks + " times, and every one of them cost you the day you would "
-                    + "otherwise have spent getting there.";
-        };
-        return first + "\n\n"
-                + "Two clocks that agree have agreed about nothing. They share a box, a temperature and a "
-                + "knock, and when the same cause moves both of them they will sit side by side in perfect "
-                + "agreement and both be wrong by the same amount. The only instrument on board that cannot "
-                + "share their mistakes is the sky, and the sky is only open on days you would rather be "
-                + "sailing.";
     }
 
     void hint(String text) {

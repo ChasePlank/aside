@@ -49,9 +49,135 @@ public final class SelfTest {
         landfall();
         theSeason();
         balance();
+        thePhoneBuild();
         System.out.println((checks - failed) + "/" + checks + " checks passed"
                 + (failed == 0 ? "" : "  --  " + failed + " FAILED"));
         if (failed > 0) System.exit(1);
+    }
+
+    // ------------------------------------------------------- the phone build
+
+    /**
+     * The generated phone build, and the words it carries.
+     *
+     * A generated file that has gone stale is worse than no file: it is a
+     * second copy of the game quietly disagreeing with the first. So this
+     * regenerates and compares, rather than spot-checking. If it fails, run
+     * aside.games.bearings.WebBearings from the repository root.
+     *
+     * The prose checks are the other half. The phone build reads its strings
+     * out of {@link Bearings}; these assert that it actually carries them,
+     * so a line moved into the model but never emitted is caught here rather
+     * than by a player seeing a blank.
+     */
+    static void thePhoneBuild() throws Exception {
+        Path out = Path.of("web", "bearings.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no web/bearings.html from here -- run from the repository root)");
+            return;
+        }
+        String generated;
+        try {
+            generated = WebBearings.html();
+        } catch (Exception e) {
+            System.out.println("       (no template from here: " + e.getMessage() + ")");
+            return;
+        }
+        ok(generated.equals(Files.readString(out)),
+                "web/bearings.html is current -- regenerate it with aside.games.bearings.WebBearings");
+
+        for (String line : fixedLines()) {
+            ok(generated.contains(WebBearings.str(line)), "the phone build carries: " + line);
+        }
+        // The lines that depend on a number are emitted as templates, so what
+        // has to be present is the template, not any one filling of it.
+        for (String t : new String[]{Bearings.PROMPT_LONG, Bearings.RATED_AT,
+                Bearings.SIGHT_WAS, Bearings.SIGHT_RERATED, Bearings.VERDICT_FOUND,
+                Bearings.VERDICT_SHORT, Bearings.VERDICT_PAST, Bearings.VERDICT_SEASON,
+                Bearings.CLOSING_MANY, Bearings.DAY_OF}) {
+            ok(generated.contains(WebBearings.str(t)), "the phone build carries the template: " + t);
+        }
+        for (String[] r : Bearings.RULES) {
+            ok(generated.contains(WebBearings.str(r[1])), "the phone build carries the rule: " + r[1]);
+        }
+        for (Bearings.Weather w : Bearings.Weather.values()) {
+            ok(generated.contains(WebBearings.str(Bearings.weatherLine(w))),
+                    "the phone build carries the " + w + " weather line");
+            for (String p : dayProsePool(w)) {
+                ok(generated.contains(WebBearings.str(p)),
+                        "the phone build carries a " + w + " day: " + p.substring(0, 28) + "...");
+            }
+        }
+        // And the simulation itself: the constants the port cannot invent.
+        for (String c : new String[]{"9E3779B97F4A7C15", "BF58476D1CE4E5B9",
+                "94D049BB133111EB", "DRIFT_VALUE", "DRIFT_WEIGHT"}) {
+            ok(generated.contains(c), "the phone build carries the draw: " + c);
+        }
+    }
+
+    static String[] dayProsePool(Bearings.Weather w) {
+        return switch (w) {
+            case FAIR -> Bearings.DAY_FAIR;
+            case CLEAR -> Bearings.DAY_CLEAR;
+            case FOUL -> Bearings.DAY_FOUL;
+        };
+    }
+
+    /** Every fixed line the game says, in one place, so the check above is
+     *  a list rather than a sample. */
+    static java.util.List<String> fixedLines() {
+        java.util.List<String> l = new java.util.ArrayList<>();
+        l.addAll(java.util.List.of(Bearings.OPENING));
+        l.add(Bearings.RULES_HEADING);
+        l.add(Bearings.START_LINE);
+        l.add(Bearings.GO_ON);
+        l.add(Bearings.AGAIN);
+        l.add(Bearings.BTN_BEGIN);
+        l.add(Bearings.BTN_GO_ON);
+        l.add(Bearings.BTN_AGAIN);
+        l.add(Bearings.DAY_HINT);
+        l.add(Bearings.VOYAGE_OVER);
+        l.add(Bearings.PROMPT_NEVER);
+        l.add(Bearings.PROMPT_DEFAULT);
+        l.add(Bearings.WHAT_EACH_CLOCK);
+        l.add(Bearings.CLOCK_A);
+        l.add(Bearings.CLOCK_B);
+        l.add(Bearings.TAKE_SIGHT);
+        l.add(Bearings.SKY_OPEN);
+        l.add(Bearings.SKY_CLOSED);
+        l.add(Bearings.BOOK_HEAD);
+        l.add(Bearings.CLOCKS_HEAD);
+        l.add(Bearings.OF_MILES);
+        l.add(Bearings.ROW_LAST_LOOKED);
+        l.add(Bearings.ROW_AND_FOUND);
+        l.add(Bearings.ROW_LOOKS_USED);
+        l.add(Bearings.ROW_DAYS_LEFT);
+        l.add(Bearings.NEVER);
+        l.add(Bearings.AHEAD);
+        l.add(Bearings.BEHIND);
+        l.add(Bearings.RATE_NOTE);
+        l.add(Bearings.IN_PORT);
+        l.add(Bearings.SIGHT_HEAD);
+        l.add(Bearings.SIGHT_EXACT);
+        l.add(Bearings.SIGHT_AHEAD);
+        l.add(Bearings.SIGHT_BEHIND);
+        l.add(Bearings.SIGHT_PROSE);
+        l.add(Bearings.VOYAGE_HEAD);
+        l.add(Bearings.VOYAGE_COLS);
+        l.add(Bearings.LOOKED);
+        l.add(Bearings.HEAD_FOUND);
+        l.add(Bearings.HEAD_SHORT);
+        l.add(Bearings.HEAD_PAST);
+        l.add(Bearings.HEAD_SEASON);
+        l.add(Bearings.CLOSING_NONE);
+        l.add(Bearings.CLOSING_ONE);
+        l.add(Bearings.CLOSING_TWO);
+        l.add(Bearings.CLOSING_SHARED);
+        l.add(Bearings.WORDMARK);
+        l.add(Bearings.WHERE);
+        l.add(Bearings.ageLabel(0));
+        l.add(Bearings.ageLabel(1));
+        return l;
     }
 
     // ------------------------------------------------------------ content

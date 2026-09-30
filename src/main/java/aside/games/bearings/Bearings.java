@@ -301,6 +301,283 @@ public final class Bearings {
         return (h >>> 11) * 0x1.0p-53;
     }
 
+    // ---- the words --------------------------------------------------------
+    //
+    // Every fixed line the game says lives here, not in the screen.
+    //
+    // Not tidiness: the phone build reads these strings, and a second copy
+    // of the prose in a template is a second copy of the game quietly
+    // disagreeing with the first. The screen draws them; the generator
+    // emits them; neither owns them.
+
+    public static final String WORDMARK = "bearings";
+    public static final String WHERE = "the eastern passage";
+    /** %s is the day number, %s the number of days. */
+    public static final String DAY_OF = "day %s of %s";
+    public static final String VOYAGE_OVER = "the voyage is over";
+
+    public static final String[] OPENING = {
+        "You are the navigator, and the island is " + (int) NEEDED
+                + " miles east of you, and there is nothing between you and it "
+                + "but open water and two chronometers.",
+        "Every day you write the day's run into the ship's book. The book is what you steer by. "
+                + "You cannot write down where you are -- only how far you believe you have run -- "
+                + "and the two clocks will not agree about it.",
+        "Both were rated in port. A rate does not stay rated. It moves at night, and nothing says so.",
+        "The only instrument on board that reports the truth is the sky. It has to be clear, and "
+                + "looking costs you most of the day.",
+    };
+
+    public static final String RULES_HEADING = "HOW IT GOES";
+
+    public static final String[][] RULES = {
+        {"1 / 2", "Write the day's run into the book from Clock A or Clock B. You will steer by what you write."},
+        {"3", "Heave to and take a sighting. Clear days only. Puts the book back on the sea and re-rates both clocks. Costs most of the day."},
+        {"", "When the book reaches " + (int) NEEDED + " you call for land. Whether you are there is not up to the book."},
+        {"", "When the two clocks disagree, one of them has moved. When they agree, you have learned nothing."},
+    };
+
+    public static final String START_LINE = "ENTER to begin.";
+    public static final String GO_ON = "ENTER to go on.";
+    public static final String AGAIN = "R to sail it again.  ENTER for the library.";
+    // The phone has buttons, not keys, so it needs the verb without the key.
+    // Stripping "ENTER to " off the desktop line would have left the end
+    // screen offering "for the library" on a button that sails again.
+    public static final String BTN_BEGIN = "Begin";
+    public static final String BTN_GO_ON = "Go on";
+    public static final String BTN_AGAIN = "Sail it again";
+    public static final String DAY_HINT = "1 / 2 to write the run, 3 to look. ESC for the library.";
+
+    public static final String WEATHER_FAIR = "Fair wind, and the sea is working with you.";
+    public static final String WEATHER_CLEAR = "Clear. Nothing between the glass and the sun.";
+    public static final String WEATHER_FOUL = "Foul. Grey from rail to rail.";
+
+    public static final String[] DAY_FAIR = {
+        "The wind holds all day and the sea runs with you. Nobody on board has anything to say about the clocks.",
+        "Good going, and the log line straight behind. The two brass faces sit side by side in their box and neither of them is talking.",
+        "A steady day. You write the run in the book, and the book gets a little further from the sea.",
+        "The ship works well. The clocks work. Nothing about the day tells you anything you did not already believe.",
+    };
+    public static final String[] DAY_CLEAR = {
+        "Not a cloud. The horizon is a ruled line and the sun is where the almanac says it should be, which is the only honest thing on board.",
+        "Clear from rail to rail. You could have the truth off the glass in an hour, and you would lose the afternoon's run doing it.",
+        "The sky is open. Everything you have written in the book is checkable today, and none of it has been checked.",
+    };
+    public static final String[] DAY_FOUL = {
+        "Grey from rail to rail and the sea coming over the bow. You make what you can and you write it down.",
+        "No sun, no stars, no horizon. The book is the only world there is today.",
+        "Bad weather. The clocks are in their box, and the box is the only thing on board that claims to know anything.",
+    };
+
+    public static final String PROMPT_NEVER =
+        "You have not looked at anything outside this ship yet. Everything on the right is what you "
+        + "wrote down, and none of it has been checked.";
+    /** %s is how long ago the last sighting was. */
+    public static final String PROMPT_LONG =
+        "It has been %s since anything on the right was checked against something that was not a clock.";
+    public static final String PROMPT_DEFAULT =
+        "Write one of these into the book. The book is what you steer by, and it will not be checked today.";
+
+    public static final String WHAT_EACH_CLOCK = "What each clock would have you write:";
+    public static final String CLOCK_A = "Clock A";
+    public static final String CLOCK_B = "Clock B";
+    public static final String TAKE_SIGHT = "Take a sighting";
+    public static final String SKY_OPEN = "the sky is open -- this is the only honest reading on board";
+    public static final String SKY_CLOSED = "the sky is closed";
+    public static final String MILES = " miles";
+
+    public static final String BOOK_HEAD = "THE SHIP'S BOOK";
+    public static final String CLOCKS_HEAD = "THE CLOCKS";
+    public static final String OF_MILES = "of " + (int) NEEDED + " miles";
+    public static final String ROW_LAST_LOOKED = "last looked";
+    public static final String ROW_AND_FOUND = "and found";
+    public static final String ROW_LOOKS_USED = "looks used";
+    public static final String ROW_DAYS_LEFT = "days left";
+    public static final String NEVER = "never";
+    public static final String AHEAD = "ahead of the sea";
+    public static final String BEHIND = "behind the sea";
+    /** The bare direction words, for the sighting line. */
+    public static final String SIGHT_AHEAD = "ahead of";
+    public static final String SIGHT_BEHIND = "behind";
+    public static final String RATE_NOTE =
+        "A rate is only as good as the day it was written. The clocks do not tell you when they have moved.";
+    /** %s is the rate, e.g. "+7". */
+    public static final String RATED_AT = "rated %s, %s";
+    public static final String IN_PORT = "in port";
+
+    public static final String SIGHT_HEAD = "You have the sun.";
+    /** %s is the distance, %s the direction. */
+    public static final String SIGHT_WAS =
+        "Your book was %s miles %s the sea.";
+    public static final String SIGHT_EXACT =
+        "Your book was exactly on the sea. It has happened once before, to somebody else.";
+    /** %s is the clock name, %s the rate. */
+    public static final String SIGHT_RERATED =
+        "%s is running %s miles a day, and the book now says so.";
+    public static final String SIGHT_PROSE =
+        "The correction is written into the book and both clocks are re-rated, and you have spent most "
+        + "of the day doing it. What you know now is true today. Nothing about it says anything about "
+        + "tomorrow, and tonight the rates will move again.";
+
+    public static final String VOYAGE_HEAD = "THE VOYAGE";
+    public static final String VOYAGE_COLS = "day     sky      wrote      had      off by";
+    public static final String LOOKED = "looked";
+
+    public static final String HEAD_FOUND = "You raise the island at dawn.";
+    public static final String HEAD_SHORT = "You call for land, and there is no land.";
+    public static final String HEAD_PAST = "You call for land, and you are already past it.";
+    public static final String HEAD_SEASON = "The season turns before you get there.";
+
+    /** %s called, %s here, %s off. */
+    public static final String VERDICT_FOUND =
+        "You called for land at %s miles by the book, and you were at %s. The book was %s miles out, "
+        + "and %s miles is inside the error a landfall can absorb.";
+    /** %s called, %s here, %s off. */
+    public static final String VERDICT_SHORT =
+        "You called for land at %s miles by the book. You were at %s -- %s miles short, with nothing "
+        + "on the horizon in any direction and no way to know which way to beat.";
+    /** %s called, %s here, %s off. */
+    public static final String VERDICT_PAST =
+        "You called for land at %s miles by the book. You were at %s -- %s miles beyond the island, "
+        + "which is now somewhere behind you in a great deal of water.";
+    /** %s needed, %s here, %s off. */
+    public static final String VERDICT_SEASON =
+        "The book never reached %s. The season turned, and you put the helm over and went back. You "
+        + "were at %s miles, which is %s miles short of where you needed to be.";
+
+    public static final String CLOSING_NONE =
+        "You never looked. The book was a perfectly consistent account of a voyage that was "
+        + "happening somewhere else, and there was nothing in it that could have told you so.";
+    public static final String CLOSING_ONE =
+        "You looked once. One honest reading in sixteen days, and the whole voyage after it "
+        + "rested on a rate that was true on the afternoon you took it.";
+    public static final String CLOSING_TWO =
+        "You looked twice. Two afternoons of truth in sixteen days, and between them the book "
+        + "ran on its own, which is what a book does.";
+    /** %s is the number of looks. */
+    public static final String CLOSING_MANY =
+        "You looked %s times, and every one of them cost you the day you would otherwise have "
+        + "spent getting there.";
+    public static final String CLOSING_SHARED =
+        "Two clocks that agree have agreed about nothing. They share a box, a temperature and a "
+        + "knock, and when the same cause moves both of them they will sit side by side in perfect "
+        + "agreement and both be wrong by the same amount. The only instrument on board that cannot "
+        + "share their mistakes is the sky, and the sky is only open on days you would rather be "
+        + "sailing.";
+
+    // ---- the lines that depend on a number, as functions of it ------------
+
+    /**
+     * The day counter.
+     *
+     * After a sighting the day has already turned over and the screen is
+     * still showing the day the look was taken on, so the two screens do
+     * not compute it the same way -- which is exactly why it lives here
+     * rather than being written twice.
+     */
+    public static String dayLabel(int day, boolean onSightScreen, boolean finished) {
+        if (finished) return VOYAGE_OVER;
+        int shown = onSightScreen ? day : day + 1;
+        return DAY_OF.formatted(Math.min(shown, DAYS), DAYS);
+    }
+
+    /**
+     * What the book panel says the last sighting found.
+     *
+     * A correction of exactly zero has no direction, and "0 miles behind
+     * the sea" directly under "your book was exactly on the sea" reads as a
+     * mistake -- which it was.
+     */
+    public static String foundLine(double off) {
+        if (off == 0) return "0" + MILES;
+        return Math.round(Math.abs(off)) + MILES + " " + (off > 0 ? AHEAD : BEHIND);
+    }
+
+    public static String ageLabel(int days) {
+        if (days <= 0) return "today";
+        if (days == 1) return "yesterday";
+        return days + " days ago";
+    }
+
+    /** A rate with its sign, because the sign is the whole point of it. */
+    public static String rateLabel(Clock c) {
+        return (c.rated > 0 ? "+" : "") + Math.round(c.rated);
+    }
+
+    /**
+     * When a clock was last rated. A rating made before the ship sailed is
+     * not "yesterday" -- it is the one the voyage is spending.
+     */
+    public static String ratedWhenLabel(Clock c, int day) {
+        return c.ratedOn < 0 ? IN_PORT : ageLabel(c.ageOn(day));
+    }
+
+    public static String weatherLine(Weather w) {
+        return switch (w) {
+            case FAIR -> WEATHER_FAIR;
+            case CLEAR -> WEATHER_CLEAR;
+            case FOUL -> WEATHER_FOUL;
+        };
+    }
+
+    /** The day's colour, chosen from the same counter-based draw the
+     *  simulation uses, so a seed replays the same words. */
+    public String dayProse() {
+        String[] pool = switch (weather) {
+            case FAIR -> DAY_FAIR;
+            case CLEAR -> DAY_CLEAR;
+            case FOUL -> DAY_FOUL;
+        };
+        return pool[(int) Math.floor(rand(90) * pool.length) % pool.length];
+    }
+
+    public String dayPrompt() {
+        if (!everLooked) return PROMPT_NEVER;
+        if (day - lastSightDay >= 5) {
+            return PROMPT_LONG.formatted(ageLabel(day - lastSightDay));
+        }
+        return PROMPT_DEFAULT;
+    }
+
+    public String headline() {
+        return switch (ending) {
+            case "found" -> HEAD_FOUND;
+            case "short" -> HEAD_SHORT;
+            case "past" -> HEAD_PAST;
+            default -> HEAD_SEASON;
+        };
+    }
+
+    public String verdict() {
+        long here = Math.round(finalTrue);
+        long called = Math.round(book);
+        long off = Math.round(Math.abs(miss()));
+        return switch (ending) {
+            case "found" -> VERDICT_FOUND.formatted(called, here, off, off);
+            case "short" -> VERDICT_SHORT.formatted(called, here, off);
+            case "past" -> VERDICT_PAST.formatted(called, here, off);
+            default -> VERDICT_SEASON.formatted((long) NEEDED, here, off);
+        };
+    }
+
+    public String closing() {
+        int looks = sightings;
+        String first = switch (Math.min(looks, 3)) {
+            case 0 -> CLOSING_NONE;
+            case 1 -> CLOSING_ONE;
+            case 2 -> CLOSING_TWO;
+            default -> CLOSING_MANY.formatted(looks);
+        };
+        return first + "\n\n" + CLOSING_SHARED;
+    }
+
+    /** What the sighting screen says the book was, given the correction. */
+    public static String sightWas(double off) {
+        if (off == 0) return SIGHT_EXACT;
+        return SIGHT_WAS.formatted(Math.round(Math.abs(off)),
+                off > 0 ? SIGHT_AHEAD : SIGHT_BEHIND);
+    }
+
     // ---- storage ----------------------------------------------------------
 
     public String serialize() {
