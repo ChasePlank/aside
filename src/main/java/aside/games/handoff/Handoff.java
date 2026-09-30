@@ -45,6 +45,79 @@ public final class Handoff {
      */
     public static final int ORDERS_HELD = 3;
 
+    // ------------------------------------------------------------- the voice
+
+    /**
+     * Every fixed line the game says, kept here and not in the screen.
+     *
+     * There are two builds now -- the JavaFX screen and the phone build -- and
+     * a sentence kept in {@link HandoffScreen} is a sentence the phone build
+     * does not have. The same rule as Testimony: the prose lives in the model,
+     * and both windows read it. Edit a sentence here, never in a screen.
+     */
+    public static final String WORDMARK = "handoff";
+    public static final String SUBTITLE = "a light on a rock";
+
+    public static final String WHAT_YOU_CAN_SEE = "WHAT YOU CAN SEE";
+    public static final String WHAT_YOU_DO = "WHAT YOU DO";
+    public static final String THE_ORDERS = "THE ORDERS";
+    public static final String KEPT_BEFORE = "B. kept this light before you";
+    public static final String APPLIES_TONIGHT = "this one applies tonight";
+
+    public static final String TAG_AS_WRITTEN = "as written";
+    public static final String TAG_AS_NEEDED = "as it needs";
+    public static final String TAG_NOTHING = "nothing";
+
+    public static final String YOU_LEARNED = "YOU LEARNED A LINE";
+    public static final String LEARNED_NOTHING_FOLLOW =
+        "You learned nothing you did not already have.";
+    public static final String LEARNED_NOTHING_FOLLOW_2 =
+        "Bell's line was already in the book.";
+    public static final String LEARNED_NOTHING_HOLD =
+        "You learned nothing. Nothing was written down, so nothing carries.";
+
+    public static final String WRITING_HEADING = "What you leave him";
+    public static final String WRITING_INTRO =
+        "Five watches are behind you. He gets three lines and no nights of his own. "
+      + "You do not know what his night will be.";
+    public static final String BELLS_FOUR = "BELL'S FOUR";
+    public static final String WHAT_YOU_LEARNED = "WHAT YOU LEARNED";
+    public static final String WHAT_YOU_LEAVE = "WHAT YOU LEAVE HIM";
+    public static final String WRITTEN = "written";
+    public static final String LEARNED_NOTHING_EMPTY =
+        "Nothing. You never did anything but what you were told.";
+
+    public static final String WHAT_HE_COULD_SEE = "WHAT HE COULD SEE";
+    public static final String WHAT_HE_DID = "WHAT HE DID";
+    public static final String BECAUSE_YOU_WROTE = "because you wrote: ";
+    public static final String WHAT_YOU_LEFT_HIM = "WHAT YOU LEFT HIM";
+    public static final String READ_IN_THIS_ORDER = "read in this order";
+
+    public static final String THE_ORDERS_YOU_LEFT = "The orders you left";
+    public static final String STANDING_ORDER =
+        "A standing order is a judgment with the judge taken out of it, sent on ahead "
+      + "to a night nobody has seen.";
+
+    /**
+     * The verdict line, as a template.
+     *
+     * Same move as Testimony's closings: the numbers are filled in by whoever
+     * draws it, so the sentence itself is written once. The phone build carries
+     * the template and substitutes; it does not own the sentence and cannot
+     * write a different one.
+     */
+    public static final String VERDICT =
+        "%good% of the %raised% things the night raised were met well.";
+
+    /** "line 1", "line 2", "line 3" -- the slots, in the order you wrote them. */
+    public static String lineLabel(int n) { return "line " + n; }
+
+    /** The verdict with its numbers in it. */
+    public static String verdict(int good, int raised) {
+        return VERDICT.replace("%good%", String.valueOf(good))
+                      .replace("%raised%", String.valueOf(raised));
+    }
+
     // ------------------------------------------------------------- signals
 
     /**
@@ -446,8 +519,7 @@ public final class Handoff {
         s.allBell = !written.isEmpty();
         for (Order ord : written) if (!ord.bell) s.allBell = false;
 
-        s.verdict = s.good + " of the " + s.raised
-                  + " things the night raised were met well.";
+        s.verdict = verdict(s.good, s.raised);
 
         if (s.allBell) {
             s.closing = "You gave him Bell's night. It was not Bell's night.";
@@ -490,6 +562,31 @@ public final class Handoff {
         all.add(E1); all.add(E2); all.add(E3); all.add(E4); all.add(E5);
         return all;
     }
+
+    /** The ten signals, in the order they are declared. */
+    public static List<String> signalIds() {
+        return new ArrayList<>(SIGNALS.keySet());
+    }
+
+    /**
+     * What an action does on the successor's night, and whether it was right.
+     *
+     * Exposed so the phone build can carry the words without carrying the
+     * decision: which action happens is in the generated table, not in
+     * anything a phone runs.
+     */
+    public static String actText(String action) {
+        Act a = ACTS.get(action);
+        return a == null ? action : a.text;
+    }
+
+    public static boolean actGood(String action) {
+        Act a = ACTS.get(action);
+        return a != null && a.good;
+    }
+
+    /** What it means when nothing you wrote answered a part of the station. */
+    public static String unmetText(Concern c) { return UNMET.get(c); }
 
     public static Order orderById(String id) {
         for (Order o : allOrders()) if (o.id.equals(id)) return o;

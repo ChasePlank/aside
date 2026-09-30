@@ -149,11 +149,11 @@ public class HandoffScreen extends UiScreen {
 
         gc.setFill(ACCENT);
         gc.setFont(F_TITLE);
-        gc.fillText("handoff", M, 76);
+        gc.fillText(Handoff.WORDMARK, M, 76);
 
         gc.setFont(F_TINY);
         gc.setFill(FAINT);
-        gc.fillText("a light on a rock", M + 132, 76);
+        gc.fillText(Handoff.SUBTITLE, M + 132, 76);
 
         switch (game.phase) {
             case WATCH      -> drawWatch();
@@ -204,7 +204,7 @@ public class HandoffScreen extends UiScreen {
         }
 
         y += 26;
-        label("WHAT YOU CAN SEE", M, y);
+        label(Handoff.WHAT_YOU_CAN_SEE, M, y);
         y += 26;
         gc.setFont(F_BODY);
         for (String s : w.signals) {
@@ -217,7 +217,7 @@ public class HandoffScreen extends UiScreen {
 
         // The three ways, along the bottom.
         double by = 566;
-        label("WHAT YOU DO", M, by);
+        label(Handoff.WHAT_YOU_DO, M, by);
         by += 30;
         Handoff.Order applying = game.applying();
         for (int i = 0; i < w.options.size(); i++) {
@@ -226,9 +226,9 @@ public class HandoffScreen extends UiScreen {
             gc.setFont(F_ITEM);
             gc.setFill(sel ? ACCENT : DIM);
             String tag = switch (o.kind) {
-                case FOLLOW -> "as written";
-                case JUDGE -> "as it needs";
-                case HOLD -> "nothing";
+                case FOLLOW -> Handoff.TAG_AS_WRITTEN;
+                case JUDGE -> Handoff.TAG_AS_NEEDED;
+                case HOLD -> Handoff.TAG_NOTHING;
             };
             String shown = (sel ? "\u25B6  " : "   ") + (i + 1) + ".  " + o.text;
             gc.fillText(shown, M + 8, by);
@@ -247,10 +247,10 @@ public class HandoffScreen extends UiScreen {
         Handoff.Order applying = game.applying();
         double h = 300;
         panel(x, y, w, h);
-        label("THE ORDERS", x + 22, y + 34);
+        label(Handoff.THE_ORDERS, x + 22, y + 34);
         gc.setFont(F_TINY);
         gc.setFill(FAINT);
-        gc.fillText("B. kept this light before you", x + 22, y + 54);
+        gc.fillText(Handoff.KEPT_BEFORE, x + 22, y + 54);
 
         double ly = y + 92;
         for (Handoff.Order o : Handoff.BELL) {
@@ -271,7 +271,7 @@ public class HandoffScreen extends UiScreen {
             if (on) {
                 gc.setFont(F_TINY);
                 gc.setFill(Color.rgb(242, 193, 78, 0.8));
-                gc.fillText("this one applies tonight", x + 26, ty + 2);
+                gc.fillText(Handoff.APPLIES_TONIGHT, x + 26, ty + 2);
                 ty += 18;
             }
             ly = ty + 22;
@@ -305,7 +305,7 @@ public class HandoffScreen extends UiScreen {
         y += 34;
         if (opt.unlock != null) {
             panel(M, y, 760, 96);
-            label("YOU LEARNED A LINE", M + 22, y + 32);
+            label(Handoff.YOU_LEARNED, M + 22, y + 32);
             gc.setFont(F_POOL);
             gc.setFill(ACCENT);
             double ty = y + 58;
@@ -316,12 +316,12 @@ public class HandoffScreen extends UiScreen {
         } else if (opt.kind == Handoff.Kind.FOLLOW) {
             gc.setFont(F_BODY);
             gc.setFill(FAINT);
-            gc.fillText("You learned nothing you did not already have.", M, y + 20);
-            gc.fillText("Bell's line was already in the book.", M, y + 46);
+            gc.fillText(Handoff.LEARNED_NOTHING_FOLLOW, M, y + 20);
+            gc.fillText(Handoff.LEARNED_NOTHING_FOLLOW_2, M, y + 46);
         } else {
             gc.setFont(F_BODY);
             gc.setFill(FAINT);
-            gc.fillText("You learned nothing. Nothing was written down, so nothing carries.", M, y + 20);
+            gc.fillText(Handoff.LEARNED_NOTHING_HOLD, M, y + 20);
         }
 
         hint("ENTER -- on to the next watch");
@@ -333,12 +333,11 @@ public class HandoffScreen extends UiScreen {
         double y = 122;
         gc.setFont(F_HEAD);
         gc.setFill(BODY);
-        gc.fillText("What you leave him", M, y);
+        gc.fillText(Handoff.WRITING_HEADING, M, y);
         y += 32;
         gc.setFont(F_BODY);
         gc.setFill(Color.rgb(200, 200, 215, 0.8));
-        for (String line : wrap("Five watches are behind you. He gets three lines and no "
-                + "nights of his own. You do not know what his night will be.", F_BODY, 1100)) {
+        for (String line : wrap(Handoff.WRITING_INTRO, F_BODY, 1100)) {
             gc.fillText(line, M, y);
             y += 26;
         }
@@ -352,9 +351,9 @@ public class HandoffScreen extends UiScreen {
         double sx = M + (colW + 20) * 2 + 20;
 
         double labelY = y + 34;
-        label("BELL'S FOUR", lx, labelY);
-        label("WHAT YOU LEARNED", rx, labelY);
-        label("WHAT YOU LEAVE HIM", sx, labelY);
+        label(Handoff.BELLS_FOUR, lx, labelY);
+        label(Handoff.WHAT_YOU_LEARNED, rx, labelY);
+        label(Handoff.WHAT_YOU_LEAVE, sx, labelY);
 
         double ly = labelY + 30, ry = labelY + 30;
         List<Handoff.Order> pool = game.pool();
@@ -381,7 +380,7 @@ public class HandoffScreen extends UiScreen {
             if (held) {
                 gc.setFont(F_TINY);
                 gc.setFill(ACCENT);
-                gc.fillText("written", x, ty + 1);
+                gc.fillText(Handoff.WRITTEN, x, ty + 1);
                 ty += 16;
             }
             if (o.bell) ly = ty + 20; else ry = ty + 20;
@@ -389,8 +388,7 @@ public class HandoffScreen extends UiScreen {
         if (game.unlocked.isEmpty()) {
             gc.setFont(F_POOL);
             gc.setFill(FAINT);
-            for (String line : wrap("Nothing. You never did anything but what you were told.",
-                    F_POOL, colW - 24)) {
+            for (String line : wrap(Handoff.LEARNED_NOTHING_EMPTY, F_POOL, colW - 24)) {
                 gc.fillText(line, rx, ry + 8);
                 ry += 21;
             }
@@ -413,7 +411,7 @@ public class HandoffScreen extends UiScreen {
             panel(x, y, w, h);
             gc.setFont(F_TINY);
             gc.setFill(FAINT);
-            gc.fillText("line " + (i + 1), x + 16, y + 22);
+            gc.fillText(Handoff.lineLabel(i + 1), x + 16, y + 22);
             if (i < game.written.size()) {
                 gc.setFont(F_POOL);
                 gc.setFill(ACCENT);
@@ -457,7 +455,7 @@ public class HandoffScreen extends UiScreen {
         // could see and what he did are the same beat, one moment apart,
         // and stacking them ran the third line off the bottom of the canvas.
         if (!revealed) {
-            label("WHAT HE COULD SEE", M, y);
+            label(Handoff.WHAT_HE_COULD_SEE, M, y);
             y += 26;
             gc.setFont(F_BODY);
             for (String sig : Handoff.SUCCESSION_SIGNALS) {
@@ -469,7 +467,7 @@ public class HandoffScreen extends UiScreen {
             return;
         }
 
-        label("WHAT HE DID", M, y);
+        label(Handoff.WHAT_HE_DID, M, y);
         y += 30;
         Handoff.Succession s = game.succession();
         for (Handoff.Event ev : s.events) {
@@ -484,7 +482,7 @@ public class HandoffScreen extends UiScreen {
             if (ev.by != null) {
                 gc.setFont(F_TINY);
                 gc.setFill(FAINT);
-                gc.fillText("because you wrote: " + ev.by.id, M + 30, y);
+                gc.fillText(Handoff.BECAUSE_YOU_WROTE + ev.by.id, M + 30, y);
                 y += 20;
             }
             y += 12;
@@ -497,10 +495,10 @@ public class HandoffScreen extends UiScreen {
     void drawWrittenPanel(double x, double y, double w) {
         double h = 322;
         panel(x, y, w, h);
-        label("WHAT YOU LEFT HIM", x + 22, y + 34);
+        label(Handoff.WHAT_YOU_LEFT_HIM, x + 22, y + 34);
         gc.setFont(F_TINY);
         gc.setFill(FAINT);
-        gc.fillText("read in this order", x + 22, y + 54);
+        gc.fillText(Handoff.READ_IN_THIS_ORDER, x + 22, y + 54);
 
         double ly = y + 86;
         for (int i = 0; i < game.written.size(); i++) {
@@ -530,7 +528,7 @@ public class HandoffScreen extends UiScreen {
         double y = 122;
         gc.setFont(F_HEAD);
         gc.setFill(BODY);
-        gc.fillText("The orders you left", M, y);
+        gc.fillText(Handoff.THE_ORDERS_YOU_LEFT, M, y);
         y += 40;
 
         gc.setFont(F_BODY);
@@ -571,8 +569,7 @@ public class HandoffScreen extends UiScreen {
         gc.setFont(F_BODY);
         gc.setFill(Color.rgb(200, 200, 215, 0.85));
         double ty = y + 34;
-        for (String line : wrap("A standing order is a judgment with the judge taken out of "
-                + "it, sent on ahead to a night nobody has seen.", F_BODY, 940)) {
+        for (String line : wrap(Handoff.STANDING_ORDER, F_BODY, 940)) {
             gc.fillText(line, M + 22, ty);
             ty += 26;
         }

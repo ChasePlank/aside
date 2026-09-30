@@ -1,0 +1,1285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#07070B">
+<title>handoff</title>
+<style>
+  :root{
+    --bg:#07070B; --ink:#E8E8EF; --dim:#B9B9C6; --faint:#6E6E86;
+    --gold:#F2C14E; --edge:#22222E; --card:#12121A;
+    --red:#C86B5A; --green:#7FD1AE;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:17px/1.55 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:620px; margin:0 auto; padding:22px 18px 24px}
+  header{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
+  .sub{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint)}
+  .label{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+         margin:26px 0 10px}
+  .watchhead{font:12px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+             margin:26px 0 4px}
+  .watchtitle{font-size:21px; color:var(--gold); margin:0 0 12px}
+  .scene{font-size:17px; color:var(--dim); margin:0 0 4px}
+  .para{font-size:17px; color:var(--dim); margin:0 0 16px}
+  .seen{margin:0; padding:0; list-style:none}
+  .seen li{color:var(--dim); font-size:16px; padding:3px 0}
+  .seen li .mk{color:var(--faint); margin-right:8px}
+  .note{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin:8px 0 0}
+  /* The orders are a panel and not prose, on the desktop and here, because the
+     whole game is a written thing sitting next to a situation that has moved.
+     The panel does not change across the five watches. Only the night does. */
+  .panel{background:var(--card); border:1px solid var(--edge); border-radius:12px;
+         padding:14px 16px; margin:0}
+  .panel .ph{font:12px/1.4 Consolas,Menlo,monospace; color:var(--gold); margin:0 0 10px}
+  .order{border-left:3px solid transparent; padding:8px 10px; margin:0 0 6px;
+         font-size:15px; color:#8E8EA2; border-radius:0 8px 8px 0}
+  .order.on{background:#1C1A12; border-left-color:var(--gold); color:var(--gold)}
+  .order .applies{display:block; font:11px/1.5 Arial,Helvetica,sans-serif;
+                  color:#F2C14Ecc; margin-top:5px}
+  .opt{border:1px solid transparent; border-radius:10px; padding:11px 13px; margin:0 0 7px;
+       background:var(--card); cursor:pointer; color:var(--dim); font-size:17px}
+  .opt.sel{background:#1E1E2A; border-color:#3E3E54; box-shadow:inset 3px 0 0 var(--gold)}
+  .opt .mark{color:var(--gold); font:13px/1.6 Consolas,Menlo,monospace; margin-right:8px}
+  .opt .tag{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin-left:8px}
+  .opt.sel .tag{color:#F2C14Eaa}
+  .head{font-size:22px; margin:26px 0 12px}
+  .head.good{color:var(--green)} .head.bad{color:var(--red)}
+  .said{color:var(--faint); font-size:16px; margin:0 0 14px}
+  .line{border:1px solid var(--edge); border-radius:10px; padding:11px 13px; margin:0 0 8px;
+        background:var(--card); font-size:15px; color:var(--dim); cursor:pointer}
+  .line.held{background:#1C1A12; border-color:#4A3F1C; color:var(--gold)}
+  .line .origin{display:block; font:11px/1.5 Arial,Helvetica,sans-serif;
+                color:var(--faint); margin-top:6px}
+  .line .heldmk{display:block; font:11px/1.5 Arial,Helvetica,sans-serif;
+                color:var(--gold); margin-top:6px}
+  .slot{border:1px dashed var(--edge); border-radius:10px; padding:11px 13px; margin:0 0 8px;
+        background:#0C0C12}
+  .slot.filled{border-style:solid; border-color:#4A3F1C; background:#1C1A12}
+  .slot .sn{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); display:block;
+            margin-bottom:5px}
+  .slot .sx{font-size:15px; color:var(--gold)}
+  .slot .sx.empty{color:#6E6E86}
+  .ev{margin:0 0 14px; font-size:16px; color:var(--dim)}
+  .ev.good{color:var(--ink)} .ev.bad{color:var(--red)} .ev.unmet{color:#8E8EA2}
+  .ev .mk{font:13px/1.6 Consolas,Menlo,monospace; margin-right:7px}
+  .ev .by{display:block; font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint);
+          margin-top:5px}
+  .verdict{font-size:17px; color:var(--dim); margin:18px 0 0}
+  .verdict.warn{color:var(--red)}
+  .closing{font-size:17px; color:var(--ink); margin:14px 0 0}
+  .goldline{font-size:15px; color:var(--gold); margin:22px 0 0}
+  .warn{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--red); margin:16px 0 0}
+  .bar{position:fixed; left:0; right:0; bottom:0; background:#07070Bf2;
+       border-top:1px solid var(--edge); padding:9px 18px calc(9px + env(safe-area-inset-bottom))}
+  .bar .inner{max-width:620px; margin:0 auto}
+  .bar .hint{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin:0 0 8px}
+  .btns{display:flex; gap:9px}
+  button{flex:1; font:16px/1.2 Georgia,serif; padding:14px 10px; border-radius:10px;
+         background:var(--card); color:var(--ink); border:1px solid var(--edge); cursor:pointer}
+  button.go{background:var(--gold); color:#171410; border-color:var(--gold)}
+  button:disabled{opacity:.4; cursor:default}
+  .spacer{height:0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar"></div>
+<script>
+const C = {
+"ordersHeld":3,
+"wordmark":"handoff",
+"subtitle":"a light on a rock",
+"voice":{
+  "whatYouCanSee":"WHAT YOU CAN SEE",
+  "whatYouDo":"WHAT YOU DO",
+  "theOrders":"THE ORDERS",
+  "keptBefore":"B. kept this light before you",
+  "appliesTonight":"this one applies tonight",
+  "youLearned":"YOU LEARNED A LINE",
+  "learnedNothingFollow":"You learned nothing you did not already have.",
+  "learnedNothingFollow2":"Bell's line was already in the book.",
+  "learnedNothingHold":"You learned nothing. Nothing was written down, so nothing carries.",
+  "writingHeading":"What you leave him",
+  "writingIntro":"Five watches are behind you. He gets three lines and no nights of his own. You do not know what his night will be.",
+  "bellsFour":"BELL'S FOUR",
+  "whatYouLearned":"WHAT YOU LEARNED",
+  "whatYouLeave":"WHAT YOU LEAVE HIM",
+  "written":"written",
+  "learnedNothingEmpty":"Nothing. You never did anything but what you were told.",
+  "whatHeCouldSee":"WHAT HE COULD SEE",
+  "whatHeDid":"WHAT HE DID",
+  "becauseYouWrote":"because you wrote: ",
+  "whatYouLeftHim":"WHAT YOU LEFT HIM",
+  "readInThisOrder":"read in this order",
+  "theOrdersYouLeft":"The orders you left",
+  "standingOrder":"A standing order is a judgment with the judge taken out of it, sent on ahead to a night nobody has seen.",
+  "verdict":"%good% of the %raised% things the night raised were met well.",
+  "tags":{"FOLLOW":"as written","JUDGE":"as it needs","HOLD":"nothing"},
+  "lineLabel":["","line 1","line 2","line 3"]
+},
+"signals":{"lamp_low":"the lamp is burning low","wick_short":"the wick is burnt down to a stub","oil_low":"the drum is down to the last of it","fog":"fog is coming in from the sea","door_open":"the outer door will not stay shut","wind_west":"the wind is from the west and getting up","vessel_light":"a light is showing off the reef","vessel_wrong":"the light is on the wrong side of the reef","stair_dark":"the stair lamp has gone out","tide_turning":"the tide is turning"},
+"lineIds":["B1","B2","B3","B4","E1","E2","E3","E4","E5"],
+"orders":[
+  {"id":"B1","text":"When the lamp burns low, raise the wick.","requires":["lamp_low"],"action":"raise_wick","concern":"LAMP","bell":true,"origin":"Bell's"},
+  {"id":"B2","text":"When the outer door is unlatched, bolt it.","requires":["door_open"],"action":"bolt_door","concern":"DOOR","bell":true,"origin":"Bell's"},
+  {"id":"B3","text":"When a vessel shows a light, log her name.","requires":["vessel_light"],"action":"log_vessel","concern":"VESSEL","bell":true,"origin":"Bell's"},
+  {"id":"B4","text":"Never leave the stair unlit.","requires":["stair_dark"],"action":"light_stair","concern":"STAIR","bell":true,"origin":"Bell's"},
+  {"id":"E1","text":"When the lamp burns low and the oil is low, look to the oil before the wick.","requires":["lamp_low","oil_low"],"action":"check_oil","concern":"LAMP","bell":false,"origin":"yours, from the first watch"},
+  {"id":"E2","text":"When the wind is from the west and the door is unlatched, bolt it.","requires":["door_open","wind_west"],"action":"bolt_door","concern":"DOOR","bell":false,"origin":"yours, from the second watch"},
+  {"id":"E3","text":"In fog, with little oil, burn low and light the standby.","requires":["fog","oil_low"],"action":"burn_low","concern":"LAMP","bell":false,"origin":"yours, from the third watch"},
+  {"id":"E4","text":"When a light shows on the wrong side of the reef, answer it with the shutter.","requires":["vessel_light","vessel_wrong"],"action":"shutter_answer","concern":"VESSEL","bell":false,"origin":"yours, from the fourth watch"},
+  {"id":"E5","text":"When the oil is low, the stair stays dark and the light stays lit.","requires":["oil_low","stair_dark"],"action":"rope_stair","concern":"STAIR","bell":false,"origin":"yours, from the fifth watch"}
+],
+"watches":[
+  {"heading":"First watch","title":"The wick","scene":"The light has been going since four. By nine it is burning low, and the drum is light in your hand when you lift it. The wick is burnt down to a stub.","signals":["lamp_low","wick_short","oil_low"],"options":[{"text":"Raise the wick, as the orders say.","kind":"FOLLOW","outcome":"You raise the wick. It catches and burns bright and ugly, and for two hours the light is the best it has been all week. Then the drum is dry, and the light goes out, and you sit with a dead lamp until the boat comes.","unlock":null},{"text":"Trim the wick back and top up the drum from the spare.","kind":"JUDGE","outcome":"You trim the wick and fill the drum from the spare, and the light burns steady and low all night. It is not a good light. It is a light.","unlock":"E1"},{"text":"Leave it. It is burning.","kind":"HOLD","outcome":"You leave it. It burns low all night, and twice you hear a horn out in the dark, asking where the light is.","unlock":null}]},
+  {"heading":"Second watch","title":"The door","scene":"The outer door will not stay shut. The wind is from the west and getting up, and every few minutes the door walks itself open and the room fills with cold.","signals":["door_open","wind_west"],"options":[{"text":"Bolt it, as the orders say.","kind":"FOLLOW","outcome":"You bolt it. The wind works at it all night and does not get in. In the morning the bolt is still there, and so are you.","unlock":null},{"text":"Wedge it open a hand's width to air the room.","kind":"JUDGE","outcome":"You wedge it open to air the room, and by midnight the floor is wet and the salt is on everything, and you spend the rest of the night mopping.","unlock":"E2"},{"text":"Leave it. It is only wind.","kind":"HOLD","outcome":"You leave it. It bangs all night, and by morning the latch has worked itself loose in the frame.","unlock":null}]},
+  {"heading":"Third watch","title":"The fog","scene":"Fog comes in from the sea at eleven and does not lift. The lamp is burning low again and the drum is down to the last of it. The boat is not due for three days.","signals":["lamp_low","oil_low","fog"],"options":[{"text":"Raise the wick, as the orders say.","kind":"FOLLOW","outcome":"You raise the wick. For an hour the fog is lit up orange and you can see the light doing its work. Then the drum is dry, and the fog is still there, and there is nothing you can do about it.","unlock":null},{"text":"Trim it low and steady, and light the standby beside it.","kind":"JUDGE","outcome":"You trim the lamp down and set the standby burning beside it. Two small lights instead of one big one, and neither of them uses much. The fog keeps them both, all night.","unlock":"E3"},{"text":"Wait. Fog lifts.","kind":"HOLD","outcome":"You wait. The fog does not lift. At two in the morning you hear a horn, very close, and then further off, and then not at all.","unlock":null}]},
+  {"heading":"Fourth watch","title":"The light off the reef","scene":"A light shows off the reef at half past one. It is not a vessel's light. It is on the wrong side of the reef, low down, and it does not move.","signals":["vessel_light","vessel_wrong"],"options":[{"text":"Log her name, as the orders say.","kind":"FOLLOW","outcome":"You take down the book and write the hour and the bearing and the word unidentified, and you go back to the light. The light off the reef is still there at four. In the morning there is nothing on the reef at all.","unlock":null},{"text":"Answer it with the shutter -- three short.","kind":"JUDGE","outcome":"You take the shutter and give it three short. The light off the reef goes out. Nothing comes of it, and you never learn what it was, and that is the whole of the reward.","unlock":"E4"},{"text":"Nothing. It is not yours.","kind":"HOLD","outcome":"You do nothing. It burns until first light and then it is gone, and you find out later that a dory went onto the reef at Sarrow Point the same night.","unlock":null}]},
+  {"heading":"Fifth watch","title":"The stair","scene":"The stair lamp has gone out. The oil for it is kept at the foot of the stair, and the stair is unlit, and the tide is turning -- the causeway will be under in an hour.","signals":["stair_dark","oil_low","tide_turning"],"options":[{"text":"Light the stair, as the orders say.","kind":"FOLLOW","outcome":"You go down the stair in the dark to fetch the oil. You get it, and you light the lamp, and you come back up with a wrenched ankle and the drum in the lamp room half empty. The light upstairs burns low for the rest of the night.","unlock":null},{"text":"Leave the stair dark. Keep the oil for the light, and rope the stair off.","kind":"JUDGE","outcome":"You rope the stair off at the top and leave it dark, and the oil stays in the lamp room where the light can use it. Nobody comes up the stair in the night, because nobody comes.","unlock":"E5"},{"text":"Nothing. Nobody uses the stair at night.","kind":"HOLD","outcome":"You leave it. Nobody comes, and the stair is dark, and the order sits in the back of your mind all night like a bill you have not paid.","unlock":null}]}
+],
+"succession":{"heading":"The night after you","title":"His first night","scene":"The next keeper's first night on the rock. He has your orders and nothing else: no watch of his own, no idea what your nights were like.","signals":["lamp_low","oil_low","fog","door_open","vessel_light","vessel_wrong"]},
+"acts":{"raise_wick":{"text":"He raised the wick, because that is what the orders said to do with a low lamp. It burned bright for an hour and then the last of the oil was gone, and the light was out by two.","good":false},"bolt_door":{"text":"He bolted the outer door against the weather. It held.","good":true},"log_vessel":{"text":"He wrote a name in the book -- unidentified -- and went back to the light. The light off the reef stayed where it was until four.","good":false},"light_stair":{"text":"He went down the stair in the dark for the oil.","good":false},"check_oil":{"text":"He looked to the oil before the wick, and found enough in the drum for the night, and trimmed the lamp to make it last. The light burned steady until morning.","good":true},"burn_low":{"text":"He trimmed the lamp low and lit the standby beside it, and the fog took both lights and kept them all night.","good":true},"shutter_answer":{"text":"He answered the light off the reef with the shutter, three short. It went out and did not come back.","good":true},"rope_stair":{"text":"He roped off the stair and kept the oil for the light.","good":true}},
+"unmet":{"LAMP":"The lamp burned low all night and no line of yours told him to touch it.","DOOR":"The outer door was unlatched all night and no line of yours told him to bolt it.","VESSEL":"A light showed off the reef and no line of yours told him to answer it.","STAIR":"The stair was dark and no line of yours told him what to do about it."},
+"closings":["You gave him Bell's night. It was not Bell's night.","Everything went wrong on his night. He will write his own orders, and they will be about the things that happened to him.","Two things went wrong on his night. He will not know which of them to blame you for, so he will blame you for both.","One thing went wrong on his night, and it was the thing you had no line for. You can only write for the night you had.","Nothing went wrong on his night. He will think the light is easy, and he will write you a shorter note than you wrote him."],
+"table":[
+  "0|0|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|0|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,B3",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,B1;DOOR,B2;VESSEL,E4",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,B3",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|0|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|0|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,B1;DOOR,B2;VESSEL,E4",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,B3",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,B1;DOOR,B2;VESSEL,E4",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|0|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|0|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,B3",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,B3",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,B3",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|0|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|0|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,B3",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "3|4|3|LAMP,E1;DOOR,B2;VESSEL,E4",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,B3",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "3|4|3|LAMP,E3;DOOR,B2;VESSEL,E4",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,B1;DOOR,B2;VESSEL,E4",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "3|4|3|LAMP,E1;DOOR,B2;VESSEL,E4",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "3|4|3|LAMP,E3;DOOR,B2;VESSEL,E4",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,B3",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,B3",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,B3",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,B3",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "0|0|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|0|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "0|0|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|0|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,B3",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,B3",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|0|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|0|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|0|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|0|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|0|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|0|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|0|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "0|0|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|0|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|0|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|0|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|0|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|0|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,B3",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "3|4|3|LAMP,E1;DOOR,B2;VESSEL,E4",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,B3",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "3|4|3|LAMP,E1;DOOR,B2;VESSEL,E4",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,B3",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "3|4|3|LAMP,E3;DOOR,B2;VESSEL,E4",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,B3",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "3|4|3|LAMP,E3;DOOR,B2;VESSEL,E4",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,B1;DOOR,B2;VESSEL,E4",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,B1;DOOR,B2;VESSEL,E4",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "3|4|3|LAMP,E1;DOOR,B2;VESSEL,E4",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "3|4|3|LAMP,E3;DOOR,B2;VESSEL,E4",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "3|4|3|LAMP,E1;DOOR,B2;VESSEL,E4",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "3|4|3|LAMP,E3;DOOR,B2;VESSEL,E4",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|LAMP,B1;VESSEL,B3;DOOR,-",
+  "1|2|3|DOOR,B2;VESSEL,B3;LAMP,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E1;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;DOOR,B2;VESSEL,-",
+  "1|2|3|LAMP,E3;VESSEL,B3;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,B1;VESSEL,E4;DOOR,-",
+  "2|3|3|DOOR,B2;VESSEL,E4;LAMP,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E1;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "2|3|3|LAMP,E3;VESSEL,E4;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,B1;DOOR,-;VESSEL,-",
+  "1|2|3|DOOR,B2;LAMP,-;VESSEL,-",
+  "0|1|3|VESSEL,B3;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E1;DOOR,-;VESSEL,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-",
+  "1|2|3|LAMP,E3;DOOR,-;VESSEL,-",
+  "1|2|3|VESSEL,E4;LAMP,-;DOOR,-",
+  "0|1|3|LAMP,-;DOOR,-;VESSEL,-"
+]
+}
+;
+
+// --------------------------------------------------------------- the station
+// A port of aside.games.handoff.Handoff. The content above is generated from
+// the Java model, so the writing cannot drift.
+//
+// THE RULE THAT IS NOT HERE. What happens on the successor's night -- he reads
+// the orders in the order you wrote them, takes the first line that applies to
+// each part of the station, and does it -- is not written in this file. Every
+// set of orders a player can leave was played out at build time and written
+// into C.table: nine lines, three slots, ordered, 504 outcomes. This build
+// looks the night up. It cannot disagree with the desktop, because there is
+// nothing here to disagree with.
+
+const KEY = 'aside.handoff.orders';
+const N = C.lineIds.length;
+const STRIDE = N * N;
+
+const orderById = id => C.orders.filter(o => o.id === id)[0] || null;
+const int = (s, d) => { const n = parseInt(s, 10); return isNaN(n) ? d : n; };
+
+function fresh() {
+  return { phase: 'WATCH', watch: 0, taken: [], unlocked: [], written: [], lastOption: -1 };
+}
+
+/** Bell's four, which is what you are keeping the watch under. */
+const bell = () => C.orders.filter(o => o.bell);
+
+/** The line of Bell's that applies to the current watch. */
+function applying() {
+  const w = C.watches[Math.min(S.watch, C.watches.length - 1)];
+  for (const o of bell()) if (o.requires.every(r => w.signals.indexOf(r) >= 0)) return o;
+  return null;
+}
+
+/** Everything you may write, Bell's first, then what you earned. */
+function pool() { return bell().concat(S.unlocked.map(orderById).filter(Boolean)); }
+
+function choose(i) {
+  if (S.phase !== 'WATCH') return;
+  const w = C.watches[S.watch];
+  if (i < 0 || i >= w.options.length) return;
+  const opt = w.options[i];
+  S.lastOption = i;
+  S.taken.push(i);
+  if (opt.unlock && S.unlocked.indexOf(opt.unlock) < 0) S.unlocked.push(opt.unlock);
+  S.phase = 'OUTCOME';
+}
+
+function advance() {
+  if (S.phase !== 'OUTCOME') return;
+  S.lastOption = -1;
+  if (S.watch + 1 < C.watches.length) { S.watch++; S.phase = 'WATCH'; }
+  else S.phase = 'WRITING';
+}
+
+function write(id) {
+  if (S.phase !== 'WRITING') return false;
+  if (S.written.length >= C.ordersHeld) return false;
+  if (S.written.indexOf(id) >= 0) return false;
+  S.written.push(id);
+  return true;
+}
+
+function unwrite() {
+  if (S.phase !== 'WRITING' || S.written.length === 0) return;
+  S.written.pop();
+}
+
+function seal() {
+  if (S.phase !== 'WRITING' || S.written.length !== C.ordersHeld) return false;
+  S.phase = 'SUCCESSION';
+  return true;
+}
+
+// ------------------------------------------------------------- the night
+// One lookup. See the note at the top of this block for why there is no rule
+// here to go wrong.
+
+function night() {
+  const i = C.lineIds.indexOf(S.written[0]);
+  const j = C.lineIds.indexOf(S.written[1]);
+  const k = C.lineIds.indexOf(S.written[2]);
+  if (i < 0 || j < 0 || k < 0) return null;
+  const parts = C.table[i * STRIDE + j * N + k].split('|');
+  const events = parts[3] ? parts[3].split(';').map(p => {
+    const bits = p.split(',');
+    const concern = bits[0], id = bits[1];
+    if (id === '-') return { concern: concern, by: null, text: C.unmet[concern], good: false };
+    const o = orderById(id);
+    const act = C.acts[o.action];
+    return { concern: concern, by: id, text: act.text, good: act.good };
+  }) : [];
+  return { good: int(parts[0], 0), closing: C.closings[int(parts[1], 0)],
+           raised: int(parts[2], 0), events: events };
+}
+
+// ------------------------------------------------------------- the save file
+// Handoff.toText() writes the orders as plain text and Handoff.load() reads
+// them. This is that exact format, kept in localStorage, so a watch can be
+// carried between the desktop and the phone by copying a few lines.
+
+function serialize() {
+  let s = 'phase ' + S.phase + '\n';
+  s += 'watch ' + S.watch + '\n';
+  for (let i = 0; i < S.taken.length; i++) s += 'took ' + i + ' ' + S.taken[i] + '\n';
+  for (const id of S.unlocked) s += 'unlocked ' + id + '\n';
+  for (const id of S.written) s += 'wrote ' + id + '\n';
+  return s;
+}
+
+function deserialize(text) {
+  const s = fresh();
+  for (const raw of String(text).split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const p = line.split(/\s+/);
+    try {
+      if (p[0] === 'phase') { if (['WATCH','OUTCOME','WRITING','SUCCESSION','DONE'].indexOf(p[1]) >= 0) s.phase = p[1]; }
+      else if (p[0] === 'watch') s.watch = Math.max(0, Math.min(C.watches.length - 1, int(p[1], 0)));
+      else if (p[0] === 'took') {
+        const idx = int(p[1], 0), opt = int(p[2], 0);
+        while (s.taken.length <= idx) s.taken.push(0);
+        s.taken[idx] = opt;
+      }
+      else if (p[0] === 'unlocked') {
+        const o = orderById(p[1]);
+        if (o && !o.bell && s.unlocked.indexOf(o.id) < 0) s.unlocked.push(o.id);
+      }
+      else if (p[0] === 'wrote') {
+        const o = orderById(p[1]);
+        if (o && s.written.indexOf(o.id) < 0 && s.written.length < C.ordersHeld) s.written.push(o.id);
+      }
+    } catch (e) { /* a corrupt record is skipped; the rest of the file still stands */ }
+  }
+  // An interrupted outcome beat goes back to the watch it belongs to.
+  if (s.phase === 'OUTCOME') s.phase = 'WATCH';
+  // A game that says it is writing but already holds three lines is really at
+  // the night after you.
+  if (s.phase === 'WRITING' && s.written.length >= C.ordersHeld) s.phase = 'SUCCESSION';
+  return s;
+}
+
+const CAN_STORE = (() => {
+  try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); return true; }
+  catch (e) { return false; }
+})();
+
+function load() {
+  if (!CAN_STORE) return fresh();
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { text = null; }
+  return text === null ? fresh() : deserialize(text);
+}
+
+function save() {
+  if (!CAN_STORE) return false;
+  try { localStorage.setItem(KEY, serialize()); return true; } catch (e) { return false; }
+}
+
+// --------------------------------------------------------------- the screen
+
+let S = load();
+let sel = 0;
+let revealed = false;   // on the succession beat: has his night been played out?
+let kept = true;
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const lowerFirst = s => s ? s.charAt(0).toLowerCase() + s.slice(1) : '';
+
+function header() {
+  const right = S.phase === 'WATCH' || S.phase === 'OUTCOME'
+    ? (S.watch + 1) + ' of ' + C.watches.length
+    : S.phase === 'WRITING' ? 'what you leave him'
+    : S.phase === 'SUCCESSION' ? 'his first night' : 'the orders you left';
+  return '<header><h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(right) + '</div></header>';
+}
+
+/** Bell's four, fixed, with the one that applies to tonight marked. */
+function ordersPanel() {
+  const on = applying();
+  let h = '<div class="panel"><div class="ph">' + esc(C.voice.theOrders) + '</div>'
+        + '<div class="note" style="margin:0 0 10px">' + esc(C.voice.keptBefore) + '</div>';
+  for (const o of bell()) {
+    const live = on && on.id === o.id;
+    h += '<div class="order' + (live ? ' on' : '') + '">' + esc(o.text)
+       + (live ? '<span class="applies">' + esc(C.voice.appliesTonight) + '</span>' : '')
+       + '</div>';
+  }
+  return h + '</div>';
+}
+
+function drawWatch() {
+  const w = C.watches[S.watch];
+  let h = header()
+    + '<div class="watchhead">' + esc(w.heading.toUpperCase()) + '</div>'
+    + '<div class="watchtitle">' + esc(w.title) + '</div>'
+    + '<p class="scene">' + esc(w.scene) + '</p>'
+    + '<div class="label">' + esc(C.voice.whatYouCanSee) + '</div><ul class="seen">';
+  for (const s of w.signals) h += '<li><span class="mk">\u00b7</span>' + esc(C.signals[s]) + '</li>';
+  h += '</ul>' + ordersPanel()
+    + '<div class="label">' + esc(C.voice.whatYouDo) + '</div>';
+  w.options.forEach((o, i) => {
+    h += '<div class="opt' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">'
+       + '<span class="mark">' + (i + 1) + '.</span>' + esc(o.text)
+       + '<span class="tag">' + esc(C.voice.tags[o.kind]) + '</span></div>';
+  });
+  h += '<div class="spacer"></div>';
+  if (!CAN_STORE) h += '<p class="warn">This browser will not keep the orders. '
+    + 'They will be gone when you close the page.</p>';
+  app.innerHTML = h;
+  app.querySelectorAll('.opt').forEach(el => {
+    el.onclick = () => { sel = +el.dataset.i; draw(); };
+  });
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="do">Do it</button></div></div>';
+  document.getElementById('do').onclick = () => {
+    choose(sel); sel = 0; kept = save(); draw();
+  };
+}
+
+function drawOutcome() {
+  const w = C.watches[S.watch];
+  const opt = w.options[Math.max(0, S.lastOption)];
+  let h = header()
+    + '<div class="head">' + esc(w.heading) + ' \u2014 ' + esc(w.title) + '</div>'
+    + '<p class="said">You ' + esc(lowerFirst(opt.text)) + '</p>'
+    + '<p class="para">' + esc(opt.outcome) + '</p>';
+  if (opt.unlock) {
+    const o = orderById(opt.unlock);
+    h += '<div class="panel"><div class="ph">' + esc(C.voice.youLearned) + '</div>'
+       + '<div class="order on" style="margin:0">' + esc(o.text) + '</div></div>';
+  } else if (opt.kind === 'FOLLOW') {
+    h += '<p class="said">' + esc(C.voice.learnedNothingFollow) + '<br>'
+       + esc(C.voice.learnedNothingFollow2) + '</p>';
+  } else {
+    h += '<p class="said">' + esc(C.voice.learnedNothingHold) + '</p>';
+  }
+  h += '<div class="spacer"></div>';
+  app.innerHTML = h;
+  const last = S.watch + 1 >= C.watches.length;
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="n">' + (last ? 'Write the orders' : 'On to the next watch')
+    + '</button></div></div>';
+  document.getElementById('n').onclick = () => { advance(); sel = 0; kept = save(); draw(); };
+}
+
+function drawWriting() {
+  let h = header()
+    + '<div class="head">' + esc(C.voice.writingHeading) + '</div>'
+    + '<p class="para">' + esc(C.voice.writingIntro) + '</p>'
+    + '<div class="label">' + esc(C.voice.whatYouLeave) + '</div>';
+  for (let i = 0; i < C.ordersHeld; i++) {
+    const id = S.written[i];
+    h += '<div class="slot' + (id ? ' filled' : '') + '">'
+       + '<span class="sn">' + esc(C.voice.lineLabel[i + 1]) + '</span>'
+       + (id ? '<span class="sx">' + esc(orderById(id).text) + '</span>'
+             : '<span class="sx empty">\u2014</span>') + '</div>';
+  }
+  h += '<div class="label">' + esc(C.voice.bellsFour) + '</div>';
+  h += poolCards(bell());
+  h += '<div class="label">' + esc(C.voice.whatYouLearned) + '</div>';
+  if (S.unlocked.length === 0) {
+    h += '<p class="said">' + esc(C.voice.learnedNothingEmpty) + '</p>';
+  } else {
+    h += poolCards(S.unlocked.map(orderById).filter(Boolean));
+  }
+  h += '<div class="spacer"></div>';
+  if (!kept) h += '<p class="warn">The orders could not be written down, so they will '
+    + 'not be here next time. Everything above is still true.</p>';
+  app.innerHTML = h;
+  app.querySelectorAll('.line').forEach(el => {
+    el.onclick = () => { if (write(el.dataset.id)) { kept = save(); draw(); } };
+  });
+  const full = S.written.length >= C.ordersHeld;
+  bar.innerHTML = '<div class="inner">'
+    + '<div class="hint">' + esc(S.written.length + ' of ' + C.ordersHeld + ' written'
+      + (full ? ' \u2014 he reads them in this order' : '')) + '</div>'
+    + '<div class="btns">'
+    + (S.written.length > 0 ? '<button id="back">Take one back</button>' : '')
+    + '<button class="go" id="seal"' + (full ? '' : ' disabled') + '>Seal the orders</button>'
+    + '</div></div>';
+  const back = document.getElementById('back');
+  if (back) back.onclick = () => { unwrite(); kept = save(); draw(); };
+  document.getElementById('seal').onclick = () => {
+    if (seal()) { revealed = false; kept = save(); draw(); }
+  };
+}
+
+/** The lines you may write, with the ones already written marked. */
+function poolCards(list) {
+  let h = '';
+  for (const o of list) {
+    const held = S.written.indexOf(o.id) >= 0;
+    h += '<div class="line' + (held ? ' held' : '') + '" data-id="' + esc(o.id) + '">'
+       + esc(o.text)
+       + (held ? '<span class="heldmk">' + esc(C.voice.written) + '</span>'
+               : '<span class="origin">' + esc(o.origin) + '</span>')
+       + '</div>';
+  }
+  return h;
+}
+
+function drawSuccession() {
+  const sc = C.succession;
+  let h = header()
+    + '<div class="head">' + esc(sc.heading) + ' \u2014 ' + esc(sc.title) + '</div>'
+    + '<p class="scene">' + esc(sc.scene) + '</p>'
+    + '<div class="label">' + esc(C.voice.whatYouLeftHim) + '</div>'
+    + '<div class="note" style="margin:0 0 10px">' + esc(C.voice.readInThisOrder) + '</div>';
+  S.written.forEach((id, i) => {
+    const o = orderById(id);
+    h += '<div class="line' + (o.bell ? '' : ' held') + '">' + esc(o.text)
+       + '<span class="origin">' + (i + 1) + '. ' + esc(o.origin) + '</span></div>';
+  });
+
+  // The reveal replaces the column rather than adding to it. What he could see
+  // and what he did are the same beat, one moment apart.
+  if (!revealed) {
+    h += '<div class="label">' + esc(C.voice.whatHeCouldSee) + '</div><ul class="seen">';
+    for (const s of sc.signals) h += '<li><span class="mk">\u00b7</span>' + esc(C.signals[s]) + '</li>';
+    h += '</ul><div class="spacer"></div>';
+    app.innerHTML = h;
+    bar.innerHTML = '<div class="inner"><div class="btns">'
+      + '<button class="go" id="r">Let his night happen</button></div></div>';
+    document.getElementById('r').onclick = () => { revealed = true; draw(); };
+    return;
+  }
+
+  const n = night();
+  h += '<div class="label">' + esc(C.voice.whatHeDid) + '</div>';
+  for (const ev of n.events) {
+    const cls = ev.by === null ? 'unmet' : (ev.good ? 'good' : 'bad');
+    const mk = ev.by === null ? '&nbsp;&nbsp;' : (ev.good ? '\u2713 ' : '\u2717 ');
+    h += '<div class="ev ' + cls + '"><span class="mk">' + mk + '</span>' + esc(ev.text)
+       + (ev.by === null ? '' : '<span class="by">' + esc(C.voice.becauseYouWrote + ev.by)
+          + '</span>') + '</div>';
+  }
+  h += '<div class="spacer"></div>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="n">What your orders did</button></div></div>';
+  document.getElementById('n').onclick = () => { S.phase = 'DONE'; kept = save(); draw(); };
+}
+
+function drawDone() {
+  const n = night();
+  let h = header() + '<div class="head">' + esc(C.voice.theOrdersYouLeft) + '</div>';
+  S.written.forEach((id, i) => {
+    const o = orderById(id);
+    h += '<div class="line' + (o.bell ? '' : ' held') + '">' + esc(o.text)
+       + '<span class="origin">' + (i + 1) + '. ' + esc(o.origin) + '</span></div>';
+  });
+  // The count is not a failure by itself. It only reads red when the night
+  // raised something nothing answered.
+  h += '<p class="verdict' + (n.good >= n.raised ? '' : ' warn') + '">'
+     + esc(C.voice.verdict.replace('%good%', n.good).replace('%raised%', n.raised)) + '</p>'
+     + '<p class="closing">' + esc(n.closing) + '</p>'
+     + '<p class="goldline">' + esc(C.voice.standingOrder) + '</p>'
+     + '<div class="spacer"></div>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="again">Keep the watch again</button></div></div>';
+  document.getElementById('again').onclick = () => {
+    S = fresh(); revealed = false; sel = 0; kept = save(); draw();
+  };
+}
+
+function draw() {
+  if (S.phase === 'WATCH') drawWatch();
+  else if (S.phase === 'OUTCOME') drawOutcome();
+  else if (S.phase === 'WRITING') drawWriting();
+  else if (S.phase === 'SUCCESSION') drawSuccession();
+  else drawDone();
+  // The bar is fixed, so the content needs exactly its height of clearance and
+  // no more. It is measured rather than guessed, the way the others are.
+  const sp = app.querySelector('.spacer');
+  if (sp) sp.style.height = (bar.offsetHeight + 16) + 'px';
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  if (S.phase === 'WATCH') {
+    const n = C.watches[S.watch].options.length;
+    if (k === 'ArrowDown') { sel = (sel + 1) % n; draw(); }
+    else if (k === 'ArrowUp') { sel = (sel - 1 + n) % n; draw(); }
+    else if (k >= '1' && k <= '9') { const i = +k - 1; if (i < n) { sel = i; draw(); } }
+  }
+  if (k === 'Enter') {
+    const b = bar.querySelector('button.go') || bar.querySelector('button');
+    if (b && !b.disabled) b.click();
+  }
+});
+
+draw();
+</script>
+</body>
+</html>

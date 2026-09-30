@@ -47,6 +47,7 @@ public final class SelfTest {
         silence();
         persistence();
         playthroughs();
+        thePhoneBuild();
         System.out.println((checks - failed) + "/" + checks + " checks passed"
                 + (failed == 0 ? "" : "  --  " + failed + " FAILED"));
         if (failed > 0) System.exit(1);
@@ -411,5 +412,235 @@ public final class SelfTest {
         eq(best.written.size(), 0, "and clears the orders");
         eq(best.unlocked.size(), 0, "and the lines earned");
         eq(best.taken.size(), 0, "and the watches kept");
+    }
+
+    // ------------------------------------------------------- the phone build
+
+    /** Every fixed line of prose the game says, in one list. */
+    static List<String> fixedLines() {
+        return new ArrayList<>(List.of(
+                Handoff.WORDMARK, Handoff.SUBTITLE,
+                Handoff.WHAT_YOU_CAN_SEE, Handoff.WHAT_YOU_DO, Handoff.THE_ORDERS,
+                Handoff.KEPT_BEFORE, Handoff.APPLIES_TONIGHT,
+                Handoff.TAG_AS_WRITTEN, Handoff.TAG_AS_NEEDED, Handoff.TAG_NOTHING,
+                Handoff.YOU_LEARNED, Handoff.LEARNED_NOTHING_FOLLOW,
+                Handoff.LEARNED_NOTHING_FOLLOW_2, Handoff.LEARNED_NOTHING_HOLD,
+                Handoff.WRITING_HEADING, Handoff.WRITING_INTRO, Handoff.BELLS_FOUR,
+                Handoff.WHAT_YOU_LEARNED, Handoff.WHAT_YOU_LEAVE, Handoff.WRITTEN,
+                Handoff.LEARNED_NOTHING_EMPTY, Handoff.WHAT_HE_COULD_SEE,
+                Handoff.WHAT_HE_DID, Handoff.BECAUSE_YOU_WROTE, Handoff.WHAT_YOU_LEFT_HIM,
+                Handoff.READ_IN_THIS_ORDER, Handoff.THE_ORDERS_YOU_LEFT,
+                Handoff.STANDING_ORDER, Handoff.VERDICT,
+                Handoff.SUCCESSION_HEADING, Handoff.SUCCESSION_TITLE,
+                Handoff.SUCCESSION_SCENE));
+    }
+
+    /**
+     * The prose is the model's.
+     *
+     * There are two builds now -- the JavaFX screen and the phone build -- and
+     * a sentence kept in {@link HandoffScreen} is a sentence the phone build
+     * does not have. Every fixed line has to be reachable from Handoff, and the
+     * screen may not hold a second copy of any of them. Same rule as Testimony;
+     * this is the check that makes it a rule rather than an intention.
+     */
+    static void theVoice() {
+        Set<String> distinct = new HashSet<>();
+        for (String s : fixedLines()) {
+            ok(s != null && !s.isBlank(), "every fixed line is a line");
+            ok(distinct.add(s), "no fixed line is written twice: " + s);
+        }
+        String screen = source("src/main/java/aside/games/handoff/HandoffScreen.java");
+        if (screen == null) {
+            System.out.println("       (no HandoffScreen.java from here -- run from the repository root)");
+            return;
+        }
+        for (String s : fixedLines()) {
+            // The wordmark is the one word the screen may also spell, because
+            // the title is the game's name and not a sentence in it.
+            if (s.equals(Handoff.WORDMARK)) continue;
+            ok(!screen.contains("\"" + s + "\""),
+                    "the screen does not hold its own copy of: " + s);
+        }
+    }
+
+    /**
+     * The single-file build is generated, not written, and a generated file
+     * that has gone stale is worse than no file: it is a second copy of the
+     * game quietly disagreeing with the first. So the test regenerates it and
+     * compares. If this fails, run aside.games.handoff.WebHandoff from the
+     * repository root.
+     */
+    static void thePhoneBuild() throws Exception {
+        theVoice();
+
+        Path out = Path.of("web", "handoff.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no web/handoff.html from here -- run from the repository root)");
+            return;
+        }
+        String generated;
+        try {
+            generated = WebHandoff.html();
+        } catch (Exception e) {
+            System.out.println("       (no template from here: " + e.getMessage() + ")");
+            return;
+        }
+        ok(generated.equals(Files.readString(out)),
+                "web/handoff.html is current -- regenerate it with aside.games.handoff.WebHandoff");
+
+        // And it has to carry the writing, not just be the right size. The
+        // prose goes through the same JSON writer the build uses, because a
+        // line containing a quotation mark is escaped in the file and would
+        // otherwise look absent.
+        for (String s : fixedLines()) {
+            ok(generated.contains(WebHandoff.str(s)), "the phone build carries: " + s);
+        }
+        for (String id : Handoff.signalIds()) {
+            ok(generated.contains(WebHandoff.str(id)), "the phone build knows the signal " + id);
+            ok(generated.contains(WebHandoff.str(Handoff.signalText(id))),
+                    "the phone build carries what " + id + " looks like");
+        }
+        for (Handoff.Order o : Handoff.allOrders()) {
+            ok(generated.contains(WebHandoff.str(o.id)), "the phone build knows the line " + o.id);
+            ok(generated.contains(WebHandoff.str(o.text)), "the phone build carries " + o.id);
+            ok(generated.contains(WebHandoff.str(o.origin)),
+                    "the phone build says where " + o.id + " came from");
+        }
+        for (Handoff.Watch w : Handoff.WATCHES) {
+            ok(generated.contains(WebHandoff.str(w.heading)), "the phone build carries " + w.heading);
+            ok(generated.contains(WebHandoff.str(w.title)), "the phone build carries its title");
+            ok(generated.contains(WebHandoff.str(w.scene)), "the phone build carries its scene");
+            for (Handoff.Option o : w.options) {
+                ok(generated.contains(WebHandoff.str(o.text)),
+                        "the phone build carries an option of " + w.heading);
+                ok(generated.contains(WebHandoff.str(o.outcome)),
+                        "the phone build carries what that option cost");
+            }
+        }
+        for (String action : WebHandoff.actionKeys()) {
+            ok(generated.contains(WebHandoff.str(Handoff.actText(action))),
+                    "the phone build carries what " + action + " does on his night");
+        }
+        for (Handoff.Concern c : Handoff.Concern.values()) {
+            ok(generated.contains(WebHandoff.str(Handoff.unmetText(c))),
+                    "the phone build carries what it means when nothing answers " + c);
+        }
+        for (String closing : WebHandoff.distinctClosings()) {
+            ok(generated.contains(WebHandoff.str(closing)),
+                    "the phone build can close with: " + closing);
+        }
+        ok(Handoff.VERDICT.contains("%good%") && Handoff.VERDICT.contains("%raised%"),
+                "the verdict is a template with both numbers in it");
+
+        theNightTable(generated);
+    }
+
+    /**
+     * The whole night, read back out of the build and checked against the model.
+     *
+     * This is the check the previous five phone builds could not make. Outside
+     * resolved its ending into a table and the table was indexed along the
+     * wrong axis -- every entry was still a real sentence, so nothing about the
+     * file looked wrong, and it was found by driving both builds and diffing.
+     * Here the table is the *simulation*, so the check is not a sample: every
+     * set of orders a player can leave is in it, and every one of them is
+     * compared field by field against {@link Handoff#succeed}. There is no set
+     * of orders the phone can be wrong about, because there is no set of orders
+     * the phone computes.
+     */
+    static void theNightTable(String generated) {
+        List<String> closings = WebHandoff.distinctClosings();
+        List<String> table = stringsOf(section(generated, "\"table\":["));
+        eq(table.size(), WebHandoff.N * WebHandoff.N * WebHandoff.N,
+                "the table holds every set of orders, in order");
+        if (table.size() != WebHandoff.N * WebHandoff.N * WebHandoff.N) return;
+
+        List<Handoff.Order> lines = Handoff.allOrders();
+        for (int i = 0; i < WebHandoff.N; i++) {
+            for (int j = 0; j < WebHandoff.N; j++) {
+                for (int k = 0; k < WebHandoff.N; k++) {
+                    Handoff.Order a = lines.get(i), b = lines.get(j), c = lines.get(k);
+                    String got = table.get(i * WebHandoff.STRIDE + j * WebHandoff.N + k);
+                    Handoff.Succession want = Handoff.succeed(List.of(a, b, c));
+                    ok(sameNight(got, want, closings),
+                            "his night on " + a.id + "/" + b.id + "/" + c.id
+                          + " is the model's  (" + got + ")");
+                }
+            }
+        }
+    }
+
+    /** One table entry, decoded and compared to the model's own answer. */
+    static boolean sameNight(String entry, Handoff.Succession want, List<String> closings) {
+        String[] parts = entry.split("\\|", -1);
+        if (parts.length != 4) return false;
+        try {
+            if (Integer.parseInt(parts[0]) != want.good) return false;
+            int ci = Integer.parseInt(parts[1]);
+            if (ci < 0 || ci >= closings.size() || !closings.get(ci).equals(want.closing)) return false;
+            if (Integer.parseInt(parts[2]) != want.raised) return false;
+            String[] evs = parts[3].isEmpty() ? new String[0] : parts[3].split(";");
+            if (evs.length != want.events.size()) return false;
+            for (int e = 0; e < evs.length; e++) {
+                String[] bits = evs[e].split(",", -1);
+                if (bits.length != 2) return false;
+                Handoff.Event wev = want.events.get(e);
+                if (!bits[0].equals(wev.concern.name())) return false;
+                if (!bits[1].equals(wev.by == null ? "-" : wev.by.id)) return false;
+            }
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /** The text between a marker and the first ']' after it. */
+    static String section(String generated, String marker) {
+        int at = generated.indexOf(marker);
+        if (at < 0) throw new IllegalStateException("the build has no " + marker);
+        int end = generated.indexOf(']', at);
+        if (end < 0) throw new IllegalStateException(marker + " is never closed");
+        return generated.substring(at + marker.length(), end);
+    }
+
+    /** The JSON strings in a fragment, unescaped, in order. */
+    static List<String> stringsOf(String s) {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) != '"') continue;
+            StringBuilder b = new StringBuilder();
+            i++;
+            while (i < s.length() && s.charAt(i) != '"') {
+                if (s.charAt(i) == '\\' && i + 1 < s.length()) {
+                    char e = s.charAt(i + 1);
+                    switch (e) {
+                        case 'n' -> b.append('\n');
+                        case 'r' -> b.append('\r');
+                        case 't' -> b.append('\t');
+                        case 'u' -> {
+                            b.append((char) Integer.parseInt(s.substring(i + 2, i + 6), 16));
+                            i += 4;
+                        }
+                        default -> b.append(e);
+                    }
+                    i += 2;
+                } else {
+                    b.append(s.charAt(i));
+                    i++;
+                }
+            }
+            out.add(b.toString());
+        }
+        return out;
+    }
+
+    static String source(String path) {
+        try {
+            Path p = Path.of(path);
+            return Files.exists(p) ? Files.readString(p) : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

@@ -78,6 +78,7 @@ public final class PhoneShelf {
             case "ledger" -> "Keeps its ledger in this browser. Six nights, and one sitting.";
             case "testimony" -> "Keeps its account in this browser. Eight questions, and one sitting.";
             case "outside" -> "Keeps its week in this browser. Seven days, and one sitting.";
+            case "handoff" -> "Keeps your orders in this browser. Five watches, and one sitting.";
             case "vigil" -> "Twelve days. One sitting.";
             case "overtime" -> "A visual novel. What you say carries.";
             default -> "";
