@@ -147,6 +147,22 @@ public final class Threat {
         timer += dt;
         if (timer < g.interval(this)) return;
         timer = 0;
+
+        // The die. Every other game in the franchise rolls one -- FNAF 1,
+        // 2 and 3 all read `rng.nextInt(20) < aiLevel` before an
+        // animatronic takes its step -- and FNAF 5 shipped without it.
+        // `Game.aiLevel` was defined and never called, so the building was
+        // a metronome: every threat moved on its interval, every time, and
+        // the seed did nothing at all. The sweep is how it showed up. A
+        // night with no randomness in it cannot produce a difficulty
+        // curve, and FNAF 5's sweep returned 0% or 100% on every night
+        // with nothing in between, at every grace value and every pace
+        // tried, because there was nothing to average.
+        //
+        // A failed roll is a hesitation, not a retreat: the threat stays
+        // where it is and tries again on its next interval.
+        if (g.rng.nextInt(20) >= Game.aiLevel(g.night)) return;
+
         step(g);
     }
 

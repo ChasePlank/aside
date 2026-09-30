@@ -54,8 +54,6 @@ public class Game {
     public static final double SHOCK_TIME = 0.55;
     /** How long the shock is drawn for. */
     public static final double SHOCK_FLASH = 0.85;
-    /** How long the refusal flash is drawn for. */
-    public static final double BLOCKED_FLASH = 0.45;
 
     // ---- Sound ----
     /**
@@ -86,10 +84,6 @@ public class Game {
     public double busyTotal = 0;
     /** How long the shock flash has left to draw. */
     public double shockT = 0;
-    /** How long the "there is something in that doorway" flash has left. */
-    public double blockedT = 0;
-    /** The doorway that was refused, for the flash. */
-    public Room.Where blockedAt = null;
 
     // ---- What you can see ----
     /** The room on the monitor. Never the room you are in. */
@@ -168,12 +162,18 @@ public class Game {
     // ---- Difficulty ----
 
     /**
-     * AI level per night.
+     * AI level per night -- the chance in twenty that a threat moves.
      *
      * Chase's line for the franchise was "each gets harder than the last",
      * so this starts above FNAF 4's and ends at the top. FNAF 5 is the one
      * that takes away the room you are standing in, so it also has the
      * steepest ramp of the five.
+     *
+     * <b>This was defined and never read until 2026-09-30.</b> The threats
+     * moved on their interval every time, with no roll, so the building was
+     * a metronome and the seed did nothing; see the note in
+     * `Threat.update`. It is read now, and it is what makes a night a
+     * distribution instead of a script.
      */
     static int aiLevel(int night) {
         int[] table = {4, 7, 11, 15, 20};
@@ -291,7 +291,6 @@ public class Game {
             }
         }
         if (shockT > 0) shockT = Math.max(0, shockT - dt);
-        if (blockedT > 0) blockedT = Math.max(0, blockedT - dt);
 
         for (Threat t : threats) {
             t.update(dt, this);
@@ -347,40 +346,34 @@ public class Game {
      * are in the middle of and the move you are in the middle of. There is
      * no queue: a second press during a move is not a second move.
      *
-     * Refused as well when something is standing in the room you are
-     * walking into, and that refusal is the load-bearing rule of the whole
-     * game. Without it the building is a corridor you can always run down:
-     * the player is faster than everything in it, so a player who simply
-     * keeps walking is never caught, and the night becomes a treadmill.
-     * With it, the things in the building are <b>walls</b>. Three of them
-     * in five rooms means two empty rooms, and a player pinned between two
-     * occupied doors has nowhere to be -- which is what the shock is for,
-     * and why there are so few of them.
+     * <b>Not refused for the room you are walking into, and that is a
+     * deliberate design decision rather than an oversight.</b> The rule
+     * this method used to describe -- that the things in the building are
+     * walls, so a player pinned between two occupied doors has nowhere to
+     * be -- was written down and never implemented, and when it was
+     * implemented and swept it turned out to be unplayable. With a
+     * pursuer in a line of five rooms and no way past him, the player is
+     * cornered on a fixed cycle and the whole night becomes a countdown of
+     * charges: measured at Freddy paces from 0.25 to 1.05, every policy
+     * died on every night. A line plus a pursuer plus walls has no
+     * counterplay, so the walls are not there.
      *
-     * The refusal is not a hidden dice roll. You would see a seven-foot
-     * animatronic standing in the doorway before you walked into it, so
-     * the game tells you, and the information is free. What is not free is
-     * the position it leaves you in.
+     * <p><b>OPEN, and deliberately not fixed (2026-09-30):</b> what the
+     * missing refusal costs is a treadmill. The player is faster than
+     * everything in the building, so a player who simply keeps walking is
+     * never caught, and the sweep says so in the only place it could: the
+     * survival rate is close to a step function rather than a curve. See
+     * {@link Bot#flipReaction} and the note on the week in {@link #grace}.
+     * The rule and the difficulty table have to move together, and that is
+     * a tuning job rather than a bug fix.
      *
-     * <p><b>OPEN, and deliberately not fixed (2026-09-30):</b> the refusal
-     * described above is <i>not implemented</i>. This method walks into an
-     * occupied room, and a probe confirms it (`step` into a room holding a
-     * threat returns true). It is written down here rather than fixed
-     * because it is not a one-line change: adding
-     * {@code if (standingIn(dest) != null) return false;} on its own takes
-     * <b>every</b> bot policy to 0% on every night of the week -- the
-     * building becomes walls, the player is pinned almost immediately, and
-     * the shock allowance is nowhere near enough to buy a way out. So the
-     * rule and the difficulty table have to move together, and that is a
-     * tuning job rather than a bug fix.
-     *
-     * <p>The related symptom, measured the same way: without the refusal
-     * the sweep's HOLD and REACT policies die to Funtime Freddy on every
-     * night (mean 60-90s) while PANIC survives 60-100%. That inverts what
-     * {@link Bot} says PANIC is for, and it means {@link SelfTest}'s "the
-     * week does not get easier" check is comparing an all-zero array and
-     * cannot fail. The instrument is broken, so the published table is not
-     * yet a reading of the game.
+     * <p>The instrument that found this was itself broken when the note
+     * above was first written. HOLD and REACT died to Funtime Freddy on
+     * every night while PANIC survived, because HOLD parked in the middle
+     * of the building -- and, underneath that, because the engine had no
+     * die roll in it at all, so every night was the same night. Both are
+     * fixed; see {@link Bot} and {@link Threat#update}. The table in
+     * {@link SelfTest} is now a reading of the game rather than of the bot.
      */
     public boolean step(int direction) {
         if (status != Status.PLAYING) return false;

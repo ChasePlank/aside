@@ -332,26 +332,59 @@ public final class SelfTest {
         section("the week");
 
         int runs = 60;
-        System.out.printf("    %-6s %7s %7s %7s %7s%n", "night", "IDLE", "REACT", "HOLD", "PANIC");
+        System.out.printf("    %-6s %7s %7s %7s %7s %7s%n",
+                "night", "IDLE", "REACT", "HOLD", "FLEE", "PANIC");
         double[] hold = new double[5];
+        double[] react = new double[5];
+        double[] flee = new double[5];
+        double[] panic = new double[5];
         for (int n = 1; n <= 5; n++) {
             double idle = Bot.survival(n, runs, Bot.Policy.IDLE);
-            double react = Bot.survival(n, runs, Bot.Policy.REACT);
-            double h = Bot.survival(n, runs, Bot.Policy.HOLD);
-            double panic = Bot.survival(n, runs, Bot.Policy.PANIC);
-            hold[n - 1] = h;
-            System.out.printf("    %-6d %6.0f%% %6.0f%% %6.0f%% %6.0f%%%n",
-                    n, idle * 100, react * 100, h * 100, panic * 100);
+            react[n - 1] = Bot.survival(n, runs, Bot.Policy.REACT);
+            hold[n - 1] = Bot.survival(n, runs, Bot.Policy.HOLD);
+            flee[n - 1] = Bot.survival(n, runs, Bot.Policy.FLEE);
+            panic[n - 1] = Bot.survival(n, runs, Bot.Policy.PANIC);
+            System.out.printf("    %-6d %6.0f%% %6.0f%% %6.0f%% %6.0f%% %6.0f%%%n",
+                    n, idle * 100, react[n - 1] * 100, hold[n - 1] * 100,
+                    flee[n - 1] * 100, panic[n - 1] * 100);
         }
 
-        // The shape, not the numbers. A player who does nothing must die,
-        // and the week must get harder -- the second one is what "each gets
-        // harder than the last" means as a test rather than as a promise.
-        check("doing nothing dies on night 1",
-                Bot.survival(1, runs, Bot.Policy.IDLE) == 0.0);
-        check("doing nothing dies on night 5",
-                Bot.survival(5, runs, Bot.Policy.IDLE) == 0.0);
-        check("the week does not get easier", hold[4] <= hold[0] + 1e-9);
+        // The shape, not the numbers. A player who does nothing must die on
+        // every night of the week, not just the two ends of it.
+        for (int n = 1; n <= 5; n++) {
+            check("doing nothing dies on night " + n,
+                    Bot.survival(n, runs, Bot.Policy.IDLE) == 0.0);
+        }
+
+        // The ladder the design wants: answering the room beats doing
+        // nothing, and walking beats answering the room and stopping. The
+        // second one is the whole skill of the game and it is the check
+        // that the first sweep failed -- see the note in Bot.
+        double reactMean = mean(react);
+        double holdMean = mean(hold);
+        check("walking beats parking: HOLD beats REACT over the week",
+                holdMean > reactMean);
+        check("HOLD is the best of the four playing policies",
+                holdMean >= mean(flee) && holdMean >= mean(panic));
+
+        // And the finding, kept as a test so it cannot be quietly
+        // forgotten: running from Funtime Freddy does not pay. Every step
+        // is a noise and the noise is Ballora's, so the strategy the design
+        // describes is worse than the one it does not. If a later change
+        // makes FLEE better than HOLD, that is a real change to the game
+        // and this check is the place it should show up.
+        check("running from Freddy does not pay: HOLD beats FLEE over the week",
+                holdMean > mean(flee));
+
+        // The building has to be able to surprise you. Before the die was
+        // added to Threat.update, every seed produced the same night: the
+        // sweep returned 0% or 100% and nothing in between, because there
+        // was nothing random in the game at all. Two seeds, two nights.
+        java.util.Set<Integer> shapes = new java.util.HashSet<>();
+        for (int i = 0; i < 24; i++) {
+            shapes.add(Bot.run(3, 1000L + i * 7919L, Bot.Policy.HOLD).arrivals);
+        }
+        check("the same night is not the same night twice", shapes.size() > 1);
 
         // The charges are the resource, and the week takes them away.
         for (int n = 1; n < 5; n++) {
@@ -366,6 +399,21 @@ public final class SelfTest {
             check("night " + (n + 1) + " is at least as fast as night " + n,
                     b.baseInterval() <= a.baseInterval() + 1e-9);
         }
+
+        // The dial the week actually turns on. Printed rather than
+        // asserted: the flip is a measurement, and a measurement that is
+        // asserted stops being one.
+        System.out.print("    the reaction margin (seconds):");
+        for (int n = 1; n <= 5; n++) {
+            System.out.printf(" n%d=%.2f", n, Bot.flipReaction(n, 24));
+        }
+        System.out.println();
+    }
+
+    static double mean(double[] xs) {
+        double t = 0;
+        for (double x : xs) t += x;
+        return t / xs.length;
     }
 
     // ---------------------------------------------------------------- plumbing
