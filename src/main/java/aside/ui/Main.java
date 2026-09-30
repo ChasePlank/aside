@@ -50,6 +50,8 @@ public class Main extends Application {
         // JavaFX for its own frame always tells the truth.
         String shotPath = System.getProperty("aside.snapshot");
         String shotKeys = System.getProperty("aside.keys");
+        String shotMouse = System.getProperty("aside.mouse");
+        String shotClick = System.getProperty("aside.click");
 
         AnimationTimer loop = new AnimationTimer() {
             long last = -1;
@@ -60,17 +62,24 @@ public class Main extends Application {
                 ui.tick(dt);
                 frames++;
 
-                // Feed synthetic key presses, then snapshot.
-                if (shotKeys != null && frames == 30) {
-                    for (String k : shotKeys.split(",")) {
-                        javafx.scene.input.KeyCode code;
-                        try {
-                            code = javafx.scene.input.KeyCode.valueOf(k.trim().toUpperCase());
-                        } catch (Exception ex) { continue; }
-                        ui.handleKey(new javafx.scene.input.KeyEvent(
-                                javafx.scene.input.KeyEvent.KEY_PRESSED,
-                                "", "", code, false, false, false, false));
+                // Feed synthetic input, then snapshot. Keys first, then the
+                // mouse, so a click can land on the screen a key just opened
+                // -- which is the only way to render a click on anything
+                // that is not the first screen.
+                if (frames == 30) {
+                    if (shotKeys != null) {
+                        for (String k : shotKeys.split(",")) {
+                            javafx.scene.input.KeyCode code;
+                            try {
+                                code = javafx.scene.input.KeyCode.valueOf(k.trim().toUpperCase());
+                            } catch (Exception ex) { continue; }
+                            ui.handleKey(new javafx.scene.input.KeyEvent(
+                                    javafx.scene.input.KeyEvent.KEY_PRESSED,
+                                    "", "", code, false, false, false, false));
+                        }
                     }
+                    applyMouse(ui, shotMouse, false);
+                    applyMouse(ui, shotClick, true);
                 }
 
                 if (shotPath != null && frames == 90) {
@@ -99,6 +108,32 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) { launch(args); }
+
+    /**
+     * One synthetic mouse event, from -Daside.mouse=x,y (hover) or
+     * -Daside.click=x,y (press).
+     *
+     * Coordinates are WINDOW coordinates, which is what a real scene
+     * delivers; UiManager converts them into the top screen's canvas space,
+     * so a screen that draws at its own resolution still gets the right
+     * numbers. In a render the window is 1280x720 and so is the engine
+     * canvas, so there they are also canvas coordinates.
+     *
+     * A mouse feature that cannot be rendered is a mouse feature that rots:
+     * a click that did nothing and a click that was never made look exactly
+     * alike in a screenshot.
+     */
+    static void applyMouse(UiManager ui, String spec, boolean pressed) {
+        if (spec == null) return;
+        String[] parts = spec.split(",");
+        if (parts.length != 2) return;
+        try {
+            ui.handleMouse(Double.parseDouble(parts[0].trim()),
+                           Double.parseDouble(parts[1].trim()), pressed);
+        } catch (NumberFormatException ignored) {
+            // a malformed hook is not worth failing a render over
+        }
+    }
 
     /**
      * Where the art, audio and stories live.

@@ -1,6 +1,7 @@
 package aside.games.fnaf2;
 
 import aside.games.fnaf2.engine.Animatronic;
+import aside.games.fnaf2.engine.Clicks;
 import aside.games.fnaf2.engine.Game;
 import aside.ui.Audio;
 import aside.ui.UiManager;
@@ -31,6 +32,18 @@ import javafx.scene.text.TextAlignment;
  *   0      camera 10      -      camera 11
  *   ESC    pause
  *
+ * And the same thing with a mouse, because FNAF is a point-and-click game
+ * and this one was keyboard-only:
+ *
+ *   click an opening        look there (same as Q / Z / C)
+ *   click MASK / MONITOR    the two buttons along the bottom
+ *   click a camera row      the strip down the right of the monitor
+ *   click the music box bar wind it (a click, not a hold -- see below)
+ *   click anywhere masked   take the mask off
+ *
+ * Where a click lands is decided by {@link MouseMap}, which is pure geometry
+ * so SelfTest can check every region without a display.
+ *
  * The office is drawn as a whole view per light state, not as one picture
  * with lit rectangles on top: in FNAF 2 the view swaps. See {@link Assets}.
  */
@@ -39,20 +52,19 @@ public class GameScreen extends UiScreen {
     final Game game;
     final int night;
 
-    /** Source office art is 1600x768; the canvas is 1280x720. Fitting the
-     *  width keeps both vent openings on screen -- covering the canvas
-     *  crops 117px off each side in source space, which is most of the
-     *  left vent. */
-    static final double OS = W / 1600.0;
-    static final double OW = 1600 * OS;
-    static final double OH = 768 * OS;
-    static final double OX = 0;
-    static final double OY = (H - OH) / 2;
-
-    /** Opening rectangles, in source pixels. */
-    static final double[] HALL_SRC   = {545, 175, 510, 465};
-    static final double[] VENT_L_SRC = {40, 415, 185, 275};
-    static final double[] VENT_R_SRC = {1375, 415, 185, 275};
+    /**
+     * Source office art is 1600x768; the canvas is 1280x720. Fitting the
+     * width keeps both vent openings on screen -- covering the canvas crops
+     * 117px off each side in source space, which is most of the left vent.
+     *
+     * The numbers live in {@link MouseMap} now, because the mouse layer has
+     * to hit-test against exactly what this draws. Two copies of a rectangle
+     * is how a button ends up clickable somewhere it is not drawn.
+     */
+    static final double OW = MouseMap.OW;
+    static final double OH = MouseMap.OH;
+    static final double OX = MouseMap.OX;
+    static final double OY = MouseMap.OY;
 
     double flash = 0;          // white blink on a jumpscare
     double scareT = 0;
@@ -72,6 +84,10 @@ public class GameScreen extends UiScreen {
      *   -Daside.fnaf2.scare=<name>   jump straight to the jumpscare
      *   -Daside.fnaf2.win=1          jump straight to 6 AM
      *   -Daside.fnaf2.freeze=1       stop the engine ticking
+     *
+     * A click is not one of these: the engine has -Daside.click=x,y and
+     * -Daside.mouse=x,y (see Main), which work on any screen and fire after
+     * the keys, so a click can land on the state the keys produced.
      *
      * The stage hook is the one that earns its keep: a threat that is
      * only visible for a window is impossible to screenshot by playing,
@@ -165,6 +181,25 @@ public class GameScreen extends UiScreen {
         if (e.getCode() == KeyCode.W) game.setWinding(false);
     }
 
+    // ---- Mouse ----
+
+    /** Where the pointer is, in canvas pixels. -1 means nowhere. */
+    double hoverX = -1, hoverY = -1;
+
+    @Override
+    public void handleMouse(double x, double y, boolean pressed) {
+        hoverX = x;
+        hoverY = y;
+        if (!pressed) return;
+        Clicks.apply(game, MouseMap.hit(x, y, game.cameraUp, game.maskOn, game.currentCam));
+    }
+
+    /** What the pointer is over right now, for the hover highlight. */
+    MouseMap.Hit hover() {
+        if (hoverX < 0) return MouseMap.Hit.NONE;
+        return MouseMap.hit(hoverX, hoverY, game.cameraUp, game.maskOn, game.currentCam);
+    }
+
     /** "Balloon Boy" matches "balloonboy" -- a dev hook should not make
      *  you remember where the spaces are. */
     static boolean matches(String name, String arg) {
@@ -180,12 +215,95 @@ public class GameScreen extends UiScreen {
         Assets a = Assets.A;
         if (a != null) drawOfficeView(a);
 
-        if (game.cameraUp) drawCameraView();
+        if (game.cameraUp) {
+            drawCameraView();
+            drawCamStrip();
+        }
 
+        if (!game.maskOn) drawButtons();
         drawHUD();
+        drawHover();
 
         if (game.status == Game.Status.JUMPSCARED) drawJumpscare();
         if (game.status == Game.Status.SURVIVED) drawWin();
+    }
+
+    // ---- Mouse affordances ----
+
+    /**
+     * The two buttons along the bottom, in both views.
+     *
+     * MASK and the monitor toggle. The toggle is one button wearing the
+     * label for what it will do next, and it is live in both views because
+     * the two things a player reaches for while the monitor is up are the
+     * two things that take it away.
+     *
+     * Drawn rather than styled: a Region background does not paint on this
+     * GPU, which is why every screen draws itself onto a Canvas (UiScreen).
+     */
+    void drawButtons() {
+        MouseMap.Hit h = hover();
+        button(MouseMap.MASK_BTN, "MASK", h.kind() == MouseMap.Kind.MASK);
+        button(MouseMap.MONITOR_BTN, game.cameraUp ? "LOWER" : "MONITOR",
+                h.kind() == MouseMap.Kind.MONITOR);
+    }
+
+    void button(double[] r, String label, boolean hot) {
+        gc.setFill(Color.rgb(0, 0, 0, hot ? 0.78 : 0.55));
+        gc.fillRect(r[0], r[1], r[2], r[3]);
+        gc.setStroke(hot ? Color.web("#E94560") : Color.web("#555566"));
+        gc.setLineWidth(hot ? 3 : 2);
+        gc.strokeRect(r[0], r[1], r[2], r[3]);
+        gc.setFill(hot ? Color.WHITE : Color.web("#CCCCCC"));
+        gc.setFont(Font.font("Arial", 20));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText(label, r[0] + r[2] / 2, r[1] + r[3] / 2 + 7);
+        gc.setTextAlign(TextAlignment.LEFT);
+    }
+
+    /**
+     * The camera strip, down the right of the monitor.
+     *
+     * It is also the map the game never had: the keyboard selector was
+     * invisible, so the eleven cameras existed only for a player who had
+     * been told they did.
+     */
+    void drawCamStrip() {
+        MouseMap.Hit h = hover();
+        for (int cam = 1; cam <= MouseMap.MUSIC_BOX_CAM; cam++) {
+            double[] r = MouseMap.camRow(cam);
+            boolean here = cam == game.currentCam;
+            boolean hot = h.kind() == MouseMap.Kind.CAM && h.cam() == cam;
+            gc.setFill(Color.rgb(0, 0, 0, here ? 0.85 : hot ? 0.72 : 0.5));
+            gc.fillRect(r[0], r[1], r[2], r[3]);
+            gc.setStroke(here ? Color.web("#E94560")
+                    : hot ? Color.web("#8888AA") : Color.web("#333344"));
+            gc.setLineWidth(here || hot ? 2 : 1);
+            gc.strokeRect(r[0], r[1], r[2], r[3]);
+            gc.setFill(here ? Color.WHITE : Color.web("#9999AA"));
+            gc.setFont(Font.font("Monospaced", 15));
+            gc.fillText("CAM " + (cam < 10 ? "0" + cam : "" + cam), r[0] + 12, r[1] + 30);
+        }
+    }
+
+    /**
+     * A thin outline on whatever the pointer is over, so the openings read
+     * as clickable before anything is clicked. Buttons and camera rows
+     * highlight themselves, so this only covers the openings and the bar.
+     */
+    void drawHover() {
+        if (game.status != Game.Status.PLAYING) return;
+        double[] r = switch (hover().kind()) {
+            case HALL   -> MouseMap.rect(MouseMap.HALL_SRC);
+            case VENT_L -> MouseMap.rect(MouseMap.VENT_L_SRC);
+            case VENT_R -> MouseMap.rect(MouseMap.VENT_R_SRC);
+            case WIND   -> MouseMap.WIND_BTN;
+            default -> null;
+        };
+        if (r == null) return;
+        gc.setStroke(Color.rgb(233, 69, 96, 0.85));
+        gc.setLineWidth(3);
+        gc.strokeRect(r[0], r[1], r[2], r[3]);
     }
 
     /** Which whole-office view the current light state calls for. */
@@ -214,25 +332,25 @@ public class GameScreen extends UiScreen {
             if (game.hallLightOn) {
                 for (Animatronic x : game.visitors()) {
                     if (x.atOpening() && x.opening == Animatronic.Opening.HALL) {
-                        drawFigure(a, x.name, HALL_SRC);
+                        drawFigure(a, x.name, MouseMap.HALL_SRC);
                     }
                 }
                 // Foxy is staged rather than a visitor -- he does not walk
                 // a path to the office, he waits in the cove and then runs
                 // -- so he is not in visitors() and has to be drawn here.
                 if (game.witheredFoxy.stages >= 3) {
-                    drawFigure(a, game.witheredFoxy.name, HALL_SRC);
+                    drawFigure(a, game.witheredFoxy.name, MouseMap.HALL_SRC);
                 }
             } else if (game.ventLLightOn) {
                 for (Animatronic x : game.visitors()) {
                     if (x.atOpening() && x.opening == Animatronic.Opening.VENT_L) {
-                        drawFigure(a, x.name, VENT_L_SRC);
+                        drawFigure(a, x.name, MouseMap.VENT_L_SRC);
                     }
                 }
             } else if (game.ventRLightOn) {
                 for (Animatronic x : game.visitors()) {
                     if (x.atOpening() && x.opening == Animatronic.Opening.VENT_R) {
-                        drawFigure(a, x.name, VENT_R_SRC);
+                        drawFigure(a, x.name, MouseMap.VENT_R_SRC);
                     }
                 }
             }
@@ -277,7 +395,7 @@ public class GameScreen extends UiScreen {
     }
 
     static double[] rect(double[] src) {
-        return new double[]{OX + src[0] * OS, OY + src[1] * OS, src[2] * OS, src[3] * OS};
+        return MouseMap.rect(src);
     }
 
     // ---- Camera ----
@@ -360,13 +478,17 @@ public class GameScreen extends UiScreen {
     }
 
     /** The music box is the real clock, so it gets a panel rather than a
-     *  number in a corner. */
+     *  number in a corner.
+     *
+     *  It sits high because the bottom strip of the screen belongs to the
+     *  buttons in both views -- see {@link MouseMap}. */
     void drawMusicBoxPanel() {
-        double bw = 520, bh = 34;
-        double bx = (W - bw) / 2, by = H - 120;
+        double bw = MouseMap.MUSIC_BOX_BAR_W, bh = MouseMap.MUSIC_BOX_BAR_H;
+        double bx = MouseMap.MUSIC_BOX_BAR_X, by = MouseMap.MUSIC_BOX_BAR_Y;
 
         gc.setFill(Color.rgb(0, 0, 0, 0.62));
-        gc.fillRect(bx - 24, by - 54, bw + 48, bh + 96);
+        double[] panel = MouseMap.MUSIC_BOX_PANEL;
+        gc.fillRect(panel[0], panel[1], panel[2], panel[3]);
 
         gc.setFill(Color.web("#CCCCCC"));
         gc.setFont(Font.font("Arial", 20));
@@ -387,7 +509,8 @@ public class GameScreen extends UiScreen {
 
         gc.setFill(game.winding ? Color.web("#3CB043") : Color.web("#8888AA"));
         gc.setFont(Font.font("Arial", 18));
-        gc.fillText(game.winding ? "WINDING" : "hold W to wind", W / 2, by + bh + 30);
+        gc.fillText(game.winding ? "WINDING — click to stop" : "click the bar to wind",
+                W / 2, by + bh + 30);
         gc.setTextAlign(TextAlignment.LEFT);
 
         if (game.puppetComing) {
@@ -461,9 +584,13 @@ public class GameScreen extends UiScreen {
         gc.setFont(Font.font("Arial", 13));
         gc.setTextAlign(TextAlignment.RIGHT);
         if (game.cameraUp) {
-            gc.fillText("1-9, 0, - = cams    SPACE = lower    W = wind (CAM 11)", W - 30, H - 26);
+            gc.fillText("click a camera    SPACE = lower    click the bar = wind (CAM 11)",
+                    W - 30, H - 26);
+        } else if (game.maskOn) {
+            gc.fillText("click anywhere to take the mask off    M", W - 30, H - 26);
         } else {
-            gc.fillText("Q hall   Z/C vents   M mask   SPACE monitor", W - 30, H - 26);
+            gc.fillText("click a light    Q hall    Z/C vents    M mask    SPACE monitor",
+                    W - 30, H - 26);
         }
         gc.setTextAlign(TextAlignment.LEFT);
     }

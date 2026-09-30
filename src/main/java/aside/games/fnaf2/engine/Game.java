@@ -363,6 +363,7 @@ public class Game {
         if (maskOn) {
             cameraUp = false;
             setLight(NONE);
+            winding = false;
         }
         cue("camera_down");
     }
@@ -370,6 +371,11 @@ public class Game {
     public void toggleCamera() {
         if (status != Status.PLAYING || maskOn) return;
         cameraUp = !cameraUp;
+        // You cannot wind a box you are not looking at. Without this, a
+        // winding flag set by a click survives the monitor going down and
+        // resumes by itself the next time CAM 11 comes up -- a state the
+        // keyboard never produced, because releasing W always cleared it.
+        if (!cameraUp) winding = false;
         cue(cameraUp ? "camera_up" : "camera_down");
     }
 

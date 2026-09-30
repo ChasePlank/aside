@@ -1,5 +1,7 @@
 package aside.games.fnaf2.engine;
 
+import aside.games.fnaf2.MouseMap;
+
 /**
  * Headless self-test for FNAF 2.
  *
@@ -18,6 +20,31 @@ public class SelfTest {
         checks++;
         if (!ok) failed++;
         System.out.printf("  %s %s%n", ok ? "ok  " : "FAIL", what);
+    }
+
+    /** Do two rectangles share area? Touching edges do not count. */
+    static boolean overlaps(double[] a, double[] b) {
+        return a[0] < b[0] + b[2] && b[0] < a[0] + a[2]
+            && a[1] < b[1] + b[3] && b[1] < a[1] + a[3];
+    }
+
+    /** An n x n grid of interior points of a rectangle, for "nowhere in
+     *  here does X" -- a centre alone cannot tell a whole region from a
+     *  point that happens to be right. */
+    static java.util.List<double[]> grid(double[] r, int n) {
+        java.util.List<double[]> pts = new java.util.ArrayList<>();
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= n; j++) {
+                pts.add(new double[]{ r[0] + r[2] * i / (n + 1.0),
+                                      r[1] + r[3] * j / (n + 1.0) });
+            }
+        }
+        return pts;
+    }
+
+    /** Click a point, the way the screen does: resolve it, then apply it. */
+    static void click(Game g, double[] p) {
+        Clicks.apply(g, MouseMap.hit(p[0], p[1], g.cameraUp, g.maskOn, g.currentCam));
     }
 
     public static void main(String[] args) {
@@ -177,7 +204,268 @@ public class SelfTest {
                     !g.lightsDisabled);
         }
 
-        // 12. Bot survival across nights, for the record.
+        // 12. The mouse map.
+        //
+        //     Pure geometry, so it can be checked without a display -- and it
+        //     has to be, because the failure mode is invisible in a
+        //     screenshot: a button drawn in one place and clickable in
+        //     another looks perfectly fine in a picture.
+        {
+            check("MouseMap's music box camera is Game's",
+                    MouseMap.MUSIC_BOX_CAM == Game.MUSIC_BOX_CAM);
+
+            double[][] openings = { MouseMap.rect(MouseMap.HALL_SRC),
+                                    MouseMap.rect(MouseMap.VENT_L_SRC),
+                                    MouseMap.rect(MouseMap.VENT_R_SRC) };
+            MouseMap.Kind[] kinds = { MouseMap.Kind.HALL, MouseMap.Kind.VENT_L,
+                                      MouseMap.Kind.VENT_R };
+
+            // Every opening answers for itself, over its whole area -- not
+            // just at its centre, which is where a wrong rectangle still
+            // happens to be right.
+            boolean each = true;
+            for (int i = 0; i < openings.length; i++) {
+                for (double[] p : grid(openings[i], 7)) {
+                    each &= MouseMap.hit(p[0], p[1], false, false, 1).kind() == kinds[i];
+                }
+            }
+            check("every point of every opening answers for that opening", each);
+
+            // Nothing overlaps anything: two regions that share area make a
+            // click ambiguous, and the order in hit() then decides, silently.
+            boolean disjoint = !overlaps(MouseMap.MASK_BTN, MouseMap.MONITOR_BTN);
+            for (int i = 0; i < openings.length; i++) {
+                for (int j = i + 1; j < openings.length; j++) {
+                    disjoint &= !overlaps(openings[i], openings[j]);
+                }
+                disjoint &= !overlaps(openings[i], MouseMap.MASK_BTN);
+                disjoint &= !overlaps(openings[i], MouseMap.MONITOR_BTN);
+            }
+            check("no opening overlaps another opening or a button", disjoint);
+
+            double[] mb = MouseMap.centre(MouseMap.MASK_BTN);
+            double[] nb = MouseMap.centre(MouseMap.MONITOR_BTN);
+            check("the MASK button answers MASK",
+                    MouseMap.hit(mb[0], mb[1], false, false, 1).kind() == MouseMap.Kind.MASK);
+            check("the MONITOR button answers MONITOR",
+                    MouseMap.hit(nb[0], nb[1], false, false, 1).kind() == MouseMap.Kind.MONITOR);
+
+            // Both buttons are live in both views, at the same place. With
+            // the monitor up they are the only way out of it, so a mouse
+            // player who could not reach them would be stuck pressing SPACE.
+            boolean bothViews = true;
+            for (boolean up : new boolean[]{ false, true }) {
+                bothViews &= MouseMap.hit(mb[0], mb[1], up, false, 1).kind() == MouseMap.Kind.MASK;
+                bothViews &= MouseMap.hit(nb[0], nb[1], up, false, 1).kind()
+                        == MouseMap.Kind.MONITOR;
+            }
+            check("both buttons are live with the monitor up and down", bothViews);
+
+            // And the room itself is not a button. Corners, the clock, the
+            // middle of the floor.
+            double[][] dead = { {2, 2}, {1278, 2}, {2, 718}, {1278, 718},
+                                {1250, 48}, {640, 100} };
+            boolean quiet = true;
+            for (double[] p : dead) {
+                quiet &= MouseMap.hit(p[0], p[1], false, false, 1).kind() == MouseMap.Kind.NONE;
+            }
+            check("a click on the room itself does nothing", quiet);
+
+            // The office is not reachable through the monitor. Sampled over
+            // the openings rather than at their centres: the right vent's
+            // centre is under the camera strip, which is the correct answer
+            // and not the one being asked about here.
+            boolean through = true;
+            for (double[] r : openings) {
+                for (double[] p : grid(r, 7)) {
+                    MouseMap.Kind k = MouseMap.hit(p[0], p[1], true, false, 1).kind();
+                    through &= k != MouseMap.Kind.HALL && k != MouseMap.Kind.VENT_L
+                            && k != MouseMap.Kind.VENT_R;
+                }
+            }
+            check("the office cannot be clicked through the monitor", through);
+
+            // Every camera row selects its own camera, and no two overlap.
+            boolean rows = true, rowsDisjoint = true;
+            for (int cam = 1; cam <= MouseMap.MUSIC_BOX_CAM; cam++) {
+                for (double[] p : grid(MouseMap.camRow(cam), 3)) {
+                    MouseMap.Hit h = MouseMap.hit(p[0], p[1], true, false, 1);
+                    rows &= h.kind() == MouseMap.Kind.CAM && h.cam() == cam;
+                }
+                for (int other = cam + 1; other <= MouseMap.MUSIC_BOX_CAM; other++) {
+                    rowsDisjoint &= !overlaps(MouseMap.camRow(cam), MouseMap.camRow(other));
+                }
+            }
+            check("every point of every camera row selects that camera", rows);
+            check("no two camera rows overlap", rowsDisjoint);
+
+            // The strip fits between the clock and the hint, and covers no
+            // part of the music box bar.
+            double[] lastRow = MouseMap.camRow(MouseMap.MUSIC_BOX_CAM);
+            check("the camera strip fits between the clock and the hint",
+                    MouseMap.CAM_STRIP_Y > 90 && lastRow[1] + lastRow[3] < 690);
+            boolean stripClear = true;
+            for (int cam = 1; cam <= MouseMap.MUSIC_BOX_CAM; cam++) {
+                stripClear &= !overlaps(MouseMap.camRow(cam), MouseMap.WIND_BTN);
+                stripClear &= !overlaps(MouseMap.camRow(cam), MouseMap.MASK_BTN);
+                stripClear &= !overlaps(MouseMap.camRow(cam), MouseMap.MONITOR_BTN);
+            }
+            check("no camera row covers the music box bar or a button", stripClear);
+
+            // The panel stops short of the button strip, so nothing on
+            // CAM 11 is drawn over a button or clickable as one.
+            check("the music box panel stops short of the buttons",
+                    !overlaps(MouseMap.MUSIC_BOX_PANEL, MouseMap.MASK_BTN)
+                            && !overlaps(MouseMap.MUSIC_BOX_PANEL, MouseMap.MONITOR_BTN));
+            check("the wind bar is inside its own panel",
+                    MouseMap.WIND_BTN[0] >= MouseMap.MUSIC_BOX_PANEL[0]
+                            && MouseMap.WIND_BTN[1] >= MouseMap.MUSIC_BOX_PANEL[1]
+                            && MouseMap.WIND_BTN[0] + MouseMap.WIND_BTN[2]
+                                    <= MouseMap.MUSIC_BOX_PANEL[0] + MouseMap.MUSIC_BOX_PANEL[2]
+                            && MouseMap.WIND_BTN[1] + MouseMap.WIND_BTN[3]
+                                    <= MouseMap.MUSIC_BOX_PANEL[1] + MouseMap.MUSIC_BOX_PANEL[3]);
+
+            // The bar winds on its own camera and nowhere else.
+            double[] w = MouseMap.centre(MouseMap.WIND_BTN);
+            check("the music box bar winds on CAM 11",
+                    MouseMap.hit(w[0], w[1], true, false, MouseMap.MUSIC_BOX_CAM).kind()
+                            == MouseMap.Kind.WIND);
+            check("the music box bar is not there on CAM 1",
+                    MouseMap.hit(w[0], w[1], true, false, 1).kind() == MouseMap.Kind.NONE);
+
+            // Masked, every click is the way out.
+            boolean out = true;
+            for (double[] r : openings) {
+                for (double[] p : grid(r, 3)) {
+                    out &= MouseMap.hit(p[0], p[1], false, true, 1).kind() == MouseMap.Kind.MASK;
+                }
+            }
+            check("any click while masked lowers the mask", out);
+
+            // Everything clickable is on the canvas.
+            boolean onCanvas = true;
+            for (double[] r : new double[][]{ MouseMap.MASK_BTN, MouseMap.MONITOR_BTN,
+                                              MouseMap.WIND_BTN, MouseMap.MUSIC_BOX_PANEL,
+                                              MouseMap.camRow(1),
+                                              MouseMap.camRow(MouseMap.MUSIC_BOX_CAM) }) {
+                onCanvas &= r[0] >= 0 && r[1] >= 0
+                        && r[0] + r[2] <= MouseMap.W && r[1] + r[3] <= MouseMap.H;
+            }
+            check("every clickable region is on the canvas", onCanvas);
+
+            // The night rows: each one answers for itself, they do not
+            // overlap, and the gaps between them answer for nobody. The
+            // highlight is drawn from the same rectangle, so a row that
+            // lights up is the row that starts.
+            boolean nights = true, nightsDisjoint = true, gapsQuiet = true;
+            for (int i = 0; i < MouseMap.NIGHTS; i++) {
+                double[] c = MouseMap.centre(MouseMap.nightRow(i));
+                nights &= MouseMap.nightAt(c[0], c[1]) == i;
+                for (int j = i + 1; j < MouseMap.NIGHTS; j++) {
+                    nightsDisjoint &= !overlaps(MouseMap.nightRow(i), MouseMap.nightRow(j));
+                }
+                if (i + 1 < MouseMap.NIGHTS) {
+                    double gapY = MouseMap.nightRow(i)[1] + MouseMap.nightRow(i)[3] + 2;
+                    gapsQuiet &= MouseMap.nightAt(c[0], gapY) == -1;
+                }
+            }
+            check("every night row selects its own night", nights);
+            check("no two night rows overlap", nightsDisjoint);
+            check("the gaps between the night rows select nothing", gapsQuiet);
+            check("a click above or below the night list selects nothing",
+                    MouseMap.nightAt(MouseMap.W / 2.0, 60) == -1
+                            && MouseMap.nightAt(MouseMap.W / 2.0, MouseMap.H - 60) == -1);
+        }
+
+        // 13. What a click does.
+        //
+        //     The geometry above says where a click lands; this says the
+        //     landing does something. A screenshot cannot tell a click that
+        //     did nothing from a click that was never made, so it has to be
+        //     asserted here.
+        {
+            double[] hall = MouseMap.centre(MouseMap.rect(MouseMap.HALL_SRC));
+            double[] vl   = MouseMap.centre(MouseMap.rect(MouseMap.VENT_L_SRC));
+            double[] vr   = MouseMap.centre(MouseMap.rect(MouseMap.VENT_R_SRC));
+            double[] mb   = MouseMap.centre(MouseMap.MASK_BTN);
+            double[] nb   = MouseMap.centre(MouseMap.MONITOR_BTN);
+            double[] w    = MouseMap.centre(MouseMap.WIND_BTN);
+            double[] c5   = MouseMap.centre(MouseMap.camRow(5));
+
+            // An opening toggles its own light, and only its own.
+            Game g = new Game(1, 7L);
+            click(g, hall);
+            check("clicking the hall turns the hall light on", g.hallLightOn);
+            click(g, vl);
+            check("clicking the left vent moves the light and turns the hall off",
+                    g.ventLLightOn && !g.hallLightOn);
+            click(g, vr);
+            check("clicking the right vent moves the light again",
+                    g.ventRLightOn && !g.ventLLightOn);
+            click(g, vr);
+            check("clicking the lit opening again turns it off",
+                    !g.hallLightOn && !g.ventLLightOn && !g.ventRLightOn);
+
+            // The mask button wears it; anywhere at all takes it off.
+            g = new Game(1, 7L);
+            click(g, mb);
+            check("clicking MASK wears the mask", g.maskOn);
+            click(g, hall);
+            check("clicking anywhere while masked takes it off", !g.maskOn);
+
+            // The monitor button raises it, and a camera row selects.
+            g = new Game(1, 7L);
+            click(g, nb);
+            check("clicking MONITOR raises the monitor", g.cameraUp);
+            click(g, c5);
+            check("clicking CAM 05 selects camera 5", g.currentCam == 5);
+            click(g, nb);
+            check("clicking the same button again lowers the monitor", !g.cameraUp);
+
+            // The bar winds, and winds only where it is drawn.
+            g = new Game(1, 7L);
+            click(g, nb);
+            click(g, MouseMap.centre(MouseMap.camRow(MouseMap.MUSIC_BOX_CAM)));
+            click(g, w);
+            check("clicking the bar on CAM 11 starts winding", g.winding);
+            click(g, w);
+            check("clicking the bar again stops winding", !g.winding);
+
+            // ... and the flag cannot survive the camera being taken away.
+            //     This is the one state the keyboard could never produce,
+            //     because releasing W always cleared it.
+            g = new Game(1, 7L);
+            click(g, nb);
+            click(g, MouseMap.centre(MouseMap.camRow(MouseMap.MUSIC_BOX_CAM)));
+            click(g, w);
+            click(g, nb);                       // monitor down
+            click(g, nb);                       // and up again
+            click(g, MouseMap.centre(MouseMap.camRow(MouseMap.MUSIC_BOX_CAM)));
+            check("winding does not resume by itself after the monitor drops",
+                    !g.winding);
+
+            g = new Game(1, 7L);
+            click(g, nb);
+            click(g, MouseMap.centre(MouseMap.camRow(MouseMap.MUSIC_BOX_CAM)));
+            click(g, w);
+            click(g, mb);                       // mask on: camera goes down
+            check("the mask stops the winding too", !g.winding && !g.cameraUp);
+
+            // A click on the room does nothing at all.
+            g = new Game(1, 7L);
+            click(g, new double[]{ 640, 100 });
+            check("a click on the room changes nothing",
+                    !g.hallLightOn && !g.ventLLightOn && !g.ventRLightOn
+                            && !g.maskOn && !g.cameraUp && !g.winding);
+
+            // A click after the night is over is ignored, not queued.
+            g = new Game(1, 7L);
+            g.status = Game.Status.JUMPSCARED;
+            click(g, mb);
+            check("a click after the night is over does nothing", !g.maskOn);
+        }
+
+        // 14. Bot survival across nights, for the record.
         System.out.println();
         for (int night = 1; night <= 5; night++) {
             int wins = 0;
