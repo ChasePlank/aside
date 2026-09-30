@@ -6,6 +6,7 @@ import aside.games.drift.DriftGame;
 import aside.games.attribution.AttributionGame;
 import aside.games.fnaf.FnafGame;
 import aside.games.fnaf2.Fnaf2Game;
+import aside.games.fnaf3.Fnaf3Game;
 import aside.games.fruitjump.FruitJumpGame;
 import aside.games.handoff.HandoffGame;
 import aside.games.interval.IntervalGame;
@@ -36,6 +37,7 @@ public final class Games {
         g.add(new OvertimeGame());
         g.add(new FnafGame());
         g.add(new Fnaf2Game());
+        g.add(new Fnaf3Game());
         g.add(new FruitJumpGame());
         g.add(new ResidueGame());
         g.add(new LedgerGame());
