@@ -46,11 +46,18 @@ public class ShotVn extends Application {
         String story = getParameters().getRaw().isEmpty() ? "overtime" : getParameters().getRaw().get(0);
         Script script = Script.load(Path.of("stories", story + ".aside"));
         Vn vn = new Vn(script);
-        // Walk to the first beat with someone standing in it.
+        // Where to stop. "sprite" waits for someone to be standing in the scene; "choice" stops the moment the
+        // story offers the player a decision, which is the screen a reader spends the most time looking at and
+        // the one view of this presenter I had never seen.
+        String stopAt = getParameters().getRaw().size() > 1 ? getParameters().getRaw().get(1) : "sprite";
         int steps = 0;
-        while (vn.shown.isEmpty() && steps++ < 400) {
-            if (vn.mode == Vn.Mode.CHOOSING) vn.choose(0);
-            else vn.advance();
+        if ("choice".equals(stopAt)) {
+            while (vn.mode != Vn.Mode.CHOOSING && steps++ < 400) vn.advance();
+        } else {
+            while (vn.shown.isEmpty() && steps++ < 400) {
+                if (vn.mode == Vn.Mode.CHOOSING) vn.choose(0);
+                else vn.advance();
+            }
         }
         System.out.println("DIAG reached a beat after " + steps + " steps: shown=" + vn.shown
                 + " speaker=" + vn.speaker() + " mode=" + vn.mode);
@@ -80,7 +87,7 @@ public class ShotVn extends Application {
                     if ((a & 0xFFFFFF) != 0) nonBlack++;
                 }
                 javax.imageio.ImageIO.write(bi, "png", new java.io.File("/root/downloads/" + story + "-vn.png"));
-                System.out.println("PASS wrote " + story + "-vn.png non-black=" + nonBlack);
+                System.out.println("PASS wrote " + story + "-vn-" + stopAt + ".png non-black=" + nonBlack);
             } catch (Exception ex) {
                 System.out.println("FAIL: " + ex);
             }

@@ -251,7 +251,11 @@ public class Vn {
     // ---------------- accessors for the renderer ----------------
 
     public String speaker() { return current == null ? null : current.speaker; }
-    public String text() { return current == null ? "" : current.text; }
+    // Never null. The guard used to cover `current` but not `current.text`, so a STAGE beat - a bg or a show,
+    // which carries no prose - returned null, and VnScreen.syncText crashed on t.equals(shownText). Found by
+    // capturing a choice screen: the sprite capture never landed on a stageless beat, so the presenter had
+    // been looked at before without this being visible.
+    public String text() { return current == null || current.text == null ? "" : current.text; }
     public String pose(String character) { return shown.get(character); }
     public String position(String character) { return stagePos.getOrDefault(character, "center"); }
 
