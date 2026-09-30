@@ -75,6 +75,23 @@ public final class WebBearings {
         b.append("\"days\":").append(Bearings.DAYS).append(",\n");
         b.append("\"tolerance\":").append(num(Bearings.TOLERANCE)).append(",\n");
         b.append("\"sightCost\":").append(Bearings.SIGHT_COST).append(",\n");
+        // The rule's other knobs, and the drift table. These were literals in
+        // the template, which meant the balance lived in two places and only
+        // one of them was the game. Emitted here so a change to any of them
+        // without a regeneration fails a check instead of shipping two
+        // slightly different voyages.
+        b.append("\"rule\":{\"clearBelow\":").append(Bearings.CLEAR_BELOW)
+         .append(",\"fairBelow\":").append(Bearings.FAIR_BELOW)
+         .append(",\"openFromDay\":").append(Bearings.SKY_OPENS_FROM_DAY)
+         .append(",\"openAfter\":").append(Bearings.SKY_OPENS_AFTER)
+         .append(",\"sharedCauseBelow\":").append(Bearings.SHARED_CAUSE_BELOW)
+         .append(",\"aMovesBelow\":").append(Bearings.A_MOVES_BELOW)
+         .append(",\"bMovesBelow\":").append(Bearings.B_MOVES_BELOW)
+         .append(",\"lostCap\":").append(Bearings.LOST_PENALTY_CAP)
+         .append(",\"lostDivisor\":").append(Bearings.LOST_PENALTY_DIVISOR)
+         .append("},\n");
+        b.append("\"driftValue\":").append(doubles(Bearings.DRIFT_VALUE)).append(",\n");
+        b.append("\"driftWeight\":").append(doubles(Bearings.DRIFT_WEIGHT)).append(",\n");
 
         b.append("\"voice\":{\n");
         b.append("  \"opening\":").append(strList(Bearings.OPENING)).append(",\n");
@@ -129,6 +146,7 @@ public final class WebBearings {
         b.append("  \"never\":").append(str(Bearings.NEVER)).append(",\n");
         b.append("  \"ahead\":").append(str(Bearings.AHEAD)).append(",\n");
         b.append("  \"behind\":").append(str(Bearings.BEHIND)).append(",\n");
+        b.append("  \"foundExact\":").append(str(Bearings.FOUND_EXACT)).append(",\n");
         b.append("  \"rateNote\":").append(str(Bearings.RATE_NOTE)).append(",\n");
         b.append("  \"ratedAt\":").append(str(Bearings.RATED_AT)).append(",\n");
         b.append("  \"inPort\":").append(str(Bearings.IN_PORT)).append(",\n");
@@ -173,6 +191,16 @@ public final class WebBearings {
 
     static String num(double d) {
         return d == Math.rint(d) ? String.valueOf((long) d) : String.valueOf(d);
+    }
+
+    /** A Java double array as a JSON array. */
+    static String doubles(double[] xs) {
+        StringBuilder b = new StringBuilder("[");
+        for (int i = 0; i < xs.length; i++) {
+            if (i > 0) b.append(',');
+            b.append(xs[i]);
+        }
+        return b.append(']').toString();
     }
 
     static String str(String s) {

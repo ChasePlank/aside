@@ -92,6 +92,9 @@ const C = {
 "days":16,
 "tolerance":55,
 "sightCost":0.75,
+"rule":{"clearBelow":0.25,"fairBelow":0.85,"openFromDay":4,"openAfter":6,"sharedCauseBelow":0.1,"aMovesBelow":0.22,"bMovesBelow":0.22,"lostCap":0.45,"lostDivisor":250.0},
+"driftValue":[0.0,7.0,-7.0,18.0,-18.0],
+"driftWeight":[0.32,0.2,0.2,0.14,0.14],
 "voice":{
   "opening":["You are the navigator, and the island is 820 miles east of you, and there is nothing between you and it but open water and two chronometers.","Every day you write the day's run into the ship's book. The book is what you steer by. You cannot write down where you are -- only how far you believe you have run -- and the two clocks will not agree about it.","Both were rated in port. A rate does not stay rated. It moves at night, and nothing says so.","The only instrument on board that reports the truth is the sky. It has to be clear, and looking costs you most of the day."],
   "rulesHeading":"HOW IT GOES",
@@ -128,6 +131,7 @@ const C = {
   "never":"never",
   "ahead":"ahead of the sea",
   "behind":"behind the sea",
+  "foundExact":"exactly on the sea",
   "rateNote":"A rate is only as good as the day it was written. The clocks do not tell you when they have moved.",
   "ratedAt":"rated %s, %s",
   "inPort":"in port",
@@ -186,8 +190,11 @@ function rand(seed, day, salt){
   return Number(h >> 11n) / TWO53;
 }
 
-const DRIFT_VALUE  = [0, 7, -7, 18, -18];
-const DRIFT_WEIGHT = [0.32, 0.20, 0.20, 0.14, 0.14];
+/* The rule's numbers come from the model, not from here. A second copy of a
+ * balance constant is a second game, and the two would only disagree on the
+ * afternoon somebody changed one of them. */
+const DRIFT_VALUE  = C.driftValue;
+const DRIFT_WEIGHT = C.driftWeight;
 
 function newDrift(seed, day, salt){
   const r = rand(seed, day, salt);
@@ -218,13 +225,13 @@ function Voyage(seed){
 
 Voyage.prototype.rollWeather = function(){
   const r = rand(this.seed, this.day, 1);
-  let w = r < 0.25 ? 'CLEAR' : r < 0.85 ? 'FAIR' : 'FOUL';
+  let w = r < C.rule.clearBelow ? 'CLEAR' : r < C.rule.fairBelow ? 'FAIR' : 'FOUL';
   // A voyage with no clear day is not a game, and a navigator who has not
   // been able to look for a week is being punished by the weather rather
   // than by their own choices. The sky opens on its own schedule.
-  if (w !== 'CLEAR' && this.day >= 4){
+  if (w !== 'CLEAR' && this.day >= C.rule.openFromDay){
     if (this.clearDays === 0) w = 'CLEAR';
-    else if (this.day - this.lastClearDay >= 6) w = 'CLEAR';
+    else if (this.day - this.lastClearDay >= C.rule.openAfter) w = 'CLEAR';
   }
   if (w === 'CLEAR'){ this.clearDays++; this.lastClearDay = this.day; }
   return w;
@@ -234,7 +241,7 @@ Voyage.prototype.startDay = function(){
   this.weather = this.rollWeather();
   // Being lost costs you way, not just accuracy: a navigator steering for
   // a landfall that is not where the book says it is makes less ground.
-  const penalty = Math.min(0.45, Math.abs(this.error()) / 250.0);
+  const penalty = Math.min(C.rule.lostCap, Math.abs(this.error()) / C.rule.lostDivisor);
   this.todayRun = run(this.weather) * (1 - penalty);
 };
 
@@ -250,14 +257,14 @@ Voyage.prototype.rollDrift = function(){
   // night in a wooden box. When it does, both clocks take the same new rate
   // -- so they agree, and their agreement is the one thing a navigator
   // cannot use.
-  if (rand(this.seed, this.day, 2) < 0.10){
+  if (rand(this.seed, this.day, 2) < C.rule.sharedCauseBelow){
     const d = newDrift(this.seed, this.day, 7);
     for (const c of this.clocks) c.drift = d;
     return;
   }
-  if (rand(this.seed, this.day, 3) < 0.22)
+  if (rand(this.seed, this.day, 3) < C.rule.aMovesBelow)
     this.clocks[0].drift = newDrift(this.seed, this.day, 5);
-  if (rand(this.seed, this.day, 4) < 0.22)
+  if (rand(this.seed, this.day, 4) < C.rule.bMovesBelow)
     this.clocks[1].drift = newDrift(this.seed, this.day, 6);
 };
 
@@ -348,9 +355,9 @@ function dayLabel(onSightScreen){
 }
 
 function foundLine(off){
-  if (off === 0) return '0' + C.voice.miles;
-  return Math.round(Math.abs(off)) + C.voice.miles + ' '
-       + (off > 0 ? C.voice.ahead : C.voice.behind);
+  const m = Math.round(Math.abs(off));
+  if (m === 0) return C.voice.foundExact;
+  return m + C.voice.miles + ' ' + (off > 0 ? C.voice.ahead : C.voice.behind);
 }
 
 function headline(v){
@@ -384,6 +391,160 @@ function sightWas(off){
              off > 0 ? C.voice.sightAhead : C.voice.sightBehind);
 }
 
+/* ------------------------------------------------------------ the save file
+ *
+ * Bearings.serialize() writes this format and Bearings.load() reads it, so a
+ * voyage can be carried between the desktop and the phone by copying one block
+ * of text. This is that format, in localStorage.
+ *
+ * It matters more here than in the other seven. Sixteen days is a long sitting
+ * for a phone, and a voyage that evaporates when the tab is closed is a voyage
+ * nobody finishes. Residue, Ledger, Testimony, Outside, Handoff and Inventory
+ * all keep their state in the browser; this one did not, and the reason it was
+ * missed is that the rule port was the interesting part.
+ *
+ * jd() is Java's Double.toString, and it is here because JavaScript's is not
+ * the same function. Two differences, both found by the trace rather than by
+ * reading: Java prints a whole double with a trailing .0 ("68.0", not "68"),
+ * and Java switches to scientific notation outside 1e-3 .. 1e7 with an
+ * uppercase E and no plus on a positive exponent ("1.1368683772161603E-13",
+ * where JS writes "1.1368683772161603e-13"). Both parse fine in both
+ * languages, so neither would ever have shown up as a bug -- but "the same
+ * file" would have stopped meaning the same file, and the trace's plain diff
+ * is only a proof while the bytes are the same bytes.
+ */
+
+function jd(x){
+  if (!isFinite(x)) return String(x);
+  const a = Math.abs(x);
+  if (a !== 0 && (a < 1e-3 || a >= 1e7)){
+    const s = x.toExponential().replace('e', 'E');
+    const at = s.indexOf('E');
+    let mant = s.slice(0, at), exp = s.slice(at + 1);
+    if (mant.indexOf('.') < 0) mant += '.0';
+    if (exp.charAt(0) === '+') exp = exp.slice(1);
+    return mant + 'E' + exp;
+  }
+  return Number.isInteger(x) ? x.toFixed(1) : String(x);
+}
+
+const int = (s, d) => { const n = parseInt(s, 10); return isNaN(n) ? d : n; };
+const num = (s, d) => { const n = parseFloat(s); return isNaN(n) ? d : n; };
+
+function serialize(v){
+  const L = [];
+  L.push('bearings 1');
+  L.push('seed ' + v.seed.toString());
+  L.push('day ' + v.day);
+  L.push('weather ' + v.weather);
+  L.push('todayRun ' + jd(v.todayRun));
+  L.push('trueRun ' + jd(v.trueRun));
+  L.push('book ' + jd(v.book));
+  L.push('sightings ' + v.sightings);
+  L.push('lastSightDay ' + v.lastSightDay);
+  L.push('lastCorrected ' + jd(v.lastCorrected));
+  L.push('everLooked ' + (v.everLooked ? 1 : 0));
+  L.push('finished ' + (v.finished ? 1 : 0));
+  L.push('found ' + (v.found ? 1 : 0));
+  L.push('finalTrue ' + jd(v.finalTrue));
+  L.push('ending ' + (v.ending === '' ? '-' : v.ending));
+  L.push('clearDays ' + v.clearDays);
+  L.push('lastClearDay ' + v.lastClearDay);
+  for (const c of v.clocks)
+    L.push('clock ' + c.name + ' ' + jd(c.drift) + ' ' + jd(c.rated) + ' ' + c.ratedOn);
+  for (const d of v.days)
+    L.push('rec ' + d.index + ' ' + d.weather + ' ' + d.pick + ' ' + jd(d.recorded) + ' '
+      + jd(d.actual) + ' ' + jd(d.bookAfter) + ' ' + jd(d.trueAfter) + ' '
+      + jd(d.clockA) + ' ' + jd(d.clockB));
+  return L.join('\n') + '\n';
+}
+
+function deserialize(text){
+  const lines = String(text).split('\n');
+  let seed = 0n;
+  for (const line of lines){
+    if (line.indexOf('seed ') === 0){ seed = BigInt(line.slice(5).trim()); break; }
+  }
+  const v = new Voyage(seed);
+  for (const raw of lines){
+    const line = raw.trim();
+    if (!line) continue;
+    const f = line.split(' ');
+    switch (f[0]){
+      case 'day': v.day = int(f[1], 0); break;
+      case 'weather': v.weather = f[1]; break;
+      case 'todayRun': v.todayRun = num(f[1], 0); break;
+      case 'trueRun': v.trueRun = num(f[1], 0); break;
+      case 'book': v.book = num(f[1], 0); break;
+      case 'sightings': v.sightings = int(f[1], 0); break;
+      case 'lastSightDay': v.lastSightDay = int(f[1], -1); break;
+      case 'lastCorrected': v.lastCorrected = num(f[1], 0); break;
+      case 'everLooked': v.everLooked = f[1] === '1'; break;
+      case 'finished': v.finished = f[1] === '1'; break;
+      case 'found': v.found = f[1] === '1'; break;
+      case 'finalTrue': v.finalTrue = num(f[1], 0); break;
+      case 'ending': v.ending = f[1] === '-' ? '' : f[1]; break;
+      case 'clearDays': v.clearDays = int(f[1], 0); break;
+      case 'lastClearDay': v.lastClearDay = int(f[1], -1); break;
+      case 'clock': {
+        const c = v.clocks[f[1] === 'A' ? 0 : 1];
+        c.drift = num(f[2], 0); c.rated = num(f[3], 0); c.ratedOn = int(f[4], -1);
+        break;
+      }
+      case 'rec': {
+        v.days.push({index:int(f[1], 0), weather:f[2], pick:f[3],
+          recorded:num(f[4], 0), actual:num(f[5], 0), bookAfter:num(f[6], 0),
+          trueAfter:num(f[7], 0), clockA:num(f[8], 0), clockB:num(f[9], 0)});
+        break;
+      }
+      default: break;
+    }
+  }
+  return v;
+}
+
+const KEY = 'aside.bearings.voyage';
+
+const CAN_STORE = (() => {
+  try {
+    localStorage.setItem(KEY + '.probe', '1');
+    localStorage.removeItem(KEY + '.probe');
+    return true;
+  } catch (e) { return false; }
+})();
+
+/** The voyage in progress, or null. A finished one comes back finished. */
+function load(){
+  if (!CAN_STORE) return null;
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { text = null; }
+  if (text === null || text === '') return null;
+  try { return deserialize(text); } catch (e) { return null; }
+}
+
+function save(v){
+  if (!CAN_STORE) return false;
+  try { localStorage.setItem(KEY, serialize(v)); return true; } catch (e) { return false; }
+}
+
+function clearSave(){
+  if (!CAN_STORE) return;
+  try { localStorage.removeItem(KEY); } catch (e) { /* nothing to do about it */ }
+}
+
+/**
+ * A seed for a new voyage.
+ *
+ * Java seeds from System.nanoTime(), which is a long -- about 1e18, and well
+ * past the 2^53 where a double stops counting. It is kept as a BigInt all the
+ * way through, because a desktop save carries a seed of that size and a phone
+ * that rounded it on load would replay a different voyage from the same file.
+ */
+function freshSeed(){
+  const t = BigInt(Date.now()) * 1000000n + BigInt(Math.floor(Math.random() * 1000000));
+  return BigInt.asIntN(64, t);
+}
+
 /* ------------------------------------------------------------- the screen */
 
 const app = document.getElementById('app');
@@ -392,8 +553,12 @@ const barinner = document.getElementById('barinner');
 const esc = s => String(s).replace(/[&<>"]/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-let v = null;
-let phase = 'OPEN';
+// A voyage already under way opens on the day, not on the premise again, and a
+// finished one opens on its ending. Sixteen days is long enough that being
+// told the rules every time you come back would be its own punishment. Same
+// two lines as the desktop screen's constructor.
+let v = load();
+let phase = v === null ? 'OPEN' : (v.finished ? 'END' : 'DAY');
 
 function header(right){
   return `<header><h1>${esc(C.wordmark)}</h1>
@@ -424,7 +589,8 @@ function renderOpen(){
         `<div class="rule">${r.key ? `<span class="k">${esc(r.key)}</span>` : ''}`
         + `<span>${esc(r.text)}</span></div>`).join('') + `</div>`;
   setBar('', C.voice.btnBegin, () => {
-    v = new Voyage(Math.floor(Math.random() * 9007199254740991));
+    v = new Voyage(freshSeed());
+    save(v);
     phase = 'DAY';
     render();
   });
@@ -481,11 +647,14 @@ function renderDay(){
     + bookPanel();
   document.getElementById('a').onclick = () => { v.choose('A'); afterDay(); };
   document.getElementById('b').onclick = () => { v.choose('B'); afterDay(); };
-  document.getElementById('s').onclick = () => { if (v.choose('SIGHT')) { phase = 'SIGHT'; render(); } };
+  document.getElementById('s').onclick = () => {
+    if (v.choose('SIGHT')) { save(v); phase = 'SIGHT'; render(); }
+  };
   bar.hidden = true;
 }
 
 function afterDay(){
+  save(v);
   if (v.finished) phase = 'END';
   render();
 }
@@ -517,14 +686,16 @@ function renderEnd(){
       + String(Math.round(d.actual)).padEnd(9)
       + (off >= 0 ? '+' : '') + Math.round(off);
   });
-  app.innerHTML = header('')
+  app.innerHTML = header(C.voice.voyageOver)
     + `<p class="head ${v.found ? 'good' : 'bad'}">${esc(headline(v))}</p>`
     + `<p class="verdict">${esc(verdict(v))}</p>`
     + `<p class="label">${esc(C.voice.voyageHead)}</p>`
     + `<p class="voy">${esc(C.voice.voyageCols + "\n" + rows.join("\n"))}</p>`
     + `<p class="closing">${esc(closing(v))}</p>`;
   setBar('', C.voice.btnAgain, () => {
-    v = new Voyage(Math.floor(Math.random() * 9007199254740991));
+    clearSave();
+    v = new Voyage(freshSeed());
+    save(v);
     phase = 'DAY';
     render();
   });
@@ -535,25 +706,61 @@ render();
 /* Hooks for the trace harness and for screenshots: drive the model directly,
  * read it back, and put any phase on screen without playing to it. A frame
  * that cannot be reached in a snapshot is a frame nobody has looked at. */
+
+/* The trace's policies, and the reason they are in here rather than in the
+ * harness: the harness runs in node, where the model is not importable, so the
+ * only way to drive the real build is through the build. The table is the same
+ * table as aside.games.bearings.Trace -- a test input, not a rule, and if the
+ * two drift the trace fails loudly instead of quietly agreeing. */
+const TRACE_PICKS = ['A', 'B', 'SIGHT', 'A', 'SIGHT', 'B', 'A', 'B',
+                     'SIGHT', 'A', 'A', 'SIGHT', 'B', 'A', 'SIGHT', 'B'];
+
+function tracePick(policy, v){
+  let p;
+  if (policy === 'a') p = 'A';
+  else if (policy === 'b') p = 'B';
+  else if (policy === 'look') p = v.canSight() ? 'SIGHT' : (v.day % 2 === 0 ? 'A' : 'B');
+  else p = TRACE_PICKS[v.day % TRACE_PICKS.length];
+  if (p === 'SIGHT' && !v.canSight()) p = 'A';
+  return p;
+}
+
 window.__bearings = {
   Voyage: Voyage,
   rand: rand,
   newDrift: newDrift,
   content: C,
+  // The save file, so the trace can compare it to the desktop's byte for byte
+  // and so a browser check can round-trip it through the real localStorage.
+  serialize: serialize,
+  deserialize: deserialize,
+  freshSeed: freshSeed,
+  key: KEY,
+  canStore: CAN_STORE,
+  save: save,
+  load: load,
+  clearSave: clearSave,
   showDay(voyage){ v = voyage; phase = 'DAY'; render(); },
   showSight(voyage){ v = voyage; phase = 'SIGHT'; render(); },
   showEnd(voyage){ v = voyage; phase = 'END'; render(); },
-  play(seed, picks){
+  /**
+   * A whole voyage, printed in the save format after every day.
+   *
+   * This is what tools/bearings-trace.mjs compares against the Java model's
+   * own output. The two builds cannot both be right and disagree; if they do,
+   * the diff names the day and the field.
+   */
+  play(seed, policy){
     const v = new Voyage(seed);
-    const out = [];
-    for (const p of picks){
-      if (v.finished) break;
-      if (!v.choose(p)) break;
-      out.push({day:v.day, weather:v.weather, book:v.book, trueRun:v.trueRun,
-                ending:v.ending, finished:v.finished});
+    const out = [serialize(v)];
+    let guard = 0;
+    while (!v.finished && guard++ < 40){
+      if (!v.choose(tracePick(policy, v))) break;
+      out.push('--');
+      out.push(serialize(v));
     }
     return {ending:v.ending, found:v.found, book:v.book, trueRun:v.trueRun,
-            sightings:v.sightings, days:out};
+            sightings:v.sightings, states:out};
   }
 };
 </script>

@@ -39,6 +39,26 @@ public final class Bearings {
      */
     public static final double SIGHT_COST = 0.75;
 
+    /**
+     * The rule's other knobs, named.
+     *
+     * These were literals inside the methods that use them, which was fine
+     * while there was one build. There are two now, and the phone build has to
+     * be given the same numbers -- so they are constants, they are emitted into
+     * the phone build, and a change to one of them without regenerating fails
+     * a check instead of quietly making two different games. The template used
+     * to hold its own copies of all nine of these.
+     */
+    public static final double CLEAR_BELOW = 0.25;
+    public static final double FAIR_BELOW = 0.85;
+    public static final int SKY_OPENS_FROM_DAY = 4;
+    public static final int SKY_OPENS_AFTER = 6;
+    public static final double SHARED_CAUSE_BELOW = 0.10;
+    public static final double A_MOVES_BELOW = 0.22;
+    public static final double B_MOVES_BELOW = 0.22;
+    public static final double LOST_PENALTY_CAP = 0.45;
+    public static final double LOST_PENALTY_DIVISOR = 250.0;
+
     public enum Weather { FAIR, CLEAR, FOUL }
     public enum Pick { A, B, SIGHT }
 
@@ -143,7 +163,7 @@ public final class Bearings {
         // ground than one who knows. This is the only place the error bites
         // before the last day, and it is what makes looking early worth
         // anything at all.
-        double penalty = Math.min(0.45, Math.abs(error()) / 250.0);
+        double penalty = Math.min(LOST_PENALTY_CAP, Math.abs(error()) / LOST_PENALTY_DIVISOR);
         todayRun = run(weather) * (1 - penalty);
     }
 
@@ -236,17 +256,17 @@ public final class Bearings {
     Weather rollWeather() {
         double r = rand(1);
         Weather w;
-        if (r < 0.25) w = Weather.CLEAR;
-        else if (r < 0.85) w = Weather.FAIR;
+        if (r < CLEAR_BELOW) w = Weather.CLEAR;
+        else if (r < FAIR_BELOW) w = Weather.FAIR;
         else w = Weather.FOUL;
 
         // A voyage with no clear day is not a game, and a navigator who has
         // not been able to look for a week is being punished by the weather
         // rather than by their own choices. The sky opens on its own
         // schedule, and this is that schedule.
-        if (w != Weather.CLEAR && day >= 4) {
+        if (w != Weather.CLEAR && day >= SKY_OPENS_FROM_DAY) {
             if (clearDays == 0) w = Weather.CLEAR;
-            else if (day - lastClearDay >= 6) w = Weather.CLEAR;
+            else if (day - lastClearDay >= SKY_OPENS_AFTER) w = Weather.CLEAR;
         }
         if (w == Weather.CLEAR) { clearDays++; lastClearDay = day; }
         return w;
@@ -275,13 +295,13 @@ public final class Bearings {
      * navigator cannot use.
      */
     void rollDrift() {
-        if (rand(2) < 0.10) {
+        if (rand(2) < SHARED_CAUSE_BELOW) {
             double d = newDrift(7);
             for (Clock c : clocks) c.drift = d;
             return;
         }
-        if (rand(3) < 0.22) clocks.get(0).drift = newDrift(5);
-        if (rand(4) < 0.22) clocks.get(1).drift = newDrift(6);
+        if (rand(3) < A_MOVES_BELOW) clocks.get(0).drift = newDrift(5);
+        if (rand(4) < B_MOVES_BELOW) clocks.get(1).drift = newDrift(6);
     }
 
     // ---- determinism ------------------------------------------------------
@@ -411,6 +431,15 @@ public final class Bearings {
         "Your book was %s miles %s the sea.";
     public static final String SIGHT_EXACT =
         "Your book was exactly on the sea. It has happened once before, to somebody else.";
+
+    /**
+     * The book panel's version of the same afternoon.
+     *
+     * SIGHT_EXACT is a sentence and this is a value in a key/value row, so
+     * they are two strings -- but they are the same fact, and the panel used
+     * to report it as a direction.
+     */
+    public static final String FOUND_EXACT = "exactly on the sea";
     /** %s is the clock name, %s the rate. */
     public static final String SIGHT_RERATED =
         "%s is running %s miles a day, and the book now says so.";
@@ -487,10 +516,17 @@ public final class Bearings {
      * A correction of exactly zero has no direction, and "0 miles behind
      * the sea" directly under "your book was exactly on the sea" reads as a
      * mistake -- which it was.
+     *
+     * The rounding is deliberate and it is not decoration: this game produces
+     * errors of 1e-13 whenever the book and the sea land on the same double,
+     * and a bare `off == 0` test would print "0 miles behind the sea" for
+     * exactly the case the line exists to handle. The sight screen already has
+     * a sentence for that afternoon; the panel uses it.
      */
     public static String foundLine(double off) {
-        if (off == 0) return "0" + MILES;
-        return Math.round(Math.abs(off)) + MILES + " " + (off > 0 ? AHEAD : BEHIND);
+        long m = Math.round(Math.abs(off));
+        if (m == 0) return FOUND_EXACT;
+        return m + MILES + " " + (off > 0 ? AHEAD : BEHIND);
     }
 
     public static String ageLabel(int days) {

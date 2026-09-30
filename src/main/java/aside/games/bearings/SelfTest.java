@@ -113,6 +113,75 @@ public final class SelfTest {
                 "94D049BB133111EB", "DRIFT_VALUE", "DRIFT_WEIGHT"}) {
             ok(generated.contains(c), "the phone build carries the draw: " + c);
         }
+
+        // ---- the rule's knobs come from the model, not from the template
+        //
+        // These nine were literals in the template. A balance change that
+        // reached one build and not the other would make two different games
+        // that both look right, and nothing else in the suite would notice.
+        ok(generated.contains("\"clearBelow\":" + Bearings.CLEAR_BELOW),
+                "the phone build's sky opens at the same odds");
+        ok(generated.contains("\"fairBelow\":" + Bearings.FAIR_BELOW),
+                "the phone build's fair weather starts at the same odds");
+        ok(generated.contains("\"openFromDay\":" + Bearings.SKY_OPENS_FROM_DAY),
+                "the phone build's sky starts opening on the same day");
+        ok(generated.contains("\"openAfter\":" + Bearings.SKY_OPENS_AFTER),
+                "the phone build's sky opens after the same gap");
+        ok(generated.contains("\"sharedCauseBelow\":" + Bearings.SHARED_CAUSE_BELOW),
+                "the phone build has the same chance of a shared cause");
+        ok(generated.contains("\"aMovesBelow\":" + Bearings.A_MOVES_BELOW),
+                "the phone build's A moves at the same odds");
+        ok(generated.contains("\"bMovesBelow\":" + Bearings.B_MOVES_BELOW),
+                "the phone build's B moves at the same odds");
+        ok(generated.contains("\"lostCap\":" + Bearings.LOST_PENALTY_CAP),
+                "the phone build caps the cost of being lost the same way");
+        ok(generated.contains("\"lostDivisor\":" + Bearings.LOST_PENALTY_DIVISOR),
+                "the phone build scales the cost of being lost the same way");
+        ok(generated.contains("\"driftValue\":" + WebBearings.doubles(Bearings.DRIFT_VALUE)),
+                "the phone build's drift values come from the model");
+        ok(generated.contains("\"driftWeight\":" + WebBearings.doubles(Bearings.DRIFT_WEIGHT)),
+                "the phone build's drift distribution comes from the model");
+        ok(generated.contains("\"foundExact\":" + WebBearings.str(Bearings.FOUND_EXACT)),
+                "the phone build's book panel knows an exact reading has no direction");
+
+        theSaveFile(generated);
+    }
+
+    /**
+     * The phone build keeps the voyage, in the desktop's own format.
+     *
+     * Sixteen days is a long sitting for a phone, and the first version of
+     * this build had no storage at all -- a voyage that evaporates when the
+     * tab is closed is a voyage nobody finishes. Every other phone build of
+     * mine keeps its state; this one now keeps the same file the desktop
+     * writes, so a voyage can be carried between them by copying one block of
+     * text.
+     *
+     * Only the shape is checked here. tools/bearings-trace.mjs compares the
+     * bytes against the Java model for 1600 voyages, and the real localStorage
+     * is checked once in a browser, because a stub cannot tell you whether the
+     * API is there.
+     */
+    static void theSaveFile(String generated) {
+        ok(generated.contains("'aside.bearings.voyage'"),
+                "the phone build has somewhere to keep the voyage");
+        ok(generated.contains("localStorage.setItem"), "and it writes to the browser");
+        ok(generated.contains("function serialize(v)"), "and it writes the desktop's format");
+        ok(generated.contains("function deserialize(text)"), "and it can read it back");
+        ok(generated.contains("function jd(x)"),
+                "and it prints doubles the way Java does, so the file is the same file");
+        for (String key : new String[]{"seed ", "day ", "weather ", "todayRun ", "trueRun ",
+                "book ", "sightings ", "lastSightDay ", "lastCorrected ", "everLooked ",
+                "finished ", "found ", "finalTrue ", "ending ", "clearDays ",
+                "lastClearDay ", "clock ", "rec "}) {
+            ok(generated.contains("'" + key + "'"),
+                    "the phone build writes the save line: " + key.trim());
+        }
+        // A finished voyage has no day to open on, and one under way opens on
+        // the day rather than on the premise again. Same two lines as the
+        // desktop screen's constructor.
+        ok(generated.contains("v.finished ? 'END' : 'DAY'"),
+                "the phone build opens a saved voyage where it was left");
     }
 
     static String[] dayProsePool(Bearings.Weather w) {
