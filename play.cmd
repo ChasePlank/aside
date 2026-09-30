@@ -29,6 +29,15 @@ rem ---------------------------------------------------------------------
 cd /d "%~dp0"
 
 set "JAVA="
+
+rem 0. A JDK shipped INSIDE this package. The full package carries one, so
+rem    nobody has to install anything - which is the point of it.
+for /f "delims=" %%D in ('dir /b /ad /o-n "%~dp0..\jdk-*" 2^>nul') do (
+  if not defined JAVA if exist "%~dp0..\%%D\bin\java.exe" set "JAVA=%~dp0..\%%D\bin\java.exe"
+)
+if not defined JAVA if exist "%~dp0..\jdk\bin\java.exe" set "JAVA=%~dp0..\jdk\bin\java.exe"
+
+rem 1. An installed JDK elsewhere on the machine.
 if defined JAVA_HOME if exist "%JAVA_HOME%\bin\java.exe" set "JAVA=%JAVA_HOME%\bin\java.exe"
 
 if not defined JAVA (
