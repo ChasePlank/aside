@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0A11">
+<title>ledger</title>
+<style>
+  :root{
+    --bg:#0A0A11; --ink:#E8E8EF; --dim:#9A9AAE; --faint:#6E6E86;
+    --gold:#F2C14E; --edge:#22222E; --card:#14141C;
+    --red:#E94560; --green:#7FD1AE;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:17px/1.55 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:620px; margin:0 auto; padding:22px 18px 24px}
+  header{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
+  .where{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint)}
+  .label{font:11px/1.4 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+         margin:28px 0 10px}
+  .nighthead{font:12px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+             margin:26px 0 4px}
+  .nighttitle{font-size:21px; color:var(--gold); margin:0 0 12px}
+  .scene{font-size:17px; color:var(--dim); margin:0}
+  .det{border:1px solid transparent; border-radius:10px; padding:11px 13px; margin:0 0 7px;
+       background:var(--card); cursor:pointer; color:var(--dim); font-size:17px}
+  .det.sel{background:#1E1E2A; border-color:#3E3E54; box-shadow:inset 3px 0 0 var(--gold)}
+  .det.held{color:var(--ink)}
+  .det .mark{color:var(--gold); font:13px/1.6 Consolas,Menlo,monospace; margin-right:8px}
+  .det .mark.off{color:var(--faint)}
+  .q{font-size:20px; margin:0 0 12px}
+  .note{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin:14px 0 0}
+  .opt{border:1px solid transparent; border-radius:10px; padding:11px 13px; margin:0 0 7px;
+       background:var(--card); cursor:pointer; color:var(--dim); font-size:16px}
+  .opt.sel{background:#1E1E2A; border-color:#3E3E54; box-shadow:inset 3px 0 0 var(--gold); color:var(--ink)}
+  .opt.none{font-style:italic; color:var(--faint)}
+  .head{font-size:22px; margin:26px 0 12px}
+  .head.good{color:var(--green)} .head.bad{color:var(--red)}
+  .said{color:var(--dim); font-size:16px; margin:0 0 14px}
+  .expl{font-size:17px; margin:0}
+  .count{font-size:17px; color:var(--dim); margin:0 0 14px}
+  .closing{font-size:17px; color:var(--dim); margin:0}
+  .list{margin:0}
+  .list .row{display:flex; gap:9px; padding:5px 0; border-bottom:1px solid #17171F; font-size:15px}
+  .list .row:last-child{border-bottom:0}
+  .list .row .mk{color:var(--gold); font:12px/1.7 Consolas,Menlo,monospace}
+  .list .row .tx{color:var(--dim)}
+  .list.gone .row .mk{color:var(--faint)}
+  .list.gone .row .tx{color:var(--faint)}
+  /* The ledger is the game, so it stays on screen while the hotel keeps
+     offering more. On the desktop that is a second column; here it is a fixed
+     strip under the thumb, which is the same idea in one dimension. */
+  .bar{position:fixed; left:0; right:0; bottom:0; background:#0A0A11f2;
+       border-top:1px solid var(--edge); padding:9px 18px calc(9px + env(safe-area-inset-bottom))}
+  .bar .inner{max-width:620px; margin:0 auto}
+  .led{font:12px/1.6 Consolas,Menlo,monospace; color:var(--dim); margin:0 0 8px}
+  .led .h{color:var(--faint); letter-spacing:.1em}
+  .led .l{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .led .l .mk{color:var(--gold)}
+  .led .l.old .mk{color:var(--red)}
+  .led .l.old{color:#D9A0A0}
+  .led .cost{color:var(--red); font-size:11px}
+  .led .none{color:var(--faint)}
+  .btns{display:flex; gap:9px}
+  button{flex:1; font:16px/1.2 Georgia,serif; padding:14px 10px; border-radius:10px;
+         background:var(--card); color:var(--ink); border:1px solid var(--edge); cursor:pointer}
+  button.go{background:var(--gold); color:#171410; border-color:var(--gold)}
+  button.ghost{background:transparent; color:var(--faint); border-color:transparent;
+               flex:0 0 auto; padding-left:8px; padding-right:8px}
+  .warn{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--red); margin:16px 0 0}
+  .spacer{height:0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar"></div>
+<script>
+const C = {
+"capacity":5,
+"nights":[
+  {"heading":"Night one","title":"The man who would not leave his coat","scene":"It is raining on the street and the desk lamp is the only light on this floor. A man comes in at half past eleven, wet through, and stands at the desk without shaking the water off. He takes room nine.","details":[{"id":"n1a","text":"He signed the register \"R. Ainsley\"."},{"id":"n1b","text":"He paid in exact change, and counted it twice."},{"id":"n1c","text":"He asked for a room facing the yard, not the street."},{"id":"n1d","text":"He would not leave his coat at the desk."}]},
+  {"heading":"Night two","title":"The woman in room four","scene":"Room four's bell rings at two in the morning. The woman who comes down is not dressed for the hour, and she does not look at the clock.","details":[{"id":"n2a","text":"She asked what time the kitchen opened."},{"id":"n2b","text":"She wore a red scarf, indoors, in February."},{"id":"n2c","text":"She was carrying a letter she did not post."},{"id":"n2d","text":"She called you \"Mr. Pell\", and then corrected herself."}]},
+  {"heading":"Night three","title":"The boy who sweeps","scene":"The boy who sweeps the front steps comes in out of the cold and does not go home. He stands by the radiator until it is warm, and then a while longer.","details":[{"id":"n3a","text":"He swept the same three steps twice."},{"id":"n3b","text":"He asked whether the man in room nine had paid."},{"id":"n3c","text":"He left his cap on the banister and forgot it."},{"id":"n3d","text":"He said his sister used to work here."}]},
+  {"heading":"Night four","title":"The yard door","scene":"At three, the draught from the back tells you the yard door is open. The rain has stopped, and the yard is very quiet.","details":[{"id":"n4a","text":"The yard door was unlocked."},{"id":"n4b","text":"There were wet footprints going out, not in."},{"id":"n4c","text":"The lamp over the yard door had been unscrewed, not broken."},{"id":"n4d","text":"A red thread was caught on the latch."}]},
+  {"heading":"Night five","title":"Room nine is empty","scene":"You take the nine o'clock round and room nine does not answer. The key is on the inside of the door, so you let yourself in.","details":[{"id":"n5a","text":"The bed had not been slept in."},{"id":"n5b","text":"The window stood open, though it had rained all night."},{"id":"n5c","text":"A letter addressed to \"Mr. Pell\" lay on the table, unopened."},{"id":"n5d","text":"The coat was gone from the hook."}]},
+  {"heading":"Night six","title":"The inspector","scene":"The inspector arrives before the street is light and does not take his hat off. He has a notebook of his own, and he does not show it to you.","details":[{"id":"n6a","text":"He asked for the register."},{"id":"n6b","text":"He asked who had been on the desk, and on which nights."},{"id":"n6c","text":"He asked whether anything had been written down."},{"id":"n6d","text":"He said the man in room nine was not called Ainsley."}]}
+],
+"reckonings":[{"question":"The inspector asks: the man in room nine. What name did he give?","answerId":"n1a","explanation":"R. Ainsley. He signed it himself, in the register, in front of you, and it is the only name in this hotel that he chose."},{"question":"The inspector asks: was the yard door forced?","answerId":"n4c","explanation":"The lamp had been unscrewed, not broken. Somebody stood on something and took it down on purpose, in the dark, so as not to be seen doing it. A forced door is a stranger. That was not a stranger."},{"question":"The inspector asks: the thread on the yard latch. Whose is it?","answerId":"n2b","explanation":"A red scarf, indoors, in February, on a woman who did not look at the clock. You saw it and it was nothing. It is the whole answer."}],
+"reckoningAfter":[1,3,5],
+"answered":{"__none":"You said you did not know.","n1a":"You answered: \"He signed the register \"R. Ainsley\".\"","n1b":"You answered: \"He paid in exact change, and counted it twice.\"","n1c":"You answered: \"He asked for a room facing the yard, not the street.\"","n1d":"You answered: \"He would not leave his coat at the desk.\"","n2a":"You answered: \"She asked what time the kitchen opened.\"","n2b":"You answered: \"She wore a red scarf, indoors, in February.\"","n2c":"You answered: \"She was carrying a letter she did not post.\"","n2d":"You answered: \"She called you \"Mr. Pell\", and then corrected herself.\"","n3a":"You answered: \"He swept the same three steps twice.\"","n3b":"You answered: \"He asked whether the man in room nine had paid.\"","n3c":"You answered: \"He left his cap on the banister and forgot it.\"","n3d":"You answered: \"He said his sister used to work here.\"","n4a":"You answered: \"The yard door was unlocked.\"","n4b":"You answered: \"There were wet footprints going out, not in.\"","n4c":"You answered: \"The lamp over the yard door had been unscrewed, not broken.\"","n4d":"You answered: \"A red thread was caught on the latch.\"","n5a":"You answered: \"The bed had not been slept in.\"","n5b":"You answered: \"The window stood open, though it had rained all night.\"","n5c":"You answered: \"A letter addressed to \"Mr. Pell\" lay on the table, unopened.\"","n5d":"You answered: \"The coat was gone from the hook.\"","n6a":"You answered: \"He asked for the register.\"","n6b":"You answered: \"He asked who had been on the desk, and on which nights.\"","n6c":"You answered: \"He asked whether anything had been written down.\"","n6d":"You answered: \"He said the man in room nine was not called Ainsley.\""},
+"costWarning":{"n1a":"Writing one more costs the oldest line: He signed the register \"R. Ainsley\".","n1b":"Writing one more costs the oldest line: He paid in exact change, and counted it twice.","n1c":"Writing one more costs the oldest line: He asked for a room facing the yard, not the street.","n1d":"Writing one more costs the oldest line: He would not leave his coat at the desk.","n2a":"Writing one more costs the oldest line: She asked what time the kitchen opened.","n2b":"Writing one more costs the oldest line: She wore a red scarf, indoors, in February.","n2c":"Writing one more costs the oldest line: She was carrying a letter she did not post.","n2d":"Writing one more costs the oldest line: She called you \"Mr. Pell\", and then corrected herself.","n3a":"Writing one more costs the oldest line: He swept the same three steps twice.","n3b":"Writing one more costs the oldest line: He asked whether the man in room nine had paid.","n3c":"Writing one more costs the oldest line: He left his cap on the banister and forgot it.","n3d":"Writing one more costs the oldest line: He said his sister used to work here.","n4a":"Writing one more costs the oldest line: The yard door was unlocked.","n4b":"Writing one more costs the oldest line: There were wet footprints going out, not in.","n4c":"Writing one more costs the oldest line: The lamp over the yard door had been unscrewed, not broken.","n4d":"Writing one more costs the oldest line: A red thread was caught on the latch.","n5a":"Writing one more costs the oldest line: The bed had not been slept in.","n5b":"Writing one more costs the oldest line: The window stood open, though it had rained all night.","n5c":"Writing one more costs the oldest line: A letter addressed to \"Mr. Pell\" lay on the table, unopened.","n5d":"Writing one more costs the oldest line: The coat was gone from the hook.","n6a":"Writing one more costs the oldest line: He asked for the register.","n6b":"Writing one more costs the oldest line: He asked who had been on the desk, and on which nights.","n6c":"Writing one more costs the oldest line: He asked whether anything had been written down.","n6d":"Writing one more costs the oldest line: He said the man in room nine was not called Ainsley."},
+"answeredCount":["0 of 3 questions could still be answered.","1 of 3 questions could still be answered.","2 of 3 questions could still be answered.","3 of 3 questions could still be answered."],
+"endNotes":["Nothing. You wrote things down all week and kept none of the ones that were true.","One answer. A record is not what you saw. It is what you were willing to carry.","Two answers. The third was in your hands once, and you put it down to make room.","You kept the right things. Nobody could have known which ones they were."],
+"voice":{"inspectorNote":"He has a notebook of his own. Whatever is not in yours, you cannot give him.","hadIt":"You had it.","didNotHaveIt":"You do not know.","closes":"The ledger closes.","nothing":"nothing","iDoNotKnow":"I do not know."}
+}
+;
+
+// ---------------------------------------------------------------- the clerk
+// A port of aside.games.ledger.Ledger. The content above is generated from the
+// Java model, so the writing cannot drift; this logic is the same rules written
+// a second time in a language a phone can run.
+
+const KEY = 'aside.ledger.clerk';
+
+const detailById = id => {
+  for (const n of C.nights) for (const d of n.details) if (d.id === id) return d;
+  return null;
+};
+const words = id => { const d = detailById(id); return d ? d.text : id; };
+const int = (s, d) => { const n = parseInt(s, 10); return isNaN(n) ? d : n; };
+
+function fresh() { return { night: 0, reck: 0, correct: 0, finished: false, seen: [], lines: [] }; }
+
+const holds = (l, id) => l.lines.indexOf(id) >= 0;
+function record(l, id) {
+  if (!id || holds(l, id)) return;
+  if (l.lines.length >= C.capacity) l.lines.shift();
+  l.lines.push(id);
+}
+function erase(l, id) { const i = l.lines.indexOf(id); if (i >= 0) l.lines.splice(i, 1); }
+function toggle(l, id) { if (holds(l, id)) erase(l, id); else record(l, id); }
+const nextOut = l => l.lines.length >= C.capacity ? l.lines[0] : null;
+const currentNight = l => l.night < C.nights.length ? C.nights[l.night] : null;
+const reckoning = l => l.reck < C.reckonings.length ? C.reckonings[l.reck] : null;
+
+function reckoningDue(l) {
+  for (let i = 0; i < C.reckoningAfter.length; i++) {
+    if (C.reckoningAfter[i] === l.night && i === l.reck) return true;
+  }
+  return false;
+}
+
+function closeNight(l) {
+  const n = currentNight(l);
+  if (n) for (const d of n.details) if (l.seen.indexOf(d.id) < 0) l.seen.push(d.id);
+}
+function advanceNight(l) { l.night++; if (l.night >= C.nights.length) l.finished = true; }
+
+function answer(l, lineId) {
+  const r = reckoning(l);
+  if (!r) return false;
+  const ok = r.answerId === lineId;
+  if (ok) l.correct++;
+  l.reck++;
+  return ok;
+}
+
+const lost = l => l.seen.filter(id => l.lines.indexOf(id) < 0);
+
+// ------------------------------------------------------------- the save file
+// Ledger.serialize() writes a small plain-text ledger and Ledger.deserialize()
+// reads it. This is that exact format, kept in localStorage, so a clerk can be
+// carried between the desktop and the phone by copying a few lines of text.
+
+function serialize(l) {
+  let s = '# ledger v1\n';
+  s += 'night\t' + l.night + '\n';
+  s += 'reck\t' + l.reck + '\n';
+  s += 'correct\t' + l.correct + '\n';
+  s += 'finished\t' + (l.finished ? 1 : 0) + '\n';
+  for (const id of l.seen) s += 'seen\t' + id + '\n';
+  for (const id of l.lines) s += 'line\t' + id + '\n';
+  return s;
+}
+
+function deserialize(text) {
+  const l = fresh();
+  for (const raw of String(text).split(/\r?\n/)) {
+    if (!raw || raw.charAt(0) === '#') continue;
+    const p = raw.split('\t');
+    if (p[0] === 'night') l.night = int(p[1], 0);
+    else if (p[0] === 'reck') l.reck = int(p[1], 0);
+    else if (p[0] === 'correct') l.correct = int(p[1], 0);
+    else if (p[0] === 'finished') l.finished = int(p[1], 0) === 1;
+    else if (p[0] === 'seen') { if (detailById(p[1])) l.seen.push(p[1]); }
+    else if (p[0] === 'line') { if (detailById(p[1])) l.lines.push(p[1]); }
+  }
+  if (l.night > C.nights.length) l.night = C.nights.length;
+  if (l.reck > C.reckonings.length) l.reck = C.reckonings.length;
+  return l;
+}
+
+const CAN_STORE = (() => {
+  try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); return true; }
+  catch (e) { return false; }
+})();
+
+function load() {
+  if (!CAN_STORE) return fresh();
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { text = null; }
+  return text === null ? fresh() : deserialize(text);
+}
+
+function save(l) {
+  if (!CAN_STORE) return false;
+  try { localStorage.setItem(KEY, serialize(l)); return true; } catch (e) { return false; }
+}
+
+// ---------------------------------------------------------------- the screen
+
+let L = load();
+let phase = L.finished ? 'end' : 'night';
+let sel = 0;
+let lastCorrect = false;
+let lastAnswer = null;
+let kept = true;
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function header() {
+  const where = L.finished ? 'closed'
+    : 'night ' + Math.min(L.night + 1, C.nights.length) + ' of ' + C.nights.length;
+  return '<header><h1>ledger</h1><div class="where">' + where + '</div></header>';
+}
+
+/** The ledger strip. It is on every screen that has a ledger. */
+function ledgerStrip() {
+  let h = '<div class="led"><span class="h">THE LEDGER</span> '
+        + L.lines.length + ' of ' + C.capacity;
+  if (L.lines.length === 0) {
+    h += '<div class="l none">' + esc(C.voice.nothing) + '</div>';
+  } else {
+    const out = nextOut(L);
+    for (const id of L.lines) {
+      h += '<div class="l' + (id === out ? ' old' : '') + '">'
+         + '<span class="mk">\u2713</span> ' + esc(words(id)) + '</div>';
+    }
+    if (out) h += '<div class="cost">' + esc(C.costWarning[out]) + '</div>';
+  }
+  return h + '</div>';
+}
+
+function drawNight() {
+  const n = currentNight(L);
+  if (!n) { phase = 'end'; draw(); return; }
+  let h = header()
+    + '<div class="nighthead">' + esc(n.heading.toUpperCase()) + '</div>'
+    + '<div class="nighttitle">' + esc(n.title) + '</div>'
+    + '<p class="scene">' + esc(n.scene) + '</p>'
+    + '<div class="label">YOU COULD WRITE DOWN</div>';
+  n.details.forEach((d, i) => {
+    const held = holds(L, d.id);
+    h += '<div class="det' + (i === sel ? ' sel' : '') + (held ? ' held' : '') + '" data-i="' + i + '">'
+       + '<span class="mark' + (held ? '' : ' off') + '">' + (held ? '\u2713' : '\u00b7') + '</span>'
+       + esc(d.text) + '</div>';
+  });
+  h += '<div class="spacer"></div>';
+  if (!CAN_STORE) h += '<p class="warn">This browser will not keep the ledger. '
+    + 'It will be gone when you close the page.</p>';
+  app.innerHTML = h;
+  app.querySelectorAll('.det').forEach(el => {
+    el.onclick = () => { sel = +el.dataset.i; draw(); };
+  });
+  bar.innerHTML = '<div class="inner">' + ledgerStrip()
+    + '<div class="btns"><button class="go" id="n">End the night</button></div></div>';
+  document.getElementById('n').onclick = () => {
+    closeNight(L);
+    kept = save(L);
+    if (reckoningDue(L)) { phase = 'reckoning'; sel = 0; }
+    else { advanceNight(L); phase = L.finished ? 'end' : 'night'; sel = 0; }
+    draw();
+  };
+}
+
+function drawReckoning() {
+  const r = reckoning(L);
+  if (!r) { phase = 'end'; draw(); return; }
+  let h = header()
+    + '<div class="label">THE INSPECTOR</div>'
+    + '<p class="q">' + esc(r.question) + '</p>'
+    + '<p class="note">' + esc(C.voice.inspectorNote) + '</p>'
+    + '<div class="label">ANSWER FROM THE LEDGER</div>';
+  L.lines.forEach((id, i) => {
+    h += '<div class="opt' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">'
+       + esc(words(id)) + '</div>';
+  });
+  const noneIdx = L.lines.length;
+  h += '<div class="opt none' + (sel === noneIdx ? ' sel' : '') + '" data-i="' + noneIdx + '">'
+     + esc(C.voice.iDoNotKnow) + '</div>';
+  h += '<div class="spacer"></div>';
+  app.innerHTML = h;
+  app.querySelectorAll('.opt').forEach(el => {
+    el.onclick = () => { sel = +el.dataset.i; draw(); };
+  });
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="a">Answer</button></div></div>';
+  document.getElementById('a').onclick = () => {
+    lastAnswer = sel >= L.lines.length ? null : L.lines[sel];
+    lastCorrect = answer(L, lastAnswer);
+    kept = save(L);
+    phase = 'verdict';
+    draw();
+  };
+}
+
+function drawVerdict() {
+  const r = C.reckonings[L.reck - 1];
+  let h = header()
+    + '<div class="head ' + (lastCorrect ? 'good' : 'bad') + '">'
+    + esc(lastCorrect ? C.voice.hadIt : C.voice.didNotHaveIt) + '</div>';
+  if (!lastCorrect) {
+    h += '<p class="said">' + esc(lastAnswer === null ? C.answered['__none'] : C.answered[lastAnswer]) + '</p>';
+  }
+  if (r) h += '<p class="expl">' + esc(r.explanation) + '</p>';
+  h += '<div class="spacer"></div>';
+  if (!kept) h += '<p class="warn">The ledger could not be written down, so it will not be '
+    + 'here next time. Everything above is still true.</p>';
+  app.innerHTML = h;
+  bar.innerHTML = '<div class="inner">' + ledgerStrip()
+    + '<div class="btns"><button class="go" id="n">The next night</button></div></div>';
+  document.getElementById('n').onclick = () => {
+    advanceNight(L);
+    kept = save(L);
+    phase = L.finished ? 'end' : 'night';
+    sel = 0;
+    draw();
+  };
+}
+
+function drawEnd() {
+  let h = header()
+    + '<div class="head">' + esc(C.voice.closes) + '</div>'
+    + '<p class="count">' + esc(C.answeredCount[L.correct]) + '</p>'
+    + '<p class="closing">' + esc(C.endNotes[L.correct]) + '</p>'
+    + '<div class="label">STILL IN THE LEDGER</div><div class="list">';
+  if (L.lines.length === 0) {
+    h += '<div class="row"><span class="mk">\u00b7</span><span class="tx">'
+       + esc(C.voice.nothing) + '</span></div>';
+  } else {
+    for (const id of L.lines) {
+      h += '<div class="row"><span class="mk">\u2713</span><span class="tx">' + esc(words(id)) + '</span></div>';
+    }
+  }
+  h += '</div><div class="label">EVERYTHING YOU LET GO</div><div class="list gone">';
+  const gone = lost(L);
+  if (gone.length === 0) {
+    h += '<div class="row"><span class="mk">\u00b7</span><span class="tx">'
+       + esc(C.voice.nothing) + '</span></div>';
+  } else {
+    for (const id of gone) {
+      h += '<div class="row"><span class="mk">\u00b7</span><span class="tx">' + esc(words(id)) + '</span></div>';
+    }
+  }
+  h += '</div><div class="spacer"></div>';
+  app.innerHTML = h;
+  // One button. The finished ledger is kept until the player says otherwise,
+  // the way the desktop keeps it until R -- and leaving is the shelf's job,
+  // not this game's, so there is nothing for a second button to do.
+  bar.innerHTML = '<div class="inner"><div class="btns">'
+    + '<button class="go" id="r">Start again</button></div></div>';
+  document.getElementById('r').onclick = () => {
+    L = fresh();
+    kept = save(L);
+    phase = 'night';
+    sel = 0;
+    draw();
+  };
+}
+
+function draw() {
+  if (phase === 'night') drawNight();
+  else if (phase === 'reckoning') drawReckoning();
+  else if (phase === 'verdict') drawVerdict();
+  else drawEnd();
+  // The bar is fixed, so the content needs exactly its height of clearance and
+  // no more. A fixed band was 210px, which is right for a full ledger and a
+  // hundred pixels of dead air for an empty one.
+  const sp = app.querySelector('.spacer');
+  if (sp) sp.style.height = (bar.offsetHeight + 16) + 'px';
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  const rows = phase === 'night' ? (currentNight(L) ? currentNight(L).details.length : 0)
+             : phase === 'reckoning' ? L.lines.length + 1 : 0;
+  if (rows > 0) {
+    if (k === 'ArrowDown') { sel = (sel + 1) % rows; draw(); }
+    else if (k === 'ArrowUp') { sel = (sel - 1 + rows) % rows; draw(); }
+    else if (k >= '1' && k <= '9') { const i = +k - 1; if (i < rows) { sel = i; draw(); } }
+  }
+  if (k === 'Enter') {
+    const b = bar.querySelector('button.go') || bar.querySelector('button');
+    if (b) b.click();
+  }
+});
+
+draw();
+</script>
+</body>
+</html>

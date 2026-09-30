@@ -1,6 +1,10 @@
 package aside.games.ledger;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Headless checks for Ledger.
@@ -27,7 +31,7 @@ public final class SelfTest {
         if (!same) { failed++; System.out.println("FAIL  " + what + "  (got " + a + ", want " + b + ")"); }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         content();
         capacity();
         toggle();
@@ -35,9 +39,132 @@ public final class SelfTest {
         answering();
         roundTrip();
         playthrough();
+        theVoice();
+        thePhoneBuild();
         System.out.println((checks - failed) + "/" + checks + " checks passed"
                 + (failed == 0 ? "" : "  --  " + failed + " FAILED"));
         if (failed > 0) System.exit(1);
+    }
+
+    /**
+     * The prose is the model's.
+     *
+     * There are two builds now -- the JavaFX screen and the phone build -- and
+     * a sentence kept in LedgerScreen is a sentence the phone build does not
+     * have. Every fixed line has to be reachable from Ledger, and the screen
+     * may not hold a second copy of any of them.
+     */
+    static void theVoice() {
+        String[] lines = {Ledger.INSPECTOR_NOTE, Ledger.HAD_IT, Ledger.DID_NOT_HAVE_IT,
+                Ledger.SAID_NOTHING, Ledger.CLOSES, Ledger.NOTHING, Ledger.I_DO_NOT_KNOW};
+        Set<String> distinct = new HashSet<>();
+        for (String s : lines) {
+            ok(s != null && !s.isBlank(), "every fixed line is a line: " + s);
+            ok(distinct.add(s), "and no two of them are the same line");
+        }
+        // The lines that depend on state are the model's too.
+        for (int c = 0; c <= Ledger.RECKONINGS.size(); c++) {
+            ok(Ledger.answeredCount(c).contains(String.valueOf(c)), "the count reads back score " + c);
+            ok(Ledger.endNote(c) != null && Ledger.endNote(c).length() > 40, "score " + c + " closes on a line");
+        }
+        for (Ledger.Night n : Ledger.NIGHTS) {
+            for (Ledger.Detail d : n.details) {
+                ok(Ledger.answered(d.id).contains(d.text), "answering with " + d.id + " quotes it");
+                ok(Ledger.costWarning(d.id).contains(d.text), "the cost of writing " + d.id + " names it");
+            }
+        }
+        String screen = screenSource();
+        if (screen != null) {
+            // Look for the line as a string literal, not as a bare word:
+            // "nothing" is a word this game uses in prose and in comments, and
+            // a check that cannot tell a line from a word is a check that
+            // fails for the wrong reason.
+            for (String s : lines) {
+                ok(!screen.contains("\"" + s + "\""), "the screen does not hold its own copy of: " + s);
+            }
+            ok(!screen.contains("String endNote") && !screen.contains("String answeredCount"),
+                    "and the closing lines are the model's, not the screen's");
+        }
+    }
+
+    /** A line of prose has to be in the build, in the form the build stores it. */
+    static void carries(String generated, String text, String what) {
+        ok(generated.contains(WebLedger.str(text)), what);
+    }
+
+    /** The screen's source, if this is being run from a checkout. */
+    static String screenSource() {
+        Path p = Path.of("src", "main", "java", "aside", "games", "ledger", "LedgerScreen.java");
+        try {
+            return Files.exists(p) ? Files.readString(p) : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * The single-file build is generated, not written, and a generated file
+     * that has gone stale is worse than no file: it is a second copy of the
+     * game quietly disagreeing with the first. So the test regenerates it and
+     * compares. If this fails, run aside.games.ledger.WebLedger from the
+     * repository root.
+     */
+    static void thePhoneBuild() throws Exception {
+        Path out = Path.of("web", "ledger.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no web/ledger.html from here -- run from the repository root)");
+            return;
+        }
+        String generated;
+        try {
+            generated = WebLedger.html();
+        } catch (Exception e) {
+            System.out.println("       (no template from here: " + e.getMessage() + ")");
+            return;
+        }
+        ok(generated.equals(Files.readString(out)),
+                "web/ledger.html is current -- regenerate it with aside.games.ledger.WebLedger");
+
+        // And it has to carry the writing, not just be the right size. The
+        // prose goes through the same JSON writer the build uses, because a
+        // detail containing a quotation mark is escaped in the file and would
+        // otherwise look absent -- which is how this check first failed.
+        for (Ledger.Night n : Ledger.NIGHTS) {
+            carries(generated, n.heading, "the phone build carries " + n.heading);
+            carries(generated, n.title, "the phone build carries the title of " + n.heading);
+            carries(generated, n.scene, "the phone build carries the scene of " + n.heading);
+            for (Ledger.Detail d : n.details) {
+                carries(generated, d.text, "the phone build carries " + d.id);
+                carries(generated, Ledger.answered(d.id), "and what answering with " + d.id + " says");
+                carries(generated, Ledger.costWarning(d.id), "and what writing " + d.id + " costs");
+            }
+        }
+        for (Ledger.Reckoning r : Ledger.RECKONINGS) {
+            carries(generated, r.question, "the phone build carries the question about " + r.answerId);
+            carries(generated, r.explanation, "and the answer to it");
+        }
+        for (int c = 0; c <= Ledger.RECKONINGS.size(); c++) {
+            carries(generated, Ledger.answeredCount(c), "the phone build carries the count for " + c);
+            carries(generated, Ledger.endNote(c), "and the closing for " + c);
+        }
+        carries(generated, Ledger.INSPECTOR_NOTE, "the phone build carries the inspector's note");
+        carries(generated, Ledger.HAD_IT, "the phone build carries the verdict when you had it");
+        carries(generated, Ledger.DID_NOT_HAVE_IT, "the phone build carries the verdict when you did not");
+        carries(generated, Ledger.SAID_NOTHING, "the phone build carries the answer that said nothing");
+        carries(generated, Ledger.CLOSES, "the phone build carries the closing");
+        carries(generated, Ledger.I_DO_NOT_KNOW, "the phone build carries the answer that is always there");
+        ok(generated.contains("capacity"), "the phone build is told how many lines the ledger has");
+
+        // The save format is the same one on both sides.
+        ok(generated.contains("ledger v1"), "the phone build writes the same save file the desktop does");
+
+        // The content is embedded in a script tag, so nothing in the prose may
+        // be able to end the block early.
+        ok(!generated.contains("</script>")
+                        || generated.indexOf("</script>") > generated.lastIndexOf("const C ="),
+                "nothing in the prose can end the script block early");
+
+        System.out.println("       phone build: " + (generated.length() / 1024) + " KB, current");
     }
 
     static void content() {

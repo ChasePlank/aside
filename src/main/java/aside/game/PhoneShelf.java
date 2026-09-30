@@ -67,6 +67,7 @@ public final class PhoneShelf {
     static String noteFor(String id) {
         return switch (id) {
             case "residue" -> "Keeps its room in this browser. Come back and it will have aged.";
+            case "ledger" -> "Keeps its ledger in this browser. Six nights, and one sitting.";
             case "vigil" -> "Twelve days. One sitting.";
             case "overtime" -> "A visual novel. What you say carries.";
             default -> "";

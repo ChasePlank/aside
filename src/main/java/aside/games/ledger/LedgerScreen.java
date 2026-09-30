@@ -306,7 +306,7 @@ public class LedgerScreen extends UiScreen {
         boolean sel = index == ledger.lines.size();
         gc.setFont(F_ITEM);
         gc.setFill(sel ? GOLD : DIM);
-        gc.fillText((sel ? "\u25B6  " : "   ") + "0.  I do not know.", M + 6, y + 6);
+        gc.fillText((sel ? "\u25B6  " : "   ") + "0.  " + Ledger.I_DO_NOT_KNOW, M + 6, y + 6);
 
         // The right column is where the ledger lives on every other beat.
         // Here the ledger IS the answer list, so the column holds the one
@@ -314,8 +314,7 @@ public class LedgerScreen extends UiScreen {
         gc.setFont(F_SMALL);
         gc.setFill(Color.rgb(150, 150, 170, 0.75));
         double ny = 170;
-        for (String line : wrap("He has a notebook of his own. Whatever is not in yours, "
-                + "you cannot give him.", F_SMALL, RIGHT_W)) {
+        for (String line : wrap(Ledger.INSPECTOR_NOTE, F_SMALL, RIGHT_W)) {
             gc.fillText(line, RIGHT_X, ny);
             ny += 22;
         }
@@ -331,15 +330,15 @@ public class LedgerScreen extends UiScreen {
         double y = 170;
         gc.setFont(F_HEAD);
         gc.setFill(lastCorrect ? GREEN : RED);
-        gc.fillText(lastCorrect ? "You had it." : "You do not know.", M, y);
+        gc.fillText(lastCorrect ? Ledger.HAD_IT : Ledger.DID_NOT_HAVE_IT, M, y);
         y += 44;
 
         gc.setFont(F_SCENE);
         gc.setFill(Color.rgb(200, 200, 215, 0.72));
         if (!lastCorrect) {
             String what = lastAnswer == null
-                    ? "You said you did not know."
-                    : "You answered: \"" + Ledger.words(lastAnswer) + "\"";
+                    ? Ledger.SAID_NOTHING
+                    : Ledger.answered(lastAnswer);
             for (String line : wrap(what, F_SCENE, LEFT_W)) {
                 gc.fillText(line, M, y);
                 y += 28;
@@ -364,21 +363,15 @@ public class LedgerScreen extends UiScreen {
         double y = 128;
         gc.setFont(F_HEAD);
         gc.setFill(INK);
-        gc.fillText("The ledger closes.", M, y);
+        gc.fillText(Ledger.CLOSES, M, y);
         y += 38;
 
         gc.setFont(F_SCENE);
         gc.setFill(Color.rgb(200, 200, 215, 0.8));
-        gc.fillText(ledger.correct + " of " + Ledger.RECKONINGS.size()
-                + " questions could still be answered.", M, y);
+        gc.fillText(Ledger.answeredCount(ledger.correct), M, y);
         y += 32;
 
-        String closing = switch (ledger.correct) {
-            case 3 -> "You kept the right things. Nobody could have known which ones they were.";
-            case 2 -> "Two answers. The third was in your hands once, and you put it down to make room.";
-            case 1 -> "One answer. A record is not what you saw. It is what you were willing to carry.";
-            default -> "Nothing. You wrote things down all week and kept none of the ones that were true.";
-        };
+        String closing = Ledger.endNote(ledger.correct);
         gc.setFill(DIM);
         for (String line : wrap(closing, F_SCENE, W - M * 2)) {
             gc.fillText(line, M, y);
@@ -399,7 +392,7 @@ public class LedgerScreen extends UiScreen {
         gc.setFont(F_DETAIL);
         if (ledger.lines.isEmpty()) {
             gc.setFill(FAINT);
-            gc.fillText("\u00B7  nothing", M, ly);
+            gc.fillText("\u00B7  " + Ledger.NOTHING, M, ly);
         }
         for (String id : ledger.lines) {
             gc.setFill(GOLD);
@@ -481,7 +474,7 @@ public class LedgerScreen extends UiScreen {
             y += 10;
             gc.setFont(F_TINY);
             gc.setFill(Color.rgb(217, 160, 160, 0.85));
-            for (String line : wrap("Writing one more costs the oldest line: " + Ledger.words(out), F_TINY, RIGHT_W)) {
+            for (String line : wrap(Ledger.costWarning(out), F_TINY, RIGHT_W)) {
                 gc.fillText(line, x, y);
                 y += 17;
             }

@@ -161,6 +161,62 @@ public final class Ledger {
     /** Reckoning i happens after this night (0-based). */
     public static final int[] RECKONING_AFTER = {1, 3, 5};
 
+    // -------------------------------------------------------------- the voice
+    //
+    // Every fixed line the game says lives here rather than in a screen,
+    // because there are two builds now: the JavaFX screen and the phone build
+    // (aside.games.ledger.WebLedger). A sentence kept in one of them is a
+    // sentence the other one does not have.
+
+    /** The note under the inspector's question. */
+    public static final String INSPECTOR_NOTE =
+            "He has a notebook of his own. Whatever is not in yours, you cannot give him.";
+
+    /** The two verdict heads. */
+    public static final String HAD_IT = "You had it.";
+    public static final String DID_NOT_HAVE_IT = "You do not know.";
+
+    /** What you said, when it was wrong. */
+    public static final String SAID_NOTHING = "You said you did not know.";
+
+    /** What you said, when it was wrong and it was something. */
+    public static String answered(String id) {
+        return "You answered: \"" + words(id) + "\"";
+    }
+
+    /** The end. */
+    public static final String CLOSES = "The ledger closes.";
+
+    public static String answeredCount(int correct) {
+        return correct + " of " + RECKONINGS.size() + " questions could still be answered.";
+    }
+
+    /**
+     * The line the game closes on, by how many the clerk could still answer.
+     *
+     * Three is not a perfect score, it is the whole of it -- there are three
+     * reckonings -- and the note for it says so without congratulating anybody.
+     */
+    public static String endNote(int correct) {
+        return switch (correct) {
+            case 3 -> "You kept the right things. Nobody could have known which ones they were.";
+            case 2 -> "Two answers. The third was in your hands once, and you put it down to make room.";
+            case 1 -> "One answer. A record is not what you saw. It is what you were willing to carry.";
+            default -> "Nothing. You wrote things down all week and kept none of the ones that were true.";
+        };
+    }
+
+    /** The warning under a full ledger: what the next write costs. */
+    public static String costWarning(String id) {
+        return "Writing one more costs the oldest line: " + words(id);
+    }
+
+    /** What an empty ledger says it holds. */
+    public static final String NOTHING = "nothing";
+
+    /** The answer that is always on the list. */
+    public static final String I_DO_NOT_KNOW = "I do not know.";
+
     // ---------------------------------------------------------------- state
 
     /** The ledger itself: detail ids, oldest first. */
