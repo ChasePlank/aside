@@ -32,7 +32,10 @@
   .rule{display:flex; gap:12px; margin:0 0 14px; font:13px/1.6 Arial,Helvetica,sans-serif;
         color:var(--dim)}
   .rule:last-child{margin:0}
-  .rule .k{flex:0 0 62px; color:var(--gold); font:12px/1.7 Consolas,Menlo,monospace}
+  /* 78px, not 62: "1 / 2 / 3" in Consolas 12 is 65px, and at 62 the label
+     wrapped onto a second line and ran into the sentence it was labelling.
+     The desktop's key column is 78 for the same reason. */
+  .rule .k{flex:0 0 78px; color:var(--gold); font:12px/1.7 Consolas,Menlo,monospace}
   .form{font-size:18px; color:var(--ink); margin:0}
   .boxnote{border-left:3px solid var(--edge); padding:2px 0 2px 13px; margin:18px 0 0;
            font-style:italic; font-size:17px; color:var(--note)}
