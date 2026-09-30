@@ -149,7 +149,14 @@ public final class Corroboration {
 
     static int draw(int seed, int salt, int n) {
         long h = mix((long) seed * 0x100000001B3L + (long) salt * 0xC2B2AE3D27D4EB4FL);
-        return (int) Math.floorMod(h, (long) n);
+        // remainderUnsigned, NOT floorMod. The hash is a 64-bit value and half
+        // the time its top bit is set, so as a signed long it is negative --
+        // and floorMod on a negative long is the signed residue, which differs
+        // from the unsigned one by (2^64 mod n). The phone build takes the
+        // unsigned remainder, because a BigInt has no sign to lose, so the two
+        // builds disagreed about the night on their first trace. The draw is
+        // defined on the 64 bits, not on the number Java reads them as.
+        return (int) Long.remainderUnsigned(h, n);
     }
 
     public static Corroboration newNight(int seed) {
@@ -348,6 +355,65 @@ public final class Corroboration {
         "established. It is not a lie, and it is not a failure.",
     };
 
+    // ---- every fixed line the game says, kept here and not in the screen.
+    // The phone build reads these too; a label written twice is a label that
+    // will disagree with itself eventually.
+
+    public static final String OPEN_SUB = "THE LOG, CLOSED FOR THE NIGHT";
+    public static final String ASK_HEAD = "THE FOURTEENTH";
+    public static final String FILE_HEAD = "THE ENTRY";
+    public static final String END_HEAD = "THE LOG, CLOSED";
+    public static final String FILE_LINE = "Whatever you write becomes what happened.";
+    public static final String LABEL_SAYS = "says";
+    public static final String LABEL_CHECK = "check";
+    public static final String LABEL_WROTE = "wrote";
+    public static final String LABEL_WAS = "was";
+    public static final String CHECK_NONE = "--";
+    public static final String CHECK_CLEAN = "clean";
+    public static final String CHECK_CAUGHT = "caught";
+    public static final String LOG_HEAD = "THE ELEVENTH, AS IT STANDS IN THE LOG";
+    public static final String LOG_ORDER = "(the hour, the bearing, the height, the motion)";
+    public static final String BTN_BEGIN = "open the log";
+    public static final String BTN_FILE = "write the entry";
+    public static final String BTN_BACK = "back to the questions";
+    public static final String BTN_END = "close the entry";
+    public static final String BTN_AGAIN = "another night";
+    public static final String BTN_LIBRARY = "the library";
+    public static final String NO_QUESTIONS = "that was the last question";
+
+    /** The two closings that are whole paragraphs rather than a tally. */
+    public static final String CLOSING_EMPTY =
+        "Four lines, all of them blank. A blank is the only honest thing to write "
+      + "about a line nobody could settle, and it is the only part of an entry that "
+      + "will still be true in a year. It is also not an entry. The station will have "
+      + "to be asked again, and it will not be asked by you.";
+
+    public static final String CLOSING_BEST =
+        "Three lines, three checks that could have failed, and one left open on "
+      + "purpose. That is as good as this entry gets: everything in it was paid "
+      + "for, and the one thing that could not be established says so.";
+
+    public static final String V_KNOWN = "known";
+    public static final String V_LUCKY = "right, and unchecked";
+    public static final String V_WRONG = "wrong";
+    public static final String V_BLANK = "not established";
+    public static final String V_WITHHELD = "known, and not written";
+
+    public static String verdictWord(Verdict v) {
+        return switch (v) {
+            case KNOWN -> V_KNOWN;
+            case LUCKY -> V_LUCKY;
+            case WRONG -> V_WRONG;
+            case BLANK -> V_BLANK;
+            case WITHHELD -> V_WITHHELD;
+        };
+    }
+
+    /** "N QUESTIONS LEFT", and the singular nobody remembers to write. */
+    public static String questionsLeft(int n) {
+        return n + (n == 1 ? " QUESTION LEFT" : " QUESTIONS LEFT");
+    }
+
     public static final String ASK_HINT =
             "up/down the lines    enter to check that person against the eleventh";
 
@@ -356,6 +422,18 @@ public final class Corroboration {
 
     public static final String END_HINT =
             "enter for the library    r for another night";
+
+    // The phone's own hints, because a hint is written for the thing that
+    // reads it. The desktop's says "up/down the lines" and "enter"; a phone
+    // has no keys, and a hint that names keys it does not have is worse than
+    // no hint. (Bearings shipped a button labelled "for the library" that
+    // actually sailed again, because the label was a regex strip of a
+    // keyboard hint. Same mistake, caught earlier.)
+    public static final String ASK_HINT_PHONE =
+            "tap a line to check that person against the eleventh";
+    public static final String FILE_HINT_PHONE =
+            "tap a value for each line, then close the entry";
+    public static final String END_HINT_PHONE = "";
 
     /** The four lines of the eleventh, as they stand in the log. */
     public String logLine() {
@@ -380,12 +458,7 @@ public final class Corroboration {
         int wrong = tally(Verdict.WRONG), blank = tally(Verdict.BLANK);
         int withheld = tally(Verdict.WITHHELD);
 
-        if (known + lucky + wrong + withheld == 0) {
-            return "Four lines, all of them blank. A blank is the only honest thing to write "
-                 + "about a line nobody could settle, and it is the only part of an entry that "
-                 + "will still be true in a year. It is also not an entry. The station will have "
-                 + "to be asked again, and it will not be asked by you.";
-        }
+        if (known + lucky + wrong + withheld == 0) return CLOSING_EMPTY;
 
         StringBuilder s = new StringBuilder();
         if (wrong > 0) {
@@ -411,9 +484,7 @@ public final class Corroboration {
              .append("a year. ");
         }
         if (known == N - 1 && blank + withheld == 1) {
-            s.append("Three lines, three checks that could have failed, and one left open on ")
-             .append("purpose. That is as good as this entry gets: everything in it was paid ")
-             .append("for, and the one thing that could not be established says so.");
+            s.append(CLOSING_BEST);
         } else if (known > 0) {
             s.append(plural(known, "One line was paid for", known + " lines were paid for"))
              .append(". That is the whole of what you know, and it is worth more than the rest ")

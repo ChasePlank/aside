@@ -112,7 +112,7 @@ public class CorroborationScreen extends UiScreen {
                 c.check(obs(row), axis(row));
                 if (!already) sfx("light_click");
                 persist();
-                if (c.left == 0) say("that was the last question");
+                if (c.left == 0) say(Corroboration.NO_QUESTIONS);
             }
             case F -> { phase = Phase.FILE; sfx("choice_select"); }
             default -> { }
@@ -189,7 +189,7 @@ public class CorroborationScreen extends UiScreen {
         gc.fillText(Corroboration.OPEN_HEAD, M, 96);
         gc.setFill(FAINT);
         gc.setFont(F_TINY);
-        gc.fillText("THE LOG, CLOSED FOR THE NIGHT", M, 120);
+        gc.fillText(Corroboration.OPEN_SUB, M, 120);
 
         double y = 146;
         gc.setFont(F_OPEN);
@@ -203,7 +203,7 @@ public class CorroborationScreen extends UiScreen {
     }
 
     void drawAsk() {
-        header("THE FOURTEENTH", c.left + (c.left == 1 ? " QUESTION LEFT" : " QUESTIONS LEFT"));
+        header(Corroboration.ASK_HEAD, Corroboration.questionsLeft(c.left));
 
         for (int o = 0; o < 2; o++) {
             double x = M + o * COL;
@@ -230,21 +230,21 @@ public class CorroborationScreen extends UiScreen {
 
                 gc.setFont(F_MONO_S);
                 gc.setFill(FAINT);
-                gc.fillText("says", x + 220, y);
+                gc.fillText(Corroboration.LABEL_SAYS, x + 220, y);
                 gc.setFill(INK);
                 gc.fillText(Corroboration.valueName(a, c.claim(o, a)), x + 268, y);
 
                 gc.setFill(FAINT);
-                gc.fillText("check", x + 220, y + 22);
+                gc.fillText(Corroboration.LABEL_CHECK, x + 220, y + 22);
                 if (!c.asked[o][a]) {
                     gc.setFill(FAINT);
-                    gc.fillText("--", x + 268, y + 22);
+                    gc.fillText(Corroboration.CHECK_NONE, x + 268, y + 22);
                 } else if (c.caught(o, a)) {
                     gc.setFill(RED);
-                    gc.fillText("caught", x + 268, y + 22);
+                    gc.fillText(Corroboration.CHECK_CAUGHT, x + 268, y + 22);
                 } else {
                     gc.setFill(GREEN);
-                    gc.fillText("clean", x + 268, y + 22);
+                    gc.fillText(Corroboration.CHECK_CLEAN, x + 268, y + 22);
                 }
             }
         }
@@ -255,13 +255,13 @@ public class CorroborationScreen extends UiScreen {
 
         gc.setFill(FAINT);
         gc.setFont(F_TINY);
-        gc.fillText("THE ELEVENTH, AS IT STANDS IN THE LOG", M, 578);
+        gc.fillText(Corroboration.LOG_HEAD, M, 578);
         gc.setFill(DIM);
         gc.setFont(F_MONO);
         gc.fillText(c.logLine(), M, 604);
         gc.setFill(FAINT);
         gc.setFont(F_TINY);
-        gc.fillText("(the hour, the bearing, the height, the motion)", M, 626);
+        gc.fillText(Corroboration.LOG_ORDER, M, 626);
 
         gc.setFill(GOLD);
         gc.setFont(F_SMALL);
@@ -271,10 +271,10 @@ public class CorroborationScreen extends UiScreen {
     }
 
     void drawFile() {
-        header("THE ENTRY", "THE FOURTEENTH");
+        header(Corroboration.FILE_HEAD, Corroboration.ASK_HEAD);
         gc.setFill(DIM);
         gc.setFont(F_SCENE);
-        gc.fillText("Whatever you write becomes what happened.", M, 190);
+        gc.fillText(Corroboration.FILE_LINE, M, 190);
 
         for (int a = 0; a < Corroboration.N; a++) {
             double y = 260 + a * 74;
@@ -311,7 +311,7 @@ public class CorroborationScreen extends UiScreen {
     }
 
     void drawEnd() {
-        header("THE LOG, CLOSED", "THE FOURTEENTH");
+        header(Corroboration.END_HEAD, Corroboration.ASK_HEAD);
 
         for (int a = 0; a < Corroboration.N; a++) {
             double y = 214 + a * 52;
@@ -323,18 +323,18 @@ public class CorroborationScreen extends UiScreen {
 
             gc.setFont(F_MONO_S);
             gc.setFill(FAINT);
-            gc.fillText("wrote", M + 200, y);
+            gc.fillText(Corroboration.LABEL_WROTE, M + 200, y);
             gc.setFill(v == Corroboration.Verdict.WRONG ? RED : INK);
             gc.fillText(Corroboration.valueName(a, c.filed[a]), M + 256, y);
 
             gc.setFill(FAINT);
-            gc.fillText("was", M + 400, y);
+            gc.fillText(Corroboration.LABEL_WAS, M + 400, y);
             gc.setFill(INK);
             gc.fillText(Corroboration.valueName(a, c.truth[a]), M + 444, y);
 
             gc.setFill(verdictColor(v));
             gc.setFont(F_SMALL);
-            gc.fillText(verdictWord(v), M + 600, y);
+            gc.fillText(Corroboration.verdictWord(v), M + 600, y);
         }
 
         gc.setStroke(EDGE);
@@ -361,16 +361,6 @@ public class CorroborationScreen extends UiScreen {
             case WRONG -> RED;
             case BLANK -> DIM;
             case WITHHELD -> RED;
-        };
-    }
-
-    static String verdictWord(Corroboration.Verdict v) {
-        return switch (v) {
-            case KNOWN -> "known";
-            case LUCKY -> "right, and unchecked";
-            case WRONG -> "wrong";
-            case BLANK -> "not established";
-            case WITHHELD -> "known, and not written";
         };
     }
 

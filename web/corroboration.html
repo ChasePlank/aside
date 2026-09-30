@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0A12">
+<title>corroboration</title>
+<style>
+  :root{
+    --bg:#0A0A12; --panel:#14141C; --edge:#22222E;
+    --gold:#F2C14E; --ink:#E8E8EF; --dim:#9A9AAE; --faint:#6E6E86;
+    --red:#E94560; --green:#7FD1AE;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:17px/1.55 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:620px; margin:0 auto; padding:22px 18px 132px}
+  h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
+  .sub{font:11px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+       margin:5px 0 0}
+  .para{font-size:17px; color:#B9B9CC; margin:0 0 15px}
+  .para.tight{margin:0 0 9px}
+  .label{font:11px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+         margin:26px 0 10px}
+  .who{font-size:20px; color:var(--gold); margin:22px 0 10px}
+  .row{display:block; width:100%; text-align:left; background:var(--panel);
+       border:1px solid var(--edge); border-radius:11px; padding:12px 14px; margin:0 0 9px;
+       color:var(--ink); font:inherit; cursor:pointer}
+  .row:disabled{opacity:.55; cursor:default}
+  .row .top{display:flex; align-items:baseline; gap:10px}
+  .row .ax{flex:1 1 auto; font-size:17px}
+  .row .st{flex:0 0 auto; font:12px/1.6 Consolas,Menlo,monospace; color:var(--faint)}
+  .row .st.clean{color:var(--green)} .row .st.caught{color:var(--red)}
+  .row .bot{display:flex; align-items:baseline; gap:9px; margin:6px 0 0}
+  .row .k{font:11px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); flex:0 0 42px}
+  .row .v{font:14px/1.6 Consolas,Menlo,monospace; color:var(--ink)}
+  .row .v.dim{color:var(--faint)}
+  .log{background:var(--panel); border:1px solid var(--edge); border-radius:12px;
+       padding:13px 15px; margin:26px 0 0}
+  .log .lh{font:11px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--faint);
+           margin:0 0 9px}
+  .log .lv{font:15px/1.7 Consolas,Menlo,monospace; color:var(--ink); white-space:pre-wrap}
+  .log .lo{font:11px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin:7px 0 0}
+  .pick{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px}
+  .pick .ax{flex:0 0 100%; font-size:17px; color:var(--ink); margin:0 0 6px}
+  .chip{font:14px/1.5 Consolas,Menlo,monospace; padding:9px 13px; border-radius:9px;
+        background:var(--panel); color:var(--dim); border:1px solid var(--edge); cursor:pointer}
+  .chip.on{background:var(--gold); color:#1A1509; border-color:var(--gold)}
+  /* Two rows, not one. On a 360px screen "the bearing  wrote south-east  was
+     south-east  known" does not fit on one line, and what a browser does about
+     that is break a word -- "south-" / "east" -- which reads as two values. */
+  .line{padding:10px 0; border-bottom:1px solid var(--edge)}
+  .line .ltop{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
+  .line .ax{font-size:17px; color:var(--dim)}
+  .line .lbot{display:flex; align-items:baseline; gap:8px; margin:5px 0 0}
+  .line .k{font:11px/1.6 Arial,Helvetica,sans-serif; color:var(--faint)}
+  .line .v{font:14px/1.6 Consolas,Menlo,monospace; color:var(--ink); white-space:nowrap}
+  .line .v.bad{color:var(--red)}
+  .line .w{font:12px/1.6 Arial,Helvetica,sans-serif; white-space:nowrap}
+  .line .w.known{color:var(--green)} .line .w.lucky{color:var(--gold)}
+  .line .w.wrong{color:var(--red)} .line .w.blank{color:var(--dim)}
+  .closing{font-size:17px; color:#B9AFA2; margin:22px 0 0; white-space:pre-line}
+  .bar{position:fixed; left:0; right:0; bottom:0; background:#0A0A12F2;
+       border-top:1px solid var(--edge);
+       padding:10px 18px calc(10px + env(safe-area-inset-bottom))}
+  .bar .inner{max-width:620px; margin:0 auto}
+  .bar .hint{font:11px/1.5 Arial,Helvetica,sans-serif; color:var(--faint); margin:0 0 8px}
+  button.go{width:100%; font:17px/1.2 Georgia,serif; padding:15px 12px; border-radius:11px;
+            background:var(--gold); color:#1A1509; border:1px solid var(--gold); cursor:pointer}
+  button.plain{width:100%; font:16px/1.2 Georgia,serif; padding:14px 12px; border-radius:11px;
+               background:var(--panel); color:var(--ink); border:1px solid var(--edge);
+               cursor:pointer}
+  button.plain + button.plain{margin:9px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar" hidden><div class="inner" id="barinner"></div></div>
+
+<script>
+const C = {
+"head":"CORROBORATION",
+"sub":"THE LOG, CLOSED FOR THE NIGHT",
+"askHead":"THE FOURTEENTH",
+"fileHead":"THE ENTRY",
+"endHead":"THE LOG, CLOSED",
+"fileLine":"Whatever you write becomes what happened.",
+"open":["A hill station. Two observers awake for the night of the fourteenth,","and one of them has reported a sighting.","","The entry has four lines: the hour, the bearing, the height, the","motion. Whatever you write becomes what happened.","","Both observers have already told you what they saw. What you do not","have is any reason to believe either of them, because neither of them","is an instrument.","","An observer who is wrong is wrong the same way every time. They report","what they expected to see, and they report it on every night, in the","same voice.","","They were not watching the same part of the sky. One line of the entry","neither of them could see, and each of them is wrong about one other.","","You have eight questions. A question is one check: one observer, one","line, against the eleventh, which is in the log. A check that comes","back clean is not proof. It is proof only if it could have come back","dirty.","","A line may be left blank. A blank is a record of what was not","established. It is not a lie, and it is not a failure."],
+"budget":8,
+"valueCount":3,
+"blankMark":"--",
+"observers":["Hallam","Voss"],
+"axes":["the hour","the bearing","the height","the motion"],
+"values":[["22:00","23:00","00:00"],["north-east","east","south-east"],["low","half","high"],["fixed","drifting","crossing"]],
+"labelSays":"says",
+"labelCheck":"check",
+"labelWrote":"wrote",
+"labelWas":"was",
+"checkNone":"--",
+"checkClean":"clean",
+"checkCaught":"caught",
+"logHead":"THE ELEVENTH, AS IT STANDS IN THE LOG",
+"logOrder":"(the hour, the bearing, the height, the motion)",
+"askHint":"up/down the lines    enter to check that person against the eleventh",
+"fileHint":"left/right to set a line    up/down to move    enter to file the entry",
+"endHint":"enter for the library    r for another night",
+"noQuestions":"that was the last question",
+"askHintPhone":"tap a line to check that person against the eleventh",
+"fileHintPhone":"tap a value for each line, then close the entry",
+"endHintPhone":"",
+"questionsLeftOne":"1 QUESTION LEFT",
+"questionsLeftMany":"%s QUESTIONS LEFT",
+"verdict":{"KNOWN":"known","LUCKY":"right, and unchecked","WRONG":"wrong","BLANK":"not established","WITHHELD":"known, and not written"},
+"closing":{"empty":"Four lines, all of them blank. A blank is the only honest thing to write about a line nobody could settle, and it is the only part of an entry that will still be true in a year. It is also not an entry. The station will have to be asked again, and it will not be asked by you.","best":"Three lines, three checks that could have failed, and one left open on purpose. That is as good as this entry gets: everything in it was paid for, and the one thing that could not be established says so."},
+"btn":{"begin":"open the log","file":"write the entry","back":"back to the questions","end":"close the entry","again":"another night","library":"the library"}
+}
+;
+
+/* ------------------------------------------------------------------ model
+ *
+ * A port of aside.games.corroboration.Corroboration, and it has to stay one.
+ *
+ * The draw is counter-based, not a stream: every number is a pure function
+ * of (seed, salt), so there is no RNG position to carry and a seed replays
+ * a night exactly, here and in Java. The arithmetic is BigInt because Java's
+ * `long` is 64-bit and a JS number is not; a double would lose the low bits
+ * and the two builds would disagree about who is stuck on what.
+ *
+ * The rule, in one line: an observer who is wrong is wrong the same way
+ * every time, so a clean check is only proof if it could have come back
+ * dirty. decisive() is that test, and it is visible from the outside.
+ */
+
+const N = C.axes.length, VALUES = C.valueCount, BLANK = -1;
+
+const u64 = x => BigInt.asUintN(64, x);
+function mix(z) {
+  z = u64(z + 0x9E3779B97F4A7C15n);
+  z = u64((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n);
+  z = u64((z ^ (z >> 27n)) * 0x94D049BB133111EBn);
+  return u64(z ^ (z >> 31n));
+}
+function draw(seed, salt, n) {
+  const h = mix(u64(BigInt(seed) * 0x100000001B3n + BigInt(salt) * 0xC2B2AE3D27D4EB4Fn));
+  const m = BigInt(n);
+  return Number(((h % m) + m) % m);
+}
+
+function newNight(seed) {
+  const c = { seed, truth: [], logged: [], stuck: [[], []], expected: [[], []],
+              left: C.budget, asked: [[], []], answer: [[], []],
+              filed: [BLANK, BLANK, BLANK, BLANK], filedDone: false };
+  for (let a = 0; a < N; a++) {
+    c.truth[a] = draw(seed, 100 + a, VALUES);
+    c.logged[a] = draw(seed, 200 + a, VALUES);
+  }
+  const shared = draw(seed, 300, N);
+  const others = []; for (let a = 0; a < N; a++) if (a !== shared) others.push(a);
+  const hallamPrivate = others[draw(seed, 301, N - 1)];
+  const rest = others.filter(a => a !== hallamPrivate);
+  const vossPrivate = rest[draw(seed, 302, N - 2)];
+
+  for (let o = 0; o < 2; o++) for (let a = 0; a < N; a++) {
+    c.stuck[o][a] = false; c.expected[o][a] = 0;
+    c.asked[o][a] = false; c.answer[o][a] = BLANK;
+  }
+  c.stuck[0][shared] = true; c.stuck[0][hallamPrivate] = true;
+  c.stuck[1][shared] = true; c.stuck[1][vossPrivate] = true;
+
+  for (let o = 0; o < 2; o++) for (let a = 0; a < N; a++) {
+    if (c.stuck[0][a] && c.stuck[1][a]) {
+      // Nobody was watching this line. Their expectation cannot be the log's
+      // own value, or the check would come back clean on both of them and the
+      // one line that cannot be settled would look settled.
+      let e = draw(seed, 400 + o * 10 + a, VALUES - 1);
+      if (e >= c.logged[a]) e++;
+      c.expected[o][a] = e;
+    } else {
+      c.expected[o][a] = draw(seed, 400 + o * 10 + a, VALUES);
+    }
+  }
+  return c;
+}
+
+const report = (c, o, a, actual) => c.stuck[o][a] ? c.expected[o][a] : actual;
+const claim = (c, o, a) => report(c, o, a, c.truth[a]);
+
+function check(c, o, a) {
+  if (c.asked[o][a]) return c.answer[o][a];
+  if (c.left <= 0) return BLANK;
+  c.asked[o][a] = true; c.left--;
+  c.answer[o][a] = report(c, o, a, c.logged[a]);
+  return c.answer[o][a];
+}
+const cleared = (c, o, a) => c.asked[o][a] && c.answer[o][a] === c.logged[a];
+const caught  = (c, o, a) => c.asked[o][a] && c.answer[o][a] !== c.logged[a];
+const decisive = (c, o, a) => cleared(c, o, a) && claim(c, o, a) !== c.logged[a];
+
+function established(c, a) {
+  for (let o = 0; o < 2; o++) if (decisive(c, o, a)) return claim(c, o, a);
+  // Neither check proved anything on its own, and together they do. The line
+  // nobody saw is the only line both observers are stuck on, and there both of
+  // them are caught -- so a clean check on this line cannot be a stuck
+  // observer's, and the night is the value they named.
+  if (c.asked[0][a] && c.asked[1][a] && (cleared(c, 0, a) || cleared(c, 1, a))) return c.logged[a];
+  return BLANK;
+}
+const knows = (c, a) => established(c, a) !== BLANK;
+
+function verdict(c, a) {
+  if (c.filed[a] === BLANK) return knows(c, a) ? 'WITHHELD' : 'BLANK';
+  if (c.filed[a] !== c.truth[a]) return 'WRONG';
+  return knows(c, a) ? 'KNOWN' : 'LUCKY';
+}
+const tally = (c, v) => { let n = 0; for (let a = 0; a < N; a++) if (verdict(c, a) === v) n++; return n; };
+const plural = (n, one, many) => n === 1 ? one : many;
+
+function closing(c) {
+  const known = tally(c, 'KNOWN'), lucky = tally(c, 'LUCKY'), wrong = tally(c, 'WRONG');
+  const blank = tally(c, 'BLANK'), withheld = tally(c, 'WITHHELD');
+  if (known + lucky + wrong + withheld === 0) return C.closing.empty;
+  let s = '';
+  if (wrong > 0) s += plural(wrong, 'One line went in', wrong + ' lines went in')
+    + ' on the strength of a check that came back clean, and it was wrong. Nothing in the '
+    + 'log will show that. The entry is written in the same hand as the rest of it, and the '
+    + 'fourteenth is now whatever you said it was. ';
+  if (lucky > 0) s += plural(lucky, 'One line came out right', lucky + ' lines came out right')
+    + ' without being checked, which is not the same as being known, and which will not '
+    + 'happen in the same place twice. ';
+  if (withheld > 0) s += plural(withheld, 'One line was established', withheld + ' lines were established')
+    + ' and then left out of the entry. That is the one kind of gap that is somebody\'s '
+    + 'decision rather than the arithmetic\'s. ';
+  if (blank > 0) s += plural(blank, 'One line is blank', blank + ' lines are blank')
+    + '. A blank is the only honest thing to write about a line nobody could settle, and it '
+    + 'is the only part of this entry that will still be true in a year. ';
+  if (known === N - 1 && blank + withheld === 1) s += C.closing.best;
+  else if (known > 0) s += plural(known, 'One line was paid for', known + ' lines were paid for')
+    + '. That is the whole of what you know, and it is worth more than the rest of the entry '
+    + 'put together.';
+  return s;
+}
+
+/* --------------------------------------------------------------- storage */
+
+const KEY = 'aside.corroboration.night';
+const CAN_STORE = (() => { try { localStorage.setItem(KEY + '.t', '1'); localStorage.removeItem(KEY + '.t'); return true; } catch (e) { return false; } })();
+
+const serialize = c => [
+  'seed ' + c.seed,
+  'left ' + c.left,
+  'asked ' + c.asked.map(o => o.map(v => v ? 1 : 0).join('')).join(''),
+  'filed ' + c.filed.join(' '),
+  'done ' + (c.filedDone ? 1 : 0),
+].join('\n') + '\n';
+
+function deserialize(text) {
+  let seed = 0, left = C.budget, asked = null;
+  let filed = [BLANK, BLANK, BLANK, BLANK], done = false;
+  for (const line of text.split('\n')) {
+    const f = line.trim().split(/\s+/);
+    if (!f[0]) continue;
+    if (f[0] === 'seed') seed = parseInt(f[1], 10);
+    else if (f[0] === 'left') left = parseInt(f[1], 10);
+    else if (f[0] === 'asked') asked = f[1];
+    else if (f[0] === 'filed') filed = f.slice(1, 1 + N).map(Number);
+    else if (f[0] === 'done') done = f[1] === '1';
+  }
+  const c = newNight(seed);
+  c.left = left;
+  if (asked) for (let i = 0; i < asked.length && i < 2 * N; i++) {
+    if (asked[i] === '1') {
+      const o = Math.floor(i / N), a = i % N;
+      c.asked[o][a] = true;
+      c.answer[o][a] = report(c, o, a, c.logged[a]);
+    }
+  }
+  c.filed = filed; c.filedDone = done;
+  return c;
+}
+
+function save(c) { if (CAN_STORE) { try { localStorage.setItem(KEY, serialize(c)); } catch (e) {} } }
+function load() {
+  if (!CAN_STORE) return null;
+  try { const t = localStorage.getItem(KEY); return t ? deserialize(t) : null; } catch (e) { return null; }
+}
+function clear() { if (CAN_STORE) { try { localStorage.removeItem(KEY); } catch (e) {} } }
+
+/* -------------------------------------------------------------------- ui */
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const barinner = document.getElementById('barinner');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const valueName = (a, v) => v === BLANK ? C.blankMark : C.values[a][v];
+const axisName = a => C.axes[a];
+
+let c = load() || newNight(seedFromClock());
+let phase = c.filedDone ? 'END' : (c.left < C.budget ? 'ASK' : 'OPEN');
+
+function seedFromClock() { return Math.floor(Date.now() / 1000) & 0x7fffffff; }
+
+function hint(t) { return t ? '<p class="hint">' + esc(t) + '</p>' : ''; }
+
+function render() {
+  if (phase === 'OPEN') return renderOpen();
+  if (phase === 'ASK') return renderAsk();
+  if (phase === 'FILE') return renderFile();
+  return renderEnd();
+}
+
+/* The premise is stored as lines with blank ones between paragraphs, because
+   that is how the engine screen draws it. Here it has to be paragraphs. */
+function paras(lines) {
+  const out = []; let cur = [];
+  for (const l of lines) {
+    if (!l.trim()) { if (cur.length) out.push(cur.join(' ')); cur = []; }
+    else cur.push(l.trim());
+  }
+  if (cur.length) out.push(cur.join(' '));
+  return out;
+}
+
+function renderOpen() {
+  app.innerHTML = '<h1>' + esc(C.head) + '</h1><p class="sub">' + esc(C.sub) + '</p>'
+    + paras(C.open).map(p => '<p class="para">' + esc(p) + '</p>').join('');
+  bar.hidden = false;
+  barinner.innerHTML = '<button class="go" id="begin">' + esc(C.btn.begin) + '</button>';
+  document.getElementById('begin').onclick = () => { phase = 'ASK'; render(); };
+}
+
+const questionsLeft = n => n === 1 ? C.questionsLeftOne : C.questionsLeftMany.replace('%s', n);
+
+function renderAsk() {
+  let h = '<h1>' + esc(C.askHead) + '</h1><p class="sub">' + esc(questionsLeft(c.left)) + '</p>';
+  for (let o = 0; o < 2; o++) {
+    h += '<div class="who">' + esc(C.observers[o]) + '</div>';
+    for (let a = 0; a < N; a++) {
+      const st = !c.asked[o][a] ? null : (caught(c, o, a) ? 'caught' : 'clean');
+      h += '<button class="row" data-o="' + o + '" data-a="' + a + '"'
+        + (c.left <= 0 && !c.asked[o][a] ? ' disabled' : '') + '>'
+        + '<span class="top"><span class="ax">' + esc(axisName(a)) + '</span>'
+        + '<span class="st ' + (st || '') + '">' + esc(st ? (st === 'clean' ? C.checkClean : C.checkCaught) : C.checkNone) + '</span></span>'
+        + '<span class="bot"><span class="k">' + esc(C.labelSays) + '</span>'
+        + '<span class="v">' + esc(valueName(a, claim(c, o, a))) + '</span></span>'
+        + '</button>';
+    }
+  }
+  h += '<div class="log"><p class="lh">' + esc(C.logHead) + '</p>'
+    + '<div class="lv">' + esc(c.logged.map((v, a) => valueName(a, v)).join('   ')) + '</div>'
+    + '<p class="lo">' + esc(C.logOrder) + '</p></div>';
+  app.innerHTML = h;
+
+  bar.hidden = false;
+  barinner.innerHTML = hint(c.left <= 0 ? C.noQuestions : C.askHintPhone)
+    + '<button class="go" id="tofile">' + esc(C.btn.file) + '</button>';
+  document.getElementById('tofile').onclick = () => { phase = 'FILE'; render(); };
+
+  app.querySelectorAll('.row').forEach(el => {
+    el.onclick = () => {
+      const o = +el.dataset.o, a = +el.dataset.a;
+      if (c.left <= 0 && !c.asked[o][a]) return;
+      check(c, o, a); save(c); render();
+    };
+  });
+}
+
+function renderFile() {
+  let h = '<h1>' + esc(C.fileHead) + '</h1><p class="sub">' + esc(C.askHead) + '</p>'
+    + '<p class="para">' + esc(C.fileLine) + '</p>';
+  for (let a = 0; a < N; a++) {
+    h += '<div class="pick"><span class="ax">' + esc(axisName(a)) + '</span>';
+    for (let v = BLANK; v < VALUES; v++) {
+      h += '<button class="chip' + (c.filed[a] === v ? ' on' : '') + '" data-a="' + a + '" data-v="' + v + '">'
+        + esc(valueName(a, v)) + '</button>';
+    }
+    h += '</div>';
+  }
+  app.innerHTML = h;
+
+  bar.hidden = false;
+  barinner.innerHTML = hint(C.fileHintPhone)
+    + '<button class="go" id="close">' + esc(C.btn.end) + '</button>';
+  document.getElementById('close').onclick = () => { c.filedDone = true; save(c); phase = 'END'; render(); };
+
+  app.querySelectorAll('.chip').forEach(el => {
+    el.onclick = () => { c.filed[+el.dataset.a] = +el.dataset.v; save(c); render(); };
+  });
+}
+
+function renderEnd() {
+  let h = '<h1>' + esc(C.endHead) + '</h1><p class="sub">' + esc(C.askHead) + '</p>';
+  for (let a = 0; a < N; a++) {
+    const v = verdict(c, a);
+    const word = C.verdict[v];
+    const cls = v.toLowerCase();
+    h += '<div class="line"><div class="ltop"><span class="ax">' + esc(axisName(a)) + '</span>'
+      + '<span class="w ' + cls + '">' + esc(word) + '</span></div>'
+      + '<div class="lbot"><span class="k">' + esc(C.labelWrote) + '</span>'
+      + '<span class="v' + (v === 'WRONG' ? ' bad' : '') + '">' + esc(valueName(a, c.filed[a])) + '</span>'
+      + '<span class="k">' + esc(C.labelWas) + '</span>'
+      + '<span class="v">' + esc(valueName(a, c.truth[a])) + '</span></div></div>';
+  }
+  h += '<p class="closing">' + esc(closing(c)) + '</p>';
+  app.innerHTML = h;
+
+  bar.hidden = false;
+  barinner.innerHTML = hint(C.endHintPhone)
+    + '<button class="go" id="again">' + esc(C.btn.again) + '</button>'
+    + '<button class="plain" id="lib">' + esc(C.btn.library) + '</button>';
+  document.getElementById('again').onclick = () => {
+    clear();
+    c = newNight(seedFromClock()); phase = 'ASK'; render();
+  };
+  document.getElementById('lib').onclick = () => {
+    clear();
+    c = newNight(seedFromClock()); phase = 'OPEN'; render();
+  };
+}
+
+render();
+
+/* A hook for the trace, so the shipped build can be driven rather than a
+   second copy of it. tools/corroboration-trace.mjs uses this and diffs the
+   result against the Java model. */
+window.__corroboration = { newNight, check, claim, cleared, caught, decisive,
+                           established, knows, verdict, closing, serialize,
+                           deserialize, C, N, VALUES, BLANK };
+</script>
+</body>
+</html>

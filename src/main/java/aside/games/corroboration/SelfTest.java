@@ -38,6 +38,7 @@ public final class SelfTest {
         determinism();
         storage();
         theArithmetic();
+        thePhoneBuild();
         System.out.println((checks - failed) + "/" + checks + " checks passed"
                 + (failed == 0 ? "" : "  --  " + failed + " FAILED"));
         if (failed > 0) System.exit(1);
@@ -304,6 +305,70 @@ public final class SelfTest {
                 lucky == null ? 0.0 : sum(lucky) / (double) seeds,
                 sum(wrong) / (double) seeds,
                 (seeds * N - sum(known) - (lucky == null ? 0 : sum(lucky)) - sum(wrong)) / (double) seeds);
+    }
+
+    // ------------------------------------------------------- the phone build
+
+    /**
+     * A generated file that has gone stale is worse than no file -- it is a
+     * second copy of the game quietly disagreeing with the first. So the check
+     * is a regeneration diff, not a spot-check.
+     *
+     * What this cannot check is whether the two models still agree about a
+     * night; that needs node. tools/corroboration-trace.mjs is the other half,
+     * and it is the half that found the unsigned-remainder bug.
+     */
+    static void thePhoneBuild() throws Exception {
+        Path out = Path.of("web", "corroboration.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no web/corroboration.html from here -- run from the repository root)");
+            return;
+        }
+        String generated;
+        try {
+            generated = WebCorroboration.html();
+        } catch (Exception e) {
+            System.out.println("       (no template from here: " + e.getMessage() + ")");
+            return;
+        }
+        ok(generated.equals(Files.readString(out)),
+                "web/corroboration.html is current -- regenerate it with aside.games.corroboration.WebCorroboration");
+
+        // Every fixed line the game says has to be in the build, because the
+        // build does not own any of them.
+        for (String line : Corroboration.OPEN) {
+            if (line.isBlank()) continue;
+            ok(generated.contains(WebCorroboration.str(line)), "the phone build carries: " + line);
+        }
+        for (String line : new String[] {
+                Corroboration.OPEN_HEAD, Corroboration.OPEN_SUB, Corroboration.ASK_HEAD,
+                Corroboration.FILE_HEAD, Corroboration.END_HEAD, Corroboration.FILE_LINE,
+                Corroboration.LABEL_SAYS, Corroboration.LABEL_CHECK, Corroboration.LABEL_WROTE,
+                Corroboration.LABEL_WAS, Corroboration.CHECK_NONE, Corroboration.CHECK_CLEAN,
+                Corroboration.CHECK_CAUGHT, Corroboration.LOG_HEAD, Corroboration.LOG_ORDER,
+                Corroboration.ASK_HINT, Corroboration.FILE_HINT, Corroboration.END_HINT,
+                Corroboration.NO_QUESTIONS, Corroboration.BTN_BEGIN, Corroboration.BTN_FILE,
+                Corroboration.BTN_BACK, Corroboration.BTN_END, Corroboration.BTN_AGAIN,
+                Corroboration.BTN_LIBRARY, Corroboration.CLOSING_EMPTY, Corroboration.CLOSING_BEST,
+                Corroboration.V_KNOWN, Corroboration.V_LUCKY, Corroboration.V_WRONG,
+                Corroboration.V_BLANK, Corroboration.V_WITHHELD,
+        }) {
+            ok(generated.contains(WebCorroboration.str(line)), "the phone build carries: " + line);
+        }
+        // The count line is emitted as a template, so what has to be present is
+        // the template, not any one filling of it.
+        ok(generated.contains(WebCorroboration.str(Corroboration.questionsLeft(2).replace("2", "%s"))),
+                "the phone build carries the question count as a template");
+        ok(generated.contains(WebCorroboration.str(Corroboration.questionsLeft(1))),
+                "and the singular, which is the one that gets forgotten");
+        for (int a = 0; a < N; a++) {
+            ok(generated.contains(WebCorroboration.str(Corroboration.axisName(a))),
+                    "the phone build carries the line name: " + Corroboration.axisName(a));
+            for (int v = 0; v < Corroboration.VALUES; v++) {
+                ok(generated.contains(WebCorroboration.str(Corroboration.valueName(a, v))),
+                        "and the value " + Corroboration.valueName(a, v));
+            }
+        }
     }
 
     static int sum(int[] a) { int s = 0; for (int x : a) s += x; return s; }
