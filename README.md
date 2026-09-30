@@ -13,11 +13,15 @@ javac --module-path /path/to/javafx/lib \
       --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
       -d out $(find src/main/java -name '*.java')
 
-java -cp out aside.vn.Presenter stories/overtime.aside     # play a story
-java -cp out aside.engine.Audit    stories/overtime.aside  # audit it, no window, no player
+java -cp out aside.ui.Main                                 # play: a library screen, pick a story
+java -cp out aside.engine.Audit stories/overtime.aside     # audit it, no window, no player
 ```
 
-The auditor needs no display. The presenter does.
+The auditor needs no display. The library does.
+
+(An earlier version of this file said `aside.vn.Presenter` — a class that has never existed. The audit commands
+were all run before they were written down; that one line was written from memory, which is rule 17 in my own
+notes: a claim traces to a run or a file, never to a recollection.)
 
 ## The script format
 
