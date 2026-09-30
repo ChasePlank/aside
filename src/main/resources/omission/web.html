@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Omission</title>
+<style>
+  :root {
+    --bg: #0B0A08;
+    --iron: #131210;
+    --ink: #EDE9E0;
+    --dim: #A29C8E;
+    --faint: #6E6A60;
+    --gold: #E8B44A;
+    --bad: #D9534F;
+    --good: #7FBF7F;
+    --silent: #7FB2E5;
+    --paper: #1A1813;
+    --edge: #2E2B23;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: env(safe-area-inset-top) 0 0 0;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 150px; }
+  h1 { font-family: Georgia, serif; font-size: 34px; color: var(--gold); margin: 18px 0 2px; font-weight: 400; }
+  .sub { color: var(--faint); font-size: 12px; margin-bottom: 18px; }
+  p { margin: 0 0 14px; }
+  .scene { font-family: Georgia, serif; font-size: 17px; color: var(--ink); }
+  .card { background: var(--paper); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; margin: 0 0 16px; }
+  .card h2 { font-size: 12px; letter-spacing: .08em; color: var(--faint); margin: 0 0 12px; font-weight: 600; }
+  .rule { margin-bottom: 14px; }
+  .rule .k { color: var(--gold); font-size: 14px; }
+  .rule .t { color: var(--dim); font-size: 13px; }
+  button {
+    font: inherit; font-size: 15px; border: 0; border-radius: 10px; padding: 13px 18px;
+    background: var(--gold); color: #14110A; font-weight: 600; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--dim); border: 1px solid var(--edge); font-weight: 400; }
+  button[disabled] { opacity: .38; cursor: default; }
+  .row {
+    display: block; width: 100%; text-align: left; background: transparent; color: var(--ink);
+    border: 0; border-bottom: 1px solid var(--edge); border-radius: 0; padding: 10px 8px;
+    font-weight: 400; font-size: 15px;
+  }
+  .row .t { font-family: Georgia, serif; display: block; }
+  .row .s { display: block; font-size: 12px; color: var(--silent); margin-top: 3px; }
+  .row .s.spoken { color: var(--faint); }
+  .row .w { display: block; font-size: 11px; color: var(--faint); margin-top: 3px; letter-spacing: .04em; }
+  .row.in { background: var(--paper); border-radius: 10px; }
+  .row.in .t { color: var(--gold); }
+  .row.in .w { color: var(--gold); }
+  .bag { font-size: 14px; color: var(--ink); padding: 6px 0; border-bottom: 1px solid var(--edge); }
+  .bag .b { color: var(--gold); }
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; background: rgba(11,10,8,.96);
+    border-top: 1px solid var(--edge); padding: 10px 16px calc(env(safe-area-inset-bottom) + 10px);
+  }
+  .bar .in { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+  .bar .n { color: var(--dim); font-size: 13px; flex: 1; }
+  .big { font-family: Georgia, serif; font-size: 23px; color: var(--ink); margin: 4px 0 14px; }
+  .big.good { color: var(--good); }
+  .big.bad { color: var(--bad); }
+  .stat { font-size: 14px; color: var(--dim); margin-bottom: 6px; }
+  .closing { font-family: Georgia, serif; font-size: 16px; color: var(--ink); margin: 18px 0; }
+  .note { color: var(--faint); font-size: 12px; margin-top: 8px; }
+  .warn { color: var(--bad); font-size: 13px; margin-bottom: 10px; }
+  .read { padding: 8px 0; border-bottom: 1px solid var(--edge); }
+  .read .t { font-family: Georgia, serif; font-size: 15px; }
+  .read .m { font-size: 12px; margin-top: 3px; }
+  .read .m.ok { color: var(--good); }
+  .read .m.no { color: var(--bad); }
+  .read .m.kept { color: var(--gold); }
+  .read .m .as { color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const C = /*__CONTENT__*/;
+
+//__MODEL_BEGIN__
+// The deal, ported. Counter-based, not a stream: every number is a pure
+// function of (seed, salt), so the phone and the desktop can deal the same
+// list without either carrying an RNG position. The arithmetic is BigInt
+// because a double loses the low bits of a 64-bit Java long and the two builds
+// would diverge on the first draw.
+const MASK = (1n << 64n) - 1n;
+function mix(seed, salt) {
+  let z = (BigInt(seed) + 0x9E3779B97F4A7C15n * BigInt(salt + 1)) & MASK;
+  z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & MASK;
+  z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & MASK;
+  return (z ^ (z >> 31n)) & MASK;
+}
+function pick(seed, salt, n) {
+  if (n <= 1) return 0;
+  return Number(mix(seed, salt) % BigInt(n));
+}
+// n distinct indices out of poolSize, in a shuffled order -- the same partial
+// Fisher-Yates the model runs, in the same order, or the list would differ.
+function dealIdx(seed, salt, poolSize, n) {
+  const idx = [];
+  for (let i = 0; i < poolSize; i++) idx.push(i);
+  for (let i = 0; i < n; i++) {
+    const j = i + pick(seed, salt + i, poolSize - i);
+    const t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+  }
+  return idx.slice(0, n);
+}
+function dealList(seed) {
+  return dealIdx(seed, 100, C.pool.length, C.list).map(i => C.pool[i]);
+}
+// What you remember about a thing, after the bag is closed. A thing in the bag
+// you remember as it was. A thing you left behind you remember as it was only
+// if you had said it out loud -- otherwise you remember the assumption.
+function believed(list, kept, i) {
+  const d = list[i];
+  if (kept.indexOf(i) >= 0 || d.told) return d.text;
+  return d.assumed;
+}
+function right(list, kept, i) { return believed(list, kept, i) === list[i].text; }
+function scoreOf(list, kept) {
+  let n = 0;
+  for (let i = 0; i < list.length; i++) if (right(list, kept, i)) n += list[i].matters;
+  return n;
+}
+function totalOf(list) { let n = 0; for (const d of list) n += d.matters; return n; }
+function rightCount(list, kept) {
+  let n = 0;
+  for (let i = 0; i < list.length; i++) if (right(list, kept, i)) n++;
+  return n;
+}
+function silentCount(list) { let n = 0; for (const d of list) if (!d.told) n++; return n; }
+// The most that was available to a player who knew the rule: everything you
+// said comes back for free, so the slots go to the heaviest things nobody else
+// knew. Derived, not declared -- a build that changed the rule would move it.
+function bestOf(list) {
+  let n = 0; const silent = [];
+  for (const d of list) { if (d.told) n += d.matters; else silent.push(d.matters); }
+  silent.sort((a, b) => b - a);
+  for (let i = 0; i < Math.min(C.slots, silent.length); i++) n += silent[i];
+  return n;
+}
+function heaviestLost(list, kept) {
+  let best = null;
+  for (let i = 0; i < list.length; i++) {
+    const d = list[i];
+    if (d.told || kept.indexOf(i) >= 0) continue;
+    if (best === null || d.matters > best.matters) best = d;
+  }
+  return best;
+}
+function heaviestWasted(list, kept) {
+  let best = null;
+  for (const i of kept) {
+    const d = list[i];
+    if (!d.told) continue;
+    if (best === null || d.matters > best.matters) best = d;
+  }
+  return best;
+}
+function wastedSlots(list, kept) {
+  let n = 0;
+  for (const i of kept) if (list[i].told) n++;
+  return n;
+}
+//__MODEL_END__
+
+const KEY = 'aside.omission.house';
+const $ = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.firstElementChild; };
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+let seed = null, list = null, kept = [], left = false, cursor = 0, notice = '';
+
+function newHouse() {
+  seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
+  list = dealList(seed);
+  kept = []; left = false; cursor = 0; notice = '';
+  save();
+}
+function serialize() { return JSON.stringify({ seed: seed, kept: kept, left: left }); }
+function save() {
+  try { localStorage.setItem(KEY, serialize()); return true; } catch (e) { return false; }
+}
+function load() {
+  let raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) { return false; }
+  if (!raw) return false;
+  try {
+    const s = JSON.parse(raw);
+    seed = s.seed; list = dealList(seed); kept = s.kept || []; left = !!s.left;
+    return true;
+  } catch (e) { return false; }
+}
+function deserialize(raw) {
+  const s = JSON.parse(raw);
+  return { seed: s.seed, list: dealList(s.seed), kept: s.kept || [], left: !!s.left };
+}
+
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  app.appendChild($('<h1>' + esc(C.wordmark) + '</h1>'));
+  app.appendChild($('<div class="sub">' + esc(left ? C.whereReport : (kept.length ? C.whereList : C.where)) + '</div>'));
+  if (left) renderReport(app); else if (kept.length || started) renderChoose(app); else renderOpen(app);
+  renderBar(app);
+}
+
+let started = false;
+
+function renderOpen(app) {
+  for (const p of C.voice.opening) app.appendChild($('<p class="scene">' + esc(p) + '</p>'));
+  const card = $('<div class="card"></div>');
+  card.appendChild($('<h2>' + esc(C.voice.rulesHeading) + '</h2>'));
+  for (const r of C.voice.rules) {
+    const d = $('<div class="rule"></div>');
+    if (r.key) d.appendChild($('<div class="k">' + esc(r.key) + '</div>'));
+    d.appendChild($('<div class="t">' + esc(r.text) + '</div>'));
+    card.appendChild(d);
+  }
+  app.appendChild(card);
+}
+
+function renderChoose(app) {
+  const card = $('<div class="card"></div>');
+  card.appendChild($('<h2>' + esc(C.voice.listHead) + '</h2>'));
+  list.forEach((d, i) => {
+    const inBag = kept.indexOf(i) >= 0;
+    const b = $('<button class="row' + (inBag ? ' in' : '') + '"></button>');
+    b.appendChild($('<span class="t">' + esc(d.text) + '</span>'));
+    b.appendChild($('<span class="s' + (d.told ? ' spoken' : '') + '">' + esc(d.said) + '</span>'));
+    b.appendChild($('<span class="w">' + esc(C.worth[d.matters]) + (inBag ? '  \u00b7  ' + esc(C.voice.keptTag) : '') + '</span>'));
+    b.onclick = () => { toggle(i); };
+    card.appendChild(b);
+  });
+  app.appendChild(card);
+
+  const bag = $('<div class="card"></div>');
+  bag.appendChild($('<h2>' + esc(C.voice.bagHead) + '</h2>'));
+  if (!kept.length) bag.appendChild($('<div class="note">' + esc(C.voice.nothingYet) + '</div>'));
+  for (const i of kept) bag.appendChild($('<div class="bag"><span class="b">\u2022</span> ' + esc(list[i].text) + '</div>'));
+  bag.appendChild($('<div class="note">' + (C.slots - kept.length) + ' ' + esc(C.voice.slotsLeft) + '</div>'));
+  app.appendChild(bag);
+}
+
+function renderReport(app) {
+  const card = $('<div class="card"></div>');
+  card.appendChild($('<h2>' + esc(C.voice.readBackHead) + '</h2>'));
+  list.forEach((d, i) => {
+    const ok = right(list, kept, i), inBag = kept.indexOf(i) >= 0;
+    const row = $('<div class="read"></div>');
+    row.appendChild($('<div class="t">' + esc(d.text) + '</div>'));
+    if (!ok) row.appendChild($('<div class="m no">' + esc(C.voice.youBelieve) + ' <span class="as">' + esc(d.assumed) + '</span></div>'));
+    else if (inBag) row.appendChild($('<div class="m kept">' + esc(C.voice.keptTag) + '</div>'));
+    else row.appendChild($('<div class="m ok">' + esc(C.voice.cameBackTag) + '</div>'));
+    card.appendChild(row);
+  });
+  app.appendChild(card);
+
+  const score = scoreOf(list, kept), best = bestOf(list);
+  const count = rightCount(list, kept), total = totalOf(list);
+  const wasted = heaviestWasted(list, kept), lost = heaviestLost(list, kept);
+
+  const card2 = $('<div class="card"></div>');
+  card2.appendChild($('<h2>' + esc(C.voice.scoreHead) + '</h2>'));
+  card2.appendChild($('<div class="big' + (score >= best ? ' good' : '') + '">' + score + ' / ' + total + '</div>'));
+  card2.appendChild($('<div class="stat">' + esc(C.scoreLine[count].replace('%score%', score).replace('%total%', total)) + '</div>'));
+  card2.appendChild($('<div class="note">' + esc(C.bestLine.replace('%best%', best)) + '</div>'));
+  app.appendChild(card2);
+
+  const card3 = $('<div class="card"></div>');
+  let v;
+  if (score >= best) v = C.verdict.perfect;
+  else if (wasted !== null && (lost === null || wasted.matters >= lost.matters)) v = C.verdict.wasted;
+  else if (lost !== null) v = C.verdict.lost;
+  else v = C.verdict.short;
+  card3.appendChild($('<div class="big' + (score >= best ? ' good' : ' bad') + '">' + esc(v) + '</div>'));
+  let c;
+  if (score >= best) c = C.closing.perfect[silentCount(list)];
+  else if (wastedSlots(list, kept) > 0) c = C.closing.wasted[wastedSlots(list, kept)];
+  else c = C.closing.short;
+  card3.appendChild($('<div class="closing">' + esc(c) + '</div>'));
+  app.appendChild(card3);
+}
+
+function renderBar(app) {
+  const bar = $('<div class="bar"></div>');
+  const inner = $('<div class="in"></div>');
+  if (notice) inner.appendChild($('<div class="warn">' + esc(notice) + '</div>'));
+  if (left) {
+    const b = $('<button>' + esc(C.voice.again) + '</button>');
+    b.onclick = () => { newHouse(); started = false; render(); };
+    inner.appendChild(b);
+  } else if (!started) {
+    const b = $('<button>' + esc(C.voice.startButton) + '</button>');
+    b.onclick = () => { started = true; render(); };
+    inner.appendChild(b);
+  } else if (kept.length >= C.slots) {
+    inner.appendChild($('<div class="n">' + esc(C.voice.leaveShort) + '</div>'));
+    const b = $('<button>' + esc(C.voice.leaveButton) + '</button>');
+    b.onclick = () => { left = true; save(); render(); };
+    inner.appendChild(b);
+  } else {
+    inner.appendChild($('<div class="n">' + (C.slots - kept.length) + ' ' + esc(C.voice.slotsLeft) + '</div>'));
+    const b = $('<button class="ghost" disabled>' + esc(C.voice.take) + '</button>');
+    inner.appendChild(b);
+  }
+  bar.appendChild(inner);
+  app.appendChild(bar);
+}
+
+function toggle(i) {
+  notice = '';
+  const at = kept.indexOf(i);
+  if (at >= 0) { kept.splice(at, 1); }
+  else if (kept.length < C.slots) { kept.push(i); }
+  else { notice = C.voice.full; }
+  save();
+  render();
+}
+
+// Boot: pick up a house in progress, or deal one.
+if (!load()) newHouse();
+render();
+
+// Exposed for the trace and for a headless check of the real storage wiring.
+window.omission = { dealList, believed, right, scoreOf, totalOf, rightCount, silentCount,
+  bestOf, heaviestLost, heaviestWasted, wastedSlots, serialize, deserialize, save, load,
+  state: () => ({ seed, list, kept, left }) };
+</script>
+</body>
+</html>

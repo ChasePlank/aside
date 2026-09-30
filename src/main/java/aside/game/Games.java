@@ -13,6 +13,7 @@ import aside.games.inventory.InventoryGame;
 import aside.games.ledger.LedgerGame;
 import aside.games.lesson.LessonGame;
 import aside.games.outside.OutsideGame;
+import aside.games.omission.OmissionGame;
 import aside.games.overtime.OvertimeGame;
 import aside.games.promise.PromiseGame;
 import aside.games.redaction.RedactionGame;
@@ -52,6 +53,7 @@ public final class Games {
         g.add(new IntervalGame());
         g.add(new LessonGame());
         g.add(new PromiseGame());
+        g.add(new OmissionGame());
         return g;
     }
 

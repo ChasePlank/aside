@@ -88,6 +88,7 @@ public final class PhoneShelf {
             case "interval" -> "Keeps the season in this browser. Twelve days, six watches, one sitting.";
             case "lesson" -> "Keeps the handover in this browser. Three nights, and one shift.";
             case "promise" -> "Keeps the season in this browser. Five nights, eight asks, one sitting.";
+            case "omission" -> "Keeps the house in this browser. Twelve things you know, and five slots.";
             case "overtime" -> "A visual novel. What you say carries.";
             default -> "";
         };
