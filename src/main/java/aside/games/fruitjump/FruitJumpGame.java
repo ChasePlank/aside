@@ -17,10 +17,10 @@ public class FruitJumpGame implements Game {
 
     @Override public String id() { return "fruitjump"; }
 
-    @Override public String title() { return "Tropical Punch"; }
+    @Override public String title() { return "Fruit Jump"; }
 
     @Override public String blurb() {
-        return "Fruit Jump, and the room-crawling dungeon underneath it.";
+        return "A climber, a sunset, and a way home. Still needs a real name.";
     }
 
     @Override
