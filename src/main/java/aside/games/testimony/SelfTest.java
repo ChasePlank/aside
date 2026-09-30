@@ -42,6 +42,8 @@ public final class SelfTest {
         scoring();
         roundTrip();
         playthroughs();
+        closings();
+        thePhoneBuild();
         System.out.println((checks - failed) + "/" + checks + " checks passed"
                 + (failed == 0 ? "" : "  --  " + failed + " FAILED"));
         if (failed > 0) System.exit(1);
@@ -321,5 +323,126 @@ public final class SelfTest {
         }
         ok(Testimony.byId("speech").option("silent") != null,
                 "the honest answer is on the list no matter how the rest went");
+    }
+
+    // ------------------------------------------------------------ the closings
+
+    /**
+     * The four closings, and the fill.
+     *
+     * The sentences moved out of TestimonyScreen into the model on 2026-09-30
+     * so that the phone build could carry them. These check that the move did
+     * not lose a placeholder or leave one unfilled -- a literal %wrong% printed
+     * at the player is the kind of bug that ships, because it only appears on
+     * the branch nobody played.
+     */
+    static void closings() {
+        Testimony empty = new Testimony();
+        eq(empty.closing(), Testimony.CLOSING_NOTHING, "nothing answered gets the empty closing");
+
+        Testimony perfect = new Testimony();
+        while (!perfect.done()) perfect.answer(perfect.current().truth(), true);
+        eq(perfect.closing(), Testimony.CLOSING_PERFECT, "all eight right gets the perfect closing");
+
+        // Wrong, and never sure: the honest half.
+        Testimony doubting = new Testimony();
+        while (!doubting.done()) {
+            Testimony.Question q = doubting.current();
+            doubting.answer(q.options().get(0).id(), false);
+        }
+        ok(doubting.wrongCount() > 0 && doubting.wrongSure() == 0, "the doubter is wrong and never sure");
+        ok(!doubting.closing().contains("%"), "the honest closing has no unfilled placeholder");
+        ok(doubting.closing().contains("You were wrong " + doubting.wrongCount() + " times"),
+                "and counts the wrong answers");
+
+        // Wrong and certain: the one that matters.
+        Testimony certain = new Testimony();
+        while (!certain.done()) {
+            Testimony.Question q = certain.current();
+            certain.answer(q.options().get(0).id(), true);
+        }
+        ok(certain.wrongSure() > 0, "the helpful witness was sure of something wrong");
+        ok(!certain.closing().contains("%"), "the certain closing has no unfilled placeholder");
+        ok(certain.closing().contains("You were sure " + certain.wrongSure() + " of those"),
+                "and counts the ones they were sure of");
+
+        // The singular, which is exactly the case a second copy of the
+        // sentence gets wrong.
+        Testimony one = new Testimony();
+        one.answer("blue", false);      // the coat, wrongly, and without conviction
+        ok(one.closing().contains("You were wrong 1 time, and"),
+                "one wrong answer reads as 'time', not 'times'");
+
+        // The tally sentences, which are the other two the phone build fills.
+        eq(perfect.verdictTrue(), "8 of 8 lines were true.", "the tally sentence fills");
+        ok(!perfect.verdictTally().contains("%"), "the tally line fills");
+    }
+
+    // ------------------------------------------------------- the phone build
+
+    /**
+     * The single-file build is generated, not written, and a generated file
+     * that has gone stale is worse than no file: it is a second copy of the
+     * game quietly disagreeing with the first. So the test regenerates it and
+     * compares. If this fails, run aside.games.testimony.WebTestimony from the
+     * repository root.
+     */
+    static void thePhoneBuild() throws Exception {
+        Path out = Path.of("web", "testimony.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no web/testimony.html from here -- run from the repository root)");
+            return;
+        }
+        String generated;
+        try {
+            generated = WebTestimony.html();
+        } catch (Exception e) {
+            System.out.println("       (no template from here: " + e.getMessage() + ")");
+            return;
+        }
+        String checkedIn = Files.readString(out);
+        ok(generated.equals(checkedIn),
+                "web/testimony.html is current -- regenerate it with aside.games.testimony.WebTestimony");
+
+        // And it has to actually carry the writing, not just be the right size.
+        ok(generated.contains(Testimony.SCENE_TITLE), "the phone build carries the evening's title");
+        carries(generated, Testimony.SCENE, "the phone build carries the evening");
+        ok(generated.contains(Testimony.SCENE_NOTE), "the phone build carries the warning under it");
+        for (Testimony.Question q : Testimony.QUESTIONS) {
+            ok(generated.contains(q.prompt()), "the phone build carries the prompt for " + q.id());
+            ok(generated.contains(q.accountLine()), "the phone build carries the account line for " + q.id());
+            for (Testimony.Option o : q.options()) {
+                ok(generated.contains(o.phrase()),
+                        "the phone build carries " + q.id() + "/" + o.id() + " in the account");
+            }
+        }
+        ok(generated.contains(Testimony.CLOSING_NOTHING), "the phone build carries the closing for an empty account");
+        ok(generated.contains(Testimony.CLOSING_PERFECT), "the phone build carries the perfect closing");
+        ok(generated.contains(Testimony.CLOSING_HONEST), "the phone build carries the honest closing");
+        ok(generated.contains(Testimony.CLOSING_CERTAIN), "the phone build carries the certain closing");
+        ok(generated.contains(Testimony.VERDICT_TALLY), "the phone build carries the tally");
+        ok(generated.contains(Testimony.CONFIDENCE_NOTE), "the phone build carries the confidence note");
+        ok(generated.contains(Testimony.MEMORY_HEAD), "the phone build carries the memory panel's head");
+        ok(generated.contains("\\u003c") || !generated.contains("<script>\"<"),
+                "nothing in the prose can end the script block early");
+        System.out.println("       phone build: " + (generated.length() / 1024) + " KB, current");
+    }
+
+    /**
+     * Every paragraph of a multi-paragraph string has to be in the build.
+     *
+     * Escaped with the generator's own escaper rather than by hand, because the
+     * evening is hard-wrapped and its newlines ship as the two characters
+     * backslash-n. Searching for the raw paragraph would fail on a build that
+     * is perfectly correct.
+     */
+    static void carries(String haystack, String text, String what) {
+        for (String para : text.split("\n\n")) {
+            // The quotes come off, because a paragraph in the middle of a
+            // multi-paragraph value is not followed by one -- only the last
+            // paragraph is. Keeping them would fail on a correct build.
+            String escaped = WebTestimony.str(para);
+            ok(haystack.contains(escaped.substring(1, escaped.length() - 1)), what);
+        }
     }
 }

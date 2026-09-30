@@ -98,6 +98,34 @@ public final class Testimony {
     public static final String SCENE_NOTE =
             "This is everything you saw. Nothing else happened that you noticed.";
 
+    // ------------------------------------------------- the words on the screen
+    //
+    // Everything the game says in its own voice lives here rather than in
+    // TestimonyScreen, because there are now two windows onto this game: the
+    // JavaFX screen and the single-file phone build (aside.games.testimony.
+    // WebTestimony). A sentence written in a screen is a sentence the other
+    // build does not have. The screen reads these constants and so does the
+    // generator, so the two cannot drift apart.
+    //
+    // What is NOT here: the page furniture. The title, the button labels and
+    // the key hints belong to whichever build is drawing them, because a phone
+    // has no ESC key and the desktop has no thumb.
+
+    /** The right-hand panel, during the interview. */
+    public static final String MEMORY_HEAD = "WHAT YOU REMEMBER";
+    public static final String MEMORY_EMPTY = "nothing yet";
+
+    public static final String CONFIDENCE_HEAD = "How sure are you?";
+    public static final String CONFIDENCE_NOTE =
+            "The game will write it down and then not use it to help you.";
+
+    public static final String ACCOUNT_HEAD = "Your account.";
+    public static final String ACCOUNT_NOTE = "This is what you would say happened. Read it once.";
+
+    public static final String VERDICT_HEAD = "The evening, next to your account.";
+    public static final String VERDICT_SAID = "WHAT YOU SAID";
+    public static final String VERDICT_HAPPENED = "WHAT HAPPENED";
+
     public static final List<Question> QUESTIONS = List.of(
 
         new Question("coat",
@@ -269,24 +297,63 @@ public final class Testimony {
         return n;
     }
 
+    /**
+     * The closing, one sentence per shape of testimony.
+     *
+     * The numbers are placeholders rather than concatenation, because the
+     * phone build carries these same sentences and cannot run this method.
+     * {@code %plural%} is the empty string or an "s" -- the alternative was a
+     * second copy of the sentence with the singular spelled out, which is how
+     * two builds start disagreeing about a comma.
+     */
+    public static final String CLOSING_NOTHING =
+            "You answered nothing. An account that says nothing cannot be wrong, "
+            + "and it cannot be any use either.";
+
+    public static final String CLOSING_PERFECT =
+            "You saw it, you kept it, and you did not add to it. Almost nobody does.";
+
+    public static final String CLOSING_HONEST =
+            "You were wrong %wrong% time%plural%, and every time you said you were not sure. "
+            + "That is not the same as being right -- but it is the honest half of it, "
+            + "and it is the half that can be worked with.";
+
+    public static final String CLOSING_CERTAIN =
+            "You were wrong %wrong% time%plural%. You were sure %sure% of those. "
+            + "The second number is the one that matters: the wrong things you doubted will be "
+            + "checked, and the wrong things you were certain of are already in the account.";
+
     public String closing() {
+        if (order.isEmpty()) return CLOSING_NOTHING;
         int wrong = wrongCount();
-        if (order.isEmpty()) {
-            return "You answered nothing. An account that says nothing cannot be wrong, "
-                    + "and it cannot be any use either.";
-        }
-        if (wrong == 0) {
-            return "You saw it, you kept it, and you did not add to it. Almost nobody does.";
-        }
-        if (wrongSure() == 0) {
-            return "You were wrong " + wrong + " time" + (wrong == 1 ? "" : "s")
-                    + ", and every time you said you were not sure. That is not the same as being right -- "
-                    + "but it is the honest half of it, and it is the half that can be worked with.";
-        }
-        return "You were wrong " + wrong + " time" + (wrong == 1 ? "" : "s")
-                + ". You were sure " + wrongSure() + " of those. The second number is the one that matters: "
-                + "the wrong things you doubted will be checked, and the wrong things you were certain of are "
-                + "already in the account.";
+        if (wrong == 0) return CLOSING_PERFECT;
+        String plural = wrong == 1 ? "" : "s";
+        if (wrongSure() == 0) return fill(CLOSING_HONEST, wrong, plural, 0);
+        return fill(CLOSING_CERTAIN, wrong, plural, wrongSure());
+    }
+
+    static String fill(String template, int wrong, String plural, int sure) {
+        return template.replace("%wrong%", String.valueOf(wrong))
+                       .replace("%plural%", plural)
+                       .replace("%sure%", String.valueOf(sure));
+    }
+
+    // ------------------------------------------------------------- the tally
+
+    public static final String VERDICT_TRUE = "%correct% of %total% lines were true.";
+    public static final String VERDICT_TALLY =
+            "%wrongSure% of them you were sure of.  %wrongUnsure% you doubted.  "
+            + "%correctSure% true and certain.";
+
+    public String verdictTrue() {
+        return VERDICT_TRUE.replace("%correct%", String.valueOf(correctCount()))
+                           .replace("%total%", String.valueOf(order.size()));
+    }
+
+    public String verdictTally() {
+        return VERDICT_TALLY.replace("%wrongSure%", String.valueOf(wrongSure()))
+                            .replace("%wrongUnsure%", String.valueOf(wrongUnsure()))
+                            .replace("%correctSure%", String.valueOf(correctSure()));
     }
 
     // ------------------------------------------------------------- account

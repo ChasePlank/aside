@@ -259,14 +259,14 @@ public class TestimonyScreen extends UiScreen {
 
         gc.setFont(F_MONO);
         gc.setFill(STEEL);
-        gc.fillText("WHAT YOU REMEMBER", x, y);
+        gc.fillText(Testimony.MEMORY_HEAD, x, y);
         y += 26;
 
         List<String> sofar = t.accountSoFar();
         if (sofar.isEmpty()) {
             gc.setFont(F_TINY);
             gc.setFill(Color.rgb(110, 110, 134, 0.7));
-            gc.fillText("\u00b7  nothing yet", x, y + 14);
+            gc.fillText("\u00b7  " + Testimony.MEMORY_EMPTY, x, y + 14);
             return;
         }
 
@@ -296,11 +296,11 @@ public class TestimonyScreen extends UiScreen {
 
         gc.setFont(F_HEAD);
         gc.setFill(INK);
-        gc.fillText("How sure are you?", bx + 40, by + 58);
+        gc.fillText(Testimony.CONFIDENCE_HEAD, bx + 40, by + 58);
 
         gc.setFont(F_SMALL);
         gc.setFill(DIM);
-        gc.fillText("The game will write it down and then not use it to help you.", bx + 40, by + 84);
+        gc.fillText(Testimony.CONFIDENCE_NOTE, bx + 40, by + 84);
 
         gc.setFont(F_MONO);
         gc.setFill(GREEN);
@@ -326,11 +326,11 @@ public class TestimonyScreen extends UiScreen {
 
         gc.setFont(F_HEAD);
         gc.setFill(STEEL);
-        gc.fillText("Your account.", M, 108);
+        gc.fillText(Testimony.ACCOUNT_HEAD, M, 108);
 
         gc.setFont(F_SCENE);
         gc.setFill(Color.rgb(200, 200, 215, 0.78));
-        gc.fillText("This is what you would say happened. Read it once.", M, 140);
+        gc.fillText(Testimony.ACCOUNT_NOTE, M, 140);
 
         double y = 190;
         gc.setFont(F_LINE);
@@ -355,7 +355,7 @@ public class TestimonyScreen extends UiScreen {
 
         gc.setFont(F_HEAD);
         gc.setFill(STEEL);
-        gc.fillText("The evening, next to your account.", M, 96);
+        gc.fillText(Testimony.VERDICT_HEAD, M, 96);
 
         double top = 140;
         double colW = 520;
@@ -363,9 +363,9 @@ public class TestimonyScreen extends UiScreen {
 
         gc.setFont(F_SMALL);
         gc.setFill(STEEL);
-        gc.fillText("WHAT YOU SAID", M, top);
+        gc.fillText(Testimony.VERDICT_SAID, M, top);
         gc.setFill(Color.rgb(150, 150, 170, 0.85));
-        gc.fillText("WHAT HAPPENED", rx, top);
+        gc.fillText(Testimony.VERDICT_HAPPENED, rx, top);
 
         double y = top + 30;
         for (String qid : t.order) {
@@ -399,12 +399,10 @@ public class TestimonyScreen extends UiScreen {
         y += 12;
         gc.setFont(F_LINE);
         gc.setFill(DIM);
-        gc.fillText(t.correctCount() + " of " + t.order.size() + " lines were true.", M, y);
+        gc.fillText(t.verdictTrue(), M, y);
         y += 26;
         gc.setFill(t.wrongSure() > 0 ? Color.rgb(233, 160, 175, 0.95) : Color.rgb(190, 210, 200, 0.95));
-        gc.fillText(t.wrongSure() + " of them you were sure of.  "
-                + t.wrongUnsure() + " you doubted.  "
-                + t.correctSure() + " true and certain.", M, y);
+        gc.fillText(t.verdictTally(), M, y);
 
         y += 34;
         gc.setFont(F_SCENE);

@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0A12">
+<title>testimony</title>
+<style>
+  :root{
+    --bg:#0A0A12; --ink:#E8E8EF; --dim:#B9B9C6; --faint:#6E6E86;
+    --steel:#8FB8DE; --edge:#22222E; --card:#14141C; --panel:#101018;
+    --red:#E94560; --green:#7FD1AE; --amber:#F2C14E;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink)}
+  body{
+    font:17px/1.55 Georgia,'Times New Roman',serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:620px; margin:0 auto; padding:22px 18px 128px}
+  .kicker{font:11px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.16em; color:var(--faint)}
+  h1{font-size:25px; font-weight:normal; color:var(--steel); margin:8px 0 0; letter-spacing:.01em}
+  h2{font-size:20px; font-weight:normal; margin:0 0 6px}
+  p{margin:0 0 14px}
+  .scene{color:rgba(214,214,226,.92); margin:0 0 16px}
+  .note{color:var(--amber); font-size:15px; margin:22px 0 0}
+  .fine{font:12px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin:20px 0 0}
+  .dim{color:var(--dim); font-size:16px}
+  .bad{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--red); margin:16px 0 0}
+  .prompt{font-size:22px; line-height:1.4; margin:22px 0 20px}
+  /* The three answers. A card each, with the number in the same place the
+     desktop puts it, because the number is how the desktop player answers. */
+  .opt{display:flex; align-items:baseline; gap:12px; width:100%; text-align:left;
+       background:var(--card); border:1px solid var(--edge); border-radius:10px;
+       padding:14px 15px; margin:0 0 8px; color:var(--ink); font:17px/1.45 Georgia,serif;
+       cursor:pointer}
+  .opt .n{font:13px/1.6 Consolas,Menlo,monospace; color:var(--faint); min-width:12px}
+  .opt.sel{background:#1E1E2A; border-color:#3E3E54; box-shadow:inset 3px 0 0 var(--steel)}
+  .opt.sel .n{color:var(--steel)}
+  /* What you remember. The desktop keeps this beside the question; a phone has
+     no beside, so it goes underneath, and it is the reason the panel is not a
+     scoreboard -- it reads as prose, and prose does not hedge. */
+  .panel{background:var(--panel); border:1px solid var(--edge); border-radius:12px;
+         padding:14px 15px; margin:22px 0 0}
+  .phead{font:11px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.14em; color:var(--steel);
+         margin:0 0 10px}
+  .pline{color:rgba(222,222,234,.95); font-size:16px; margin:0 0 10px; padding-left:14px;
+         position:relative}
+  .pline:last-child{margin-bottom:0}
+  .pline:before{content:"\00b7"; position:absolute; left:0; color:rgba(150,150,170,.55)}
+  .pempty{font:12px/1.6 Arial,Helvetica,sans-serif; color:rgba(110,110,134,.7); padding-left:14px;
+          position:relative}
+  .pempty:before{content:"\00b7"; position:absolute; left:0}
+  /* The account, read back. One paragraph per line, no marks of any kind. */
+  .account p{color:rgba(226,226,238,.95); margin:0 0 16px}
+  /* The verdict. The desktop puts the two columns side by side and lets the
+     gutter carry the marks; a phone cannot, so each pair is stacked tight --
+     your line, then what happened, touching -- and the colour and the mark
+     carry what the alignment carried. */
+  .legend{display:flex; justify-content:space-between; gap:12px; margin:22px 0 12px;
+          font:11px/1.5 Arial,Helvetica,sans-serif; letter-spacing:.12em}
+  .legend .l1{color:var(--steel)}
+  .legend .l2{color:var(--faint)}
+  .item{border-left:3px solid var(--edge); padding:0 0 0 12px; margin:0 0 18px}
+  .item.right{border-left-color:var(--green)}
+  .item.wrong.sure{border-left-color:var(--red)}
+  .item.wrong.doubt{border-left-color:var(--amber)}
+  .mine{display:flex; justify-content:space-between; gap:10px; align-items:baseline;
+        color:rgba(190,210,200,.95)}
+  .item.wrong .mine{color:rgba(233,160,175,.98)}
+  .mark{font:13px/1.4 Consolas,Menlo,monospace; color:var(--red)}
+  .item.wrong.doubt .mark{color:var(--amber)}
+  .real{color:rgba(200,200,215,.9); font-size:16px}
+  .tally{color:var(--dim); margin:26px 0 6px}
+  .tally2{color:var(--dim); margin:0 0 26px}
+  .closing{color:rgba(214,214,226,.92); margin:0}
+  /* The confidence sheet. It covers the foot of the page rather than the whole
+     of it, so the question you just answered stays readable behind it. */
+  #sheet{position:fixed; inset:0; display:none; align-items:flex-end;
+         background:rgba(6,6,12,.74); z-index:20}
+  #sheet.on{display:flex}
+  .sheetcard{width:100%; max-width:620px; margin:0 auto; background:var(--card);
+             border-top:1px solid #3E3E54; border-radius:16px 16px 0 0;
+             padding:20px 18px calc(18px + env(safe-area-inset-bottom))}
+  .sheetcard .picked{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--steel);
+                     letter-spacing:.06em; margin:0 0 10px}
+  .sheetcard .dim{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin:0 0 16px}
+  .row2{display:flex; gap:9px}
+  .bar{position:fixed; left:0; right:0; bottom:0; background:#0A0A12ee;
+       border-top:1px solid var(--edge); padding:10px 18px calc(10px + env(safe-area-inset-bottom))}
+  .bar .inner{max-width:620px; margin:0 auto; display:flex; gap:9px}
+  button{flex:1; font:16px/1.2 Georgia,serif; padding:15px 10px; border-radius:10px;
+         background:var(--card); color:var(--ink); border:1px solid var(--edge); cursor:pointer}
+  button.go{background:var(--steel); color:#0B1118; border-color:var(--steel)}
+  button.ghost{background:transparent; color:var(--faint); border-color:transparent; flex:0 0 auto;
+               padding-left:6px; padding-right:6px}
+  .warn{font:13px/1.6 Arial,Helvetica,sans-serif; color:#C4553F; margin:16px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar"><div class="inner" id="inner"></div></div>
+<div id="sheet"></div>
+<script>
+const C = /*__CONTENT__*/;
+
+// ---------------------------------------------------------------- the rules
+// A port of aside.games.testimony.Testimony. The content above is generated
+// from the Java model, so the writing cannot drift; this is the same rules
+// written a second time in a language a phone can run.
+//
+// The one thing worth not paraphrasing: an answer is written into memory
+// whether or not it was true, and nothing anywhere records which. There is no
+// field for it here either. A memory that could tell you it was wrong would
+// not be a memory.
+
+const KEY = 'aside.testimony.account';
+
+const byId = id => C.questions.find(q => q.id === id);
+const optOf = (q, oid) => q.options.find(o => o.id === oid) || null;
+const join = (s, a, b) => String(s).split(a).join(b);
+
+/** The phrase an option contributes to the account. Unknown ids read as "?". */
+const phrase = (q, oid) => { const o = optOf(q, oid); return o ? o.phrase : '?'; };
+
+// The whole of the memory: question id -> chosen option id.
+let memory = {};
+let sure = {};      // question id -> whether the player claimed to be sure
+let order = [];     // question ids, in the order they were answered
+
+const done = () => order.length >= C.questions.length;
+const current = () => done() ? null : C.questions[order.length];
+const correct = qid => { const q = byId(qid); return !!q && q.truth === memory[qid]; };
+
+function counts() {
+  let c = 0, cs = 0, cu = 0, ws = 0, wu = 0;
+  for (const qid of order) {
+    const right = correct(qid), wasSure = sure[qid] === true;
+    if (right) { c++; wasSure ? cs++ : cu++; }
+    else { wasSure ? ws++ : wu++; }
+  }
+  return { correct: c, wrong: order.length - c,
+           correctSure: cs, correctUnsure: cu, wrongSure: ws, wrongUnsure: wu };
+}
+
+/**
+ * Answer the question in front of you. An option id that was never offered is
+ * refused rather than stored, because a memory of a thing that was never
+ * offered is how the real thing breaks.
+ */
+function answer(oid, confident) {
+  const q = current();
+  if (!q) return false;
+  if (!optOf(q, oid)) return false;
+  order.push(q.id);
+  memory[q.id] = oid;
+  sure[q.id] = confident;
+  return true;
+}
+
+/** The prompt, with the player's own earlier answers filled in. */
+function promptFor(q) {
+  let s = q.prompt;
+  for (const other of C.questions) {
+    const chosen = memory[other.id] !== undefined ? memory[other.id] : other.truth;
+    s = join(s, '%' + other.id + '%', phrase(other, chosen));
+  }
+  return s;
+}
+
+/** The account as it stands right now -- only the questions already answered. */
+function accountSoFar() {
+  return order.map(qid => {
+    const q = byId(qid);
+    let s = join(q.accountLine, '%this%', phrase(q, memory[qid]));
+    for (const other of C.questions) {
+      if (memory[other.id] !== undefined) {
+        s = join(s, '%' + other.id + '%', phrase(other, memory[other.id]));
+      }
+    }
+    return s;
+  });
+}
+
+/** The same account, assembled from what actually happened. */
+function accountFrom(m) {
+  return C.questions.map(q => {
+    let s = join(q.accountLine, '%this%', phrase(q, m[q.id]));
+    for (const other of C.questions) {
+      s = join(s, '%' + other.id + '%', phrase(other, m[other.id]));
+    }
+    return s;
+  });
+}
+
+function fill(t, vals) {
+  let s = t;
+  for (const k in vals) s = join(s, '%' + k + '%', String(vals[k]));
+  return s;
+}
+
+function closing() {
+  const n = counts();
+  if (order.length === 0) return C.closing.nothing;
+  if (n.wrong === 0) return C.closing.perfect;
+  const plural = n.wrong === 1 ? '' : 's';
+  if (n.wrongSure === 0) return fill(C.closing.honest, { wrong: n.wrong, plural: plural });
+  return fill(C.closing.certain, { wrong: n.wrong, plural: plural, sure: n.wrongSure });
+}
+
+function verdictTrue() {
+  const n = counts();
+  return fill(C.verdictTrue, { correct: n.correct, total: order.length });
+}
+
+function verdictTally() {
+  const n = counts();
+  return fill(C.verdictTally, { wrongSure: n.wrongSure, wrongUnsure: n.wrongUnsure,
+                                correctSure: n.correctSure });
+}
+
+// ------------------------------------------------------------- the save file
+// Testimony.save() writes qid|option|sure, one line per answer, and
+// Testimony.load() reads exactly that. This is that format, kept in
+// localStorage, so an account can be carried between the desktop and the phone
+// by copying eight lines of text.
+
+function serialize() {
+  const body = order.map(qid => qid + '|' + memory[qid] + '|' + (sure[qid] ? '1' : '0')).join('\n');
+  return order.length ? body + '\n' : body;
+}
+
+function deserialize(text) {
+  const m = {}, s = {}, o = [];
+  for (const line of String(text).split(/\r?\n/)) {
+    if (!line) continue;
+    const f = line.split('|');
+    if (f.length < 3) continue;
+    const q = byId(f[0]);
+    if (!q || !optOf(q, f[1])) continue;      // unknown question: drop it, do not crash
+    if (m[f[0]] !== undefined) continue;      // a duplicate line is not a second memory
+    o.push(f[0]); m[f[0]] = f[1]; s[f[0]] = f[2] === '1';
+  }
+  return { order: o, memory: m, sure: s };
+}
+
+// A browser that will not keep the account is not a reason to refuse to play.
+// It is a reason to say so, before the evening is taken away.
+const CAN_STORE = (() => {
+  try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); return true; }
+  catch (e) { return false; }
+})();
+
+function load() {
+  if (!CAN_STORE) return;
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { text = null; }
+  if (text === null) return;
+  const s = deserialize(text);
+  order = s.order; memory = s.memory; sure = s.sure;
+}
+
+function save() {
+  if (!CAN_STORE) return false;
+  try { localStorage.setItem(KEY, serialize()); return true; } catch (e) { return false; }
+}
+
+// ---------------------------------------------------------------- the screen
+
+load();
+
+// A testimony that is already complete has no evening left to show. Without
+// this the returning player lands on a witness screen for a scene they have
+// already been interviewed about.
+let phase = done() ? 'verdict' : 'witness';
+let pending = null;       // the option chosen, awaiting a confidence
+let notice = '';
+let kept = true;
+
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const inner = document.getElementById('inner');
+const sheet = document.getElementById('sheet');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const kicker = t => '<div class="kicker">' + esc(t) + '</div>';
+
+function drawWitness() {
+  const paras = C.scene.split(/\n\s*\n/)
+    .map(p => '<p class="scene">' + esc(p.replace(/\s+/g, ' ').trim()) + '</p>').join('');
+  app.innerHTML = kicker('TESTIMONY')
+    + '<h1>' + esc(C.sceneTitle) + '</h1>'
+    + paras
+    + '<p class="note">' + esc(C.sceneNote) + '</p>'
+    + '<p class="fine">Once. This page does not come back.</p>'
+    + (CAN_STORE ? '' : '<p class="warn">This browser will not keep the account. '
+        + 'Everything you say here will be gone when you close the page.</p>');
+  inner.innerHTML = '<button class="go" id="a">and then it is gone</button>';
+  document.getElementById('a').onclick = () => { phase = 'interview'; draw(); };
+}
+
+function memoryPanel() {
+  const lines = accountSoFar();
+  let h = '<div class="panel"><div class="phead">' + esc(C.memoryHead) + '</div>';
+  h += lines.length === 0
+    ? '<div class="pempty">' + esc(C.memoryEmpty) + '</div>'
+    : lines.map(l => '<div class="pline">' + esc(l) + '</div>').join('');
+  return h + '</div>';
+}
+
+function drawInterview() {
+  const q = current();
+  if (!q) { phase = 'account'; return draw(); }
+
+  let h = kicker('TESTIMONY \u00b7 QUESTION ' + (order.length + 1) + ' OF ' + C.questions.length)
+    + '<p class="prompt">' + esc(promptFor(q)) + '</p>';
+  q.options.forEach((o, i) => {
+    h += '<button class="opt' + (pending === o.id ? ' sel' : '') + '" data-i="' + i + '">'
+       + '<span class="n">' + (i + 1) + '</span><span class="t">' + esc(o.text) + '</span></button>';
+  });
+  h += memoryPanel();
+  if (notice) h += '<p class="bad">' + esc(notice) + '</p>';
+  app.innerHTML = h;
+
+  app.querySelectorAll('.opt').forEach(el => {
+    el.onclick = () => { pending = q.options[+el.dataset.i].id; draw(); };
+  });
+
+  inner.innerHTML = '';
+  if (pending) drawSheet(q); else sheet.classList.remove('on');
+}
+
+function drawSheet(q) {
+  const o = optOf(q, pending);
+  sheet.innerHTML = '<div class="sheetcard">'
+    + '<div class="picked">' + esc(o ? o.text : '') + '</div>'
+    + '<h2>' + esc(C.confidenceHead) + '</h2>'
+    + '<p class="dim">' + esc(C.confidenceNote) + '</p>'
+    + '<div class="row2"><button class="go" id="yes">sure</button>'
+    + '<button id="no">not sure</button></div></div>';
+  sheet.classList.add('on');
+  document.getElementById('yes').onclick = () => commit(true);
+  document.getElementById('no').onclick = () => commit(false);
+}
+
+function commit(confident) {
+  if (pending === null) return;
+  if (!answer(pending, confident)) {
+    notice = 'that answer was not on the list';
+    pending = null;
+    sheet.classList.remove('on');
+    draw();
+    return;
+  }
+  pending = null;
+  notice = '';
+  kept = save();
+  sheet.classList.remove('on');
+  phase = done() ? 'account' : 'interview';
+  draw();
+}
+
+function drawAccount() {
+  const lines = accountFrom(memory);
+  app.innerHTML = kicker('TESTIMONY')
+    + '<h1>' + esc(C.accountHead) + '</h1>'
+    + '<p class="dim">' + esc(C.accountNote) + '</p>'
+    + '<div class="account">' + lines.map(l => '<p>' + esc(l) + '</p>').join('') + '</div>'
+    + (kept ? '' : '<p class="warn">The account could not be written down, so it '
+        + 'will not be here next time. Everything above is still what you said.</p>');
+  inner.innerHTML = '<button class="go" id="v">read what happened</button>';
+  document.getElementById('v').onclick = () => { phase = 'verdict'; draw(); };
+}
+
+function drawVerdict() {
+  let h = kicker('TESTIMONY')
+    + '<h1>' + esc(C.verdictHead) + '</h1>'
+    + '<div class="legend"><span class="l1">' + esc(C.verdictSaid) + '</span>'
+    + '<span class="l2">' + esc(C.verdictHappened) + '</span></div>';
+
+  for (const qid of order) {
+    const q = byId(qid);
+    if (!q) continue;
+    const right = correct(qid), wasSure = sure[qid] === true;
+    const cls = right ? 'right' : (wasSure ? 'wrong sure' : 'wrong doubt');
+    const mark = right ? '' : (wasSure ? '!!' : '?');
+    h += '<div class="item ' + cls + '">'
+       + '<div class="mine"><span>' + esc(phrase(q, memory[qid])) + '</span>'
+       + (mark ? '<span class="mark">' + mark + '</span>' : '') + '</div>'
+       + '<div class="real">' + esc(phrase(q, q.truth)) + '</div>'
+       + '</div>';
+  }
+
+  h += '<p class="tally">' + esc(verdictTrue()) + '</p>'
+     + '<p class="tally2">' + esc(verdictTally()) + '</p>'
+     + '<p class="closing">' + esc(closing()) + '</p>';
+  app.innerHTML = h;
+
+  inner.innerHTML = '<button class="ghost" id="r">start again</button>';
+  document.getElementById('r').onclick = restart;
+}
+
+function restart() {
+  order = []; memory = {}; sure = {};
+  pending = null; notice = '';
+  kept = save();
+  phase = 'witness';
+  draw();
+}
+
+function draw() {
+  if (phase === 'witness') drawWitness();
+  else if (phase === 'interview') drawInterview();
+  else if (phase === 'account') drawAccount();
+  else drawVerdict();
+  bar.style.display = inner.innerHTML.trim() === '' ? 'none' : '';
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  if (phase === 'interview') {
+    if (pending !== null) {
+      if (k === 's' || k === 'S') commit(true);
+      else if (k === 'n' || k === 'N') commit(false);
+      else if (k === 'Escape') { pending = null; draw(); }
+    } else if (k >= '1' && k <= '3') {
+      const q = current();
+      if (q && +k <= q.options.length) { pending = q.options[+k - 1].id; draw(); }
+    }
+  } else if (k === 'Enter') {
+    const b = inner.querySelector('button');
+    if (b) b.click();
+  }
+});
+
+draw();
+</script>
+</body>
+</html>

@@ -1,44 +1,50 @@
-Port Residue in as the fourth game -- the first one with no script
+Put Testimony on a phone, and move the prose out of the screen so it can
 
-aside.games.residue -- one room, five things, one visit at a time. You
-leave a single thing and go; when you come back the room has aged without
-you. The mechanic is the difference between evidence and messages: a cup
-you forgot outlasts a note you wrote on purpose, because a message is
-about the writer and wanting is fragile.
+The fourth code game with a single-file web build, after Vigil, Residue and
+Ledger. Testimony is the first of them whose whole shape is a conversation
+rather than a room or a ledger: it asks you eight questions and then reads
+your answers back as settled fact, so the phone build has to carry the
+interview itself and not just a rendering of it.
 
-This is the first game in the library that has no .aside file, and that
-is the point. There is nothing to author and nothing to read ahead of --
-the content is generated from the room's state, and the only thing that
-differs between playthroughs is what the player did last time. It is also
-the first game that owns its persistence rather than borrowing the
-engine's: it keeps its own plain-text room in saves/residue/room.state,
-because the thing being saved is not a position in a story.
+WHAT IS NOT DUPLICATED. The template
+(src/main/resources/testimony/web.html) holds the layout and the rules. The
+content -- the evening, the eight questions, their options and phrases, the
+account lines, the four closings, the tally sentences and every heading the
+game says in its own voice -- is generated from Testimony.java, the same
+class the engine screen reads.
 
-The Game interface held. It has now survived a visual novel, a real-time
-survival game, a platformer, and a thing with no script at all, without
-gaining a method.
+That last part was new work. The headings and the closing sentences were
+string literals inside TestimonyScreen; they moved into the model on this
+fire and the screen now reads them, so there is one copy of each sentence
+and the two builds cannot drift. The closings became templates carrying
+%wrong% / %plural% / %sure% rather than concatenation, for the same reason:
+the phone build fills them, and it must not own them. SelfTest.closings()
+covers the four branches and the singular, which is exactly the case a
+second copy of a sentence gets wrong.
 
-THE BUG THE PORT EXPOSED, in the new module rather than the engine:
+WHAT IS WRITTEN TWICE. The interview's arithmetic: eight questions in a
+fixed order, an answer written into memory whether or not it was true,
+nothing anywhere recording which, propagation into the phrasing of later
+questions, and the four-way choice of closing. About sixty lines of
+JavaScript, checked rather than trusted -- SelfTest regenerates this file
+and fails if the checked-in copy has gone stale.
 
-ResidueGame.create() loaded the room and handed it to the screen without
-aging it. The room ages on arrival, so the first frame showed "visit 0"
-and traces at the ages they were saved at -- the room was displayed
-before it had happened to you. Caught by rendering the screen rather than
-by reading the code. Fixed to advance on create. It is in-memory only:
-the room is written back when the player actually leaves something, so
-walking in and out again costs nothing and reopening the screen twice
-gives the same room both times.
+Verified by driving both builds through the same four playthroughs and
+diffing what they say: the account, the tally and the closing are identical
+in all four. The propagation was checked in the phone build directly -- say
+the coat was blue and the last question asks about the woman in the blue
+coat. The returning player lands on the verdict, not on the evening again.
+All five phases rendered in Chrome at 390x844, and the desktop screen
+re-rendered to confirm the constant move did not change it.
 
-Design note, since it is not obvious from the code: the room holds THREE
-things, not five. Five things and five places would mean the choice of
-what to leave is free. At three, leaving something new costs the oldest
-thing in the room, and the player has to decide what the next person is
-allowed to find.
+The shelf picked it up without being told, which is the orphan check earning
+its keep: 6 builds, 206 KB. Engine suite 88 -> 92 checks.
 
-Verified: the 46 room assertions run against the ported package, and all
-four beats (arrival, pick, gesture, departure) were rendered headlessly
-through the engine's own snapshot mode.
-
-Generated with Letta Code (https://letta.com)
-
-Co-Authored-By: Letta Code <noreply@letta.com>
+WHAT THE PORT FOUND, and did not fix. Question.note() is written for all
+eight questions -- eight paragraphs, and some of the best writing in the
+file -- and nothing has ever drawn it. Not the screen, not the verdict, not
+this build. It is left undrawn rather than drawn on one build only, because
+a note that appears on the phone and not on the desktop is a divergence
+dressed up as a feature. The verdict is where it belongs, and the desktop
+verdict has about 90px of canvas left below the closing, so drawing eight
+notes there is a layout change and not a one-line change. Recorded.
