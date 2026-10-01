@@ -152,6 +152,20 @@ public final class Threat {
                 hereFor = 0;
                 sinceCue = 0;
                 timer = 0;
+                // She is a seven-foot animatronic and she does not leave
+                // silently. This used to move her without telling the
+                // player anything at all, which made the one moment the
+                // game is supposed to reward -- you were quiet, and she
+                // gave up -- the one moment you could not hear. Measured
+                // 2026-10-01: the bot walked straight into the room she
+                // had just left, on every seed, because the only channel
+                // that says "something is next door" was never fired.
+                if (nextDoor(g)) {
+                    g.cue("step_" + key);
+                    g.heardNextDoor(this);
+                } else {
+                    g.cue("footstep");
+                }
                 return;
             }
 

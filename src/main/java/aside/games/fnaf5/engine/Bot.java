@@ -159,6 +159,74 @@ package aside.games.fnaf5.engine;
  * play it well. The difficulty curve is also generous on nights 1 to 3
  * (100% for HOLD), because the grace table was set for an engine where the
  * shock was the Ballora answer.
+ *
+ * <h2>2026-10-01, the same night, later: it is not a bot problem</h2>
+ *
+ * The paragraph above says the next piece of work is a bot problem before
+ * it is a balance problem, and that the redesign cannot be judged until
+ * something in the suite can play it. <b>That was tried, and it is
+ * wrong.</b> The suite was instrumented rather than rewritten -- the
+ * monitor's duty cycle, the fraction of the night spent standing still,
+ * and who ends the night, per policy -- and the reading is not ambiguous.
+ *
+ * <b>The monitor is a net benefit, and looking is not a cost.</b> HOLD and
+ * FLEE leave the feed up for <b>100% of the night</b> and read 91% and 95%
+ * over the week. PRO keeps it down most of the night -- the design's own
+ * instruction -- and reads 73%. Raising {@link Game#FEED_PACE} from 2.0 to
+ * 3.0, 4.0 and 6.0 does not change that: HOLD reads 93%, 93% and 92%,
+ * because Funtime Foxy's counter (point the feed past him) is free, instant
+ * and total, so he is neutralised whatever his speed. The information the
+ * monitor buys -- which room is safe to walk into -- is worth more than the
+ * threat it feeds.
+ *
+ * <b>And the stop is not merely unprofitable, it is a handicap.</b> Adding
+ * it to HOLD, changing nothing else, takes the week from 93% to 48%. The
+ * reason is one comparison: the grace on night 5 is 1.8s and a move is
+ * 1.5s, so <i>walking out of Ballora's room always works</i>, and her clock
+ * resets the moment you leave it. Every step the player takes makes a sound
+ * at the destination, she follows it, and following it resets the clock --
+ * so walking is the answer to Freddy (outrun him), to Ballora (drag her
+ * along) and to Foxy (steer him) at the same time. The design says the
+ * three demands contradict; the sweep says one strategy satisfies all
+ * three, and it is the one the player does by default.
+ *
+ * <b>Two structural fixes were built and measured, and both make the game
+ * unwinnable.</b> They are recorded here so the next fire does not spend
+ * its hour rebuilding them:
+ *
+ *   1. <b>Ballora locks on.</b> Once she is in your room she keeps you
+ *      until silence loses her, and walking away no longer resets her
+ *      clock. This does exactly what it is for -- HOLD drops to 0% on
+ *      every night, so the stop is finally necessary -- and every policy
+ *      with it dies, best case 2% over the week. The stop is required
+ *      constantly, stopping is what lets Freddy arrive, and three to five
+ *      charges cannot pay for a 240-second night of it.
+ *   2. <b>Ballora gets her own clock, shorter than a step.</b> The grace
+ *      has to be longer than a move or the player cannot walk out of
+ *      anything (measured: at a flat 1.45s every policy reads 0%, and
+ *      Funtime Foxy alone takes 175 of HOLD's 200 deaths on night 1). But
+ *      a grace longer than a move is also a grace in which walking out of
+ *      her room always works. So she gets her own, at 1.2-1.6s. Again the
+ *      stop becomes necessary -- HOLD 100/7/12/2/14 -- and again the game
+ *      dies: the best policy reads 28%, and 127 of its 128 night-2 deaths
+ *      are Funtime Freddy, because it is standing still 88% of the night.
+ *
+ * Both fixes are correct about the design and both fail on the same thing,
+ * which is the <b>economy</b>: the night is 240 seconds, the player moves
+ * every 1.5, and a stop costs 0.9-1.7 of it, so a stop-based game needs
+ * either more charges, a shorter night, or a Freddy who does not punish
+ * every pause. That is where the next fire starts -- with the clock and
+ * the charges, not with the ladder. The ladder cannot be fixed by a table
+ * while the answer to all three threats is the same button.
+ *
+ * <b>What did change here.</b> Two things, both small and both kept: the
+ * `!pursuit` guard on PRO's stop (a policy with no charges left used to
+ * stand still with Funtime Freddy already in the room), and the removal of
+ * the heard-next-door condition on it, which measured as worth nothing.
+ * And one engine bug, found by the instrument: Ballora's departure fired no
+ * cue at all, so the one moment the game rewards -- you were quiet and she
+ * gave up -- was the one moment the player could not hear. See
+ * {@link Threat#update}.
  */
 public final class Bot {
 
@@ -423,9 +491,17 @@ public final class Bot {
         // that reads 16% and one that reads 75%: without it PRO stops
         // wherever it happens to be, spends all five charges on the first
         // fifty seconds, and then dies to Freddy with nothing left.
-        else if (sound) {
-            boolean canAfford = g.shocks > 0 && g.heardAge >= HEARD_WINDOW;
-            if (canAfford) { g.monitorDown(); return; }
+        //
+        // The other half of the old condition -- "and nothing has been heard
+        // next door" -- was removed on 2026-10-01. It reads like prudence
+        // and is the opposite: it delays the stop by exactly the seconds the
+        // stop needs, and measured, it is worth nothing (72% against 73%).
+        // The `!pursuit` guard is new and is a plain bug fix: without it a
+        // policy with no charges left would stand still with Funtime Freddy
+        // already in the room, which is the one thing the stop is not for.
+        else if (sound && !pursuit && g.shocks > 0) {
+            g.monitorDown();
+            return;
         }
 
         // Keep away from anything we can perceive.
@@ -633,6 +709,75 @@ public final class Bot {
             else out[3]++;
         }
         return out;
+    }
+
+    /**
+     * What fraction of the night the policy spends with the feed up.
+     *
+     * <b>The instrument that found the 2026-10-01 finding, and the reason it
+     * is in the suite.</b> The design says looking costs -- Funtime Foxy
+     * follows the feed, so the monitor is supposed to be a commitment. This
+     * is the number that says whether anybody is paying: HOLD and FLEE,
+     * the two best policies in the set, leave it up for <b>100% of the
+     * night</b>, and PRO, which follows the design's instruction and keeps
+     * it down, reads ten points worse. A survival table cannot show that.
+     * See the note in {@link Bot}.
+     */
+    public static double monitorDuty(int night, int runs, Policy policy) {
+        double up = 0, total = 0;
+        for (int i = 0; i < runs; i++) {
+            Game g = new Game(night, 1000L + i * 7919L);
+            Brain b = new Brain();
+            double dt = 1.0 / 60.0;
+            double think = 0;
+            double limit = Game.HOUR_SECONDS * Game.NIGHT_HOURS + 5;
+            while (g.status == Game.Status.PLAYING && g.time < limit) {
+                think -= dt;
+                if (think <= 0) {
+                    think = REACTION;
+                    act(g, policy, b);
+                }
+                watch(g, b, dt);
+                if (g.monitorOn) up += dt;
+                g.update(dt);
+            }
+            total += g.time;
+        }
+        return total <= 0 ? 0 : up / total;
+    }
+
+    /**
+     * What fraction of the night the policy spends with its hands free.
+     *
+     * The other half of the same instrument. A move is 1.5 seconds and a
+     * stop is whatever the policy decides it is, so "standing still" here
+     * means "not in the middle of a move or a shock" -- the time a player
+     * actually has to decide something. HOLD never stops and reads 0%; PRO
+     * reads 6%; and the two structural fixes that make the stop necessary
+     * (see {@link Bot}) push it to 88%, which is the number that says why
+     * they fail.
+     */
+    public static double stillness(int night, int runs, Policy policy) {
+        double still = 0, total = 0;
+        for (int i = 0; i < runs; i++) {
+            Game g = new Game(night, 1000L + i * 7919L);
+            Brain b = new Brain();
+            double dt = 1.0 / 60.0;
+            double think = 0;
+            double limit = Game.HOUR_SECONDS * Game.NIGHT_HOURS + 5;
+            while (g.status == Game.Status.PLAYING && g.time < limit) {
+                think -= dt;
+                if (think <= 0) {
+                    think = REACTION;
+                    act(g, policy, b);
+                }
+                watch(g, b, dt);
+                if (g.busy <= 0) still += dt;
+                g.update(dt);
+            }
+            total += g.time;
+        }
+        return total <= 0 ? 0 : still / total;
     }
 
     /**

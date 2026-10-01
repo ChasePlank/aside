@@ -548,6 +548,29 @@ public final class SelfTest {
         }
         System.out.println();
 
+        // THE FEED AND THE FEET -- the instrument that found the 2026-10-01
+        // finding, kept in the suite so the next pass does not have to
+        // rebuild it. The design says looking costs and standing still is
+        // how you lose Ballora; these two numbers say whether either is
+        // true. They are printed and not asserted, because they are a
+        // reading of the game rather than a contract -- but they are the
+        // reading that matters. HOLD, the best simple policy, never puts
+        // the feed down and never stands still; PRO, which plays all three
+        // counters, does both and reads worse. See the note in Bot.
+        System.out.printf("    the feed and the feet (HOLD / PRO):"
+                        + " monitor up %.0f%% / %.0f%%, standing still %.0f%% / %.0f%%%n",
+                Bot.monitorDuty(3, runs, Bot.Policy.HOLD) * 100,
+                Bot.monitorDuty(3, runs, Bot.Policy.PRO) * 100,
+                Bot.stillness(3, runs, Bot.Policy.HOLD) * 100,
+                Bot.stillness(3, runs, Bot.Policy.PRO) * 100);
+
+        System.out.print("    what ends the night (PRO):");
+        for (int n = 1; n <= 5; n++) {
+            int[] k = Bot.killers(n, runs, Bot.Policy.PRO);
+            System.out.printf(" n%d[ballora %d, foxy %d, freddy %d]", n, k[0], k[1], k[2]);
+        }
+        System.out.println();
+
         // The dial the week actually turns on. Printed rather than
         // asserted: the flip is a measurement, and a measurement that is
         // asserted stops being one.
