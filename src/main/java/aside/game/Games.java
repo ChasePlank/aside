@@ -22,6 +22,7 @@ import aside.games.promise.PromiseGame;
 import aside.games.redaction.RedactionGame;
 import aside.games.relay.RelayGame;
 import aside.games.residue.ResidueGame;
+import aside.games.tell.TellGame;
 import aside.games.testimony.TestimonyGame;
 import aside.games.vigil.VigilGame;
 
@@ -60,6 +61,7 @@ public final class Games {
         g.add(new LessonGame());
         g.add(new PromiseGame());
         g.add(new OmissionGame());
+        g.add(new TellGame());
         return g;
     }
 
