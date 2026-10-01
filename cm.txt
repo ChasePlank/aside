@@ -1,47 +1,93 @@
-Add Lesson, where a state only ever teaches its own corner
+Add FNAF 7, where it does not have a pattern, it has yours
 
-The fifteenth verb is teaching, and it is the one the other fourteen
-assume. Residue leaves, Ledger records, Testimony recalls, Handoff hands
-over, Outside tells, Bearings checks, Inventory names, Vigil keeps,
-Corroboration believes, Attribution credits, Drift compares, Redaction
-bars, Relay carries, Interval waits -- and every one of them is about
-what happens to something after somebody already knows how to do it.
-This one is about the part before that.
+The seventh, and the one that takes away the last thing every game before
+it assumed -- that the thing coming for you does not know anything about
+you.
 
-You have run a boiler for eleven years and in three nights you hand it
-to somebody else. Two gauges and a vent, and the rule is one line: you
-open the vent when the pressure is up. You have never had to say why,
-because you have never had to tell anybody.
+FNAF 1 gave you doors and a power meter. FNAF 2 gave you a mask and a
+music box. FNAF 3 gave you a speaker and took the doors. FNAF 4 gave you a
+body that can only be in one place. FNAF 5 gave you a building and took
+the room you were standing in. FNAF 6 gave you one chair, one lamp and one
+shock, and took away the idea that a look is free. FNAF 7 gives you two
+doors, one bar and one light, and then takes away the idea that you are a
+stranger to it.
 
-The rule the whole thing rests on: a state only ever teaches its own
-corner. The board has four of them -- pressure up or down, heat up or
-down -- and a state in one corner says nothing whatever about the other
-three. Three nights spent in one corner is one corner taught three
-times, and the student's belief is exactly as wide after the third night
-as it was after the first. That is the failure the game exists to make
-legible: it does not look like a failure while it is happening. Every
-demonstration feels like teaching, the student keeps saying something,
-and the nights keep going.
+THE RULE: it does not have a pattern. It has yours.
 
-The eight rules the student considers are declared, and so is the order
-they try them in, so their belief is a fact about the demonstrations
-rather than a guess about the student. No two of the eight agree on all
-four corners, which is why a demonstration in a new corner always
-narrows the field and a demonstration in a corner they have already seen
-never does -- and the game says so, on the screen, while it is still
-happening, because the whole difficulty is that it does not feel like
-one.
+There is one bar and there are two doors, so exactly one of them is open.
+The unit does not search the building and it does not walk a route: it
+comes to the side you are not looking at, because it has been keeping a
+decayed record of where your attention has been. That record is drawn on
+the screen, in words, as IT EXPECTS YOU AT: LEFT -- so the player can see
+what it thinks of them, and the whole night is the argument between that
+and where the bar actually is.
 
-Measured: covering the shift's three corners is safe on 2000 of 2000
-seeds and leaves the student certain about half the time. Showing the
-first three states on the board is safe 66.5% of the time, which is the
-number that says the game is not free. Three nights in one corner are
-safe 30% of the time, which is the number that says the trap is real.
+Three things make the night, and they are all one thing:
 
-Lesson suite 624 checks. Engine suite 170. The phone build deals the
-same board and the same shift as the desktop over 200 seeds, and agrees
-about the standing set after the same three nights -- which is the
-number the game turns on, and the one a ported model could get wrong on
-both sides at once without either side noticing.
-tools/lesson-play.mjs plays the shipped file through its own buttons,
-including the claim the rule rests on.
+  * The lamp is the steering wheel. Point it at one side and the unit
+    comes to the other, so the competent loop is not "watch for it" but
+    "watch the side you are not defending".
+  * The lamp is also the only pair of eyes, and the filament will not stay
+    lit. Held past LIGHT_MAX it cuts out and will not strike again until
+    it has cooled most of the way down, so the record is always drifting
+    and the readout is always a moving target.
+  * One pair of hands. The bar cannot move while the lamp is on, and the
+    lamp cannot come up while the bar is in the air. The answer to a
+    deviation is a second of blindness, and the record spends that second
+    still describing the side you just left.
+
+The readout is the opposite of the answer -- it says where the record
+holds, and the unit comes to the other side -- so the player has to make
+one turn, and the turn is only worth anything while the record is worth
+anything.
+
+THE FIRST SWEEP SAID THE GAME WAS NOT A GAME, and that is the most useful
+thing in this commit. Before the filament existed, the policy that watches
+the unbarred side and swaps when it sees something read 100% on all five
+nights: the lamp was free, so the lamp was always already up, so the
+answer to every arrival was a move it had a whole hall's worth of time to
+make. A light you can hold is a light that solves the night.
+
+THE SECOND SWEEP SAID THE COMPETENT POLICY WAS WORSE THAN THE REACTIVE
+ONE, and that is the second most useful thing. PRO read the record, saw
+the unit at the left door, put the bar there, and then -- on the very next
+frame -- read the record again, which still described the lamp that had
+been on the left a moment ago, concluded the unit was coming to the right,
+and moved the bar off the door the thing was standing at. Measured: PRO
+41/34/17/2/5 against REACT's 78/68/50/23/11, and the whole difference was
+that PRO was talking itself out of what it had just seen. A sighting
+outranks a record, and it outranks it until the bar takes the hit.
+
+The week, 300 seeds a night:
+
+  IDLE      0%    0%    0%    0%    0%     0%   doing nothing
+  STARE     0%    0%    0%    0%    0%     0%   one side, forever
+  LISTEN    4%    0%    0%    0%    0%     1%   ears, no lamp
+  REACT    91%   85%   62%   54%   30%    64%   the lamp alone
+  PRO      95%   87%   67%   58%   36%    69%   the lamp and the record
+
+PRO's week is monotone and the last night is the hardest of the seven.
+REACT is the control that says the readout is load-bearing rather than
+decorative: it is the same loop with the record taken away, and it is
+behind on every night.
+
+The cast is the five that watch: Circus Baby, Ennard, Glitchtrap, Vanny,
+and the Mimic. They differ in one number -- how often you can hear them
+arrive -- and the week is the order of how quiet they are, because a step
+you can place is a step you can answer without spending a look, and a look
+is the only thing keeping the record sharp. Night five's tell is 0.15:
+listening is not a plan by the end of the week.
+
+Art is reproducible from tools/fnaf7-art.py and audio from
+tools/fnaf7-audio.py. The two steps are the only pair of cues in the
+franchise that have to be told apart by direction rather than by kind, so
+they are the same body with the thud half an octave apart, and the tool
+refuses to write them if a later edit makes them the same sound. The Mimic
+is the one unit the wiki has no transparent render for; it is cropped to
+the head and masked rather than keyed, because a keyer run against a rock
+wall either eats the character or leaves the wall.
+
+130 checks in the FNAF 7 suite, 0 failed. The engine suite is 220 passed,
+0 failed. The library is now 19 games. FNAF 7 is desktop-only, like 1
+through 6, so the phone shelf is unchanged at 12 builds / 596 KB and the
+desktop-only list grows to eight.
