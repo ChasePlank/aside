@@ -91,10 +91,32 @@ public record Walker(String key, String name, String note,
             new Walker("nightmare", "Nightmare",
                     "It does not stay on the screen, and it does not hurry.",
                     1.13, 1.35, 1.2);
+    /**
+     * Night four's fast half, and the one number in the cast that was set by a
+     * measurement rather than by taste.
+     *
+     * <p>It shipped at <b>1.18</b>, which put its step at 1.9068s against
+     * Nightmare's 1.9912s -- a 4.4% difference, and that turned out to be the
+     * worst place to be. Two walkers that close in speed stay close in
+     * <i>phase</i> for most of the night, so the same one is always the one
+     * arriving just after the door has let go: measured over 400 seeds, night
+     * four killed <b>99 times on the left and 9 on the right</b>, and the
+     * split mirrored exactly when the two were swapped, so it was the walker
+     * and not the hall. A night whose deaths are 11:1 on one side is a night
+     * the player learns to ignore a hall, which is not a skill.
+     *
+     * <p><b>1.24</b> puts the step at 1.8145s -- a 9.7% difference -- and the
+     * same measurement reads <b>102 left, 106 right</b> at 400 seeds (201/221
+     * at 800) with the night's difficulty unchanged (48% against 49%). The
+     * knob is chaotic rather than smooth -- 1.22, 1.26, 1.28 and 1.30 all give
+     * a different and much worse split -- so the value is a reading, not a
+     * preference, and the check that keeps it honest is in {@code SelfTest}
+     * ("no night's deaths are one-sided"). See {@link Pair#forNight}.
+     */
     public static final Walker PLUSHTRAP =
             new Walker("plushtrap", "Plushtrap",
                     "Quick, and it gets bored of a shut door sooner than most.",
-                    1.18, 1.45, 1.2);
+                    1.24, 1.45, 1.2);
     public static final Walker GOLDEN_FREDDY =
             new Walker("goldenfreddy", "Golden Freddy",
                     "There is no picture of it. There is only a picture you had.",

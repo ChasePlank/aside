@@ -307,12 +307,27 @@ public final class Bot {
      * two steps.
      *
      * <p>This is the play that <i>feels</i> safest and it is the one the duty
-     * cycle exists to punish. Shutting the door a full step early spends two
-     * and a half of the mechanism's four and a half seconds on an empty
-     * doorway, and the walker's patience is then served out of the part that
-     * is left -- so the hold runs long, the door runs hot, and the arrival
-     * after it is the one that gets in. <b>The mistake is not being too slow.
-     * It is being too early, and paying for it out of the next decision.</b>
+     * cycle exists to punish. {@link #holdNeeded} sizes the hold by where the
+     * walker is, so shutting the door two steps out asks the mechanism for
+     * about <b>7.9 of its {@link Feed#HOLD_MAX} seconds</b> -- and the walker
+     * only needs four and a half of them, so three are spent with the door
+     * down on an empty doorway. The door then runs hot, and the arrival after
+     * it is the one that gets in. <b>The mistake is not being too slow. It is
+     * being too early, and paying for it out of the next decision.</b>
+     *
+     * <p><b>It scores zero on all five nights, and that is the answer rather
+     * than a bug.</b> The previous fire left it open as "meant to be a
+     * plausible bad policy, not a non-starter", and the suspicion was that its
+     * rhythm left the belief stale -- the same failure as {@link #stare}. Both
+     * halves of that were tested and neither is the cause. Given a competent
+     * looking loop (watch the staler hall, go dark past {@link #LOOK_MAX}) and
+     * a hold corrected for the door's travel, an early press is <i>still</i>
+     * fatal on every night: the press itself is the mistake, and it is fatal
+     * for the reason the mechanism exists. So EARLY is not a rung below PRO,
+     * it is the second trap beside STARE -- <b>STARE wastes the feed, EARLY
+     * wastes the heat, and they are the same economy spent from opposite
+     * ends.</b> The suite asserts it loses every night, which is the honest
+     * claim; the ladder's rung is GLANCE.
      */
     void early(Feed m, double dt) {
         if (keepHolding(m, dt)) return;

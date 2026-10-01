@@ -666,6 +666,25 @@ public final class SelfTest {
                     + round1(t[2]) + " per night, deaths left " + k[0]
                     + " right " + k[1]);
         }
+
+        // No night is decided by one hall. A night whose deaths are almost all
+        // on one side is a night the player learns to ignore a hall, and that
+        // is a rule rather than a skill. Night four was exactly that -- 99
+        // left against 9 right, mirrored when the two were swapped -- until
+        // Plushtrap was brought up from 1.18 to 1.24 to widen the step gap
+        // past the band where the two barely drift (see Walker.PLUSHTRAP).
+        //
+        // The bound is loose on purpose: the point is to catch a night that
+        // has collapsed onto one side, not to demand a coin flip. Measured at
+        // 400 seeds the worst night is 1.24:1, and the one this was written
+        // for was 11:1.
+        for (int n = 1; n <= 5; n++) {
+            int[] k = Bot.killers(Bot.Policy.PRO, n, 400);
+            int lo = Math.min(k[0], k[1]);
+            int hi = Math.max(k[0], k[1]);
+            check("night " + n + "'s deaths are not one-sided",
+                    hi <= 2 * Math.max(1, lo));
+        }
     }
 
     private SelfTest() {}

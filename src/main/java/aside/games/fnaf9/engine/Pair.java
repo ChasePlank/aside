@@ -53,6 +53,29 @@ public record Pair(Walker left, Walker right, String note) {
                     "One of them is quick, and one of them will outwait you.");
             case 3 -> new Pair(Walker.SPRINGTRAP, Walker.SHADOW_BONNIE,
                     "One of them is already going. Watch it while it is there.");
+            // Night four is the night the two of them come apart, and the
+            // speed gap is the whole of it. Two walkers with the same step
+            // stay in phase, so one hold covers both and the night is easy
+            // (measured: two identical walkers are survivable 92%). Two with
+            // different steps drift, and the drift is what makes the night
+            // hard -- but it is also what makes it *lopsided*, because the
+            // walker that falls behind is the one that arrives just after the
+            // door has let go, every time.
+            //
+            // That is what this pair shipped as, and it was not a night, it
+            // was a side: 99 deaths on the left against 9 on the right, and
+            // the same split mirrored when the two were swapped. Plushtrap was
+            // brought up from 1.18 to 1.24 to widen the gap past the band
+            // where the phase barely moves (see Walker.PLUSHTRAP). The night
+            // is the same difficulty and now kills 102 left, 106 right.
+            //
+            // The sharp values are the pair's other half and they are the
+            // *thematic* axis rather than the felt one: night four is where
+            // the picture starts losing them, between night three's "watch it
+            // while it is there" and night five's "there is no picture of
+            // either of them". The sweep says a competent player looks for
+            // half a second at a time and is never punished by it, so the
+            // sharp axis cannot carry the ramp and does not try to.
             case 4 -> new Pair(Walker.NIGHTMARE, Walker.PLUSHTRAP,
                     "Neither of them stays on the screen for long.");
             default -> new Pair(Walker.SHADOW_FREDDY, Walker.GOLDEN_FREDDY,
