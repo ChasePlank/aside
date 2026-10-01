@@ -33,6 +33,11 @@ public class Synth {
         write(new File(out, "power_up.wav"), sweep(1.1, 60, 380));
         write(new File(out, "chime_6am.wav"), chime());
 
+        // The Lamp Room: a lighthouse story with sea on three sides, scored until now with the pizzeria's fan hum.
+        write(new File(out, "sea_swell.wav"), norm(seaSwell(8.0), 0.50));   // a bed, under everything
+        write(new File(out, "wind.wav"), norm(wind(8.0), 0.42));            // above the sea, not in it
+        write(new File(out, "buoy_bell.wav"), norm(buoyBell(), 0.68));      // the only thing out there with a voice
+
         // Cues the games asked for and had no file for. Generated here so the
         // whole set comes from one place and can be regenerated or replaced
         // wholesale - these are placeholders with the right *character*, not
@@ -276,6 +281,55 @@ public class Synth {
      * seam. Without this a looping fan thumps once per cycle, which is
      * far more noticeable than the seam it was meant to hide.
      */
+
+    /** Slow filtered noise with a breathing amplitude - the sea, rather than a hiss.
+     *  A one-pole lowpass makes it dark; a sine on the amplitude makes it swell and fall, and loopEnds
+     *  makes the swell meet itself so it can sit under a scene for as long as the scene lasts. */
+    static double[] seaSwell(double seconds) {
+        int n = (int) (RATE * seconds);
+        double[] s = new double[n];
+        java.util.Random r = new java.util.Random(7);
+        double lp = 0;
+        for (int i = 0; i < n; i++) {
+            double t = i / (double) RATE;
+            lp += (r.nextDouble() * 2 - 1 - lp) * 0.02;
+            double swell = 0.6 + 0.4 * Math.sin(2 * Math.PI * t / seconds);
+            s[i] = lp * swell * 4;
+        }
+        loopEnds(s);
+        return s;
+    }
+
+    /** Wind: the same trick, brighter and thinner. Two poles so it sits above the sea instead of in it. */
+    static double[] wind(double seconds) {
+        int n = (int) (RATE * seconds);
+        double[] s = new double[n];
+        java.util.Random r = new java.util.Random(11);
+        double lp = 0;
+        for (int i = 0; i < n; i++) {
+            double t = i / (double) RATE;
+            lp += (r.nextDouble() * 2 - 1 - lp) * 0.10;
+            double gust = 0.5 + 0.5 * Math.sin(2 * Math.PI * t / seconds * 2 + 1.1);
+            s[i] = lp * gust * 2.2;
+        }
+        loopEnds(s);
+        return s;
+    }
+
+    /** A bell buoy: two decaying sines a fourth apart, with the long tail a bell has and a drum does not. */
+    static double[] buoyBell() {
+        int n = (int) (RATE * 2.4);
+        double[] s = new double[n];
+        for (int i = 0; i < n; i++) {
+            double t = i / (double) RATE;
+            double env = Math.exp(-t * 1.1);
+            s[i] = env * (Math.sin(2 * Math.PI * 196 * t) * 0.7
+                        + Math.sin(2 * Math.PI * 261.6 * t) * 0.4
+                        + Math.sin(2 * Math.PI * 392 * t) * 0.15);
+        }
+        return s;
+    }
+
     static void loopEnds(double[] s) {
         int fade = Math.min(RATE / 4, s.length / 8);
         for (int i = 0; i < fade; i++) {
