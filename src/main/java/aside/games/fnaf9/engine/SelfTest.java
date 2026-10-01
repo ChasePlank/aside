@@ -2,6 +2,8 @@ package aside.games.fnaf9.engine;
 
 import aside.games.fnaf9.MouseMap;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -83,6 +85,7 @@ public final class SelfTest {
         cast();
         week();
         instrument();
+        cues();
         mouse();
         survival();
         System.out.println();
@@ -618,6 +621,46 @@ public final class SelfTest {
     }
 
     // ------------------------------------------------------------- the ladder
+
+    // ----------------------------------------------------------------- cues
+
+    /**
+     * The night's own sounds, and the one thing they must not become.
+     *
+     * <p>Every cue in {@code GameScreen.play} is asked for by name with a
+     * fallback -- {@code f9_step} then {@code footstep} -- so a missing file is
+     * not an error, it is a quiet substitution, and a game's worth of
+     * substitutions sounds like a game that was never finished. That is the
+     * same shape of failure as a stale generated file: it does not fail, it
+     * just disagrees with what was written. So the files are checked for
+     * existing, and they are built by {@code tools/fnaf9-audio.py} rather than
+     * committed by hand.
+     *
+     * <p>And the two halls share one footfall. FNAF 9 has no directional
+     * channel by design -- the monitor is the only way to know where anything
+     * is, and the monitor is a picture of the past -- so a step that told the
+     * halls apart would be a free channel. The last check is what keeps one
+     * from being added by accident.
+     */
+    static void cues() {
+        section("the night's own sounds");
+        Path dir = Path.of("audio");
+        if (!Files.isDirectory(dir)) {
+            System.out.println("       (no " + dir + " from here)");
+            return;
+        }
+        for (String cue : new String[]{"f9_step", "f9_door", "f9_gives_up",
+                "f9_switch", "f9_jam", "f9_taken"}) {
+            boolean found = false;
+            for (String ext : new String[]{".wav", ".mp3", ".aiff", ".m4a", ".aac"}) {
+                if (Files.exists(dir.resolve(cue + ext))) { found = true; break; }
+            }
+            check("audio/" + cue + " is its own cue, not a fallback", found);
+        }
+        check("and the two halls share one footfall",
+                !Files.exists(dir.resolve("f9_step_left.wav"))
+                        && !Files.exists(dir.resolve("f9_step_right.wav")));
+    }
 
     static void survival() {
         section("the week, 400 seeds a night");
