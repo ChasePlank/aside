@@ -40,7 +40,24 @@ import aside.games.fnaf9.engine.Feed.Side;
  *   GLANCE   a fixed rhythm: look, rest, look.       A player with a habit.
  *   PRO      look when an arrival is due, shut when  The competent player.
  *            it is, and be dark the rest of the time.
+ *   SIEGE    PRO, but the hold is sized to cover    The player who holds
+ *            the OTHER hall as well whenever that   through both of them.
+ *            hall is within {@link #SIEGE_AT}.
  * </pre>
+ *
+ * <p><b>SIEGE is on the ladder because it beats PRO, and that is an open
+ * design item rather than a compliment.</b> Measured at 200 seeds a night it
+ * reads 89/99/99/99/66 against PRO's 86/74/62/48/35 -- three nights out of
+ * five at 99%, and a week of 90% against 61%. The reason is in the death
+ * trace: <b>every death PRO takes happens while the door is down, within
+ * 0.8s of a release</b> (measured, 418 deaths over 200 seeds a night, all of
+ * them in {@link Feed.Circuit#HOLD} and all of them inside a second of
+ * letting go). PRO lets go the moment the doorway empties, the other walker
+ * arrives inside the door's {@link Feed#SHUT_TIME}, and the door is still on
+ * its way down. SIEGE does not have that failure because it does not let go
+ * until both halls are clear -- so the night rewards <i>holding longer</i>,
+ * and the door's duty cycle is not tight enough to stop it. See
+ * {@link #SIEGE_AT} for what has been tried against it.
  *
  * <p><b>PRO is the policy the ladder is read against</b>, for the reason FNAF
  * 5 learned twice and FNAF 7 and 8 learned once each: a check written against
@@ -49,7 +66,7 @@ import aside.games.fnaf9.engine.Feed.Side;
  */
 public final class Bot {
 
-    public enum Policy { IDLE, STARE, EARLY, GLANCE, PRO }
+    public enum Policy { IDLE, STARE, EARLY, GLANCE, PRO, SIEGE }
 
     /**
      * How much warning the bot needs before it will shut the door, in seconds.
@@ -124,8 +141,17 @@ public final class Bot {
     public double lookFor = 0;
     /** Which hall GLANCE is on, for its alternation. */
     public Side glanceSide = Side.LEFT;
+    /**
+     * True when this policy sizes its hold for both halls.
+     *
+     * <p>Set from the policy rather than passed in, so there is one place that
+     * knows which policies are the extended hold.
+     */
+    public final boolean extendHold;
+
     public Bot(Policy policy) {
         this.policy = policy;
+        this.extendHold = policy == Policy.SIEGE;
     }
 
     /**
@@ -142,7 +168,7 @@ public final class Bot {
             case STARE -> stare(m);
             case EARLY -> early(m, dt);
             case GLANCE -> glance(m, dt);
-            case PRO -> play(m, dt);
+            case PRO, SIEGE -> play(m, dt);
         }
     }
 
@@ -214,10 +240,63 @@ public final class Bot {
      * wrong length of time, exactly as a person would.
      */
     double holdNeeded(Feed m, Side s) {
-        return Math.min(Feed.HOLD_MAX - 0.15,
-                est[s.ordinal()] * m.interval(s) + Feed.SHUT_TIME
-                        + m.pair.unit(s).patience() + HOLD_SLACK);
+        double need = est[s.ordinal()] * m.interval(s) + Feed.SHUT_TIME
+                + m.pair.unit(s).patience() + HOLD_SLACK;
+        if (extendHold) {
+            Side o = s.other();
+            if (est[o.ordinal()] <= SIEGE_AT) {
+                need = Math.max(need, est[o.ordinal()] * m.interval(o)
+                        + Feed.SHUT_TIME + m.pair.unit(o).patience() + HOLD_SLACK);
+            }
+        }
+        return Math.min(Feed.HOLD_MAX - 0.15, need);
     }
+
+    /**
+     * How close the other hall has to be before SIEGE holds through it too.
+     *
+     * <p>2.5 steps, and it is a reading rather than a preference: at 2.0 the
+     * extension almost never fires and SIEGE reads like PRO (73% week), at
+     * 3.0 it fires too late to help and night one collapses (74% week, night
+     * one at 1%), and 2.5 is the band where it works (90% week). Measured at
+     * 200 seeds a night, 2.5 reads 89/99/99/99/66.
+     *
+     * <p><b>What has been tried against it, all measured, none of it enough:</b>
+     *
+     * <ul>
+     *   <li><b>{@link Feed#REARM} is inert.</b> 0.35, 0.20, 0.10 and 0.00 give
+     *       byte-identical ladders for every policy, because it only gates a
+     *       re-hold after a jam and no policy on the ladder jams.</li>
+     *   <li><b>{@link Feed#COOL} cannot separate them.</b> 2.2 -> PRO 60% /
+     *       SIEGE 90%; 1.8 -> 55% / 79%; 1.5 -> 51% / 74%; 1.2 -> 26% / 36%.
+     *       The gap narrows and never closes, and the week stops ramping first
+     *       (night five is the first to go, 33% -> 8% at 1.8).</li>
+     *   <li><b>Jittering the walker's patience changes nothing.</b> Drawing a
+     *       fresh patience per visit at +/-10%, 20%, 30%, 40% and 50% leaves
+     *       SIEGE between 87% and 92% and PRO between 59% and 64%. It cannot
+     *       help: SIEGE's hold is already pinned at the mechanism's ceiling
+     *       ({@link Feed#HOLD_MAX} less the 0.15 margin), so there is no
+     *       length for the jitter to take away.</li>
+     *   <li><b>Charging the door for what is leaning on it is far too strong.</b>
+     *       Extra heat while a walker is against a shut door, at 0.5 per
+     *       second, takes PRO from 60% to 11% and SIEGE from 90% to 23%. It
+     *       punishes the recovery -- which is the thing PRO needs -- rather
+     *       than the length of the hold.</li>
+     *   <li><b>Charging the hold superlinearly is the right shape and needs a
+     *       re-balance.</b> Heat at {@code 1 + k * held / HOLD_MAX} per second
+     *       at k = 0.5 brings the two together (PRO 49%, SIEGE 55%) and at
+     *       k = 1.0 puts both on the floor (14% / 16%). But it punishes long
+     *       <i>patience</i>, which is night one's whole cast, so the ramp
+     *       inverts: PRO reads 49/76/62/43/14. That is a re-tune of the
+     *       patience table and a re-sweep, not a constant.</li>
+     * </ul>
+     *
+     * <p>So the honest state of this game is: <b>the night rewards holding
+     * longer than the competent policy holds, and no single constant fixes
+     * it.</b> The suite asserts the relationship rather than pretending it is
+     * not there, so that a future fire that does fix it is told it has.
+     */
+    public static final double SIEGE_AT = 2.50;
 
     /** Shut the door, and work out how long for. */
     void beginHold(Feed m, Side s) {

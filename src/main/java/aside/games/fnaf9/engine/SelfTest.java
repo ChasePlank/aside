@@ -55,14 +55,23 @@ import java.util.Set;
  *   <li><b>The competent policy is not a robust reading of the game, and
  *       this is the biggest thing still open.</b> A bot whose hold is sized
  *       for <i>both</i> halls rather than only the walker it was started for
- *       scores <b>99% on the week</b> (0/2/2/1/0 deaths across the five
- *       nights at 200 seeds), so the night is solved by "hold until both are
- *       clear" and the 61% below is a reading of the bot's release policy
- *       rather than of the game. The door's recovery cannot be re-tuned to
- *       close it by turning one constant -- measured, {@code COOL} 2.2 gives
- *       99%, 1.8 gives 42% with a non-monotone week, 1.5 gives 24%, 1.0 gives
- *       26%, 0.6 gives 1% -- so it is a threshold rather than a dial and the
- *       fix is a redesign of the door's economy, not a tuning pass.</li>
+ *       -- {@link Bot.Policy#SIEGE} -- reads <b>89/99/99/99/66, a week of
+ *       90%</b> against PRO's 86/74/62/48/35, so three nights out of five are
+ *       solved by "hold until both are clear" and the 61% below is a reading
+ *       of the bot's release policy rather than of the game. <b>The note that
+ *       stood here said 99% on the week, and that number was never measured;
+ *       the real one is 90%.</b> Correcting it is half the reason the policy
+ *       is on the ladder now -- a claim about the game that lives in a comment
+ *       is a claim nothing checks. The death trace says why it wins: <b>every
+ *       death PRO takes happens with the door down, inside a second of letting
+ *       go.</b> It releases the moment the doorway empties, the other walker
+ *       arrives inside the door's travel, and the door is still on its way
+ *       down. SIEGE has no such failure because it does not let go until both
+ *       halls are clear -- so the night rewards <i>holding longer</i>, and the
+ *       duty cycle is not tight enough to stop it. <b>No single constant
+ *       closes the gap</b>; see {@link Bot#SIEGE_AT} for the five things that
+ *       were tried, all of them measured. The fix is a redesign of the door's
+ *       economy plus a re-tune of the patience table, not a tuning pass.</li>
  * </ul>
  */
 public final class SelfTest {
@@ -89,6 +98,7 @@ public final class SelfTest {
         mouse();
         phone();
         survival();
+        siege();
         System.out.println();
         System.out.println(checks + " checks, " + failed + " failed");
         if (failed > 0) System.exit(1);
@@ -742,6 +752,95 @@ public final class SelfTest {
             check("night " + n + "'s deaths are not one-sided",
                     hi <= 2 * Math.max(1, lo));
         }
+    }
+
+    /**
+     * The extended hold: the policy that beats the competent player, and why.
+     *
+     * <p>This section exists because the claim it tests used to live in a
+     * comment. {@code aside-engine.md} and this file's own header both said
+     * the extended hold scored "99% on the week", and nobody had run it since
+     * the number was written down -- it is <b>90%</b>. A number in a comment
+     * is a number nothing checks, and the whole reason the ladder exists is
+     * that a balance table produced by hand is a table of the nights somebody
+     * happened to play.
+     *
+     * <p>So the policy is a rung of the ladder now, and the relationship is
+     * asserted rather than described. The assertion is deliberately written as
+     * the <i>honest state of the game</i> -- "the extended hold is still at
+     * least as good as the competent player" -- rather than as a bug, because
+     * the day it stops being true is the day the door's economy has been
+     * redesigned, and the check failing is how that fire finds out it worked.
+     */
+    static void siege() {
+        section("the extended hold, and why it wins");
+
+        int seeds = 200;
+        double[] pro = new double[5];
+        double[] sie = new double[5];
+        for (int n = 1; n <= 5; n++) {
+            pro[n - 1] = Bot.survival(Bot.Policy.PRO, n, seeds);
+            sie[n - 1] = Bot.survival(Bot.Policy.SIEGE, n, seeds);
+        }
+        System.out.println("       PRO   " + row(pro) + "   week "
+                + Math.round(week(pro) * 100) + "%");
+        System.out.println("       SIEGE " + row(sie) + "   week "
+                + Math.round(week(sie) * 100) + "%");
+
+        check("the extended hold is still at least as good as the competent player",
+                week(sie) >= week(pro));
+        check("and it is the better policy on the middle of the week",
+                sie[1] > pro[1] && sie[2] > pro[2] && sie[3] > pro[3]);
+
+        // Why. The trace, not the percentage: a survival number cannot tell
+        // you what killed you, and this one is entirely about the moment the
+        // door is let go.
+        int deaths = 0, down = 0, recent = 0;
+        double worst = 0;
+        for (int n = 1; n <= 5; n++) {
+            for (int i = 0; i < seeds; i++) {
+                Feed m = new Feed(n, 1000L * n + i);
+                Bot b = new Bot(Bot.Policy.PRO);
+                double dt = 1.0 / 60.0;
+                double lastRelease = -99;
+                boolean was = false;
+                for (int f = 0; f < 60 * 400 && m.status == Feed.Status.PLAYING; f++) {
+                    b.step(m, dt);
+                    if (was && !b.holding) lastRelease = m.time;
+                    was = b.holding;
+                    m.update(dt);
+                }
+                if (m.status == Feed.Status.TAKEN) {
+                    deaths++;
+                    if (m.circuit == Feed.Circuit.HOLD) down++;
+                    double gap = m.time - lastRelease;
+                    if (gap <= 1.0) recent++;
+                    worst = Math.max(worst, gap);
+                }
+            }
+        }
+        System.out.println("       " + deaths + " deaths over " + (5 * seeds)
+                + " nights: " + down + " with the door down, " + recent
+                + " inside a second of letting go (worst gap "
+                + round1(worst) + "s)");
+        check("every death the competent player takes is taken with the door down",
+                down == deaths);
+        check("and every one of them is inside a second of letting go",
+                recent == deaths);
+    }
+
+    /** One night's five percentages, for a report line. */
+    static String row(double[] v) {
+        StringBuilder sb = new StringBuilder();
+        for (double x : v) sb.append(String.format(" %4.0f%%", x * 100));
+        return sb.toString();
+    }
+
+    /** The mean of a five-night reading. */
+    static double week(double[] v) {
+        double t = 0;
+        for (double x : v) t += x;
+        return t / v.length;
     }
 
     /**

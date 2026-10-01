@@ -66,6 +66,21 @@ import java.util.Random;
  * shut it.</b> A player who leans on the sensor is always late; a player who
  * leans on the monitor never knows when to let go.
  *
+ * <p><b>Half of that is measured and half of it is not.</b> The first half is
+ * solid: a policy that releases on the sensor alone dies immediately, because
+ * the door finishes coming down before the walker it was shut for has arrived
+ * and the doorway is genuinely empty at that moment. The second half is the
+ * one the sweep does not support. A policy that holds until the sensor has
+ * <i>seen</i> something and then gone clear -- the play this paragraph
+ * describes -- scores <b>13% on the week</b> against the competent policy's
+ * 61%, because the sensor says the doorway is empty and says nothing about
+ * the hall behind it, and a release into a hall nobody has looked at is the
+ * move that kills. What actually decides the night is the <i>belief</i>: the
+ * walker's patience is a constant, so a player who has been keeping a hall in
+ * their head knows when the doorway will empty without asking the door. That
+ * is the open design item, and it is why the extended hold beats the competent
+ * player -- see {@link aside.games.fnaf9.engine.Bot#SIEGE_AT}.
+ *
  * <p>A live view of the doorway was here and it was removed, and the sweep is
  * why. With one, the night stops being a night: a player who keeps it on sees
  * every arrival the moment it happens, and a walker in a doorway is a walker
@@ -112,8 +127,11 @@ import java.util.Random;
  * runs {@link #heat} up at one second per second; letting go runs it down at
  * {@link #COOL}; and at {@link #HOLD_MAX} the mechanism lets go on its own and
  * will not take another hold until it has cooled past {@link #REARM}. So the
- * door can be shut for about three seconds and then it needs about three
- * seconds open.
+ * door can be shut for {@link #HOLD_MAX} seconds and then it needs
+ * {@code HOLD_MAX / COOL} -- about three and a half -- seconds open. (This
+ * said "about three seconds and then about three seconds open" for as long as
+ * the constants have said eight and 2.2. The numbers it describes are the
+ * constants, and the constants are what the night is tuned against.)
  *
  * <p>That number is not decoration. Without it the night is trivial and the
  * first sweep said so in one line: <b>a door that can be held forever is a
