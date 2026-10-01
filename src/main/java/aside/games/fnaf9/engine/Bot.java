@@ -312,6 +312,21 @@ public final class Bot {
      *       it -- and the only one whose failure mode is losing the game
      *       rather than losing the ramp, which is why {@code SelfTest} now
      *       asserts that no policy wins the week.</li>
+     *   <li><b>Charging the door for the time it spends on an EMPTY doorway --
+     *       the one cost that depends on the walker's state rather than on a
+     *       rate -- is a cliff as well.</b> Heat at {@code 1 + k} per second
+     *       while nothing is against the door and {@code 1} while something
+     *       is, so that the hold SIEGE buys its win with is the hold it pays
+     *       for: k = 0.5 -> PRO 12% / SIEGE 21%; k = 1.0 -> 0% / 0%; k = 1.5
+     *       -> 0% / 0%. It is the eighth lever and the eighth that does not
+     *       close the gap, and it is the most interesting of the eight,
+     *       because it is the shape the diagnosis below says the fix has to
+     *       have -- <i>a cost whose value depends on the walker's state rather
+     *       than on how much of it the player applies</i> -- and it still
+     *       comes back a threshold. <b>A state-dependent cost is not enough on
+     *       its own. The player still has no lever that changes the walkers,
+     *       and without one there is nothing for a gradient to be made
+     *       of.</b></li>
      * </ul>
      *
      * <p>So the honest state of this game is: <b>the night rewards holding
