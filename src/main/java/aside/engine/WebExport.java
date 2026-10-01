@@ -3,9 +3,14 @@ package aside.engine;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Stream;
 
 /**
  * Export an .aside story to a SINGLE self-contained HTML file.
@@ -29,10 +34,35 @@ import java.util.Map;
  * engine should never fail to export because of a command this tool has not
  * heard of yet.
  *
- * NOT YET RENDERED: art/sprites. Text, choices, backgrounds-by-name and the
- * branching all work; the drawings do not travel yet.
+ * ART NOW TRAVELS. This used to say "NOT YET RENDERED: art/sprites", and that
+ * was the one thing standing between a visual novel and a phone: the words
+ * went and the pictures stayed behind, so the build was a story you read
+ * rather than a novel you looked at. The drawings are now inlined as data
+ * URIs -- one file still, no folder to keep together -- and the staging the
+ * script asks for is drawn the way VnScreen draws it: a background, up to
+ * three figures on a shared floor line at the same three zones, and the
+ * figures who are not speaking dimmed to 0.72.
+ *
+ * The images come from art/web/, which tools/vn-art.py builds by downscaling
+ * the originals (14 MB of PNG is a 19 MB page; the web copies are ~1.2 MB).
+ * That directory is committed, which is what lets this class stay the only
+ * thing needed to regenerate a build -- aside.engine.SelfTest regenerates and
+ * compares, and a check that needed PIL to run would not be a check.
+ *
+ * A POSE THAT WAS NEVER DRAWN IS RESOLVED HERE, NOT IN THE BROWSER. The
+ * desktop falls back to the character's neutral and then to any pose at all
+ * (aside.ui.Assets.sprite), and a phone build that fell back differently would
+ * be a second version of the staging rather than a port of it. So the fallback
+ * runs at export time, the item carries the key it resolved to, and the
+ * browser is left with nothing to decide. What could not be resolved at all is
+ * named in the export's "missing" list and printed when this runs as a tool --
+ * a background the art library does not have should be a line of output, not a
+ * black rectangle nobody can explain.
  */
 public class WebExport {
+
+    /** Where the web-sized art lives. Built by tools/vn-art.py; see its header. */
+    static final Path ART = Path.of("art", "web");
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
@@ -42,9 +72,27 @@ public class WebExport {
         String html = convert(Files.readString(Path.of(args[0])));
         Files.writeString(Path.of(args[1]), html);
         System.out.println("wrote " + args[1] + "  (" + html.length() / 1024 + " KB)");
+        for (String m : missingIn(html)) System.out.println("  no art for: " + m);
+    }
+
+    /** The staging this export could not draw, read back out of a built page. */
+    static List<String> missingIn(String html) {
+        List<String> out = new ArrayList<>();
+        int at = html.indexOf("\"missing\":[");
+        if (at < 0) return out;
+        int end = html.indexOf(']', at);
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("\"((?:[^\"\\\\]|\\\\.)*)\"")
+                .matcher(html.substring(at + 11, end));
+        while (m.find()) out.add(m.group(1));
+        return out;
     }
 
     static String convert(String script) {
+        return convert(script, ART);
+    }
+
+    static String convert(String script, Path artRoot) {
         String title = "Untitled";
         String author = "";
         String start = null;
@@ -52,6 +100,12 @@ public class WebExport {
         Map<String, List<Map<String, Object>>> passages = new LinkedHashMap<>();
         List<Map<String, Object>> current = null;
         String currentLabel = null;
+
+        // What the script asks to see, in the order it asks. Collected while
+        // parsing so the export inlines the art this story uses and not the
+        // whole library -- the difference between a 1.2 MB page and a 4 MB one.
+        Set<String> wantBg = new LinkedHashSet<>();
+        Set<String> wantSprite = new LinkedHashSet<>();
 
         for (String raw : script.split("\n")) {
             String line = raw.strip();
@@ -117,18 +171,22 @@ public class WebExport {
 
             // scene directive
             if (line.startsWith("bg ")) {
-                current.add(item("bg", "name", line.substring(3).strip()));
+                String name = line.substring(3).strip();
+                wantBg.add(name);
+                current.add(item("bg", "name", name));
                 continue;
             }
             if (line.startsWith("show ")) {
                 // show char expr at pos   |   show char at pos   |   show char
                 String rest = line.substring(5).strip();
-                String who = rest, where = "";
+                String who = rest, where = "", pose = "";
                 int at = rest.indexOf(" at ");
                 if (at >= 0) { who = rest.substring(0, at).strip(); where = rest.substring(at + 4).strip(); }
                 int sp = who.indexOf(' ');
-                if (sp >= 0) who = who.substring(0, sp);          // drop the expression
-                current.add(item("show", "who", who, "where", where));
+                if (sp >= 0) { pose = who.substring(sp + 1).strip(); who = who.substring(0, sp); }
+                if (!pose.isEmpty()) wantSprite.add(who + "-" + pose);
+                else wantSprite.add(who + "-neutral");
+                current.add(item("show", "who", who, "pose", pose, "where", where));
                 continue;
             }
             if (line.startsWith("hide ")) {
@@ -164,11 +222,62 @@ public class WebExport {
             start = passages.isEmpty() ? "" : passages.keySet().iterator().next();
         }
 
+        // ---- resolve the staging against the art that exists -----------------
+        Set<String> bgFiles = stems(artRoot.resolve("backgrounds"), ".jpg", ".png");
+        Set<String> spFiles = stems(artRoot.resolve("sprites"), ".webp", ".png");
+        Map<String, String> assets = new LinkedHashMap<>();
+        List<String> missing = new ArrayList<>();
+
+        Path bgDir = artRoot.resolve("backgrounds");
+        Path spDir = artRoot.resolve("sprites");
+
+        for (String name : wantBg) {
+            Path file = bgFiles.contains(name) ? fileFor(bgDir, name, ".jpg", ".png") : null;
+            if (file != null) assets.put("bg:" + name, dataUri(file));
+            else missing.add("bg " + name);
+        }
+
+        // The fallback runs here, once, and the item carries the answer: the
+        // browser must not be able to disagree with the desktop about which
+        // picture a missing pose falls back to.
+        Map<String, String> poseFor = new LinkedHashMap<>();
+        for (String want : wantSprite) {
+            String key = resolveSprite(want, spFiles);
+            if (key == null) { missing.add("show " + want); continue; }
+            poseFor.put(want, key);
+            if (!key.equals(want)) missing.add("show " + want + " (drawn as " + key + ")");
+            assets.put("sp:" + key, dataUri(fileFor(spDir, key, ".webp", ".png")));
+        }
+
+        // Rewrite every show item to carry the key it resolved to, so the page
+        // is a lookup and not a decision.
+        for (List<Map<String, Object>> items : passages.values()) {
+            for (Map<String, Object> it : items) {
+                if (!"show".equals(it.get("type"))) continue;
+                String who = String.valueOf(it.get("who"));
+                String pose = String.valueOf(it.get("pose"));
+                String want = pose.isEmpty() ? who + "-neutral" : who + "-" + pose;
+                it.put("key", poseFor.getOrDefault(want, ""));
+            }
+        }
+
         StringBuilder json = new StringBuilder();
         json.append("{\"title\":").append(q(title))
             .append(",\"author\":").append(q(author))
             .append(",\"start\":").append(q(start))
-            .append(",\"passages\":{");
+            .append(",\"assets\":{");
+        boolean firstA = true;
+        for (Map.Entry<String, String> e : assets.entrySet()) {
+            if (!firstA) json.append(',');
+            firstA = false;
+            json.append(q(e.getKey())).append(':').append(q(e.getValue()));
+        }
+        json.append("},\"missing\":[");
+        for (int i = 0; i < missing.size(); i++) {
+            if (i > 0) json.append(',');
+            json.append(q(missing.get(i)));
+        }
+        json.append("],\"passages\":{");
         boolean firstP = true;
         for (Map.Entry<String, List<Map<String, Object>>> e : passages.entrySet()) {
             if (!firstP) json.append(',');
@@ -193,6 +302,58 @@ public class WebExport {
 
         return HTML_TEMPLATE.replace("__TITLE__", title.replace("<", "&lt;"))
                             .replace("__STORY__", json.toString());
+    }
+
+    /** File stems in a directory, for the extensions a web build may hold. */
+    static Set<String> stems(Path dir, String... exts) {
+        Set<String> out = new TreeSet<>();
+        if (!Files.isDirectory(dir)) return out;
+        try (Stream<Path> s = Files.list(dir)) {
+            s.map(p -> p.getFileName().toString()).forEach(n -> {
+                for (String e : exts) {
+                    if (n.endsWith(e)) { out.add(n.substring(0, n.length() - e.length())); return; }
+                }
+            });
+        } catch (Exception e) {
+            return out;
+        }
+        return out;
+    }
+
+    /** The file a stem actually lives in, so a .png background still exports. */
+    static Path fileFor(Path dir, String stem, String... exts) {
+        for (String e : exts) {
+            Path p = dir.resolve(stem + e);
+            if (Files.exists(p)) return p;
+        }
+        return null;
+    }
+
+    /**
+     * The pose a character's art actually has, mirroring aside.ui.Assets.sprite:
+     * the pose asked for, then this character's neutral, then any pose at all.
+     * Null when the character has no art whatsoever.
+     */
+    static String resolveSprite(String want, Set<String> available) {
+        if (available.contains(want)) return want;
+        int dash = want.lastIndexOf('-');
+        if (dash < 0) return null;
+        String ch = want.substring(0, dash);
+        if (available.contains(ch + "-neutral")) return ch + "-neutral";
+        for (String k : available) if (k.startsWith(ch + "-")) return k;
+        return null;
+    }
+
+    static String dataUri(Path file) {
+        try {
+            String name = file.getFileName().toString().toLowerCase();
+            String mime = name.endsWith(".webp") ? "image/webp"
+                        : name.endsWith(".png") ? "image/png"
+                        : "image/jpeg";
+            return "data:" + mime + ";base64," + Base64.getEncoder().encodeToString(Files.readAllBytes(file));
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     /**
@@ -263,51 +424,71 @@ public class WebExport {
 <title>__TITLE__</title>
 <style>
   :root { color-scheme: dark; }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0; background: #0d0a09; color: #e8e4dc;
     font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-text-size-adjust: 100%;
   }
-  #wrap { max-width: 720px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
-  #stage { flex: 1; padding: 22px 20px 0; }
-  #place { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #8a7f70; margin-bottom: 14px; min-height: 16px; }
+  #bar { position: fixed; top: 0; left: 0; height: 3px; background: #c4622b; width: 0;
+         transition: width .25s; z-index: 5; }
+  /* A phone VN is a fixed frame with a scrolling script under it, not a
+     document with a picture in it. So the page itself does not scroll: the
+     stage holds the top, the log is the only thing that moves, and the choices
+     sit at the bottom where a thumb already is. The stage is the desktop's
+     1280x720 frame at 16:9 -- the same frame, so the same three zones and the
+     same floor line, and a room that is framed the way the room was drawn
+     rather than cropped to a phone's idea of a picture. */
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+  #stage, #place, #log, #choices, #hint { width: 100%; max-width: 760px; margin: 0 auto; }
+  #stage { flex: 0 0 auto; position: relative; overflow: hidden; background: #101018;
+           aspect-ratio: 16 / 9; max-height: 42dvh; border-bottom: 1px solid #241d19; }
+  #bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  #cast { position: absolute; inset: 0; }
+  #cast img { position: absolute; bottom: 1.9%; height: 91.7%; width: auto;
+              transform: translateX(-50%); transition: opacity .18s; }
+  #place { flex: 0 0 auto; padding: 11px 20px 0; font-size: 12px; letter-spacing: .14em;
+           text-transform: uppercase; color: #8a7f70; min-height: 15px; }
+  #log { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain;
+         padding: 8px 20px 0; -webkit-overflow-scrolling: touch; }
   #log p { margin: 0 0 14px; }
   #log .say { color: #e8e4dc; }
-  #log .who { display: block; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #c4622b; margin-bottom: 3px; }
+  #log .who { display: block; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+              color: #c4622b; margin-bottom: 3px; }
   #log .narrate { color: #b3aa9c; font-style: italic; }
   #log .old { opacity: .38; }
-  #choices { padding: 0 20px 8px; }
+  #choices { flex: 0 0 auto; padding: 0 20px 6px; max-height: 42dvh; overflow-y: auto; }
   button {
     display: block; width: 100%; margin: 0 0 10px; padding: 15px 16px;
     background: #1c1614; color: #e8e4dc; border: 1px solid #3a2f28; border-radius: 10px;
     font: inherit; text-align: left; cursor: pointer;
   }
   button:hover { border-color: #c4622b; }
-  #hint { padding: 0 20px 26px; color: #6e655a; font-size: 13px; }
-  #bar { height: 3px; background: #c4622b; width: 0; transition: width .25s; }
-  @media (prefers-reduced-motion: reduce) { #bar { transition: none; } }
+  #hint { flex: 0 0 auto; padding: 0 20px 16px; color: #6e655a; font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) { #bar, #cast img { transition: none; } }
 </style>
 </head>
 <body>
 <div id="bar"></div>
-<div id="wrap">
-  <div id="stage">
-    <div id="place"></div>
-    <div id="log"></div>
-  </div>
-  <div id="choices"></div>
-  <div id="hint">tap anywhere to continue</div>
-</div>
+<div id="stage"><div id="bg"></div><div id="cast"></div></div>
+<div id="place"></div>
+<div id="log"></div>
+<div id="choices"></div>
+<div id="hint">tap anywhere to continue</div>
 <script>
 const STORY = __STORY__;
-let here = STORY.start, step = 0, lines = [];
+const ASSETS = STORY.assets || {};
+let here = STORY.start, step = 0, lines = [], lastSpeaker = null;
 const vars = {};   // affection and anything else set by "~ name +1"
 const log = document.getElementById('log');
 const choices = document.getElementById('choices');
 const place = document.getElementById('place');
 const hint = document.getElementById('hint');
 const bar = document.getElementById('bar');
+const bgEl = document.getElementById('bg');
+const castEl = document.getElementById('cast');
+const castEls = {};   // character -> <img>, so a pose change does not flash
 
 function applyFlag(it) {
   const d = parseFloat(it.delta);
@@ -319,12 +500,21 @@ function applyFlag(it) {
 // web build would take the FIRST branch every time, which does not simplify the
 // story - it tells a different one, and most of the later scenes would never be
 // reached at all.
+//
+// The word boundaries below are written with a DOUBLE backslash, and that is
+// not cosmetic: this template is a Java text block, where a single backslash-b
+// is the backspace character. Spelled with one backslash it compiled, exported,
+// and shipped a regex that matched nothing, so "and" survived into the
+// expression, the Function() threw, and condOK's catch returned true -- every
+// compound condition silently taking its first branch. No story here uses
+// and/or yet, which is the only reason it was never seen. SelfTest now asserts
+// the boundary is a boundary, and that the page holds no control characters.
 function condOK(it) {
   if (!it.cond) return true;
   const js = it.cond
-    .replace(/\band\b/g, '&&')
-    .replace(/\bor\b/g, '||')
-    .replace(/\bnot\b/g, '!')
+    .replace(/\\band\\b/g, '&&')
+    .replace(/\\bor\\b/g, '||')
+    .replace(/\\bnot\\b/g, '!')
     .replace(/[A-Za-z_][A-Za-z0-9_]*/g, m => 'vars.' + m);
   try { return !!Function('vars', 'return (' + js + ')')(vars); }
   catch (e) { return true; }   // an expression this build cannot read: do not block the story
@@ -332,9 +522,44 @@ function condOK(it) {
 
 function esc(s) { return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
+// ---- staging, drawn the way VnScreen draws it ----
+// Zones are 292 / 640 / 988 of 1280, the floor is 706 of 720 and a figure is
+// 660 of 720 tall, so the phone frame is the desktop frame in percentages and
+// the two cannot drift apart by a pixel count.
+function zoneLeft(where) {
+  return where === 'left' ? '22.8%' : where === 'right' ? '77.2%' : '50%';
+}
+function showChar(it) {
+  const src = ASSETS['sp:' + it.key];
+  let el = castEls[it.who];
+  if (!el) { el = document.createElement('img'); el.alt = it.who; castEls[it.who] = el; castEl.appendChild(el); }
+  if (src) { if (el.getAttribute('src') !== src) el.setAttribute('src', src); el.style.display = ''; }
+  else el.style.display = 'none';
+  el.style.left = zoneLeft(it.where);
+}
+function hideChar(it) {
+  const el = castEls[it.who];
+  if (el) { el.remove(); delete castEls[it.who]; }
+}
+// Whoever is not talking is dimmed, exactly as the desktop dims them; during
+// narration nobody is talking and everybody is lit.
+function dimCast() {
+  for (const ch in castEls) {
+    castEls[ch].style.opacity = (lastSpeaker === null || lastSpeaker === ch) ? '1' : '0.72';
+  }
+}
+
+// A jump changes the scene and NOTHING ELSE. The room and whoever is standing
+// in it are state, not scenery: Vn.enter() moves sceneId and index and leaves
+// background/shown/stagePos alone, so a scene that opens without a "bg" line
+// carries on in the room the last one set up. Clearing them here looked
+// harmless and was not -- the first jump out of the opening scene wiped the
+// office off the screen, and every scene after it that did not restate its
+// background played against black. Only a restart clears the stage.
 function enter(label) {
   here = label; step = 0; lines = STORY.passages[label] || [];
-  log.innerHTML = ''; choices.innerHTML = ''; place.textContent = '';
+  log.innerHTML = ''; choices.innerHTML = '';
+  lastSpeaker = null;
   advance();
 }
 
@@ -342,8 +567,14 @@ function advance() {
   // consume non-visual items, then show one line
   while (step < lines.length) {
     const it = lines[step++];
-    if (it.type === "bg") { place.textContent = it.name.replace(/_/g, " "); continue; }
-    if (it.type === "show" || it.type === "hide") continue;
+    if (it.type === "bg") {
+      place.textContent = it.name.replace(/_/g, " ");
+      const src = ASSETS['bg:' + it.name];
+      bgEl.style.backgroundImage = src ? 'url("' + src + '")' : '';
+      continue;
+    }
+    if (it.type === "show") { showChar(it); dimCast(); continue; }
+    if (it.type === "hide") { hideChar(it); dimCast(); continue; }
     if (it.type === "flag") { applyFlag(it); continue; }
     if (it.type === "jump") { if (condOK(it)) { enter(it.to); return; } continue; }
     if (it.type === "choice") { step--; offer(); return; }
@@ -361,10 +592,13 @@ function render(it) {
   if (it.type === "say") {
     p.className = 'say';
     p.innerHTML = '<span class="who">' + esc(it.who) + '</span>' + esc(it.text);
+    lastSpeaker = it.who;
   } else {
     p.className = 'narrate';
     p.textContent = it.text;
+    lastSpeaker = null;
   }
+  dimCast();
   log.appendChild(p);
   p.scrollIntoView({ block: 'nearest' });
   hint.textContent = 'tap anywhere to continue';

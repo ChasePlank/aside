@@ -544,6 +544,33 @@ public class SelfTest {
         String generated = WebExport.convert(Files.readString(story));
         check("web/" + name + ".html is current -- regenerate it with aside.engine.WebExport",
                 generated.equals(Files.readString(out)));
+
+        // The export carries the art now, and these are the ways that can go
+        // wrong quietly. A page that is current and text-only looks exactly
+        // like a page that is current and illustrated, in a diff and in a
+        // browser that has not scrolled far enough.
+        check("the web art is built (art/web/)", Files.isDirectory(Path.of("art", "web")));
+        check("web/" + name + ".html carries the art it stages",
+                generated.contains("data:image/") && generated.contains("\"assets\":{\"bg:"));
+        check("web/" + name + ".html says which staging it could not draw",
+                generated.contains("\"missing\":["));
+
+        // The word boundaries in condOK are why this is checked at all. The
+        // template is a Java text block, where \b is the backspace character,
+        // so the page shipped a regex that matched nothing -- "and" survived
+        // into the expression, the Function() threw, and condOK's catch
+        // returned true, which is every compound condition silently taking its
+        // first branch. Nothing in stories/ uses and/or yet, which is the only
+        // reason it was never seen. A check for the literal is the check that
+        // would have caught it.
+        check("web/" + name + ".html has real word boundaries in its condition reader",
+                generated.contains("/\\band\\b/g") && generated.indexOf('\b') < 0);
+
+        // The same class of bug, one step wider: a text block that ate an
+        // escape leaves a control character in the page, and a control
+        // character in a page is never intentional.
+        check("web/" + name + ".html has no stray control characters",
+                generated.chars().noneMatch(c -> c < 0x20 && c != '\n' && c != '\t'));
     }
 
     static void runUntilBlocked(Vn vn) {
