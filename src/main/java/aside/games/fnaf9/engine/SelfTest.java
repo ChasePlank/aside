@@ -27,8 +27,7 @@ import java.util.Set;
  * the week gets harder. The survival table is printed rather than asserted
  * tightly, because it is a reading of the difficulty and not a contract.
  *
- * <p>Two things this suite found are recorded as open rather than fixed, and
- * they are in the comments where they were found:
+ * <p>What this suite has found, and what was done about it:
  *
  * <ul>
  *   <li><b>The sharp axis is inert.</b> Raising night five's walkers from
@@ -38,16 +37,30 @@ import java.util.Set;
  *       which is the design working -- but it means the week's difficulty is
  *       carried entirely by arrival rate, and the pairs had to be re-tuned on
  *       that axis to make the week ramp.</li>
- *   <li><b>Night four is lopsided.</b> On every other night the two halls
- *       take a similar share of the deaths; on night four one walker takes
- *       almost all of them (146 to 12 with the pair as it stands, and the same
- *       split mirrored when the two are swapped). It is not a side bias --
- *       two identical walkers kill evenly and are survivable 94% of the time
- *       -- it is that <b>two walkers with different intervals drift apart and
- *       interleave their arrivals, while two with the same interval stay in
- *       phase and one hold covers both.</b> Night four's difficulty is
- *       therefore a property of the pair being nearly-but-not-quite the same
- *       walker, which is real but is not what its note says.</li>
+ *   <li><b>Night four was lopsided, and is fixed.</b> One walker took almost
+ *       all the deaths (99 to 9 at 400 seeds, and the same split mirrored
+ *       when the two were swapped, so it was the walker and not the hall). It
+ *       is not a side bias -- two identical walkers kill evenly and are
+ *       survivable 92% -- it is that <b>two walkers with different intervals
+ *       drift apart and interleave their arrivals, while two with the same
+ *       interval stay in phase and one hold covers both.</b> The drift is
+ *       what makes the night hard and it is also what makes it lopsided: the
+ *       walker that falls behind is the one arriving just after the door has
+ *       let go, every time. Plushtrap went from 1.18 to 1.24 to widen the
+ *       step gap past the band where the phase barely moves; the night reads
+ *       102/106 now at the same difficulty. The check below is what keeps
+ *       it that way. See {@link Walker#PLUSHTRAP}.</li>
+ *   <li><b>The competent policy is not a robust reading of the game, and
+ *       this is the biggest thing still open.</b> A bot whose hold is sized
+ *       for <i>both</i> halls rather than only the walker it was started for
+ *       scores <b>99% on the week</b> (0/2/2/1/0 deaths across the five
+ *       nights at 200 seeds), so the night is solved by "hold until both are
+ *       clear" and the 61% below is a reading of the bot's release policy
+ *       rather than of the game. The door's recovery cannot be re-tuned to
+ *       close it by turning one constant -- measured, {@code COOL} 2.2 gives
+ *       99%, 1.8 gives 42% with a non-monotone week, 1.5 gives 24%, 1.0 gives
+ *       26%, 0.6 gives 1% -- so it is a threshold rather than a dial and the
+ *       fix is a redesign of the door's economy, not a tuning pass.</li>
  * </ul>
  */
 public final class SelfTest {
