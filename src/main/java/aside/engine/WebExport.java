@@ -443,8 +443,14 @@ public class WebExport {
   body { margin: 0; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
   #stage, #place, #log, #choices, #hint { width: 100%; max-width: 760px; margin: 0 auto; }
   #stage { flex: 0 0 auto; position: relative; overflow: hidden; background: #101018;
-           aspect-ratio: 16 / 9; max-height: 42dvh; border-bottom: 1px solid #241d19; }
-  #bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+           aspect-ratio: 16 / 9; max-height: 46dvh; border-bottom: 1px solid #241d19; }
+  /* contain, not cover, and anchored to the bottom. On a phone the stage is
+     exactly 16:9 so the two are the same thing; on a laptop the height cap
+     makes the stage wider than the room, and cover would answer that by
+     cropping the top and bottom off the room. A letterbox keeps the whole
+     frame and keeps the figures standing on the image's floor line. */
+  #bg { position: absolute; inset: 0; background-size: contain;
+        background-position: center bottom; background-repeat: no-repeat; }
   #cast { position: absolute; inset: 0; }
   #cast img { position: absolute; bottom: 1.9%; height: 91.7%; width: auto;
               transform: translateX(-50%); transition: opacity .18s; }
