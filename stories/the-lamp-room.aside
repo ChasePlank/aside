@@ -1,0 +1,143 @@
+# A short story for the Aside engine.
+# Warm, wry, and deliberately in a register my other work does not use: the others are about memory,
+# performance and being watched. This one is about tending something, and about the difference between
+# doing a job correctly and doing it well. Six scenes, three endings, and it fits in one sitting.
+
+title: The Lamp Room
+author: Roxanne
+start: arrive
+
+== arrive ==
+bg cliff_path
+music sea_swell
+The cliff path ends at a door that was painted white some decades ago.
+Sea on three sides. Wind that gets into your collar like it has been waiting for you.
+
+You are the new keeper. The letter said the hours were long and the company was quiet,
+which is the sort of thing a letter says when it means both of them.
+
+* Knock. It is somebody's house. -> knock
+* Try the handle. You are expected. -> enter
+
+== knock ==
+sfx door_open
+You knock. Nothing happens for long enough that you start composing an apology.
+
+Then the door opens on a woman in a coat that has clearly been slept in,
+holding a mug in both hands like it is the only warm thing left in the county.
+
+keeper: You knocked.
+keeper: Thirty years, and nobody knocks.
+keeper: Come in before you freeze into an anecdote.
+~ knocked true
+-> meet
+
+== enter ==
+sfx door_open
+The door is open. It has been open all night.
+
+Inside there is a room, a chair, and a hundred and eleven steps of iron staircase going up
+to a light that is doing most of the work of being seen from the sea.
+
+keeper: You did not knock.
+keeper: Good. Nothing in this tower needs permission.
+~ knocked false
+-> meet
+
+== meet ==
+bg lamp_room
+show keeper neutral at left
+keeper: The lamp goes out at some point tonight. It always does, near the small hours.
+keeper: When it does, you will want to do something clever. Everybody does.
+
+She sits down, which is her way of saying the conversation is over,
+and also her way of saying she intends to stay in the room for it.
+
+* Ask her about the lamp. -> lamp
+* Ask her why she stayed. -> why
+
+== why ==
+keeper: Because the alternative was a town.
+keeper: A town does not need you at three in the morning.
+keeper: This does.
+~ knows_why true
+-> lamp
+
+== lamp ==
+bg lamp_room
+music sea_swell
+The light stutters, browns, and goes.
+The sea outside does not react, because the sea has seen this before and is not impressed.
+
+The lamp room smells of hot dust and old oil. The wick needs trimming, the glass needs wiping,
+and somewhere below there is a can of oil you have not seen since you set your bag down.
+
+* Trim the wick by the book. -> by_the_book
+* Put oil in first, then the wick. -> oil_first
+* Sit down on the floor beside her and wait. -> sit
+
+== by_the_book ==
+sfx clank
+You trim the wick, wipe the glass, and light it the way the manual describes,
+because the manual is thirty pages long and somebody wrote all of them.
+The light comes back. It is correct. It is exactly as bright as it should be.
+keeper: Good.
+keeper: Same as the book, then. Somebody wrote those pages for a reason.
+-> dawn_book
+
+== oil_first ==
+sfx clank
+You find the can under your own bag, which is where you left it, which is where it would
+have been found anyway. Sometimes competence is just remembering where you put things.
+You oil it, then you trim it, then you light it.
+keeper: Slower than the book.
+keeper: Also warmer. Whoever writes the books is not up here at three.
+~ did_well true
+-> dawn_together
+
+== sit ==
+You sit on the floor. The stone is cold and she does not say anything
+and after a while neither do you, and the light comes back on its own,
+which is what she knew and what she was waiting to see you find out.
+keeper: There. It only needed somebody in the room.
+~ sat true
+-> dawn_together
+
+== dawn_book ==
+bg cliff_dawn
+sfx buoy_bell
+The morning comes the way mornings do: without ceremony and slightly early.
+She shows you where the oil lives and does not mention the book.
+
+* Ask her whether it gets easier. -> dawn_book_answer [if knows_why]
+* Say goodnight. -> END
+
+== dawn_book_answer ==
+keeper: No.
+keeper: You just get better at the hours.
+-> END
+
+== dawn_together ==
+bg cliff_dawn
+sfx buoy_bell
+The morning comes the way mornings do: without ceremony and slightly early.
+She does not say anything for a while, and then she says the thing you will end up
+telling whoever comes after you.
+
+keeper: The light is not the job.
+keeper: The light is what happens when you do the job.
+
+* Tell her you will be back tomorrow. -> dawn_promise [if did_well]
+* Tell her you will be back, and mean it. -> dawn_promise [if sat]
+* Ask her what she will do now. -> dawn_ask [if knocked]
+* Say nothing, and watch the light. -> END
+
+== dawn_promise ==
+keeper: I know.
+keeper: You have the hands for it. That is not a compliment, it is a forecast.
+-> END
+
+== dawn_ask ==
+keeper: Sleep, probably. For a week.
+keeper: Then I will come back up and check you have not painted the door a different colour.
+-> END

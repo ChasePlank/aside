@@ -80,6 +80,8 @@ public final class Games {
         g.add(new DriftGame());
         g.add(new LessonGame());
         g.add(new TellGame());
+        g.add(new aside.games.lamproom.LampRoomGame());
+        g.add(new aside.games.discrepancy.DiscrepancyGame());
         return g;
     }
 
