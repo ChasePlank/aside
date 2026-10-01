@@ -79,16 +79,9 @@ public final class PhoneShelf {
             case "testimony" -> "Keeps its account in this browser. Eight questions, and one sitting.";
             case "outside" -> "Keeps its week in this browser. Seven days, and one sitting.";
             case "handoff" -> "Keeps your orders in this browser. Five watches, and one sitting.";
-            case "inventory" -> "Keeps the bench in this browser. Eight objects, and one sitting.";
             case "bearings" -> "Keeps the voyage in this browser. Sixteen days, and one sitting.";
-            case "vigil" -> "Twelve days. One sitting.";
-            case "corroboration" -> "Keeps the night in this browser. Two observers, and one sitting.";
-            case "attribution" -> "Scored, and dealt fresh every night. Five calls, one sitting.";
             case "drift" -> "Scored, and dealt fresh every copy. Two records, one sitting.";
-            case "interval" -> "Keeps the season in this browser. Twelve days, six watches, one sitting.";
             case "lesson" -> "Keeps the handover in this browser. Three nights, and one shift.";
-            case "promise" -> "Keeps the season in this browser. Five nights, eight asks, one sitting.";
-            case "omission" -> "Keeps the house in this browser. Twelve things you know, and five slots.";
             case "overtime" -> "A visual novel. What you say carries.";
             default -> "";
         };

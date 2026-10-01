@@ -7,6 +7,7 @@ import aside.ui.LibraryLayout;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -356,6 +357,81 @@ public class SelfTest {
             }
         } catch (Exception e) {
             check("the shelf can be generated from here (" + e.getMessage() + ")", false);
+        }
+
+        System.out.println("\n--- the retired games ---");
+        // The library is curated by a judgment -- one game per mechanic -- and
+        // a judgment cannot be checked. What can be checked is that the record
+        // of it is honest. A retirement touches four places: the registry, the
+        // sources, the phone build, and retired-games/README.md. The failure
+        // mode is doing three of them -- sources moved and the registry line
+        // left behind, or the reverse -- and that is what this section is
+        // shaped to catch.
+        try {
+            Path retiredRoot = Path.of("retired-games");
+            Path retiredSrc = retiredRoot.resolve(Path.of("src", "main", "java", "aside", "games"));
+            if (!Files.isDirectory(retiredSrc)) {
+                System.out.println("       (no " + retiredSrc
+                        + " from here -- run from the repository root)");
+            } else {
+                Set<String> inLibrary = new HashSet<>();
+                for (Game g : Games.all()) inLibrary.add(g.id());
+
+                List<String> onDisk = new ArrayList<>();
+                try (var dirs = Files.list(retiredSrc)) {
+                    dirs.filter(Files::isDirectory)
+                     .map(p -> p.getFileName().toString())
+                     .sorted()
+                     .forEach(onDisk::add);
+                }
+
+                List<Games.Retired> declared = Games.retired();
+                check("the retired list has something in it", !declared.isEmpty());
+
+                Path readmeFile = retiredRoot.resolve("README.md");
+                String readme = Files.exists(readmeFile) ? Files.readString(readmeFile) : "";
+                check("retired-games/README.md is there", !readme.isEmpty());
+
+                Set<String> declaredIds = new HashSet<>();
+                for (Games.Retired ret : declared) {
+                    declaredIds.add(ret.id());
+                    check("a retired game is not also in the library: " + ret.title(),
+                            !inLibrary.contains(ret.id()));
+                    check("a retired game's sources are under retired-games/: " + ret.title(),
+                            Files.isDirectory(retiredSrc.resolve(ret.id())));
+                    check("a retired game's phone build is out of web/: " + ret.title(),
+                            !Files.exists(Path.of("web", ret.id() + ".html")));
+                    check("a retired game's phone build is kept: " + ret.title(),
+                            Files.exists(retiredRoot.resolve(Path.of("web", ret.id() + ".html"))));
+                    // The row, not just the name. "Vigil" appears four times in
+                    // that README, so a check for the word passes even after
+                    // the table row is deleted -- which is the shape of a
+                    // check that cannot fail. The row is the record; the row
+                    // is what is checked, and it is built from the same
+                    // strings the registry holds so the two cannot drift.
+                    String row = "| **" + ret.title() + "** | " + ret.because()
+                            + " | **" + ret.kept() + "** |";
+                    check("retired-games/README.md has the row for " + ret.title(),
+                            readme.contains(row));
+                    check("a retired game names the game that already does it: " + ret.title(),
+                            inLibrary.contains(ret.kept()));
+                }
+
+                // The other direction, which is the one that goes stale
+                // silently: a game moved to retired-games/ and never added to
+                // the list. It would be out of the library and out of the
+                // record both, which is exactly the state that reads as "we
+                // never had it."
+                for (String id : onDisk) {
+                    check("retired-games/ has no game the registry has forgotten: " + id,
+                            declaredIds.contains(id));
+                }
+                check("every retired game is accounted for", declaredIds.size() == onDisk.size());
+                System.out.println("       retired: " + declared.size() + " games; library now "
+                        + Games.all().size());
+            }
+        } catch (Exception e) {
+            check("the retired list can be read from here (" + e.getMessage() + ")", false);
         }
 
         System.out.println("\n--- the story exports ---");
