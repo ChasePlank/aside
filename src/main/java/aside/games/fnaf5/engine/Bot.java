@@ -48,8 +48,14 @@ package aside.games.fnaf5.engine;
  *   IDLE    does nothing at all. Must die on every night.
  *   REACT   answers what is in the room with it, and nothing else. The
  *           player who has learned the three counters and stops there.
- *   HOLD    does that too, and keeps walking. The competent player: it
- *           never parks, because parking is what lets a pursuer arrive.
+ *   HOLD    does that too, and keeps walking. It was labelled "the
+ *           competent player" for most of the game's life and it is not
+ *           one: it plays two of the three counters and never stops. Since
+ *           2026-10-01 that is fatal -- Ballora's clock is shorter than a
+ *           step, so a policy that never stops dies to her on every night
+ *           of the week (5% over the week, against PRO's 61%). It is kept
+ *           because a policy that is wrong in an instructive way is worth
+ *           more in the suite than a policy that is right.
  *   FLEE    does that too, and runs from wherever Funtime Freddy was last
  *           seen or heard. This is the strategy the design *describes* --
  *           Freddy is the only thing that can end a night, so keep
@@ -227,6 +233,52 @@ package aside.games.fnaf5.engine;
  * cue at all, so the one moment the game rewards -- you were quiet and she
  * gave up -- was the one moment the player could not hear. See
  * {@link Threat#update}.
+ *
+ * <h2>2026-10-01, the third pass: the ladder turns over</h2>
+ *
+ * The paragraph above ends with the honest reading of the redesign -- the
+ * stop is affordable but not *profitable*, and the competent policy is
+ * still behind two policies that never stop -- and the pass after it found
+ * that the diagnosis was right and the location was wrong. The fix was not
+ * in this file.
+ *
+ * <b>The game changed, and the ladder turned over with it.</b> Ballora got
+ * her own clock, shorter than a step, so walking out of her room stopped
+ * being an answer to her; her patience came down to fit inside that clock;
+ * and giving up started buying {@link Game#BALLORA_COOLDOWN} seconds of her
+ * being deaf, which is what makes the stop worth paying for rather than
+ * merely necessary. Her pace came down so she is a periodic demand rather
+ * than a constant one, and the week's ramp moved into Freddy's pace, which
+ * is the only dial that measures "how expensive is standing still".
+ *
+ * <b>Measured over 600 seeds a night, before and after:</b>
+ *
+ * <pre>
+ *   policy   before (week)   after (week)   after (n1..n5)
+ *   IDLE          0%             0%         0  0  0  0  0
+ *   REACT        16%            20%        92  8  0  0  0
+ *   HOLD         90%             5%         2  2  3  9 11
+ *   FLEE         97%            10%         7  8  8 18 11
+ *   PANIC         0%             0%         0  0  1  0  0
+ *   PRO          79%            61%        86 76 64 50 31
+ * </pre>
+ *
+ * The ladder is right for the first time in the game's life: the policy
+ * that plays all three counters is the best one by more than forty points,
+ * and the two policies that never stop are the two worst. HOLD's deaths
+ * are Ballora's on every night of the week -- 590, 589, 582, 546 and 528
+ * out of 600 -- which is the redesign stated as a count.
+ *
+ * <b>And three of PRO's own rules were bugs, all three found by the same
+ * instrument.</b> The stop was an `else` after the Foxy counter, so a room
+ * holding Foxy skipped it; it was gated on holding a charge, which was
+ * right when the stop was a luxury and is wrong now that walking is
+ * certain death; and it did not check for Foxy, so it stood still with the
+ * feed down and froze Foxy in the room it was trying to survive. The
+ * first and third are worth 30 points of the last night between them.
+ * <b>A policy that does not survive is a policy bug until proven
+ * otherwise</b> -- the same lesson the first sweep taught, one redesign
+ * later.
  */
 public final class Bot {
 
@@ -319,9 +371,10 @@ public final class Bot {
      * backwards are the whole game: Funtime Freddy follows you and nothing
      * distracts it, so the answer is the shock. Funtime Foxy follows the
      * camera, so the answer is to put the camera somewhere else. Ballora is
-     * blind, so the book answer is silence -- and the sweep says the book
-     * answer does not work, which is why this returns false for her and
-     * lets the policy walk instead. See the note in the SOUND case.
+     * blind, so the answer is silence -- and silence is *time* rather than
+     * a button, which is why this returns false for her and lets the policy
+     * decide whether it can afford to stop. See the note in the SOUND case
+     * and {@link #pro}.
      */
     static boolean counter(Game g, Brain b) {
         boolean any = false;
@@ -357,15 +410,14 @@ public final class Bot {
         // thing that ever works on him.
         if (pursuit) return false;
 
-        // Ballora alone. The book answer is to do nothing -- she is blind
-        // and silence loses her -- and this returns false so the policy
-        // falls through to walking, which is what HOLD and FLEE do and
-        // what PRO deliberately does not. The note that used to live here
-        // said the book answer could not work, because her patience was
-        // 1.8 seconds and night 5's grace was also 1.8, so the stop was a
-        // coin flip. That was a real finding and it is why her patience is
-        // 1.2 now: a counter that only fits inside a generous night is not
-        // a counter. PRO uses it; see {@link #pro} for what it costs.
+        // Ballora alone. The answer is to do nothing -- she is blind and
+        // silence loses her -- and this returns false so the policy falls
+        // through to walking, which is what HOLD, FLEE and REACT do and
+        // what PRO deliberately does not. That split is the whole ladder
+        // now: since Ballora's clock is shorter than a step, walking is
+        // not an answer to her, so the policies that walk are the policies
+        // that die. Measured over 600 seeds a night, HOLD 5%, FLEE 10%,
+        // REACT 20%, PRO 61%. See {@link #pro}.
         return false;
     }
 
@@ -465,11 +517,20 @@ public final class Bot {
      * game's own lesson stated as arithmetic: <b>you may only stand still
      * while you can still answer what standing still costs.</b>
      *
-     * It is still behind HOLD (91%) and FLEE (97%), and it should be -- HOLD
-     * and FLEE never stop, so they never pay the stop's price, and the
-     * redesign has not yet made the stop *profitable* rather than merely
-     * affordable. It is in the suite so the next pass has something to
-     * improve rather than something to invent.
+     * <b>2026-10-01, the pass after: it is the best policy now, and the
+     * game is what changed rather than the policy.</b> The paragraph above
+     * was written when the stop was affordable and unprofitable, and it
+     * was right about the diagnosis and wrong about where the fix lived.
+     * The fix was not in the bot. Ballora got her own clock (shorter than
+     * a step, so walking out of her room stopped being an answer), her
+     * patience came down to fit inside it, and giving up started buying
+     * ten seconds of her being deaf -- so the stop is now both necessary
+     * and worth paying for. HOLD, the policy that never stops, goes from
+     * 90% over the week to <b>5%</b>; this one reads <b>61%</b> and is
+     * monotonic across the week (86/76/64/50/31).
+     *
+     * Three of its own rules had to change with the game, and all three
+     * were bugs rather than tuning. See the notes at the stop below.
      */
     static void pro(Game g, Brain b) {
         boolean pursuit = false, attention = false, sound = false;
@@ -483,23 +544,34 @@ public final class Bot {
         if (pursuit && g.shocks > 0) { g.shock(); return; }
         // Foxy: turn the feed, then keep moving -- the feed is not a wall.
         if (attention) steer(g, b);
-        // Ballora: silence, and freeze Foxy while we wait her out -- but
-        // only when the stop is affordable. Freddy is what the stop costs,
-        // and the only thing that pays for him is a charge, so a player with
-        // none in hand cannot afford to stand still however quiet the
-        // building is. This one condition is the difference between a policy
-        // that reads 16% and one that reads 75%: without it PRO stops
-        // wherever it happens to be, spends all five charges on the first
-        // fifty seconds, and then dies to Freddy with nothing left.
+        // Ballora: stand still. This is the counter the whole 2026-10-01
+        // pass is built on -- her clock is shorter than a step, so walking
+        // out of her room is not an answer to her -- and the policy got it
+        // wrong in three ways, all of which are fixed here.
         //
-        // The other half of the old condition -- "and nothing has been heard
-        // next door" -- was removed on 2026-10-01. It reads like prudence
-        // and is the opposite: it delays the stop by exactly the seconds the
-        // stop needs, and measured, it is worth nothing (72% against 73%).
-        // The `!pursuit` guard is new and is a plain bug fix: without it a
-        // policy with no charges left would stand still with Funtime Freddy
-        // already in the room, which is the one thing the stop is not for.
-        else if (sound && !pursuit && g.shocks > 0) {
+        //   1. IT WAS AN `else`. Foxy being in the room skipped the stop
+        //      entirely, and Foxy is in the room a lot, so the one counter
+        //      the redesign is built on was skipped exactly when the room
+        //      was busiest. Turning the feed and standing still are not
+        //      alternatives: you do both.
+        //   2. IT WAS GATED ON A CHARGE. The gate was right for the engine
+        //      the previous pass measured, where the stop was a luxury and
+        //      the charge was what paid for Freddy arriving during one.
+        //      It is wrong for this one: walking is now *certain* death
+        //      and stopping is merely expensive, so a player with no
+        //      charges left should still stop. Measured, removing the gate
+        //      is worth nothing on its own and everything in combination
+        //      with the two fixes below.
+        //   3. IT DID NOT CHECK FOR FOXY. Standing still with the feed down
+        //      freezes Funtime Foxy exactly where she is -- in your room --
+        //      and she kills you on the night's grace like anybody else.
+        //      So the stop is only an answer when Ballora is *alone* in the
+        //      room; with Foxy there too the room is a squeeze and the only
+        //      thing left to try is to walk, which is what Ballora
+        //      punishes. Measured: without this guard the last night reads
+        //      0%, because the stop is used on a room it cannot save you
+        //      from.
+        if (sound && !pursuit && !attention) {
             g.monitorDown();
             return;
         }

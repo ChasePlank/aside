@@ -61,10 +61,47 @@ import java.util.Random;
  *
  * And one number had to move with them: Ballora was slower than the player,
  * so "keep walking" beat her and the stop -- her actual counter -- was
- * never needed. She is faster than the player now, which is what makes
- * silence a decision rather than a formality. Measured after the three
- * changes: the killers are 12 Ballora, 11 Funtime Foxy and 3 Funtime
- * Freddy, and the ladder is FLEE 97%, HOLD 91%, PANIC 0%.
+ * never needed. Measured after the three changes: the killers are 12
+ * Ballora, 11 Funtime Foxy and 3 Funtime Freddy, and the ladder is FLEE
+ * 97%, HOLD 91%, PANIC 0%.
+ *
+ * <h2>2026-10-01, the third pass: the stop becomes the answer</h2>
+ *
+ * The redesign above fixed the *legibility* of the three counters and left
+ * the ladder upside down, and the fire after it measured why: <b>walking
+ * answered all three threats at once.</b> Freddy is slower than the player
+ * so you outrun him; Foxy follows the feed and the feed is free to move;
+ * and Ballora followed your sound, so she was always one step behind, and
+ * a grace longer than a step meant walking out of her room always worked.
+ * The three policies that never stop finished within seven points of each
+ * other and the competent one was not the best one.
+ *
+ * Four things changed, and the first is the one the whole pass turns on:
+ *
+ *   1. <b>Ballora has her own clock, and it is shorter than a step.</b>
+ *      See {@link #BALLORA_GRACE}. Walking out of her room is no longer an
+ *      answer to her, so the stop is, and the stop is the one thing in the
+ *      building that costs time. HOLD -- the policy that never stops --
+ *      goes from 90% over the week to <b>5%</b>.
+ *   2. <b>Silence buys something.</b> When she gives up she is deaf for
+ *      {@link #BALLORA_COOLDOWN} seconds, so the stop is *profitable* and
+ *      not merely affordable. Without it the stop bought nothing and the
+ *      sweep said so.
+ *   3. <b>She is a periodic demand rather than a constant one.</b> Her
+ *      pace drops from 2.60 to 1.60: at 2.60 she arrived more often than
+ *      the night could pay for her.
+ *   4. <b>Freddy's pace ramps across the week</b> ({@link #freddyPace}),
+ *      because with the stop mandatory the week's difficulty is exactly
+ *      how expensive stillness is -- and stillness is what Freddy
+ *      punishes. The grace table goes back up to compensate: it has to
+ *      stay above the worst trip (a move and a shock, 2.05s) or the
+ *      counters stop being usable at the end of the week.
+ *
+ * Measured over 600 seeds a night: IDLE 0%, REACT 20%, HOLD 5%, FLEE 10%,
+ * PANIC 0%, and the policy that plays all three counters at <b>61%</b>,
+ * monotonic across the week (86/76/64/50/31). The ladder is right for the
+ * first time in the game's life, and the killers are Ballora's: HOLD dies
+ * to her on every night of the week.
  *
  * The engine is pure logic with no UI dependency, so the week can be
  * swept by a bot at 60fps with no display. That is how the difficulty
@@ -96,18 +133,76 @@ public class Game {
     /**
      * Silence, since she arrived, that loses her.
      *
-     * <b>Shortened from 1.8 to 1.2 on 2026-10-01, because the counter the
-     * design describes has to fit inside the grace or it is not a counter.</b>
      * The book answer to Ballora is to stop making noise: her patience runs
      * from the moment she arrives, and the building has to be quiet for the
      * same stretch, so the player owes her `patience` seconds of standing
-     * still *after* the step they were already making lands. At 1.8 that
-     * was exactly night 5's grace, which meant the answer to her was a coin
-     * flip on the last night and the sweep's competent policy died to her
-     * on every seed of it. A counter that only works when the night is
-     * generous is not a counter; it is a coincidence.
+     * still *after* the step they were already making lands.
+     *
+     * <b>1.8 was a coin flip and 1.2 was still too slow; it is 0.8 now.</b>
+     * At 1.8 it was exactly night 5's grace, so the answer to her was a
+     * coin flip on the last night. At 1.2 it fitted inside the grace and
+     * the counter worked -- but only just, and the sweep said so: with
+     * {@link #BALLORA_GRACE} in place the competent policy still died to
+     * her, because 1.2 of stillness plus the step you were already making
+     * is longer than the clock you have to answer inside. The counter has
+     * to fit inside *her* clock with room to spare, not inside the night's
+     * grace: measured, 0.8 against a 1.40 clock is the difference between
+     * a competent policy at 43% and one at 61%.
      */
-    public static final double BALLORA_PATIENCE = 1.2;
+    public static final double BALLORA_PATIENCE = 0.8;
+    /**
+     * Ballora's own clock: how long she stands in your room before she is
+     * on you.
+     *
+     * <pre>
+     *   THE RULE: her clock is shorter than a step, so walking out of her
+     *             room is not an answer to her. Stopping is.
+     * </pre>
+     *
+     * <b>This is the change the whole 2026-10-01 balance pass turns on, and
+     * it is a rule rather than a number.</b> Every other threat is answered
+     * by walking: Funtime Freddy is slower than the player, and Funtime
+     * Foxy follows a feed that costs nothing to move. Ballora was answered
+     * by walking too, and that was the whole problem -- the design says the
+     * three demands contradict, and the sweep said one strategy satisfied
+     * all three, and it was the one the player does by default. A grace
+     * longer than {@link #MOVE_TIME} is a grace in which leaving her room
+     * always works, so the stop was never needed and the competent policy
+     * was not the best one.
+     *
+     * <b>Why the value does not matter much, and why it is flat.</b> The
+     * death is decided by whether you were *mid-move* when she arrived,
+     * which is binary: any clock below a step turns it into the same game,
+     * and any clock above one turns it back into the old game. Measured:
+     * 1.45, 1.42 and 1.40 over the week are identical to three decimal
+     * places, and 1.46 is a different game. So there is no ramp here --
+     * a threshold cannot be ramped -- and the week's ramp lives in
+     * {@link #grace} and {@link #freddyPace} instead.
+     *
+     * 1.40 against a 1.50 step leaves 0.10s of margin, which is enough
+     * that the threshold is not being straddled by the frame rate, and
+     * short enough that the margin is not a place to hide.
+     */
+    public static final double BALLORA_GRACE = 1.40;
+    /**
+     * Seconds Ballora is deaf after she gives up.
+     *
+     * <b>This is what makes the stop profitable rather than merely
+     * affordable.</b> With her own clock in place the stop became
+     * *necessary* -- HOLD, the policy that never stops, drops from 90% to
+     * 5% -- and the competent policy still read 47%, because a stop that
+     * buys nothing is a stop the player is only making out of fear. She
+     * gives up when the building has been quiet long enough; this is the
+     * stretch after that in which she has no target at all, so silence
+     * buys a window in which you can move freely.
+     *
+     * Ten seconds is a little over two rooms of walking. It is long enough
+     * to be worth paying 0.8 seconds of stillness for and short enough
+     * that she is never off the board for a whole night. Measured: 8, 10
+     * and 14 are indistinguishable over the week, so this is a threshold
+     * too -- what matters is that it is not zero.
+     */
+    public static final double BALLORA_COOLDOWN = 10.0;
     /** How often something in your room announces itself again. */
     public static final double CUE_EVERY = 1.6;
 
@@ -194,23 +289,23 @@ public class Game {
         // staggers their moves; without it all three step on the same beat
         // and the building reads as a metronome rather than as a place.
         //
-        // BALLORA'S PACE IS 2.60, and that is the redesign rather than a
-        // tuning number. See the note on {@link #shock}: the shock no longer
-        // removes her, so the only answer she has is silence, and silence is
-        // only a real decision if walking away from her is *not* one. At
-        // pace 1.00 she moved every 3.0 seconds on night 5 while the player
-        // moved every 1.5, so the whole week was spent outrunning her and
-        // the sweep said so -- 59 of HOLD's 64 deaths were hers, and the
-        // three moving policies finished within seven points of each other.
-        // At 2.60 she is faster than the player, so "keep walking" is no
-        // longer a strategy and the stop is the answer. Freddy is what makes
-        // the stop expensive.
+        // BALLORA'S PACE IS 1.60, and it is slower than the player on
+        // purpose. She is not a chase -- {@link #BALLORA_GRACE} is what
+        // makes her dangerous, and it makes her dangerous whether or not
+        // she can catch you. What her pace decides is how *often* she is a
+        // demand: at 2.60 she moved every 1.15 to 1.9 seconds, so she
+        // arrived more often than a night can pay for her and the competent
+        // policy read 47% no matter what the economy did. At 1.60 she is a
+        // periodic demand -- roughly one stop every three to five seconds
+        // -- which is a rhythm a player can plan around. Measured over 600
+        // seeds a night: 1.4, 1.6 and 1.8 finish within three points of
+        // each other, so this is a shape rather than a knife edge.
         threats.add(new Threat("Ballora", "ballora", Threat.Rule.SOUND,
-                Room.Where.BALLORA, 2.60, Room.Where.BALLORA));
+                Room.Where.BALLORA, 1.60, Room.Where.BALLORA));
         threats.add(new Threat("Funtime Foxy", "foxy", Threat.Rule.ATTENTION,
                 Room.Where.AUDITORIUM, 0.95, Room.Where.AUDITORIUM));
         threats.add(new Threat("Funtime Freddy", "freddy", Threat.Rule.PURSUIT,
-                Room.Where.PARTS, 1.05, Room.Where.PARTS));
+                Room.Where.PARTS, freddyPace(), Room.Where.PARTS));
     }
 
     // ---- Difficulty ----
@@ -269,6 +364,40 @@ public class Game {
     }
 
     /**
+     * How fast Funtime Freddy walks, per night.
+     *
+     * <b>This is where the week's ramp lives now, and it is the last of the
+     * four changes in the 2026-10-01 pass.</b> Once Ballora's clock made
+     * the stop mandatory, the difficulty of a night stopped being "how
+     * fast is anything" and became "how expensive is standing still" --
+     * and the only thing in the building that punishes standing still is
+     * the pursuer. So he is the dial: 0.85 on the first night and 1.15 on
+     * the last, which is a 35% increase in how often he arrives.
+     *
+     * <b>It is a table rather than a constant because the other two dials
+     * cannot carry a ramp.</b> {@link #BALLORA_GRACE} is a threshold -- a
+     * clock either is or is not shorter than a step, and measured, 1.45
+     * and 1.40 are the same game while 1.46 is a different one. The
+     * interval is the wrong dial for the reason the previous pass found: a
+     * threat that moves faster also *leaves your room* faster. Freddy's
+     * pace has no such counter-effect -- he is following you, so arriving
+     * sooner is arriving sooner -- and it is the one number the whole
+     * squeeze is denominated in.
+     *
+     * <b>And the grace table had to go back up to meet it.</b> The worst
+     * case is a move out of the room you are in and a shock, 2.05 seconds,
+     * so a grace below that cannot be answered from anywhere. The previous
+     * pass ramped grace down to 1.8, which was right for an engine where
+     * the shock was Ballora's answer and wrong for this one: measured with
+     * the ramp in Freddy's pace, night 5's competent policy reads 31% at
+     * grace 2.2 and 0% at grace 1.8. See {@link #grace}.
+     */
+    public double freddyPace() {
+        double[] table = {0.85, 0.88, 0.92, 1.00, 1.15};
+        return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
+    }
+
+    /**
      * How much faster Funtime Foxy walks while the monitor is up.
      *
      * <b>The feed is his fuel, and that is the second half of the redesign.</b>
@@ -302,20 +431,51 @@ public class Game {
      * comfortable, night 5 is not, and the difference is what forces the
      * player to stop reacting and start deciding where to be.
      *
-     * <b>Retuned 2026-10-01, and the sweep is why.</b> The table used to be
-     * {3.0, 2.8, 2.6, 2.4, 2.2} and the week did not get harder: HOLD
-     * survived 93/95/100/98/100, with the *last* night the easiest one.
-     * Most of that was the missing jitter (see {@link #INTERVAL_JITTER}),
-     * but not all of it. Once the night was a distribution, the interval
-     * turned out to be the wrong dial to ramp: a threat that moves faster
-     * also *leaves* your room faster, so a shorter interval can make a
-     * night easier rather than harder. Grace has no such counter-effect --
-     * it is exactly the time you have to answer -- so the ramp lives here
-     * now, and the week reads 95/94/91/82/49.
+     * <b>Retuned 2026-10-01, twice, and the second time is the interesting
+     * one.</b> The table used to be {3.0, 2.8, 2.6, 2.4, 2.2} and the week
+     * did not get harder: HOLD survived 93/95/100/98/100, with the *last*
+     * night the easiest one. Most of that was the missing jitter (see
+     * {@link #INTERVAL_JITTER}), but not all of it. Once the night was a
+     * distribution, the interval turned out to be the wrong dial to ramp:
+     * a threat that moves faster also *leaves* your room faster, so a
+     * shorter interval can make a night easier rather than harder. Grace
+     * has no such counter-effect -- it is exactly the time you have to
+     * answer -- so the ramp moved here, down to {3.0, 2.7, 2.4, 2.1, 1.8}.
+     *
+     * <b>Then it had to come back up, and the reason is a rule that
+     * changed underneath it.</b> 1.8 is below the worst trip -- a move and
+     * a shock, 2.05 seconds -- and that was fine while the shock was the
+     * answer to Ballora, because a player who was already standing still
+     * never had to make the trip. It stopped being fine when
+     * {@link #BALLORA_GRACE} made the stop mandatory: now the player owes
+     * stillness to one threat and a shock to another, and a night whose
+     * grace cannot contain both is a night with no answer in it. Measured
+     * with the ramp in {@link #freddyPace} where it belongs, night 5's
+     * competent policy reads 31% at 2.2 and 0% at 1.8.
+     *
+     * <b>The ramp is gentler than it looks, and that is deliberate.</b>
+     * The week's difficulty is carried by Freddy's pace now, so this table
+     * only has to stay above the worst trip and come down slowly enough
+     * that the last night is still a night rather than a coin flip.
      */
     public double grace() {
-        double[] table = {3.0, 2.7, 2.4, 2.1, 1.8};
+        double[] table = {3.0, 2.8, 2.6, 2.4, 2.2};
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
+    }
+
+    /**
+     * The clock that applies to a given threat.
+     *
+     * One threat in the building is not on the night's clock, and it is the
+     * one whose counter is *time* rather than a button. See
+     * {@link #BALLORA_GRACE}: her clock is shorter than a step, so walking
+     * out of her room is not an answer to her and standing still is.
+     * Everything else is answered by moving, so everything else gets the
+     * night's grace.
+     */
+    public double graceFor(Threat t) {
+        if (t != null && t.rule == Threat.Rule.SOUND) return BALLORA_GRACE;
+        return grace();
     }
 
     /** The worst case: a move, then the shock. */

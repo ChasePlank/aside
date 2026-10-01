@@ -95,6 +95,16 @@ public final class Threat {
     public double sinceCue;
     /** How many times it has walked into the room you were standing in. */
     public int visits;
+    /**
+     * Seconds this one has no target no matter what it hears.
+     *
+     * Only Ballora ever has one, and it is what makes her counter
+     * *profitable* rather than merely necessary: she gives up when the
+     * building has been quiet long enough, and this is the stretch after
+     * that in which silence has bought you something. See
+     * {@link Game#BALLORA_COOLDOWN}.
+     */
+    public double deaf;
 
     public Threat(String name, String key, Rule rule, Room.Where home,
                   double pace, Room.Where start) {
@@ -118,6 +128,7 @@ public final class Threat {
 
     public void update(double dt, Game g) {
         if (g.status != Game.Status.PLAYING) return;
+        if (deaf > 0) deaf = Math.max(0, deaf - dt);
 
         if (inYourRoom(g)) {
             hereFor += dt;
@@ -149,6 +160,11 @@ public final class Threat {
                     && g.soundAge >= Game.BALLORA_PATIENCE) {
                 g.cue("lost_" + key);
                 room = Room.stepAway(room, g.where);
+                // She has lost you, and it takes her a while to find you
+                // again. This is the whole reward for standing still: the
+                // stop is not just a way to survive the next few seconds,
+                // it is the only thing in the building that buys time.
+                deaf = Game.BALLORA_COOLDOWN;
                 hereFor = 0;
                 sinceCue = 0;
                 timer = 0;
@@ -169,7 +185,7 @@ public final class Threat {
                 return;
             }
 
-            if (hereFor >= g.grace()) g.jumpscare(this);
+            if (hereFor >= g.graceFor(this)) g.jumpscare(this);
             // NOTE: no return here, and that is the whole reason the
             // counters work. A thing standing in your room is still
             // walking -- it is just also a clock. Funtime Foxy is following
@@ -262,7 +278,11 @@ public final class Threat {
                 // being a way to keep it busy forever.
                 yield room == g.camera ? g.where : g.camera;
             }
-            case SOUND -> g.soundAge <= Game.SOUND_MEMORY ? g.lastSound : null;
+            // Deaf is not the same as out of range: past SOUND_MEMORY she
+            // has simply forgotten the last noise, and the next one brings
+            // her straight back. Deaf is the stretch she has given up in.
+            case SOUND -> (deaf > 0 || g.soundAge > Game.SOUND_MEMORY)
+                    ? null : g.lastSound;
         };
     }
 

@@ -24,6 +24,16 @@ import aside.games.fnaf5.MouseMap;
  * itself. The game's own bot doc said HOLD was the good policy. A check
  * that cannot fail is worse than no check, because it reads as verified.
  *
+ * <b>It has since had to change which policy it reads, twice, and both
+ * times for the same reason: the check was pointed at whatever the suite
+ * believed the competent player was.</b> HOLD was that belief, then HOLD
+ * was measured and found to play two of the three counters, and then the
+ * 2026-10-01 pass made never stopping fatal -- so HOLD is flat at the
+ * bottom of the table by design and a week that gets harder cannot show up
+ * in its column. The ladder is asserted against PRO now. <b>When a check
+ * is written against a policy, it is really written against an assumption
+ * about that policy</b>, and the assumption is the part that goes stale.
+ *
  * <b>2026-10-01, later: three of these checks are new and they are the
  * redesign written as assertions.</b> The shock removes the pursuer and
  * nothing else; the feed is Funtime Foxy's fuel, so he is faster with the
@@ -326,33 +336,71 @@ public final class SelfTest {
         check("the feed does not move Ballora", fo.interval(foBallora) == balUp);
         check("and it does not move Freddy", fo.interval(foFreddy) == freUp);
 
-        // BALLORA'S COUNTER HAS TO FIT INSIDE THE GRACE, on every night of
-        // the week. It did not before 2026-10-01: her patience was 1.8 and
-        // night 5's grace was also 1.8, so the book answer to her was a
+        // BALLORA'S COUNTER HAS TO FIT INSIDE HER OWN CLOCK, on every night
+        // of the week. It did not before 2026-10-01: her patience was 1.8
+        // and night 5's grace was also 1.8, so the book answer to her was a
         // coin flip on the last night and the sweep's competent policy died
-        // to her on every seed of it.
+        // to her on every seed of it. Then it fitted inside the night's
+        // grace and still did not work, because the night's grace is not
+        // the clock she is on any more -- see the next check.
         for (int n = 1; n <= 5; n++) {
             Game gn = new Game(n, 1);
-            check("silence loses Ballora before the grace on night " + n,
-                    Game.BALLORA_PATIENCE < gn.grace());
+            check("silence loses Ballora before her clock runs out on night " + n,
+                    Game.BALLORA_PATIENCE < gn.graceFor(byKey(gn, "ballora")));
         }
 
-        // And she is faster than the player once the week has started,
-        // which is what makes the stop a decision rather than a formality:
-        // at pace 1.00 she moved every 3.0 seconds on night 5 while the
-        // player moved every 1.5, so walking away was always an answer and
-        // silence never had to be. Nights 1 and 2 are the ramp -- she is
-        // still slower than the player there, and that is deliberate,
-        // because a first night that already demands the stop is not a
-        // first night.
-        for (int n = 3; n <= 5; n++) {
+        // THE RULE THE WHOLE 2026-10-01 PASS TURNS ON: her clock is shorter
+        // than a step, so walking out of her room is not an answer to her.
+        // Every other threat is answered by walking -- Freddy is slower than
+        // the player and Foxy follows a feed that costs nothing to move --
+        // and while Ballora was too, one strategy satisfied all three
+        // demands and the design's contradiction was never felt. Measured
+        // with the rule in place: HOLD, the policy that never stops, goes
+        // from 90% over the week to 5%.
+        check("Ballora's clock is shorter than a step",
+                Game.BALLORA_GRACE < Game.MOVE_TIME);
+        for (int n = 1; n <= 5; n++) {
             Game gn = new Game(n, 1);
-            check("Ballora is faster than the player on night " + n,
-                    gn.interval(byKey(gn, "ballora")) < Game.MOVE_TIME);
+            check("and it is her clock on night " + n + ", not the night's",
+                    gn.graceFor(byKey(gn, "ballora")) == Game.BALLORA_GRACE);
+            check("while the other two are still on the night's grace on night " + n,
+                    gn.graceFor(byKey(gn, "freddy")) == gn.grace());
         }
-        Game n1 = new Game(1, 1);
-        check("and the first night is still a night you can walk out of",
-                n1.interval(byKey(n1, "ballora")) > Game.MOVE_TIME);
+
+        // AND SILENCE HAS TO BUY SOMETHING. A stop that only postpones the
+        // next stop is a stop the player makes out of fear; this is the
+        // stretch of deafness after she gives up, and it is what makes the
+        // counter profitable rather than merely necessary. Measured, 8, 10
+        // and 14 are indistinguishable -- what matters is that it is not
+        // zero, so that is what is asserted.
+        check("giving up buys time: Ballora is deaf for a while",
+                Game.BALLORA_COOLDOWN > 0);
+
+        // The grace has to stay above the worst trip, or the two counters
+        // cannot both be used on the same night. This is why the grace
+        // table came back up in this pass: at 1.8 on night 5 the competent
+        // policy reads 0%, because the player owes stillness to one threat
+        // and a shock to another and the night does not contain both.
+        for (int n = 1; n <= 5; n++) {
+            Game gn = new Game(n, 1);
+            check("night " + n + " has room for a move and a shock",
+                    gn.grace() >= Game.worstTrip());
+        }
+
+        // The week's ramp lives in Freddy's pace now, so it has to actually
+        // ramp. He is the only thing in the building that punishes standing
+        // still, and standing still is what Ballora demands -- so how fast
+        // he walks is how expensive her counter is, which is the whole
+        // difficulty of a night.
+        for (int n = 1; n < 5; n++) {
+            Game a = new Game(n, 1), b = new Game(n + 1, 1);
+            check("Freddy is at least as fast on night " + (n + 1)
+                            + " as on night " + n,
+                    b.freddyPace() >= a.freddyPace() - 1e-9);
+        }
+        Game first = new Game(1, 1), last = new Game(5, 1);
+        check("and the last night's Freddy is faster than the first night's",
+                last.freddyPace() > first.freddyPace());
     }
 
     // ------------------------------------------------------------ the clock
@@ -427,7 +475,12 @@ public final class SelfTest {
     static void survival() {
         section("the week");
 
-        int runs = 60;
+        // 200 rather than 60, and the reason is the monotonicity check: the
+        // first two nights of the week are three hundredths of a pace
+        // apart, so at 60 seeds the sample noise is wider than the ramp it
+        // is being asked to detect. The suite is a few seconds slower and
+        // the reading is a reading.
+        int runs = 200;
         System.out.printf("    %-6s %7s %7s %7s %7s %7s %7s%n",
                 "night", "IDLE", "REACT", "HOLD", "FLEE", "PANIC", "PRO");
         double[] hold = new double[5];
@@ -454,14 +507,28 @@ public final class SelfTest {
                     Bot.survival(n, runs, Bot.Policy.IDLE) == 0.0);
         }
 
-        // The ladder the design wants: answering the room beats doing
-        // nothing, and moving beats standing still and answering. The
-        // second one is the whole skill of the game and it is the check
-        // that the first sweep failed -- see the note in Bot.
+        // THE LADDER, and it is a different ladder from the one this block
+        // was written against. It used to assert that HOLD -- "answer the
+        // room and keep walking" -- beat REACT and PANIC, because HOLD was
+        // believed to be the competent player. It is not one: it plays two
+        // of the three counters and never stops, and since Ballora's clock
+        // became shorter than a step, never stopping is fatal. Measured
+        // over 600 seeds a night, HOLD reads 5% and REACT 20%, so the old
+        // check would now be asserting the wrong thing in the wrong
+        // direction.
+        //
+        // The ladder is asserted against PRO -- the policy that actually
+        // plays all three counters -- and it is the reading the whole
+        // 2026-10-01 pass exists to produce: the competent policy is the
+        // best one, and every policy that skips a counter is behind it.
         double reactMean = mean(react);
         double holdMean = mean(hold);
-        check("walking beats parking: HOLD beats REACT over the week",
-                holdMean > reactMean);
+        double proMean = mean(pro);
+        check("playing all three counters beats never moving: PRO beats REACT",
+                proMean > reactMean);
+        check("and beats never stopping: PRO beats HOLD", proMean > holdMean);
+        check("and beats never stopping in the other direction: PRO beats FLEE",
+                proMean > mean(flee));
 
         // THE WEEK GETS HARDER -- the thing Chase asked the franchise for,
         // and the check that could not fail before 2026-10-01. It used to
@@ -471,9 +538,18 @@ public final class SelfTest {
         // reading, because the engine now has a die roll *and* a jittered
         // interval: without either, the night is a script and the table is
         // a coin flip on the parameters. See the note in Threat#update.
+        //
+        // <b>It is measured against PRO now rather than HOLD, and that is
+        // the second time this check has had to change which policy it
+        // reads.</b> HOLD is flat at the bottom of the table by design --
+        // it dies to Ballora on every night of the week, which is the
+        // redesign working -- so a week that gets harder cannot show up in
+        // its column. The week's difficulty is the competent player's, and
+        // the tolerance is 0.05 because the reading is a 200-seed sample
+        // and the first two nights are three hundredths of a pace apart.
         for (int n = 1; n < 5; n++) {
             check("night " + (n + 1) + " is not easier than night " + n,
-                    hold[n - 1] >= hold[n] - 0.02);
+                    pro[n - 1] >= pro[n] - 0.05);
         }
 
         // THE SHOCK IS NOT A UNIVERSAL ANSWER, and this is the check the
@@ -484,32 +560,31 @@ public final class SelfTest {
         // only now, so panicking wastes charges on Ballora and Foxy and has
         // none left when Freddy is the one in the room. A game whose best
         // strategy is to panic is a game whose counters are decoration.
-        check("panicking is worse than playing the counters: HOLD beats PANIC",
-                holdMean > mean(panic));
+        check("panicking is worse than playing the counters: PRO beats PANIC",
+                proMean > mean(panic));
 
-        // The finding that is still open, and it is now a *bot* finding
-        // rather than a balance one: the moving policies converge. Running
-        // from Funtime Freddy is not worse than patrolling, and moving at
-        // random is not worse either, because in a line the player is
-        // faster than everything in it and the direction of a step barely
-        // matters. Printed rather than asserted, because a fix should be
-        // allowed to break it.
+        // THE FINDING THAT WAS OPEN, AND IS NOT ANY MORE. This block used to
+        // print the spread across HOLD, FLEE and PANIC as evidence that the
+        // moving policies converged -- seven points between them, with the
+        // competent one last, because in a line the player is faster than
+        // everything in it and the direction of a step barely mattered.
+        // That was true while walking answered all three threats. It is not
+        // true now: the policies that never stop are the policies that die,
+        // and the spread between them is the size of the redesign.
         double best = Math.max(holdMean, Math.max(mean(flee), mean(panic)));
         double worst = Math.min(holdMean, Math.min(mean(flee), mean(panic)));
-        System.out.printf("    the moving policies: HOLD %.0f%%, FLEE %.0f%%, PANIC %.0f%%"
-                        + " (spread %.0f points)%n",
+        System.out.printf("    the policies that skip a counter: HOLD %.0f%%, FLEE %.0f%%,"
+                        + " PANIC %.0f%% (spread %.0f points)%n",
                 holdMean * 100, mean(flee) * 100, mean(panic) * 100,
                 (best - worst) * 100);
 
-        // PRO -- the policy that plays all three counters -- is printed and
-        // not asserted, because it is still behind HOLD and FLEE and the gap
-        // is the open question rather than a contract. It reads 75% over the
-        // week and its deaths are all Ballora and Foxy: the stop is the right
-        // answer to Ballora and it is also what Freddy is built to punish, so
-        // it is only affordable while the player still holds a charge, and
-        // gating on that took it from 16% to 75%. What is left is that the
-        // stop is affordable but not *profitable* -- HOLD and FLEE never stop
-        // and so never pay its price. See Bot#pro.
+        // PRO -- the policy that plays all three counters -- is printed
+        // beside the ladder it is now at the top of. It reads 61% over the
+        // week against HOLD's 5%, and its deaths are Ballora's: the stop is
+        // the answer to her, it is what Freddy is built to punish, and the
+        // whole economy of the night is the price of that trade. See
+        // Bot#pro for the three rules of its own that had to change with
+        // the game.
         System.out.printf("    the policy that plays all three counters: PRO %.0f%%"
                         + " (n1 %.0f%%, n5 %.0f%%)%n",
                 mean(pro) * 100, pro[0] * 100, pro[4] * 100);
