@@ -319,7 +319,8 @@ public class TellScreen extends UiScreen {
         y += 22;
         gc.setFont(F_SMALL);
         gc.setFill(DOOR);
-        gc.fillText(tell.dist(tell.px, tell.py) + " rooms away", x, y);
+        int away = tell.dist(tell.px, tell.py);
+        gc.fillText(away == 1 ? "one room away" : Tell.word(away) + " rooms away", x, y);
         y += 22;
         gc.setFont(F_TINY);
         gc.setFill(DIM);
