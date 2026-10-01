@@ -408,9 +408,16 @@ public final class Bot {
 
         // Something to find out: either the belief is too old to act on, or
         // something is close enough that knowing exactly where it is matters.
-        if (age[i] > FRESH || est[i] <= WATCH_AT) {
+        // The hall worth spending the look on is not always the urgent one --
+        // the other hall's belief is the one nobody has refreshed, and it is
+        // the one that will be urgent next.
+        Side w = u;
+        Side o = u.other();
+        if (age[o.ordinal()] > age[i] && est[o.ordinal()] <= WATCH_AT) w = o;
+        int wi = w.ordinal();
+        if (age[wi] > FRESH || est[wi] <= WATCH_AT) {
             if (m.feed < LOOK_MAX) {
-                m.watch(u);
+                m.watch(w);
                 return;
             }
             // The picture is as old as it is allowed to get. Let it catch up

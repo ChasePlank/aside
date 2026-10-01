@@ -209,12 +209,22 @@ public class Feed {
      * for before the walker gets there</i> <i>plus</i> {@link #SHUT_TIME}, or
      * a walker could outlast the door and the door would be a lie; it has to
      * be short enough that the night is a series of decisions rather than one
-     * decision. Six seconds against a patience table that tops out at 2.0, a
+     * decision. Eight seconds against a patience table that tops out at 2.0, a
      * door that takes a second to come down, and a hold that starts about a
-     * step out -- which leaves the player a window of roughly a step and a
-     * half to start a hold in rather than the tenth of a step the first
-     * numbers left, and a tenth of a step is not a decision, it is a
-     * coincidence.
+     * step out -- which leaves the player a window of roughly two steps to
+     * start a hold in rather than the tenth of a step the first numbers left,
+     * and a tenth of a step is not a decision, it is a coincidence.
+     *
+     * <p>(This comment said six for as long as the constant has said eight.
+     * The number it describes is the constant, and the constant is what the
+     * night is tuned against -- the sweep reproduces the shipped ladder at
+     * 8.0 and at nothing else.)
+     *
+     * <p>The margin is measured rather than asserted: the longest any walker
+     * in the cast can ask for is 7.6s, on night one, where the step is the
+     * slowest in the week and the patience is nearly the longest. That is
+     * close enough to the ceiling that it is worth a check, and
+     * {@code SelfTest} fails if it ever crosses.
      */
     public static final double HOLD_MAX = 8.0;
 

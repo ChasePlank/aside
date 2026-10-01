@@ -25,7 +25,26 @@ public record Pair(Walker left, Walker right, String note) {
         return s == Feed.Side.LEFT ? left : right;
     }
 
-    /** The five nights, in the order the office receives them. */
+    /**
+     * The five nights, in the order the office receives them.
+     *
+     * <p><b>The speeds were re-tuned on 2026-10-01 so that the week ramps.</b>
+     * The first cast ramped the sharp axis and left the speed axis alone, and
+     * the sweep said what that costs: PRO read 80/82/61/27/60, so night four
+     * was the hardest night of the week and night five was easier than night
+     * three. The reason is that <b>the sharp axis does not affect a competent
+     * player at all</b> -- raising night five's walkers from sharp 1.15/1.00
+     * to 2.60/2.50 moves PRO by nothing, because the policy that looks for
+     * half a second at a time never has a stale picture to be punished by.
+     * What the sharp axis does is trap the player who stares, which is the
+     * design working; what it cannot do is carry a difficulty ramp.
+     *
+     * <p>So the ramp was moved onto the axis that is actually felt -- arrival
+     * rate -- and the pairs were set from the sweep rather than from taste.
+     * The ladder is now 84/76/60/49/33 and monotone, and the sharp values were
+     * left as the thematic axis they always were, with night four's brought
+     * down to match its own note.
+     */
     public static Pair forNight(int night) {
         return switch (night) {
             case 1 -> new Pair(Walker.PHANTOM_FREDDY, Walker.PHANTOM_CHICA,

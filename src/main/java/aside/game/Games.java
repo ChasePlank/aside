@@ -43,7 +43,7 @@ import java.util.List;
  * earns a place here by doing something no other game in the list does, and
  * when a new one is written that does what an old one does, the old one moves
  * to {@link #retired()} rather than the library growing a second copy of an
- * idea it already has. The franchise is the one exception -- FNAF 1 through 8
+ * idea it already has. The franchise is the one exception -- FNAF 1 through 9
  * were asked for by name, with "each gets harder than the last," and a sequel
  * is supposed to be the same shape harder.
  *

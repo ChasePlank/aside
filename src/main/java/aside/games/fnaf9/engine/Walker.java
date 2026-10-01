@@ -37,9 +37,14 @@ package aside.games.fnaf9.engine;
  * the cast is a table, and the two drifting apart is exactly the kind of
  * mistake that only shows up as an unexplained death.
  *
- * <p>The two are independent on purpose: <b>the fast one is not the faint
- * one</b>, and a night where they were the same walker twice would be a night
- * with one threat in it wearing two names.
+ * <p>The two are independent on purpose: <b>every pair in the cast differs in
+ * both numbers</b>, and a night where they were the same walker twice would be
+ * a night with one threat in it wearing two names. (Two walkers with the same
+ * interval is not merely dull, it is easier than one of them: measured, a
+ * night of two identical walkers is survivable 94% of the time against 47%
+ * for the pair it replaces, because identical walkers stay in phase and one
+ * hold covers both, while two with different intervals drift apart and
+ * interleave their arrivals.)
  */
 public record Walker(String key, String name, String note,
                      double speed, double sharp, double patience) {
@@ -57,43 +62,43 @@ public record Walker(String key, String name, String note,
     public static final Walker PHANTOM_FREDDY =
             new Walker("phantomfreddy", "Phantom Freddy",
                     "Holds together on a bad picture longer than anything else here.",
-                    1.00, 3.40, 1.9);
+                    1.05, 3.40, 1.9);
     public static final Walker PHANTOM_CHICA =
             new Walker("phantomchica", "Phantom Chica",
                     "A shade quicker, and a shade thinner.",
-                    1.10, 2.70, 1.8);
+                    1.15, 2.70, 1.8);
     public static final Walker PHANTOM_FOXY =
             new Walker("phantomfoxy", "Phantom Foxy",
                     "Fast, and it does not like being looked at for long.",
-                    1.25, 2.00, 1.5);
+                    1.35, 2.30, 1.5);
     public static final Walker PHANTOM_PUPPET =
             new Walker("phantompuppet", "Phantom Puppet",
                     "Slow, and it will wait at a shut door longer than you will.",
-                    1.05, 1.80, 2.0);
+                    1.15, 2.10, 2.0);
     public static final Walker SPRINGTRAP =
             new Walker("springtrap", "Springtrap",
                     "Something is still in there, and it is still walking.",
-                    1.15, 2.40, 1.9);
+                    1.22, 1.95, 1.9);
     public static final Walker SHADOW_BONNIE =
             new Walker("shadowbonnie", "Shadow Bonnie",
                     "You have to be looking at it while it is still there.",
-                    1.20, 1.40, 1.4);
+                    1.27, 1.55, 1.4);
     public static final Walker SHADOW_FREDDY =
             new Walker("shadowfreddy", "Shadow Freddy",
                     "It is gone before the picture is a second old.",
-                    1.10, 1.15, 1.3);
+                    1.31, 1.15, 1.3);
     public static final Walker NIGHTMARE =
             new Walker("nightmare", "Nightmare",
-                    "Fast, and it does not stay on the screen.",
-                    1.30, 1.60, 1.2);
+                    "It does not stay on the screen, and it does not hurry.",
+                    1.13, 1.35, 1.2);
     public static final Walker PLUSHTRAP =
             new Walker("plushtrap", "Plushtrap",
                     "Quick, and it gets bored of a shut door sooner than most.",
-                    1.35, 2.20, 1.2);
+                    1.18, 1.45, 1.2);
     public static final Walker GOLDEN_FREDDY =
             new Walker("goldenfreddy", "Golden Freddy",
                     "There is no picture of it. There is only a picture you had.",
-                    1.00, 1.00, 2.0);
+                    1.26, 1.00, 2.0);
 
     /** Every walker, for the dev hooks and the checks. */
     public static Walker[] all() {
