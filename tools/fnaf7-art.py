@@ -229,7 +229,11 @@ def build_scare(unit):
     """
     from PIL import Image, ImageEnhance
     iw, ih = unit.size
-    head = unit.crop((0, 0, iw, int(ih * 0.30)))
+    # From just under the top to a bit past the shoulders. The top of a
+    # full-body render is whatever is highest -- ears, a hat, an antenna --
+    # and a jumpscare framed on a pair of ears is a jumpscare of a pair of
+    # ears.
+    head = unit.crop((0, int(ih * 0.05), iw, int(ih * 0.45)))
     img = cover(head.convert("RGB"))
     img = ImageEnhance.Brightness(img).enhance(1.28)
     img = ImageEnhance.Contrast(img).enhance(1.18)
