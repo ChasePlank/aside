@@ -10,6 +10,7 @@ import aside.games.fnaf5.Fnaf5Game;
 import aside.games.fnaf6.Fnaf6Game;
 import aside.games.fnaf7.Fnaf7Game;
 import aside.games.fnaf8.Fnaf8Game;
+import aside.games.fnaf9.Fnaf9Game;
 import aside.games.fruitjump.FruitJumpGame;
 import aside.games.handoff.HandoffGame;
 import aside.games.ledger.LedgerGame;
@@ -67,6 +68,7 @@ public final class Games {
         g.add(new Fnaf6Game());
         g.add(new Fnaf7Game());
         g.add(new Fnaf8Game());
+        g.add(new Fnaf9Game());
         g.add(new FruitJumpGame());
         g.add(new ResidueGame());
         g.add(new LedgerGame());
