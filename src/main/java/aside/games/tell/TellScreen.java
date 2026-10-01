@@ -145,7 +145,7 @@ public class TellScreen extends UiScreen {
         gc.setFill(FAINT);
         String right = switch (phase) {
             case OPEN -> Tell.WHERE;
-            case PLAY -> "night " + Tell.nightName(tell.night) + " of five";
+            case PLAY -> Tell.nightLabel(tell.night);
             case REPORT -> Tell.WHERE_REPORT;
         };
         gc.fillText(right, W - M - 160, 72);
@@ -298,7 +298,7 @@ public class TellScreen extends UiScreen {
         y += 34;
         gc.setFont(F_TINY);
         gc.setFill(DIM);
-        gc.fillText(pct + " of 100", x, y);
+        gc.fillText(Tell.readOf(pct), x, y);
         y += 30;
 
         gc.setFont(F_SMALL);
@@ -320,20 +320,17 @@ public class TellScreen extends UiScreen {
         gc.setFont(F_SMALL);
         gc.setFill(DOOR);
         int away = tell.dist(tell.px, tell.py);
-        gc.fillText(away == 1 ? "one room away" : Tell.word(away) + " rooms away", x, y);
+        gc.fillText(Tell.awayLine(away), x, y);
         y += 22;
         gc.setFont(F_TINY);
         gc.setFill(DIM);
-        gc.fillText("turn " + tell.turn + " of " + tell.limit(), x, y);
+        gc.fillText(Tell.turnLabel(tell.turn, tell.limit()), x, y);
         y += 30;
 
         gc.setFont(F_TINY);
         gc.setFill(FAINT);
-        String covers = tell.reach() == 1 ? "the one door you use most here"
-                : "the " + Tell.word(tell.reach()) + " doors you use most here";
-        for (String line : wrap("It covers " + covers + ". Going anywhere else costs "
-                + "it " + tell.missGain() + "; going where it expects costs you "
-                + tell.hitCost() + ".", F_TINY, barW)) {
+        for (String line : wrap(Tell.coversLine(tell.reach(), tell.missGain(), tell.hitCost()),
+                F_TINY, barW)) {
             gc.fillText(line, x, y);
             y += 17;
         }
@@ -348,9 +345,7 @@ public class TellScreen extends UiScreen {
         gc.setFont(F_BIG);
         gc.setFill(won ? GOOD : RED);
         double y = 176;
-        String head = won
-                ? "You reached the far door on night " + Tell.nightName(tell.night) + "."
-                : Tell.caughtLine(tell.read);
+        String head = won ? Tell.wonHead(tell.night) : Tell.caughtLine(tell.read);
         for (String line : wrap(head, F_BIG, 620)) {
             gc.fillText(line, M, y);
             y += 32;
@@ -359,9 +354,9 @@ public class TellScreen extends UiScreen {
         y += 10;
         gc.setFont(F_SMALL);
         gc.setFill(DIM);
-        gc.fillText(Tell.readLine(tell.read) + "  (" + tell.readPct() + " of 100)", M, y);
+        gc.fillText(Tell.readLine(tell.read) + "  (" + Tell.readOf(tell.readPct()) + ")", M, y);
         y += 24;
-        gc.fillText("It took you " + tell.turn + " turns to be read that far.", M, y);
+        gc.fillText(Tell.tookLine(tell.turn), M, y);
         y += 34;
 
         for (String line : wrap(Tell.closing(won, tell.read, tell.turn), F_SCENE, 620)) {

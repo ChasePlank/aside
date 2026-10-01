@@ -413,49 +413,77 @@ public final class Tell {
     public static final String REPORT_HEAD = "THE FAR DOOR";
     public static final String CAUGHT_HEAD = "IT KNEW YOU";
 
-    /** What it says when it catches you, by how far past the line it was. */
+    /**
+     * What it says when it catches you, by how far past the line it was.
+     *
+     * Three fixed sentences rather than one built on the spot, because the
+     * phone build has to pick one of them too and a sentence assembled in two
+     * places is a sentence that can end up assembled two ways.
+     */
+    public static final String CAUGHT_FAR =
+            "It was already in the room. It did not have to look.";
+    public static final String CAUGHT_NEAR =
+            "It came in behind you and did not check the corners.";
+    public static final String CAUGHT_CLOSE =
+            "It knew where you would be, and it was there.";
+
     public static String caughtLine(int read) {
-        if (read >= READ_MAX + 40) return "It was already in the room. It did not have to look.";
-        if (read >= READ_MAX + 15) return "It came in behind you and did not check the corners.";
-        return "It knew where you would be, and it was there.";
+        if (read >= READ_MAX + 40) return CAUGHT_FAR;
+        if (read >= READ_MAX + 15) return CAUGHT_NEAR;
+        return CAUGHT_CLOSE;
     }
 
-    /** The closing sentence of a night. One per ending. */
+    /**
+     * The closing sentence of a night. One per ending.
+     *
+     * Two of the four carry the turn count, so they are templates with one
+     * number in them and nothing else. The phone substitutes the number; it
+     * does not get to write the sentence.
+     */
+    public static final String CLOSING_LOST =
+            "It reads you the way you read a room you have been in before. There is "
+                    + "nothing in that to be ashamed of, and there is no way to be in a "
+                    + "house for %d turns without leaving a shape.";
+    public static final String CLOSING_LOW =
+            "You got out and it never had you. That is not luck -- that is a person who "
+                    + "walked away from their own habits on purpose, over and over, for "
+                    + "%d turns.";
+    public static final String CLOSING_MID =
+            "You got out. It knew some of you by the end, and what it knew was true, "
+                    + "and it was still not enough to be waiting at the door.";
+    public static final String CLOSING_HIGH =
+            "You got out with it nearly certain. Whatever it was going to learn about "
+                    + "you, it learned, and you spent the whole night being read and "
+                    + "left anyway.";
+
     public static String closing(boolean won, int read, int turn) {
-        if (!won) {
-            return "It reads you the way you read a room you have been in before. "
-                    + "There is nothing in that to be ashamed of, and there is no way "
-                    + "to be in a house for " + turn + " turns without leaving a shape.";
-        }
-        if (read <= 20) return "You got out and it never had you. That is not luck -- "
-                + "that is a person who walked away from their own habits on purpose, "
-                + "over and over, for " + turn + " turns.";
-        if (read <= 55) return "You got out. It knew some of you by the end, and what "
-                + "it knew was true, and it was still not enough to be waiting at the "
-                + "door.";
-        return "You got out with it nearly certain. Whatever it was going to learn "
-                + "about you, it learned, and you spent the whole night being read and "
-                + "left anyway.";
+        if (!won) return String.format(CLOSING_LOST, turn);
+        if (read <= 20) return String.format(CLOSING_LOW, turn);
+        if (read <= 55) return CLOSING_MID;
+        return CLOSING_HIGH;
     }
 
-    /** The read, said plainly, for the report. */
+    /** The read, said plainly, for the report. Four fixed lines. */
+    public static final String READ_BARELY = "It barely had you.";
+    public static final String READ_SHAPE = "It had the shape of you.";
+    public static final String READ_WAYS = "It knew which ways were yours.";
+    public static final String READ_KNEW = "It knew you.";
+
     public static String readLine(int read) {
-        if (read <= 20) return "It barely had you.";
-        if (read <= 45) return "It had the shape of you.";
-        if (read <= 75) return "It knew which ways were yours.";
-        return "It knew you.";
+        if (read <= 20) return READ_BARELY;
+        if (read <= 45) return READ_SHAPE;
+        if (read <= 75) return READ_WAYS;
+        return READ_KNEW;
     }
 
     public static String nightName(int night) {
-        String[] n = { "one", "two", "three", "four", "five" };
-        return night >= 0 && night < n.length ? n[night] : String.valueOf(night + 1);
+        return night >= 0 && night < NIGHT_NAMES.length
+                ? NIGHT_NAMES[night] : String.valueOf(night + 1);
     }
 
     /** "3" -> "three". Small numbers only; the game never needs more. */
     public static String word(int n) {
-        String[] w = { "no", "one", "two", "three", "four", "five", "six", "seven",
-                "eight", "nine", "ten" };
-        return n >= 0 && n < w.length ? w[n] : String.valueOf(n);
+        return n >= 0 && n < WORDS.length ? WORDS[n] : String.valueOf(n);
     }
 
     public static String cap(String s) {
@@ -471,5 +499,64 @@ public final class Tell {
             b.append(DIR_NAME[dirs.get(i)]);
         }
         return b.toString();
+    }
+
+    // ------------------------------------------------- the prose, as tables
+
+    /**
+     * The lines the screen draws that are not fixed sentences.
+     *
+     * These live here rather than in TellScreen because the phone build has to
+     * say them too, and a second copy of a sentence in a template is a second
+     * copy that can drift. The screen and the phone both read these; the phone
+     * substitutes numbers into the same templates, which is the only
+     * substitution it is allowed to do, because a number cannot be reworded.
+     */
+    public static final String[] NIGHT_NAMES = { "one", "two", "three", "four", "five" };
+    /** "no" through "twelve" -- twelve is the far corner of the biggest house. */
+    public static final String[] WORDS = { "no", "one", "two", "three", "four", "five",
+            "six", "seven", "eight", "nine", "ten", "eleven", "twelve" };
+
+    public static final String NIGHT_LABEL = "night %s of five";
+    public static final String AWAY_ONE = "one room away";
+    public static final String AWAY_MANY = "%s rooms away";
+    public static final String TURN_LABEL = "turn %d of %d";
+    public static final String COVERS_ONE =
+            "It covers the one door you use most here. Going anywhere else costs it "
+                    + "%d; going where it expects costs you %d.";
+    public static final String COVERS_MANY =
+            "It covers the %s doors you use most here. Going anywhere else costs it "
+                    + "%d; going where it expects costs you %d.";
+    public static final String WON_HEAD = "You reached the far door on night %s.";
+    public static final String TOOK_LINE = "It took you %d turns to be read that far.";
+    public static final String READ_OF = "%d of 100";
+
+    public static String nightLabel(int night) {
+        return NIGHT_LABEL.replace("%s", nightName(night));
+    }
+
+    public static String awayLine(int away) {
+        return away == 1 ? AWAY_ONE : AWAY_MANY.replace("%s", word(away));
+    }
+
+    public static String turnLabel(int turn, int limit) {
+        return String.format(TURN_LABEL, turn, limit);
+    }
+
+    public static String coversLine(int reach, int miss, int hit) {
+        return reach == 1 ? String.format(COVERS_ONE, miss, hit)
+                : String.format(COVERS_MANY, word(reach), miss, hit);
+    }
+
+    public static String wonHead(int night) {
+        return WON_HEAD.replace("%s", nightName(night));
+    }
+
+    public static String tookLine(int turn) {
+        return String.format(TOOK_LINE, turn);
+    }
+
+    public static String readOf(int pct) {
+        return String.format(READ_OF, pct);
     }
 }

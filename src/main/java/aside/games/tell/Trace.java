@@ -35,12 +35,24 @@ import java.util.Random;
  *
  * Run from the repository root:
  *   java -cp classes aside.games.tell.Trace [seeds]
+ *   java -cp classes aside.games.tell.Trace dump [seeds]
+ *
+ * The `dump` form prints one line per (seed, night) instead of the tables:
+ * the whole house -- where you are, where the door is, which rooms are lit,
+ * the read, the turn, the ending, and every count and recency the house is
+ * holding. It exists so tools/tell-trace.mjs can hold the phone build's
+ * ported house against this one, state by state, rather than trusting that
+ * two implementations of the same arithmetic agree.
  */
 public final class Trace {
 
     public static final String[] NAMES = { "IDLE", "STRAIGHT", "HABIT", "SPREAD", "SAFE", "THRIFTY", "DETOUR", "OTHER" };
 
     public static void main(String[] args) {
+        if (args.length > 0 && args[0].equals("dump")) {
+            dump(args.length > 1 ? Integer.parseInt(args[1]) : 200);
+            return;
+        }
         int seeds = args.length > 0 ? Integer.parseInt(args[0]) : 300;
         int[][] won = new int[NAMES.length][Tell.NIGHTS];
         int[][] readSum = new int[NAMES.length][Tell.NIGHTS];
@@ -143,6 +155,44 @@ public final class Trace {
         }
         for (int n = 0; n < Tell.NIGHTS; n++) {
             System.out.printf("  night%d: read %d, turns %d%n", n + 1, byRead[n], byTurns[n]);
+        }
+    }
+
+    /**
+     * The whole house, one line per (seed, night), after the SAFE policy.
+     *
+     * SAFE is the one to compare on because it is fully deterministic -- no
+     * rng, no threshold, no carried state -- so both builds can replay it from
+     * the seed alone. Tab-separated, and the arrays are comma-separated so a
+     * line stays one line.
+     */
+    static void dump(int seeds) {
+        for (long seed = 0; seed < seeds; seed++) {
+            Tell t = Tell.of(seed);
+            for (int night = 0; night < Tell.NIGHTS; night++) {
+                play(t, 4, seed * 31 + night);
+                StringBuilder b = new StringBuilder();
+                b.append(seed).append('\t').append(night).append('\t').append(t.size)
+                 .append('\t').append(t.px).append('\t').append(t.py)
+                 .append('\t').append(t.ex).append('\t').append(t.ey)
+                 .append('\t').append(t.read).append('\t').append(t.turn)
+                 .append('\t').append(t.won ? 1 : 0).append('\t').append(t.caught ? 1 : 0)
+                 .append('\t');
+                for (int i = 0; i < t.size * t.size; i++) b.append(t.lamp[i] ? 1 : 0);
+                b.append('\t');
+                // No trailing comma: the phone writes these with join(','), and
+                // a separator that only one side emits is a difference that
+                // looks like a disagreement and is not one.
+                String sep = "";
+                for (int i = 0; i < t.size * t.size; i++)
+                    for (int d = 0; d < Tell.DIRS; d++) { b.append(sep).append(t.hist[i][d]); sep = ","; }
+                b.append('\t');
+                sep = "";
+                for (int i = 0; i < t.size * t.size; i++)
+                    for (int d = 0; d < Tell.DIRS; d++) { b.append(sep).append(t.last[i][d]); sep = ","; }
+                System.out.println(b);
+                if (night + 1 < Tell.NIGHTS) t.nextNight();
+            }
         }
     }
 

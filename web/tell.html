@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tell</title>
+<style>
+  :root {
+    --bg: #08070A;
+    --room: #18161E;
+    --lit: #3A3022;
+    --edge: #2A2733;
+    --ink: #E8E8F0;
+    --dim: #9A9AAE;
+    --faint: #63636F;
+    --gold: #F2C14E;
+    --red: #E94560;
+    --good: #6FCF97;
+    --door: #7FB2E5;
+    --paper: #14131A;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 24px; }
+  h1 { font-family: Georgia, serif; font-size: 34px; color: var(--gold); margin: 18px 0 2px; font-weight: 400; }
+  .sub { color: var(--faint); font-size: 12px; margin-bottom: 18px; }
+  p { margin: 0 0 14px; }
+  .scene { font-family: Georgia, serif; font-size: 17px; }
+  .card { background: var(--paper); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; margin: 0 0 16px; }
+  .card h2 { font-size: 12px; letter-spacing: .08em; color: var(--faint); margin: 0 0 12px; font-weight: 600; }
+  .rule { margin-bottom: 14px; }
+  .rule .k { color: var(--gold); font-size: 14px; }
+  .rule .t { color: var(--dim); font-size: 13px; }
+  button {
+    font: inherit; font-size: 15px; border: 0; border-radius: 10px; padding: 13px 18px;
+    background: var(--gold); color: #14110A; font-weight: 600; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--dim); border: 1px solid var(--edge); font-weight: 400; }
+  .house { display: grid; gap: 4px; margin: 0 0 14px; }
+  .cell {
+    position: relative; aspect-ratio: 1 / 1; border-radius: 8px;
+    background: var(--room); border: 1px solid var(--edge);
+  }
+  .cell.lit { background: var(--lit); }
+  .cell.door { border-color: var(--door); border-width: 2px; }
+  .cell .n {
+    position: absolute; font-size: 11px; color: var(--faint); line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .cell .n.want { color: var(--red); }
+  .cell .n.up { top: 4px; left: 50%; transform: translateX(-50%); }
+  .cell .n.right { right: 5px; top: 50%; transform: translateY(-50%); }
+  .cell .n.down { bottom: 4px; left: 50%; transform: translateX(-50%); }
+  .cell .n.left { left: 5px; top: 50%; transform: translateY(-50%); }
+  .cell .here { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px;
+    margin: -7px 0 0 -7px; border-radius: 50%; background: var(--gold); }
+  .cell .doorway { position: absolute; left: 50%; top: 50%; width: 16px; height: 20px;
+    margin: -10px 0 0 -8px; background: var(--door); border-radius: 2px; }
+  .cell .bar { position: absolute; background: var(--red); }
+  .cell .bar.up { left: 10px; right: 10px; top: 2px; height: 3px; }
+  .cell .bar.right { top: 10px; bottom: 10px; right: 2px; width: 3px; }
+  .cell .bar.down { left: 10px; right: 10px; bottom: 2px; height: 3px; }
+  .cell .bar.left { top: 10px; bottom: 10px; left: 2px; width: 3px; }
+  .read { height: 16px; border-radius: 8px; background: #322E3C; overflow: hidden; margin-bottom: 6px; }
+  .read i { display: block; height: 100%; border-radius: 8px; }
+  .lbl { font-size: 12px; letter-spacing: .06em; color: var(--faint); margin: 14px 0 4px; }
+  .val { font-size: 15px; }
+  .val.red { color: var(--red); }
+  .val.door { color: var(--door); }
+  .val.dim { color: var(--dim); font-size: 13px; }
+  .val.tiny { color: var(--faint); font-size: 12px; }
+  .pad { display: grid; grid-template-columns: repeat(3, 64px); grid-template-rows: repeat(3, 56px);
+    gap: 8px; justify-content: center; margin: 18px 0 4px; }
+  .pad button { padding: 0; font-size: 20px; background: var(--paper); color: var(--ink);
+    border: 1px solid var(--edge); border-radius: 10px; font-weight: 400; }
+  .pad button:disabled { opacity: .3; }
+  .pad .u { grid-area: 1 / 2; } .pad .l { grid-area: 2 / 1; }
+  .pad .r { grid-area: 2 / 3; } .pad .d { grid-area: 3 / 2; }
+  .big { font-family: Georgia, serif; font-size: 23px; color: var(--good); margin: 4px 0 14px; }
+  .big.bad { color: var(--red); }
+  .closing { font-family: Georgia, serif; font-size: 16px; margin: 16px 0; }
+  .warn { color: var(--red); font-size: 13px; margin: 10px 0 0; min-height: 18px; }
+  .foot { color: var(--faint); font-size: 12px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const C = {
+"wordmark":"Tell",
+"where":"the house",
+"whereReport":"the far door",
+"nights":5,
+"readMax":100,
+"dirs":4,
+"dx":[0,1,0,-1],
+"dy":[-1,0,1,0],
+"dirName":["north","east","south","west"],
+"dirKey":["N","E","S","W"],
+"size":[5,5,6,6,7],
+"reach":[1,2,2,3,3],
+"base":[2,2,2,2,3],
+"miss":[4,4,4,4,4],
+"hit":[12,12,13,13,13],
+"lit":[8,8,9,9,10],
+"lamps":[3,4,5,6,7],
+"limit":[16,18,22,26,34],
+"nightNames":["one","two","three","four","five"],
+"words":["no","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve"],
+"nightLabel":"night %s of five",
+"awayOne":"one room away",
+"awayMany":"%s rooms away",
+"turnLabel":"turn %d of %d",
+"coversOne":"It covers the one door you use most here. Going anywhere else costs it %d; going where it expects costs you %d.",
+"coversMany":"It covers the %s doors you use most here. Going anywhere else costs it %d; going where it expects costs you %d.",
+"wonHead":"You reached the far door on night %s.",
+"tookLine":"It took you %d turns to be read that far.",
+"readOf":"%d of 100",
+"caughtFar":"It was already in the room. It did not have to look.",
+"caughtNear":"It came in behind you and did not check the corners.",
+"caughtClose":"It knew where you would be, and it was there.",
+"closingLost":"It reads you the way you read a room you have been in before. There is nothing in that to be ashamed of, and there is no way to be in a house for %d turns without leaving a shape.",
+"closingLow":"You got out and it never had you. That is not luck -- that is a person who walked away from their own habits on purpose, over and over, for %d turns.",
+"closingMid":"You got out. It knew some of you by the end, and what it knew was true, and it was still not enough to be waiting at the door.",
+"closingHigh":"You got out with it nearly certain. Whatever it was going to learn about you, it learned, and you spent the whole night being read and left anyway.",
+"readBarely":"It barely had you.",
+"readShape":"It had the shape of you.",
+"readWays":"It knew which ways were yours.",
+"readKnew":"It knew you.",
+"opening":["There is something in the house with you. It cannot see you. It has been listening to you move, and it is counting.","Every room you leave, you leave by a door, and it has counted which doors you use. In a room you have never left, it does not guess a habit -- it guesses the door, because that is what a person in a house with a door wants. It will tell you what it expects.","Go where it expects and it learns you faster. Go somewhere it did not expect and it loses ground. The read is how well it knows you. At a hundred it does not have to look.","The door out is in the far corner, and it knows that too. The lit rooms are not hiding you."],
+"rulesHeading":"THE HOUSE",
+"rules":[["MOVE","arrow keys or WASD. One room at a time."],["THE COUNT","the numbers in each room are how many times you have left it each way. That is the whole of its model of you, and it is on the floor."],["THE READ","rises every turn. It rises faster when you go where it expects, and falls when you do not."],["LIT ROOMS","cost read to enter. The door is in the far corner, and the cheap way there is the obvious one."]],
+"expectHead":"IT EXPECTS",
+"expectNone":"nothing, yet",
+"countHead":"WHAT IT HAS COUNTED",
+"readHead":"HOW WELL IT KNOWS YOU",
+"doorHead":"THE DOOR",
+"startLine":"ENTER to go in.",
+"startButton":"Go in",
+"again":"Another house",
+"nextNight":"ENTER for the next night",
+"noSuchDoor":"There is no door that way.",
+"reportHead":"THE FAR DOOR",
+"caughtHead":"IT KNEW YOU"
+}
+;
+
+//__MODEL_BEGIN__
+// The house, ported. Counter-based, not a stream: every number is a pure
+// function of (seed, salt), so the phone and the desktop deal the same house
+// without either carrying an RNG position. The arithmetic is BigInt because a
+// double loses the low bits of a 64-bit Java long and the two builds would
+// diverge on the first draw.
+const MASK = (1n << 64n) - 1n;
+function mix(seed, salt) {
+  let z = (BigInt(seed) + 0x9E3779B97F4A7C15n * BigInt(salt + 1)) & MASK;
+  z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & MASK;
+  z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & MASK;
+  return (z ^ (z >> 31n)) & MASK;
+}
+function pick(seed, salt, n) {
+  if (n <= 1) return 0;
+  return Number(mix(seed, salt) % BigInt(n));
+}
+
+let seed = 0, night = 0, size = 0;
+let px = 0, py = 0, ex = 0, ey = 0, sx = 0, sy = 0;
+let lamp = [], hist = [], last = [];
+let read = 0, turn = 0, won = false, caught = false;
+
+function idx(x, y) { return y * size + x; }
+function here() { return idx(px, py); }
+function inBounds(x, y) { return x >= 0 && y >= 0 && x < size && y < size; }
+function dist(x, y) { return Math.abs(x - ex) + Math.abs(y - ey); }
+function done() { return won || caught; }
+function reach() { return C.reach[night]; }
+function base() { return C.base[night]; }
+function hitCost() { return C.hit[night]; }
+function missGain() { return C.miss[night]; }
+function litCost() { return C.lit[night]; }
+function limit() { return C.limit[night]; }
+function readPct() { return Math.min(C.readMax, read); }
+
+function place() {
+  const corner = pick(seed, 7, 4);
+  const cx = [0, size - 1, size - 1, 0];
+  const cy = [0, 0, size - 1, size - 1];
+  sx = cx[corner]; sy = cy[corner];
+  ex = cx[(corner + 2) % 4]; ey = cy[(corner + 2) % 4];
+  px = sx; py = sy;
+}
+
+function dealLamps() {
+  const n = C.lamps[night];
+  let placed = 0;
+  for (let i = 0; i < size * size && placed < n; i++) {
+    const at = pick(seed, 1000 + night * 100 + i, size * size);
+    if (at === sy * size + sx || at === ey * size + ex) continue;
+    if (lamp[at]) continue;
+    lamp[at] = true;
+    placed++;
+  }
+}
+
+function clearCounts() {
+  hist = []; last = [];
+  for (let i = 0; i < size * size; i++) { hist.push([0, 0, 0, 0]); last.push([0, 0, 0, 0]); }
+}
+
+function boot(s, n) {
+  seed = s; night = 0; size = C.size[0];
+  place();
+  lamp = new Array(size * size).fill(false);
+  clearCounts();
+  dealLamps();
+  read = 0; turn = 0; won = false; caught = false;
+  for (let k = 0; k < n; k++) nextNight();
+}
+
+function nextNight() {
+  if (night + 1 >= C.nights) return false;
+  night++;
+  size = C.size[night];
+  place();
+  lamp = new Array(size * size).fill(false);
+  clearCounts();
+  read = 0; turn = 0; won = false; caught = false;
+  dealLamps();
+  return true;
+}
+
+function stepDist(d) {
+  const nx = px + C.dx[d], ny = py + C.dy[d];
+  if (!inBounds(nx, ny)) return 9999;
+  return dist(nx, ny);
+}
+
+function canMove(d) {
+  return !done() && d >= 0 && d < C.dirs && inBounds(px + C.dx[d], py + C.dy[d]);
+}
+
+function legal() {
+  const out = [];
+  for (let d = 0; d < C.dirs; d++) if (canMove(d)) out.push(d);
+  return out;
+}
+
+// Most-used first, most recent as the tie-break, top reach of them. A room it
+// has never heard you leave gets exactly one guess, and the guess is the best
+// way to the door -- that single guess is the whole of the game.
+function expected() {
+  const i = here();
+  const c = hist[i];
+  let total = 0;
+  for (let d = 0; d < C.dirs; d++) total += c[d];
+  const order = [0, 1, 2, 3];
+  if (total === 0) {
+    order.sort((a, b) => stepDist(a) - stepDist(b));
+    return order.slice(0, 1);
+  }
+  order.sort((a, b) => (c[b] - c[a]) || (last[i][b] - last[i][a]));
+  return order.slice(0, Math.min(reach(), C.dirs));
+}
+
+function move(d) {
+  if (!canMove(d)) return false;
+  const predicted = expected().indexOf(d) >= 0;
+  const i = here();
+  hist[i][d]++;
+  last[i][d] = turn;
+  px += C.dx[d]; py += C.dy[d];
+  turn++;
+  if (predicted) read += hitCost(); else read = Math.max(0, read - missGain());
+  read += base();
+  if (lamp[here()]) read += litCost();
+  if (px === ex && py === ey) won = true;
+  else if (read >= C.readMax) caught = true;
+  else if (turn >= limit()) caught = true;
+  return true;
+}
+//__MODEL_END__
+
+// ------------------------------------------------------------- the lines
+
+// The prose is the model's, not this file's. Every sentence below is a lookup
+// or a single number substituted into a template the desktop also reads, so
+// the phone cannot say something the desktop would not say.
+function nightName(n) { return C.nightNames[n] || String(n + 1); }
+function word(n) { return C.words[n] || String(n); }
+function nightLabel() { return C.nightLabel.replace('%s', nightName(night)); }
+function awayLine(away) { return away === 1 ? C.awayOne : C.awayMany.replace('%s', word(away)); }
+function turnLabel() { return C.turnLabel.replace('%d', turn).replace('%d', limit()); }
+function coversLine() {
+  return reach() === 1
+    ? C.coversOne.replace('%d', missGain()).replace('%d', hitCost())
+    : C.coversMany.replace('%s', word(reach())).replace('%d', missGain()).replace('%d', hitCost());
+}
+function wonHead() { return C.wonHead.replace('%s', nightName(night)); }
+function tookLine() { return C.tookLine.replace('%d', turn); }
+function readOf(pct) { return C.readOf.replace('%d', pct); }
+function caughtLine() {
+  if (read >= C.readMax + 40) return C.caughtFar;
+  if (read >= C.readMax + 15) return C.caughtNear;
+  return C.caughtClose;
+}
+function closing() {
+  if (!won) return C.closingLost.replace('%d', turn);
+  if (read <= 20) return C.closingLow.replace('%d', turn);
+  if (read <= 55) return C.closingMid;
+  return C.closingHigh;
+}
+function readLine() {
+  if (read <= 20) return C.readBarely;
+  if (read <= 45) return C.readShape;
+  if (read <= 75) return C.readWays;
+  return C.readKnew;
+}
+
+// ------------------------------------------------------------- the state
+
+const KEY = 'aside.tell.house';
+let screen = 'open';
+let notice = '';
+let canStore = true;
+try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); }
+catch (e) { canStore = false; }
+
+function newSeed() { return Math.floor(Date.now() % 2147483647); }
+
+function save() {
+  if (!canStore) return;
+  try {
+    localStorage.setItem(KEY, JSON.stringify({
+      seed: seed, night: night, px: px, py: py, read: read, turn: turn,
+      won: won, caught: caught, hist: hist, last: last
+    }));
+  } catch (e) { /* a phone that will not store still plays */ }
+}
+
+function load() {
+  if (!canStore) return false;
+  let t = null;
+  try { t = localStorage.getItem(KEY); } catch (e) { return false; }
+  if (!t) return false;
+  let d = null;
+  try { d = JSON.parse(t); } catch (e) { return false; }
+  if (!d || !isFinite(d.seed)) return false;
+  boot(d.seed, 0);
+  // The night is the one thing that has to be replayed rather than restored:
+  // the house is dealt fresh each night, so the state is only meaningful on
+  // the night it was dealt for.
+  for (let k = 0; k < (d.night | 0) && night + 1 < C.nights; k++) nextNight();
+  px = d.px | 0; py = d.py | 0;
+  read = d.read | 0; turn = d.turn | 0;
+  won = !!d.won; caught = !!d.caught;
+  if (Array.isArray(d.hist) && d.hist.length === size * size) hist = d.hist;
+  if (Array.isArray(d.last) && d.last.length === size * size) last = d.last;
+  return true;
+}
+
+// ------------------------------------------------------------- the drawing
+
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"]/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+const SIDE = ['up', 'right', 'down', 'left'];
+
+function house() {
+  const exp = expected();
+  let h = '<div class="house" style="grid-template-columns:repeat(' + size + ',1fr)">';
+  for (let gy = 0; gy < size; gy++) {
+    for (let gx = 0; gx < size; gx++) {
+      const i = idx(gx, gy);
+      const isDoor = gx === ex && gy === ey;
+      const isHere = gx === px && gy === py;
+      h += '<div class="cell' + (lamp[i] ? ' lit' : '') + (isDoor ? ' door' : '') + '">';
+      for (let d = 0; d < C.dirs; d++) {
+        const c = hist[i][d];
+        const want = isHere && exp.indexOf(d) >= 0;
+        if (c === 0 && !want) continue;
+        h += '<span class="n ' + SIDE[d] + (want ? ' want' : '') + '">'
+          + (c === 0 ? '\u00b7' : c) + '</span>';
+      }
+      if (isHere) for (const d of exp) h += '<span class="bar ' + SIDE[d] + '"></span>';
+      if (isHere) h += '<span class="here"></span>';
+      else if (isDoor) h += '<span class="doorway"></span>';
+      h += '</div>';
+    }
+  }
+  return h + '</div>';
+}
+
+function pad() {
+  const b = (d, cls, label) =>
+    '<button class="' + cls + '" data-dir="' + d + '"' + (canMove(d) ? '' : ' disabled')
+    + '>' + label + '</button>';
+  return '<div class="pad">' + b(0, 'u', '\u2191') + b(3, 'l', '\u2190')
+    + b(1, 'r', '\u2192') + b(2, 'd', '\u2193') + '</div>';
+}
+
+function renderOpen() {
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(C.where) + '</div>';
+  for (const p of C.opening) h += '<p class="scene">' + esc(p) + '</p>';
+  h += '<div class="card"><h2>' + esc(C.rulesHeading) + '</h2>';
+  for (const r of C.rules) {
+    h += '<div class="rule"><div class="k">' + esc(r[0]) + '</div>'
+      + '<div class="t">' + esc(r[1]) + '</div></div>';
+  }
+  h += '</div><button id="go">' + esc(C.startButton) + '</button>';
+  h += '<div class="foot">' + esc(C.startLine) + '</div>';
+  app.innerHTML = h;
+  document.getElementById('go').onclick = () => { screen = 'play'; render(); };
+}
+
+function renderPlay() {
+  const pct = readPct();
+  const colour = pct >= 75 ? 'var(--red)' : (pct >= 45 ? 'var(--gold)' : 'var(--good)');
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">' + esc(nightLabel()) + '</div>';
+  h += house();
+  h += '<div class="lbl">' + esc(C.readHead) + '</div>';
+  h += '<div class="read"><i style="width:' + Math.max(3, pct) + '%;background:' + colour + '"></i></div>';
+  h += '<div class="val tiny">' + esc(readOf(pct)) + '</div>';
+  h += '<div class="lbl">' + esc(C.expectHead) + '</div>';
+  h += '<div class="val red">'
+    + esc(expected().map(d => C.dirName[d]).join(', ')) + '</div>';
+  h += '<div class="lbl">' + esc(C.doorHead) + '</div>';
+  h += '<div class="val door">' + esc(awayLine(dist(px, py))) + '</div>';
+  h += '<div class="val dim">' + esc(turnLabel()) + '</div>';
+  h += '<div class="lbl">' + esc(C.countHead) + '</div>';
+  h += '<div class="val tiny">' + esc(coversLine()) + '</div>';
+  h += pad();
+  h += '<div class="warn">' + esc(notice) + '</div>';
+  app.innerHTML = h;
+  for (const b of app.querySelectorAll('.pad button')) {
+    b.onclick = () => step(Number(b.dataset.dir));
+  }
+}
+
+function renderReport() {
+  const head = won ? wonHead() : caughtLine();
+  let h = '<h1>' + esc(C.wordmark) + '</h1><div class="sub">'
+    + esc(won ? C.reportHead : C.caughtHead) + '</div>';
+  h += '<div class="big' + (won ? '' : ' bad') + '">' + esc(head) + '</div>';
+  h += '<div class="val dim">' + esc(readLine()) + '  (' + esc(readOf(readPct())) + ')</div>';
+  h += '<div class="val dim">' + esc(tookLine()) + '</div>';
+  h += '<p class="closing">' + esc(closing()) + '</p>';
+  h += house();
+  const next = won && night + 1 < C.nights;
+  h += '<button id="go">' + esc(next ? C.nextNight : C.again) + '</button>';
+  app.innerHTML = h;
+  document.getElementById('go').onclick = () => {
+    if (next) { nextNight(); screen = 'play'; save(); }
+    else { boot(newSeed(), 0); screen = 'open'; save(); }
+    render();
+  };
+}
+
+function render() {
+  if (screen === 'open') renderOpen();
+  else if (screen === 'play') renderPlay();
+  else renderReport();
+}
+
+function step(d) {
+  if (!canMove(d)) { notice = C.noSuchDoor; render(); return; }
+  notice = '';
+  move(d);
+  save();
+  if (done()) screen = 'report';
+  render();
+}
+
+document.addEventListener('keydown', e => {
+  if (screen === 'open' || screen === 'report') {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const b = document.getElementById('go');
+      if (b) b.click();
+    }
+    return;
+  }
+  const k = e.key.toLowerCase();
+  const d = (k === 'arrowup' || k === 'w') ? 0
+    : (k === 'arrowright' || k === 'd') ? 1
+    : (k === 'arrowdown' || k === 's') ? 2
+    : (k === 'arrowleft' || k === 'a') ? 3 : -1;
+  if (d >= 0) { e.preventDefault(); step(d); }
+});
+
+if (!load()) boot(newSeed(), 0);
+if (done()) screen = 'report';
+else if (turn > 0) screen = 'play';
+render();
+</script>
+</body>
+</html>

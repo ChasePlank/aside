@@ -209,6 +209,18 @@ public final class SelfTest {
         ok(recency, "the recency survives the file");
         Files.deleteIfExists(p);
 
+        System.out.println("\n--- the phone build ---");
+        // A generated file that has gone stale is worse than no file: it is a
+        // second copy of the game quietly disagreeing with the first. So this
+        // regenerates it and compares, rather than spot-checking a sentence.
+        Path out = Path.of("web", "tell.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here -- run from the repository root)");
+        } else {
+            ok(WebTell.html().equals(Files.readString(out)),
+                    "web/tell.html is current -- regenerate it with aside.games.tell.WebTell");
+        }
+
         System.out.println("\n" + (failed == 0 ? "all " + checks + " checks passed"
                 : failed + " of " + checks + " checks FAILED"));
         if (failed > 0) System.exit(1);
