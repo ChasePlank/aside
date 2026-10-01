@@ -7,6 +7,7 @@ import aside.games.fnaf2.Fnaf2Game;
 import aside.games.fnaf3.Fnaf3Game;
 import aside.games.fnaf4.Fnaf4Game;
 import aside.games.fnaf5.Fnaf5Game;
+import aside.games.fnaf6.Fnaf6Game;
 import aside.games.fruitjump.FruitJumpGame;
 import aside.games.handoff.HandoffGame;
 import aside.games.ledger.LedgerGame;
@@ -39,7 +40,7 @@ import java.util.List;
  * earns a place here by doing something no other game in the list does, and
  * when a new one is written that does what an old one does, the old one moves
  * to {@link #retired()} rather than the library growing a second copy of an
- * idea it already has. The franchise is the one exception -- FNAF 1 through 5
+ * idea it already has. The franchise is the one exception -- FNAF 1 through 6
  * were asked for by name, with "each gets harder than the last," and a sequel
  * is supposed to be the same shape harder.
  *
@@ -61,6 +62,7 @@ public final class Games {
         g.add(new Fnaf3Game());
         g.add(new Fnaf4Game());
         g.add(new Fnaf5Game());
+        g.add(new Fnaf6Game());
         g.add(new FruitJumpGame());
         g.add(new ResidueGame());
         g.add(new LedgerGame());
