@@ -74,6 +74,40 @@ package aside.games.fnaf5.engine;
  * building. The franchise convention is that AI 20 is the top of the
  * scale; FNAF 5 is the first game in it where the player can walk, so it
  * is the first where a deterministic threat is an easy one.
+ *
+ * <h2>2026-10-01: the week gets harder, and the ladder turns out to be
+ * flatter than it looked</h2>
+ *
+ * The paragraph above was written from a sweep that could not be trusted,
+ * and both halves of it have now moved.
+ *
+ * <b>The week gets harder.</b> HOLD is 95/94/91/82/49 across the five
+ * nights, which is the shape Chase asked the franchise for. Two things had
+ * to change. The first is {@link Game#INTERVAL_JITTER}: at AI 20 every roll
+ * succeeds, so the last night was one scripted night and all sixty seeds
+ * returned the identical result -- which is why the old table read 100% at
+ * the end and why it could not be tuned. The second is that the ramp lives
+ * in {@link Game#grace} now rather than in the interval: a threat that
+ * moves faster also leaves your room faster, so shortening the interval
+ * can make a night *easier*, and grace is the only dial with no
+ * counter-effect.
+ *
+ * <b>And the ladder is flatter than it looked.</b> The old reading -- HOLD
+ * clearly best, FLEE clearly worst -- was an artifact of the deterministic
+ * engine: with every threat on a fixed interval, a fixed patrol is a
+ * *resonant* patrol, and it happened to be a good one. With the night a
+ * distribution, the three moving policies converge: HOLD 79%, FLEE 84%,
+ * PANIC 86% over the week, a spread of seven points. Running from Freddy
+ * is not worse than patrolling, and moving at random is not worse either.
+ *
+ * That is the open design problem, and it is not a tuning number. In a
+ * line the player is faster than everything in it, so the *direction* of a
+ * step barely matters -- the only threat that cares where you are is
+ * Funtime Freddy, and he is the one that never kills anybody. The design
+ * says the three threats demand contradictory things; what the sweep says
+ * is that only Ballora ever kills, so the contradiction is never felt.
+ * Fixing that means giving Freddy and Foxy a way to matter, which is a
+ * redesign rather than a table.
  */
 public final class Bot {
 
@@ -271,8 +305,8 @@ public final class Bot {
         int mid = Room.COUNT / 2;
         int here = Room.index(g.where);
         int inward = here == mid ? b.dir : (here < mid ? 1 : -1);
-        if (g.step(inward)) { b.dir = inward; return; }
-        if (g.step(-inward)) { b.dir = -inward; return; }
+        if (tryStep(g, b, inward)) return;
+        if (tryStep(g, b, -inward)) return;
         steer(g, b);
     }
 
@@ -280,6 +314,39 @@ public final class Bot {
     static boolean deadEnd(Room.Where w) {
         int i = Room.index(w);
         return i == 0 || i == Room.COUNT - 1;
+    }
+
+    /**
+     * Step, unless the bot has a reason to think something is standing
+     * there.
+     *
+     * Added 2026-10-01, because the competent policy was walking into
+     * occupied rooms on purpose. It is the one place the player's
+     * information is worth anything: the monitor and a step next door are
+     * the only two channels for a room you are not in, and both of them are
+     * available before you commit to a move rather than after.
+     */
+    static boolean tryStep(Game g, Brain b, int dir) {
+        Room.Where dest = Room.at(Room.index(g.where) + dir);
+        if (dest == null) return false;
+        if (knownOccupied(g, dest)) return false;
+        if (g.step(dir)) { b.dir = dir; return true; }
+        return false;
+    }
+
+    /**
+     * True when the bot has a reason to believe a threat is in this room.
+     *
+     * The two channels a player has for a room they are not standing in:
+     * the monitor, if it is pointed there, and a step heard next door. Both
+     * are the FNAF 4 rule -- the bot may read the engine only where a
+     * player could have looked or listened -- and neither is a cheat: the
+     * monitor is already pointed somewhere, and the step is already in the
+     * cue stream.
+     */
+    static boolean knownOccupied(Game g, Room.Where room) {
+        if (perceived(g, room) && g.standingIn(room) != null) return true;
+        return g.heardAt == room && g.heardAge < HEARD_WINDOW;
     }
 
     /**
@@ -398,6 +465,13 @@ public final class Bot {
      * survives every seed. A night with a flip of 1.2s is a night you can
      * walk out of half asleep. A night with a flip of 0.4s is a night that
      * asks for a reaction faster than most people have.
+     *
+     * <b>A flip of 0.00 means no reaction time is fast enough</b>, which is
+     * what nights 4 and 5 now read: HOLD does not survive every seed at any
+     * reaction, so there is no margin to find. That is the intended shape
+     * at the end of the week -- the last nights are not about reacting
+     * faster, they are about having decided where to be -- and it is worth
+     * reading the number that way rather than as a broken measurement.
      */
     public static double flipReaction(int night, int runs) {
         double lo = 0.0;    // survives

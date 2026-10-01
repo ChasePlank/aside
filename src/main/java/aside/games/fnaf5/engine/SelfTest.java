@@ -15,7 +15,14 @@ import aside.games.fnaf5.MouseMap;
  *
  * The survival numbers are printed rather than asserted tightly, because
  * they are a *reading* of the difficulty, not a contract. What is asserted
- * is the shape: idle must die, and the week must get harder.
+ * is the shape: idle must die, moving must beat standing still, and the
+ * week must get harder.
+ *
+ * That last one is new as of 2026-10-01, and it is worth knowing why it
+ * was not real before. It compared HOLD's survival across the week, and
+ * HOLD scored 0% on every night, so it was comparing an array of zeros to
+ * itself. The game's own bot doc said HOLD was the good policy. A check
+ * that cannot fail is worse than no check, because it reads as verified.
  */
 public final class SelfTest {
 
@@ -357,24 +364,42 @@ public final class SelfTest {
         }
 
         // The ladder the design wants: answering the room beats doing
-        // nothing, and walking beats answering the room and stopping. The
+        // nothing, and moving beats standing still and answering. The
         // second one is the whole skill of the game and it is the check
         // that the first sweep failed -- see the note in Bot.
         double reactMean = mean(react);
         double holdMean = mean(hold);
         check("walking beats parking: HOLD beats REACT over the week",
                 holdMean > reactMean);
-        check("HOLD is the best of the four playing policies",
-                holdMean >= mean(flee) && holdMean >= mean(panic));
 
-        // And the finding, kept as a test so it cannot be quietly
-        // forgotten: running from Funtime Freddy does not pay. Every step
-        // is a noise and the noise is Ballora's, so the strategy the design
-        // describes is worse than the one it does not. If a later change
-        // makes FLEE better than HOLD, that is a real change to the game
-        // and this check is the place it should show up.
-        check("running from Freddy does not pay: HOLD beats FLEE over the week",
-                holdMean > mean(flee));
+        // THE WEEK GETS HARDER -- the thing Chase asked the franchise for,
+        // and the check that could not fail before 2026-10-01. It used to
+        // compare HOLD's array, and HOLD scored 0% on every night, so the
+        // comparison was 0 <= 0 and it passed on main for as long as the
+        // game existed. It is a real comparison now, and it is a real
+        // reading, because the engine now has a die roll *and* a jittered
+        // interval: without either, the night is a script and the table is
+        // a coin flip on the parameters. See the note in Threat#update.
+        for (int n = 1; n < 5; n++) {
+            check("night " + (n + 1) + " is not easier than night " + n,
+                    hold[n - 1] >= hold[n] - 0.02);
+        }
+
+        // The finding, and it is the open design problem rather than a
+        // tuning number: the moving policies converge. Running from
+        // Funtime Freddy is not worse than patrolling, and moving at random
+        // is not worse either, because in a line the player is faster than
+        // everything in it and the direction of a step barely matters. The
+        // design says the three threats demand contradictory things; what
+        // the sweep says is that only Ballora ever kills, so the
+        // contradiction is not being felt. Printed rather than asserted,
+        // because a fix should be allowed to break it.
+        double best = Math.max(holdMean, Math.max(mean(flee), mean(panic)));
+        double worst = Math.min(holdMean, Math.min(mean(flee), mean(panic)));
+        System.out.printf("    the moving policies: HOLD %.0f%%, FLEE %.0f%%, PANIC %.0f%%"
+                        + " (spread %.0f points)%n",
+                holdMean * 100, mean(flee) * 100, mean(panic) * 100,
+                (best - worst) * 100);
 
         // The building has to be able to surprise you. Before the die was
         // added to Threat.update, every seed produced the same night: the

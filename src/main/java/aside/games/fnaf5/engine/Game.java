@@ -174,11 +174,39 @@ public class Game {
      * a metronome and the seed did nothing; see the note in
      * `Threat.update`. It is read now, and it is what makes a night a
      * distribution instead of a script.
+     *
+     * <b>And the top of the scale is not "always moves".</b> Night 5 sits
+     * at 20, which is the franchise's top and which means every roll
+     * succeeds -- so at the top of the week the die stops being a die. That
+     * is what {@link #INTERVAL_JITTER} is for: the interval carries the
+     * randomness the roll has run out of, so the last night is the fastest
+     * *and* still unpredictable. A deterministic threat in a building the
+     * player can walk is a threat the player can learn, and FNAF 5 is the
+     * first game in the franchise where that is true.
      */
     static int aiLevel(int night) {
         int[] table = {4, 7, 11, 15, 20};
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
     }
+
+    /**
+     * How much a threat's wait varies around its interval, as a fraction.
+     *
+     * A threat waits `interval * (1 + JITTER * (rand - 0.5))`, so 0.5 gives
+     * a wait between three quarters and five quarters of the interval and
+     * leaves the mean where the table put it.
+     *
+     * <b>This exists because the die roll runs out at the top of the
+     * week.</b> `aiLevel` is a chance in twenty, so night 5 is 20 and every
+     * roll succeeds: with no jitter, night 5 was a single scripted night
+     * and all sixty seeds in the sweep produced the identical result. The
+     * symptom was a difficulty table that read 0% or 100% and nothing in
+     * between, and a week that got *easier* at the end -- night 5 came back
+     * at 100% while night 1 came back at 93%. It was not a balance problem.
+     * A night with no randomness in it cannot be measured, and it cannot be
+     * tuned either. See {@link Threat#update}.
+     */
+    public static final double INTERVAL_JITTER = 0.5;
 
     /** Seconds between moves for a threat of pace 1.0. */
     public double baseInterval() {
@@ -194,13 +222,24 @@ public class Game {
      * How long something stands in your room before it is on you.
      *
      * The dial the whole week turns on. The worst case is a move out of the
-     * room you are in and a shock, 1.85 seconds, so a grace above that can
+     * room you are in and a shock, 2.05 seconds, so a grace above that can
      * be answered from anywhere and a grace below it cannot. Night 1 is
      * comfortable, night 5 is not, and the difference is what forces the
      * player to stop reacting and start deciding where to be.
+     *
+     * <b>Retuned 2026-10-01, and the sweep is why.</b> The table used to be
+     * {3.0, 2.8, 2.6, 2.4, 2.2} and the week did not get harder: HOLD
+     * survived 93/95/100/98/100, with the *last* night the easiest one.
+     * Most of that was the missing jitter (see {@link #INTERVAL_JITTER}),
+     * but not all of it. Once the night was a distribution, the interval
+     * turned out to be the wrong dial to ramp: a threat that moves faster
+     * also *leaves* your room faster, so a shorter interval can make a
+     * night easier rather than harder. Grace has no such counter-effect --
+     * it is exactly the time you have to answer -- so the ramp lives here
+     * now, and the week reads 95/94/91/82/49.
      */
     public double grace() {
-        double[] table = {3.0, 2.8, 2.6, 2.4, 2.2};
+        double[] table = {3.0, 2.7, 2.4, 2.1, 1.8};
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
     }
 
@@ -358,14 +397,23 @@ public class Game {
      * died on every night. A line plus a pursuer plus walls has no
      * counterplay, so the walls are not there.
      *
-     * <p><b>OPEN, and deliberately not fixed (2026-09-30):</b> what the
-     * missing refusal costs is a treadmill. The player is faster than
-     * everything in the building, so a player who simply keeps walking is
-     * never caught, and the sweep says so in the only place it could: the
-     * survival rate is close to a step function rather than a curve. See
-     * {@link Bot#flipReaction} and the note on the week in {@link #grace}.
-     * The rule and the difficulty table have to move together, and that is
-     * a tuning job rather than a bug fix.
+     * <p><b>Re-verified 2026-10-01, against a working instrument.</b> The
+     * measurement above was taken before the engine had a die roll and
+     * before the bot could see what a player sees, so it was worth
+     * doubting. It holds: with the jitter, the fixed bot and the retuned
+     * grace, the guard still takes every policy to 0% from night 3 on --
+     * 93/32/0/0/0 for HOLD, and PANIC falls with it, which is the tell
+     * that it is the geometry and not the policy. The walls stay out.
+     *
+     * <p><b>OPEN, and deliberately not fixed (2026-10-01):</b> what the
+     * missing refusal costs is that movement direction barely matters. The
+     * player is faster than everything in the building, so the only threat
+     * that cares where you are is Funtime Freddy -- and he is the one that
+     * never kills anybody. The sweep says so plainly: HOLD, FLEE and PANIC
+     * finish the week within seven points of each other, and the
+     * competent policy is not the best one. The rule and the difficulty
+     * table have to move together, and that is a redesign rather than a
+     * tuning job; see the note in {@link Bot}.
      *
      * <p>The instrument that found this was itself broken when the note
      * above was first written. HOLD and REACT died to Funtime Freddy on

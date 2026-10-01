@@ -63,7 +63,30 @@ public final class Threat {
     public Room.Where room;
     /** Seconds since its last move. */
     public double timer;
-    /** Seconds it has been in the room you are standing in. */
+    /**
+     * How long it will wait before its next move.
+     *
+     * Not the same as {@link Game#interval}: the wait is drawn once, when
+     * the timer resets, with {@link Game#INTERVAL_JITTER} around it. Drawing
+     * it per frame instead would bias every move early, because the
+     * effective wait would be the smallest draw seen so far.
+     */
+    public double wait;
+    /**
+     * Seconds it has been in the room you are standing in.
+     *
+     * <b>This is the clock that ends most nights, and it does not reset
+     * when a threat and the player change rooms together.</b> If it steps
+     * into the room you are walking into while you are still mid-move, its
+     * clock is already running -- it was in your room a moment ago -- and
+     * you arrive with the grace partly spent. Measured 2026-10-01: reset
+     * the clock on every step and the game goes to 100% for every policy
+     * on nights 1 to 3, because that carry is the only thing that ever
+     * catches a player who keeps walking. So it is load-bearing rather
+     * than a bug, but it is also fragile: the whole week's difficulty
+     * rests on a race between two moves landing in the same frame. Worth
+     * a redesign rather than a guard.
+     */
     public double hereFor;
     /** Seconds since it last announced itself from your room. */
     public double sinceCue;
@@ -145,8 +168,13 @@ public final class Threat {
         }
 
         timer += dt;
-        if (timer < g.interval(this)) return;
+        if (wait <= 0) wait = g.interval(this);
+        if (timer < wait) return;
         timer = 0;
+        // The interval carries the randomness the die runs out of. See the
+        // note on Game.INTERVAL_JITTER: at the top of the week the roll is
+        // 20-in-20, so without this the last night is a script.
+        wait = g.interval(this) * (1.0 + Game.INTERVAL_JITTER * (g.rng.nextDouble() - 0.5));
 
         // The die. Every other game in the franchise rolls one -- FNAF 1,
         // 2 and 3 all read `rng.nextInt(20) < aiLevel` before an
