@@ -39,10 +39,15 @@ Run from the repository root:
 
   python3 tools/vn-art.py            # write art/web/
   python3 tools/vn-art.py --check    # fail if art/web/ is stale
+
+It also writes art/web/MANIFEST, a sha256 of every source image it read.
+aside.engine.SelfTest reads that and fails if a source has changed since the
+build, which is the one kind of staleness Java can still detect on its own.
 """
 
 import argparse
 import hashlib
+import io
 import os
 import sys
 from PIL import Image
@@ -75,15 +80,16 @@ def fit_height(im, h):
 def build():
     """Return {relative path: bytes} for everything art/web/ should hold."""
     out = {}
+    sources = []
 
     for name in sorted(os.listdir(SRC_SPRITES)):
         src = os.path.join(SRC_SPRITES, name)
         if not os.path.isfile(src):
             continue
         stem = os.path.splitext(name)[0]
+        sources.append(src)
         im = Image.open(src).convert("RGBA")
         im = fit_height(im, SPRITE_H)
-        import io
         buf = io.BytesIO()
         im.save(buf, "WEBP", quality=SPRITE_Q, method=6, exact=True)
         out["sprites/%s.webp" % stem] = buf.getvalue()
@@ -93,12 +99,26 @@ def build():
         if not os.path.isfile(src):
             continue
         stem = os.path.splitext(name)[0]
+        sources.append(src)
         im = Image.open(src).convert("RGB")
         im = cover(im, BG_W, BG_H)
-        import io
         buf = io.BytesIO()
         im.save(buf, "JPEG", quality=BG_Q, optimize=True, progressive=True)
         out["backgrounds/%s.jpg" % stem] = buf.getvalue()
+
+    # The manifest is the one thing here that is not an image, and it is the
+    # thing that makes staleness checkable. art/web/ is derived, and a derived
+    # directory that nobody re-derives is a second copy of the art quietly
+    # disagreeing with the first -- the same failure the phone builds are
+    # guarded against, one level up. Java cannot re-run this pipeline, so it
+    # cannot tell whether art/web/ is current; what it CAN do is hash the
+    # sources and compare them to the hashes recorded here at build time. Edit
+    # a sprite and the check fails until this tool is run again.
+    lines = []
+    for src in sorted(sources):
+        with open(src, "rb") as fh:
+            lines.append("%s  %s" % (hashlib.sha256(fh.read()).hexdigest(), src.replace(os.sep, "/")))
+    out["MANIFEST"] = ("\n".join(lines) + "\n").encode("utf-8")
 
     return out
 

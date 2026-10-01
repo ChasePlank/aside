@@ -521,6 +521,9 @@ public class SelfTest {
             check("the retired list can be read from here (" + e.getMessage() + ")", false);
         }
 
+        System.out.println("\n--- the web art ---");
+        webArtIsCurrent();
+
         System.out.println("\n--- the story exports ---");
         // The two .aside stories have had a web export since WebExport existed,
         // and nothing has ever checked that the exports are current. Same rule
@@ -571,6 +574,47 @@ public class SelfTest {
         // character in a page is never intentional.
         check("web/" + name + ".html has no stray control characters",
                 generated.chars().noneMatch(c -> c < 0x20 && c != '\n' && c != '\t'));
+    }
+
+    /**
+     * art/web/ is derived from art/, and a derived directory that nobody
+     * re-derives is a second copy of the art quietly disagreeing with the
+     * first. Java cannot run tools/vn-art.py, so it cannot tell whether
+     * art/web/ is current -- but it can hash the sources and compare them to
+     * the hashes the tool recorded when it built them. Edit a sprite and this
+     * fails until the tool is run again, which is the whole point.
+     */
+    static void webArtIsCurrent() {
+        Path manifest = Path.of("art", "web", "MANIFEST");
+        if (!Files.exists(manifest)) {
+            check("art/web/MANIFEST exists (run tools/vn-art.py)", false);
+            return;
+        }
+        try {
+            int checked = 0;
+            List<String> stale = new ArrayList<>();
+            for (String line : Files.readAllLines(manifest)) {
+                if (line.isBlank()) continue;
+                String[] parts = line.strip().split("\\s+", 2);
+                if (parts.length < 2) continue;
+                checked++;
+                Path src = Path.of(parts[1]);
+                if (!Files.exists(src)) { stale.add(parts[1] + " (gone)"); continue; }
+                if (!sha256(src).equals(parts[0])) stale.add(parts[1]);
+            }
+            check("art/web/ was built from the art that is here now"
+                    + (stale.isEmpty() ? "" : " -- stale: " + stale), stale.isEmpty());
+            check("art/web/MANIFEST covers the art it was built from", checked > 0);
+        } catch (Exception e) {
+            check("art/web/MANIFEST can be read (" + e.getMessage() + ")", false);
+        }
+    }
+
+    static String sha256(Path file) throws Exception {
+        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+        StringBuilder sb = new StringBuilder();
+        for (byte b : md.digest(Files.readAllBytes(file))) sb.append(String.format("%02x", b));
+        return sb.toString();
     }
 
     static void runUntilBlocked(Vn vn) {
