@@ -105,9 +105,11 @@ package aside.games.fnaf5.engine;
  * step barely matters -- the only threat that cares where you are is
  * Funtime Freddy, and he is the one that never kills anybody. The design
  * says the three threats demand contradictory things; what the sweep says
- * is that only Ballora ever kills, so the contradiction is never felt.
- * Fixing that means giving Freddy and Foxy a way to matter, which is a
- * redesign rather than a table.
+ * is that Ballora does almost all of the killing. Over the week HOLD takes
+ * 64 deaths and 59 of them are hers; Funtime Foxy takes 4 and Funtime
+ * Freddy takes 1. The contradiction is never felt, and fixing that means
+ * giving Freddy and Foxy a way to matter, which is a redesign rather than
+ * a table.
  */
 public final class Bot {
 
@@ -446,6 +448,35 @@ public final class Bot {
             if (run(night, 1000L + i * 7919L, policy, reaction).status == Game.Status.SURVIVED) wins++;
         }
         return wins / (double) runs;
+    }
+
+    /**
+     * Who ends the night, over {@code runs} seeds.
+     *
+     * The number that found FNAF 5's open design problem, and the reason it
+     * is in the suite rather than in a scratch file. Survival says how often
+     * you die; this says who killed you, and the answer is that almost all
+     * of them are Ballora. Funtime Freddy is the one the design is
+     * built around -- he is the only one that can end a night, which is why
+     * the shock exists and why the player is faster than everything -- and
+     * he never lands a hit. A survival percentage cannot tell you that; a
+     * count of killers can. See the note in {@link Bot}.
+     *
+     * Counts in cast order: Ballora, Funtime Foxy, Funtime Freddy, then
+     * anything unrecognised.
+     */
+    public static int[] killers(int night, int runs, Policy policy) {
+        int[] out = new int[4];
+        for (int i = 0; i < runs; i++) {
+            Game g = run(night, 1000L + i * 7919L, policy);
+            if (g.status == Game.Status.SURVIVED) continue;
+            String k = g.killer == null ? "" : g.killer;
+            if (k.startsWith("Ballora")) out[0]++;
+            else if (k.startsWith("Funtime Foxy")) out[1]++;
+            else if (k.startsWith("Funtime Freddy")) out[2]++;
+            else out[3]++;
+        }
+        return out;
     }
 
     /**

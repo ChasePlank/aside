@@ -425,6 +425,16 @@ public final class SelfTest {
                     b.baseInterval() <= a.baseInterval() + 1e-9);
         }
 
+        // WHO KILLS YOU. Survival says how often; this says who, and it is
+        // the number that found the open design problem. Printed rather
+        // than asserted, because a fix should be allowed to change it.
+        System.out.print("    what ends the night (HOLD):");
+        for (int n = 1; n <= 5; n++) {
+            int[] k = Bot.killers(n, runs, Bot.Policy.HOLD);
+            System.out.printf(" n%d[ballora %d, foxy %d, freddy %d]", n, k[0], k[1], k[2]);
+        }
+        System.out.println();
+
         // The dial the week actually turns on. Printed rather than
         // asserted: the flip is a measurement, and a measurement that is
         // asserted stops being one.
