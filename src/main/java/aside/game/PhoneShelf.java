@@ -85,6 +85,7 @@ public final class PhoneShelf {
             case "tell" -> "Keeps the house in this browser. Five nights, and one sitting.";
             case "fnaf6" -> "Real-time, like the desktop. Five nights, and one sitting.";
             case "fnaf7" -> "Real-time, like the desktop. It comes to the side you are not looking at.";
+            case "fnaf8" -> "Real-time, like the desktop. They are not coming for you.";
             case "fnaf9" -> "Real-time, like the desktop. The picture is always behind.";
             case "overtime" -> "A visual novel. What you say carries.";
             default -> "";

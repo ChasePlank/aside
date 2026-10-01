@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05060A">
+<title>you are where they meet</title>
+<style>
+  :root{--bg:#05060A; --ink:#D8D8E4; --dim:#7A7A90; --red:#E94560; --gold:#FFD700;
+        --panel:#0B0D14; --line:#1E2030}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font:15px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;overscroll-behavior:none}
+  #app{max-width:560px;margin:0 auto;padding:14px 14px 22px;min-height:100%;
+    display:flex;flex-direction:column;gap:12px}
+  h1{font-size:19px;letter-spacing:.10em;color:var(--red);margin:2px 0 0;text-transform:uppercase}
+  .sub{color:var(--dim);font-size:13px;margin:0}
+  .nightrow{display:block;width:100%;text-align:left;padding:12px 14px;margin:0 0 9px;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--ink);
+    font:inherit;cursor:pointer}
+  .nightrow:active{background:#16171F}
+  .nightrow .t{display:block;font-size:16px}
+  .nightrow .n{display:block;font-size:12px;color:var(--dim);margin-top:3px}
+  .help{color:var(--dim);font-size:12px;line-height:1.6}
+  #band{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    font-size:13px;color:var(--dim);border-bottom:1px solid var(--line);padding-bottom:8px}
+  #night{color:var(--red);letter-spacing:.06em}
+  #stage{position:relative;background:#02030A;border:1px solid var(--line);border-radius:10px;
+    overflow:hidden}
+  canvas{display:block;width:100%;height:auto}
+  #readout{font-size:13px;letter-spacing:.05em;color:var(--gold);min-height:20px}
+  #readout small{color:var(--dim);letter-spacing:0}
+  #strip{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #strip button{padding:13px 8px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+  #strip button:active{background:#16171F}
+  #strip button.wide{grid-column:1 / -1}
+  #strip button[disabled]{opacity:.35}
+  #over{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+    align-items:center;gap:6px;background:rgba(2,3,10,.86);text-align:center;padding:18px}
+  #over h2{margin:0;font-size:22px;color:var(--red);letter-spacing:.06em}
+  #over p{margin:0;color:var(--dim);font-size:13px}
+  #over button{margin-top:10px;padding:10px 18px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;color:var(--ink);font:inherit;cursor:pointer}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Five Nights at Freddy's 8</h1>
+  <p class="sub">Two doorways, one lamp -- and they are not coming for you, they are coming for each other.</p>
+
+  <div id="select"></div>
+
+  <div id="band" hidden>
+    <span id="night"></span>
+    <span id="clock"></span>
+    <span id="apart"></span>
+  </div>
+
+  <div id="stage" hidden>
+    <canvas id="cv" width="720" height="420"></canvas>
+    <div id="over" hidden>
+      <h2 id="overtitle"></h2>
+      <p id="overtext"></p>
+      <button id="again">Again</button>
+    </div>
+  </div>
+
+  <div id="readout" hidden></div>
+
+  <div id="strip" hidden>
+    <button id="dl">DIM LEFT</button>
+    <button id="dr">DIM RIGHT</button>
+    <button id="bl">BRIGHT LEFT</button>
+    <button id="br">BRIGHT RIGHT</button>
+    <button id="off" class="wide">LAMP OFF</button>
+  </div>
+
+  <p class="help" id="help"></p>
+</div>
+
+<script>
+const C = {
+  pairs: [
+    {left:{key:"bonnie", name:"Bonnie", note:"Walks like he is not in a hurry.", speed:0.95, stubborn:0.85}, right:{key:"chica", name:"Chica", note:"A shade quicker, and just as light.", speed:1.05, stubborn:0.8}, note:"The two that share a stage."},
+    {left:{key:"toybonnie", name:"Toy Bonnie", note:"Newer, and quicker for it.", speed:1.05, stubborn:1}, right:{key:"toychica", name:"Toy Chica", note:"Quicker still, and just as light.", speed:1.12, stubborn:0.95}, note:"The two that were built to replace them."},
+    {left:{key:"freddy", name:"Freddy", note:"Slow, and the lamp barely moves him.", speed:0.95, stubborn:1.35}, right:{key:"foxy", name:"Foxy", note:"Fast, and easy to turn around.", speed:1.3, stubborn:0.85}, note:"The two that never do."},
+    {left:{key:"goldenfreddy", name:"Golden Freddy", note:"It does not walk so much as arrive.", speed:1.05, stubborn:1.55}, right:{key:"puppet", name:"The Puppet", note:"It has been doing this longer than the building has.", speed:1.25, stubborn:1.3}, note:"The two that are already dead."},
+    {left:{key:"springtrap", name:"Springtrap", note:"Something is still in there, and it is still fast.", speed:1.3, stubborn:1.3}, right:{key:"nightmare", name:"Nightmare", note:"The lamp does not so much push it as annoy it.", speed:1.25, stubborn:1.75}, note:"The two that came back."}
+  ],
+  pace: [2.3, 2.34, 2.5, 2.58, 2.58],
+  retreat: [1.15, 1.15, 1.18, 1.2, 1.22],
+  call: [1.45, 1.48, 1.51, 1.54, 1.57],
+  patience: [5.4, 5.2, 5, 4.8, 4.6],
+  hourSeconds: 25,
+  nightHours: 6,
+  max: 5,
+  meet: 3,
+  swivel: 1.1,
+  dimRush: 1.15,
+  brightRush: 1.42,
+  help: "They are not coming for you. They are coming for each other, and the night ends when both of them are standing in a doorway at once. The lamp reaches the hall and not the doorway, so the one in your door can only be got rid of by turning its partner around -- and the hall you are not looking at is the hall that is moving."
+};
+
+
+// --------------------------------------------------------------- the night
+//
+// A faithful port of aside.games.fnaf8.engine.Meeting. Two units walk up two
+// halls toward two doorways, neither of them wants you, and the night ends
+// the moment both are standing in a doorway at the same time. The lamp
+// reaches the hall and not the doorway, so the one in your door can only be
+// got rid of by turning its partner around.
+//
+// java.util.Random is reproduced in BigInt so the same seed deals the same
+// night in both builds.
+
+function RNG(seed) {
+  this.s = (BigInt(seed) ^ 0x5DEECE66Dn) & ((1n << 48n) - 1n);
+}
+RNG.prototype.next = function (bits) {
+  this.s = (this.s * 0x5DEECE66Dn + 0xBn) & ((1n << 48n) - 1n);
+  return Number(this.s >> BigInt(48 - bits));
+};
+RNG.prototype.nextDouble = function () {
+  return (this.next(26) * 134217728 + this.next(27)) / 9007199254740992;
+};
+
+function mix(z) {
+  z = BigInt(z) + 0x9E3779B97F4A7C15n;
+  z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & ((1n << 64n) - 1n);
+  z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & ((1n << 64n) - 1n);
+  return z ^ (z >> 31n);
+}
+
+const HOUR_SECONDS = 25.0, NIGHT_HOURS = 6;
+const MAX = 5, MEET = 3, JITTER = 0.5;
+const SWIVEL = C.swivel, DIM_RUSH = C.dimRush, BRIGHT_RUSH = C.brightRush;
+const PACE = C.pace, RETREAT = C.retreat, CALL = C.call, PATIENCE = C.patience;
+
+function Meeting(night, seed) {
+  this.night = night;
+  this.rng = new RNG(mix(seed));
+  this.pair = C.pairs[night - 1];
+  this.time = 0; this.hour = 0;
+  this.d = [MAX, MAX]; this.timer = [0, 0]; this.waited = [0, 0];
+  this.lampSide = "LEFT"; this.lamp = "OFF"; this.swivel = 0;
+  this.swivelTo = null; this.swivelSetting = "DIM";
+  this.status = "PLAYING"; this.metAt = -1; this.metSide = null;
+  this.arrivals = 0; this.gaveUp = 0; this.pushed = 0; this.steps = 0; this.switches = 0;
+  this.cues = [];
+  this.timer[0] = this.nextInterval("LEFT");
+  this.timer[1] = this.nextInterval("RIGHT");
+}
+const ix = (s) => (s === "LEFT" ? 0 : 1);
+Meeting.prototype.unit = function (s) { return s === "LEFT" ? this.pair.left : this.pair.right; };
+Meeting.prototype.pace = function () { return PACE[Math.min(this.night - 1, 4)]; };
+Meeting.prototype.retreat = function () { return RETREAT[Math.min(this.night - 1, 4)]; };
+Meeting.prototype.call = function () { return CALL[Math.min(this.night - 1, 4)]; };
+Meeting.prototype.patience = function () { return PATIENCE[Math.min(this.night - 1, 4)]; };
+
+Meeting.prototype.lit = function (s) { return this.lamp !== "OFF" && this.swivel <= 0 && this.lampSide === s; };
+Meeting.prototype.pushing = function (s) { return this.lamp === "BRIGHT" && this.swivel <= 0 && this.lampSide === s; };
+Meeting.prototype.visible = function (s) { return this.lit(s) && this.d[ix(s)] > 0; };
+Meeting.prototype.waiting = function (s) { return this.d[ix(s)] === 0; };
+Meeting.prototype.distance = function (s) { return this.d[ix(s)]; };
+Meeting.prototype.patienceLeft = function (s) {
+  if (!this.waiting(s)) return 1;
+  return Math.max(0, 1 - this.waited[ix(s)] / this.patience());
+};
+Meeting.prototype.apart = function () { return this.d[0] + this.d[1]; };
+Meeting.prototype.lampAt = function () {
+  return this.swivel > 0 ? null : (this.lamp === "OFF" ? null : this.lampSide);
+};
+Meeting.prototype.clock = function () {
+  const h = Math.min(this.hour, 6);
+  return h === 0 ? "12 AM" : (h < 6 ? h + " AM" : "6 AM");
+};
+
+Meeting.prototype.cue = function (n) { this.cues.push(n); };
+Meeting.prototype.drain = function () { const c = this.cues; this.cues = []; return c; };
+
+Meeting.prototype.interval = function (s) {
+  const i = ix(s), o = s === "LEFT" ? "RIGHT" : "LEFT";
+  if (this.pushing(s)) return this.retreat() * this.unit(s).stubborn;
+  let mult = 1.0;
+  if (this.lit(o)) mult = Math.max(mult, this.lamp === "BRIGHT" ? BRIGHT_RUSH : DIM_RUSH);
+  if (this.waiting(o)) mult = Math.max(mult, this.call());
+  return this.pace() / this.unit(s).speed / mult;
+};
+Meeting.prototype.nextInterval = function (s) {
+  return this.interval(s) * (1.0 + JITTER * (this.rng.nextDouble() - 0.5));
+};
+
+Meeting.prototype.update = function (dt) {
+  if (this.status !== "PLAYING") return;
+  this.time += dt;
+  this.hour = Math.floor(this.time / HOUR_SECONDS);
+  if (this.hour >= NIGHT_HOURS) { this.status = "SURVIVED"; this.cue("chime_6am"); return; }
+
+  if (this.swivel > 0) {
+    this.swivel -= dt;
+    if (this.swivel <= 0) {
+      this.swivel = 0; this.lampSide = this.swivelTo; this.swivelTo = null;
+      this.lamp = this.swivelSetting;
+      this.cue("f8_set");
+    }
+  }
+
+  for (const s of ["LEFT", "RIGHT"]) {
+    const i = ix(s);
+    if (this.d[i] !== 0) { this.waited[i] = 0; continue; }
+    this.waited[i] += dt;
+    if (this.waited[i] >= this.patience()) {
+      this.d[i] = MAX; this.waited[i] = 0; this.timer[i] = this.nextInterval(s);
+      this.gaveUp++; this.cue("f8_gives_up");
+    }
+  }
+
+  for (const s of ["LEFT", "RIGHT"]) {
+    const i = ix(s);
+    this.timer[i] -= dt;
+    if (this.timer[i] > 0) continue;
+    this.step(s);
+    this.timer[i] = this.nextInterval(s);
+  }
+
+  if (this.apart() <= MEET) {
+    this.status = "MET"; this.metAt = Math.floor(this.time);
+    this.cue("f8_met");
+  }
+};
+
+Meeting.prototype.step = function (s) {
+  const i = ix(s);
+  if (this.pushing(s)) {
+    // The beam reaches the hall and not the doorway.
+    if (this.d[i] > 0 && this.d[i] < MAX) { this.d[i]++; this.pushed++; this.cue("f8_push"); }
+    return;
+  }
+  if (this.d[i] > 0) {
+    this.d[i]--; this.steps++; this.cue("f8_step");
+    if (this.d[i] === 0) { this.arrivals++; this.cue("f8_door"); }
+  }
+};
+
+Meeting.prototype.aim = function (s, setting) {
+  if (this.status !== "PLAYING") return false;
+  if (setting === "OFF") return this.dark();
+  if (this.swivel > 0) return false;
+  if (this.lampSide === s) {
+    if (this.lamp === setting) return false;
+    this.lamp = setting;
+    return true;
+  }
+  this.swivel = SWIVEL; this.swivelTo = s; this.swivelSetting = setting;
+  this.lamp = "OFF"; this.switches++;
+  this.cue("f8_swivel");
+  return true;
+};
+Meeting.prototype.dark = function () {
+  if (this.status !== "PLAYING") return false;
+  const was = this.lamp !== "OFF" || this.swivel > 0;
+  this.lamp = "OFF"; this.swivel = 0; this.swivelTo = null;
+  return was;
+};
+
+// --------------------------------------------------------------- the office
+
+const cv = document.getElementById("cv"), cx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+
+function drawOffice(g) {
+  cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  const hall = { LEFT: [30, 70, 210, 290], RIGHT: [W - 240, 70, 210, 290] };
+
+  for (const s of ["LEFT", "RIGHT"]) {
+    const r = hall[s];
+    // The hall, in one-point perspective: the doorway is the near end.
+    cx.fillStyle = "#070910"; cx.fillRect(r[0], r[1], r[2], r[3]);
+    cx.strokeStyle = "#1E2030"; cx.lineWidth = 2; cx.strokeRect(r[0], r[1], r[2], r[3]);
+
+    // The beam, when the lamp is on this hall.
+    if (g.lit(s)) {
+      const bright = g.lamp === "BRIGHT";
+      const grd = cx.createLinearGradient(r[0], 0, r[0] + r[2], 0);
+      grd.addColorStop(0, bright ? "rgba(255,220,150,0.30)" : "rgba(255,220,150,0.10)");
+      grd.addColorStop(1, "rgba(255,220,150,0)");
+      cx.fillStyle = grd; cx.fillRect(r[0], r[1], r[2], r[3]);
+      cx.fillStyle = bright ? "#FFDCA0" : "#6A5A3A";
+      cx.fillRect(r[0] + r[2] / 2 - 18, r[1] - 12, 36, 6);
+    }
+
+    // The unit, if it is in the hall and the lamp is holding it.
+    const d = g.distance(s);
+    if (d > 0 && g.visible(s)) {
+      const t = d / MAX;
+      const x = r[0] + r[2] / 2 + (s === "LEFT" ? -1 : 1) * (r[2] * 0.30 * (1 - t));
+      const y = r[1] + r[3] * (0.30 + 0.45 * t);
+      const sc = 0.55 + 0.45 * t;
+      cx.fillStyle = "rgba(233,69,96,0.85)";
+      cx.beginPath(); cx.ellipse(x, y, 24 * sc, 48 * sc, 0, 0, Math.PI * 2); cx.fill();
+      cx.fillStyle = "#FFD700";
+      cx.beginPath(); cx.arc(x - 8 * sc, y - 26 * sc, 4 * sc, 0, Math.PI * 2); cx.fill();
+      cx.beginPath(); cx.arc(x + 8 * sc, y - 26 * sc, 4 * sc, 0, Math.PI * 2); cx.fill();
+    }
+
+    // Something in the doorway: two eyes in the dark, and how long it will wait.
+    if (g.waiting(s)) {
+      const x = r[0] + r[2] / 2, y = r[1] + r[3] * 0.42;
+      cx.fillStyle = "#FFD700";
+      cx.beginPath(); cx.arc(x - 14, y, 6, 0, Math.PI * 2); cx.fill();
+      cx.beginPath(); cx.arc(x + 14, y, 6, 0, Math.PI * 2); cx.fill();
+      const left = g.patienceLeft(s);
+      cx.fillStyle = "#141620"; cx.fillRect(r[0] + 20, r[1] + r[3] - 18, r[2] - 40, 6);
+      cx.fillStyle = left < 0.3 ? "#E94560" : "#5A6A8A";
+      cx.fillRect(r[0] + 20, r[1] + r[3] - 18, (r[2] - 40) * left, 6);
+    }
+
+    cx.fillStyle = "#556070"; cx.font = "13px Arial"; cx.textAlign = "center";
+    cx.fillText(s, r[0] + r[2] / 2, r[1] + r[3] + 22);
+  }
+
+  // The lamp crossing.
+  if (g.swivel > 0) {
+    const t = 1 - g.swivel / SWIVEL;
+    const x = g.swivelTo === "LEFT" ? W / 2 - (W / 2 - 135) * (1 - t) : W / 2 + (W / 2 - 135) * (1 - t);
+    cx.fillStyle = "#6A5A3A"; cx.fillRect(x - 22, 30, 44, 8);
+  }
+  cx.strokeStyle = "#12141E"; cx.beginPath();
+  cx.moveTo(0, H - 40); cx.lineTo(W, H - 40); cx.stroke();
+}
+
+// --------------------------------------------------------------- the page
+
+let g = null, raf = 0, last = 0;
+
+function start(night) {
+  g = new Meeting(night, Date.now() & 0xffff);
+  document.getElementById("select").hidden = true;
+  document.getElementById("band").hidden = false;
+  document.getElementById("stage").hidden = false;
+  document.getElementById("readout").hidden = false;
+  document.getElementById("strip").hidden = false;
+  document.getElementById("over").hidden = true;
+  last = performance.now();
+  if (!raf) raf = requestAnimationFrame(loop);
+}
+
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (g) { g.update(dt); paint(); }
+  raf = requestAnimationFrame(loop);
+}
+
+function paint() {
+  drawOffice(g);
+  document.getElementById("night").textContent = "NIGHT " + g.night;
+  document.getElementById("clock").textContent = g.clock();
+  const a = g.apart();
+  document.getElementById("apart").textContent = "APART " + a + " / " + MEET;
+
+  const at = g.lampAt();
+  const r = document.getElementById("readout");
+  if (g.swivel > 0) {
+    r.innerHTML = "LAMP CROSSING <small>&mdash; it is on neither hall</small>";
+  } else if (at === null) {
+    r.innerHTML = "LAMP OFF <small>&mdash; both of them are walking</small>";
+  } else {
+    const setting = g.lamp === "BRIGHT" ? "BRIGHT" : "DIM";
+    r.innerHTML = "LAMP " + setting + " ON " + at
+      + " <small>&mdash; " + (setting === "BRIGHT" ? "pushing it back" : "only showing you") + "</small>";
+  }
+
+  const st = g.status;
+  for (const id of ["dl", "dr", "bl", "br"]) {
+    document.getElementById(id).disabled = st !== "PLAYING";
+  }
+  document.getElementById("off").disabled = st !== "PLAYING";
+
+  if (st !== "PLAYING" && document.getElementById("over").hidden) {
+    document.getElementById("over").hidden = false;
+    document.getElementById("overtitle").textContent =
+      st === "SURVIVED" ? "6 AM" : "THEY MET";
+    document.getElementById("overtext").textContent =
+      st === "SURVIVED" ? "They never found each other. " + g.gaveUp + " turned back."
+                        : "Both of them were standing in a doorway at once.";
+  }
+}
+
+document.getElementById("dl").onclick = () => g && g.aim("LEFT", "DIM");
+document.getElementById("dr").onclick = () => g && g.aim("RIGHT", "DIM");
+document.getElementById("bl").onclick = () => g && g.aim("LEFT", "BRIGHT");
+document.getElementById("br").onclick = () => g && g.aim("RIGHT", "BRIGHT");
+document.getElementById("off").onclick = () => g && g.dark();
+document.getElementById("again").onclick = () => { const n = g.night; start(n); };
+
+(function build() {
+  const sel = document.getElementById("select");
+  for (let n = 1; n <= 5; n++) {
+    const p = C.pairs[n - 1];
+    const b = document.createElement("button");
+    b.className = "nightrow";
+    b.innerHTML = '<span class="t">Night ' + n + " &mdash; " + p.left.name + " and " + p.right.name + "</span>"
+      + '<span class="n">' + p.note + "</span>";
+    b.onclick = () => start(n);
+    sel.appendChild(b);
+  }
+  document.getElementById("help").textContent = C.help;
+})();
+</script>
+</body>
+</html>

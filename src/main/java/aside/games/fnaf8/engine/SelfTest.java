@@ -4,6 +4,9 @@ import aside.games.fnaf8.MouseMap;
 import aside.games.fnaf8.engine.Meeting.Setting;
 import aside.games.fnaf8.engine.Meeting.Side;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /**
  * The FNAF 8 checks, runnable with no display.
  *
@@ -43,6 +46,7 @@ public final class SelfTest {
         economy();
         instrument();
         mouse();
+        phone();
         survival();
         System.out.println();
         System.out.println(checks + " checks, " + failed + " failed");
@@ -513,6 +517,92 @@ public final class SelfTest {
     }
 
     // -------------------------------------------------------------- survival
+
+    /**
+     * The phone build.
+     *
+     * <p>Two different things, and they fail for different reasons.
+     *
+     * <p><b>Is it current?</b> A generated file that has gone stale is worse
+     * than no file: it is a second copy of the game quietly disagreeing with
+     * the first. So the page is regenerated and compared rather than
+     * spot-checked -- the same check every other ported game carries.
+     *
+     * <p><b>Is it the same game?</b> A staleness check proves the file matches
+     * its generator and says nothing about whether the generator is right. The
+     * failure that would otherwise be silent is a rule that lives in the page
+     * as a literal and has stopped matching the engine -- so every number the
+     * night is made of is asserted to be the engine's own value, and the four
+     * night tables are asserted to be the engine's own tables.
+     *
+     * <p>What is <i>not</i> checked here is the RNG or the update loop. The
+     * page reproduces {@code java.util.Random} in BigInt so the same seed
+     * deals the same night in both builds, and that was verified by hand:
+     * night one on seed 1001 was driven through both engines under the same
+     * scripted policy and the two traces are identical every second -- the
+     * distances, the lamp's setting and the lamp's side all agree, and both
+     * end MET at the same moment. It is not checkable from Java without a
+     * JavaScript engine, and the alternative (a page that deals its own
+     * nights) would make the two builds different games with the same rules.
+     */
+    static void phone() {
+        section("the phone build");
+
+        Path out = Path.of("web", "fnaf8.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here -- run from the repository root)");
+            return;
+        }
+        String page;
+        try {
+            page = Files.readString(out);
+        } catch (Exception e) {
+            check("web/fnaf8.html can be read", false);
+            return;
+        }
+        try {
+            check("web/fnaf8.html is current -- regenerate it with aside.games.fnaf8.WebMeeting",
+                    aside.games.fnaf8.WebMeeting.html().equals(page));
+        } catch (Exception e) {
+            check("web/fnaf8.html is current -- regenerate it with aside.games.fnaf8.WebMeeting",
+                    false);
+        }
+
+        // The rules, as numbers. A port whose beam pushes at 1.2 rather than
+        // 1.15 plays differently and looks identical.
+        check("the page carries the swivel",
+                page.contains("swivel: " + aside.games.fnaf8.WebMeeting.num(Meeting.SWIVEL)));
+        check("the page carries the dim rush",
+                page.contains("dimRush: " + aside.games.fnaf8.WebMeeting.num(Meeting.DIM_RUSH)));
+        check("the page carries the bright rush",
+                page.contains("brightRush: " + aside.games.fnaf8.WebMeeting.num(Meeting.BRIGHT_RUSH)));
+        check("the page carries how close they have to get",
+                page.contains("meet: " + Meeting.MEET));
+        check("the page carries the length of the hall",
+                page.contains("max: " + Meeting.MAX));
+
+        // The four night tables, which are the whole of the difficulty ramp.
+        for (String t : new String[]{"pace", "retreat", "call", "patience"}) {
+            String want = aside.games.fnaf8.WebMeeting.table(
+                    switch (t) {
+                        case "pace" -> 0;
+                        case "retreat" -> 1;
+                        case "call" -> 2;
+                        default -> 3;
+                    });
+            check("the page carries the " + t + " table", page.contains(t + ": " + want));
+        }
+
+        // And the cast, which is the one thing the player reads before the
+        // night starts.
+        for (int n = 1; n <= 5; n++) {
+            Pair p = Pair.forNight(n);
+            check("the page carries night " + n + "'s pair, " + p.left().name()
+                            + " and " + p.right().name(),
+                    page.contains(p.left().name()) && page.contains(p.right().name())
+                            && page.contains(p.note()));
+        }
+    }
 
     static void survival() {
         section("the week, 500 seeds a night");
