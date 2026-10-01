@@ -31,6 +31,7 @@ public class LampRoomGame implements Game {
     public UiScreen create(UiManager ui) {
         try {
             Script s = Script.load(new File(STORY).toPath());
+            aside.ui.Assets.loadStory(".", "the-lamp-room");
             return new VnScreen(ui, s, s.title);
         } catch (Exception e) {
             throw new IllegalStateException("could not load " + STORY + ": " + e.getMessage(), e);

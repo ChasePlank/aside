@@ -33,6 +33,22 @@ public class Assets {
     public final Set<String> missingPoses = new LinkedHashSet<>();
     public final List<String> notes = new ArrayList<>();
 
+    /**
+     * Load a story's own art, layered over the shared set.
+     *
+     * The engine used one shared art directory, so every new story inherited whatever the last game put there -
+     * which is how a lighthouse story and a hotel story both ended up set in a pizzeria. A story that supplies
+     * nothing keeps the shared art, so this is additive and no existing story breaks.
+     *
+     *   art/stories/<id>/backgrounds/   and   art/stories/<id>/sprites/
+     */
+    public static void loadStory(String root, String storyId) {
+        File bg = new File(root, "art/stories/" + storyId + "/backgrounds");
+        if (bg.isDirectory()) for (File f : list(bg)) A.backgrounds.put(stripExt(f.getName()), loadImage(f, null));
+        File sp = new File(root, "art/stories/" + storyId + "/sprites");
+        if (sp.isDirectory()) for (File f : list(sp)) A.sprites.put(stripExt(f.getName()), loadImage(f, null));
+    }
+
     public static void load(String root) {
         A = new Assets();
         File bgDir = new File(root, "art/backgrounds");
