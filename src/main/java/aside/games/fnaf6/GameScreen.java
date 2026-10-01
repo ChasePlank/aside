@@ -280,13 +280,10 @@ public class GameScreen extends UiScreen {
         if (img == null) return;
 
         double t = Math.min(1.0, game.pose / (double) Salvage.SHOCK_MIN);
-        double scale = 0.45 + 0.55 * t;
-        double tilt = -8.0 * (1.0 - t);
-        // The feet sit below the desk line, so the desk covers them and
-        // what the player sees is a figure rising rather than a figure
-        // standing on the table.
-        double bottom = MouseMap.SCENE[1] + MouseMap.SCENE[3] + 26;
-        double h = 470 * scale;
+        double scale = MouseMap.UNIT_SCALE_MIN + (1.0 - MouseMap.UNIT_SCALE_MIN) * t;
+        double tilt = MouseMap.UNIT_TILT * (1.0 - t);
+        double bottom = MouseMap.SCENE[1] + MouseMap.SCENE[3] + MouseMap.UNIT_BOTTOM;
+        double h = MouseMap.UNIT_H * scale;
         double w = h * (img.getWidth() / img.getHeight());
 
         double lit = lightLevel();
@@ -338,11 +335,11 @@ public class GameScreen extends UiScreen {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#E94560"));
         gc.setFont(Font.font("Arial", 20));
-        gc.fillText("NIGHT " + night, 26, 44);
+        gc.fillText(String.format(Voice.BAND_NIGHT, night), 26, 44);
 
         gc.setFill(Color.web("#8888AA"));
         gc.setFont(Font.font("Arial", 12));
-        gc.fillText("IN THE CHAIR", 150, 26);
+        gc.fillText(Voice.BAND_CHAIR, 150, 26);
         gc.setFill(Color.web("#FFD700"));
         gc.setFont(Font.font("Arial", 19));
         gc.fillText(game.unit.name().toUpperCase(), 150, 48);
@@ -380,7 +377,7 @@ public class GameScreen extends UiScreen {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#8888AA"));
         gc.setFont(Font.font("Arial", 11));
-        gc.fillText("AGITATION", r[0], r[1] - 5);
+        gc.fillText(Voice.METER_LABEL, r[0], r[1] - 5);
         if (v > 0.75) {
             double beat = 0.5 + 0.5 * Math.sin(pulse * 7.0);
             gc.setFill(Color.rgb(233, 69, 96, 0.35 * beat));
@@ -401,7 +398,8 @@ public class GameScreen extends UiScreen {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(live ? Color.web("#FFD700") : Color.web("#555566"));
         gc.setFont(Font.font("Arial", 17));
-        gc.fillText(live ? "SHOCK  x1" : "SHOCK  SPENT", r[0] + r[2] / 2, r[1] + 25);
+        gc.fillText(live ? Voice.SHOCK_READY : Voice.SHOCK_SPENT,
+                r[0] + r[2] / 2, r[1] + 25);
         gc.setTextAlign(TextAlignment.LEFT);
     }
 
@@ -417,7 +415,7 @@ public class GameScreen extends UiScreen {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#8888AA"));
         gc.setFont(Font.font("Arial", 12));
-        gc.fillText("THE LAMP IS SHOWING", 270, MouseMap.BAR[1] + 30);
+        gc.fillText(Voice.STRIP_LABEL, 270, MouseMap.BAR[1] + 30);
 
         String line;
         Color colour;
@@ -426,10 +424,10 @@ public class GameScreen extends UiScreen {
             colour = game.pose >= Salvage.SHOCK_MIN ? Color.web("#E94560")
                     : Color.web("#FFD700");
         } else if (game.lit) {
-            line = "warming\u2026";
+            line = Voice.WARMING;
             colour = Color.web("#555577");
         } else {
-            line = "nothing. it is dark.";
+            line = Voice.DARK;
             colour = Color.web("#555577");
         }
         gc.setFill(colour);
@@ -442,18 +440,15 @@ public class GameScreen extends UiScreen {
         gc.setFont(Font.font("Arial", 12));
         String hint;
         if (game.status != Salvage.Status.PLAYING) {
-            hint = "ESC to the menu";
+            hint = Voice.HINT_OVER;
         } else if (game.pose >= Salvage.SHOCK_MIN) {
-            hint = "it is up. the shock reaches it now -- and not before.";
+            hint = Voice.HINT_UP;
         } else if (game.lit) {
-            hint = "the lamp is what it is waiting for. every second of it "
-                    + "is charged.";
+            hint = Voice.HINT_LIT;
         } else if (game.agitation > 0.6) {
-            hint = "the lamp has cost a lot. it does not have to be lit to be "
-                    + "listened to.";
+            hint = Voice.HINT_COSTLY;
         } else {
-            hint = "L lamp     SPACE shock     ESC pause     "
-                    + "a drag is the sound of it moving; a creak is the building.";
+            hint = Voice.HINT_IDLE;
         }
         gc.fillText(hint, 270, MouseMap.BAR[1] + 92);
 
@@ -461,8 +456,8 @@ public class GameScreen extends UiScreen {
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFill(Color.web("#3A3A4C"));
         gc.setFont(Font.font("Arial", 12));
-        gc.fillText("looks " + game.looks + "     drags heard " + game.drags
-                + "     silent " + game.silentSteps, W - 26, MouseMap.BAR[1] + 92);
+        gc.fillText(String.format(Voice.COUNTS, game.looks, game.drags,
+                game.silentSteps), W - 26, MouseMap.BAR[1] + 92);
         gc.setTextAlign(TextAlignment.LEFT);
     }
 
@@ -499,10 +494,10 @@ public class GameScreen extends UiScreen {
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setFill(Color.web("#E94560"));
             gc.setFont(Font.font("Arial", 44));
-            gc.fillText("GAME OVER", W / 2, H / 2);
+            gc.fillText(Voice.SCARE_OVER, W / 2, H / 2);
             gc.setFill(Color.web("#8888AA"));
             gc.setFont(Font.font("Arial", 16));
-            gc.fillText("ESC to the menu", W / 2, H / 2 + 40);
+            gc.fillText(Voice.SCARE_BACK, W / 2, H / 2 + 40);
             gc.setTextAlign(TextAlignment.LEFT);
         }
     }
@@ -514,21 +509,22 @@ public class GameScreen extends UiScreen {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(Color.web(destroyed ? "#E94560" : "#FFD700"));
         gc.setFont(Font.font("Arial", 50));
-        gc.fillText(destroyed ? "SALVAGE DESTROYED" : "6 AM", W / 2, H / 2 - 84);
+        gc.fillText(destroyed ? Voice.WIN_DESTROYED : Voice.WIN_SURVIVED,
+                W / 2, H / 2 - 84);
         gc.setFill(Color.web("#CCCCDD"));
         gc.setFont(Font.font("Arial", 20));
         gc.fillText(destroyed
-                        ? "It got up, and you were ready."
-                        : "Night " + night + " survived. It never moved.",
+                        ? Voice.WIN_DESTROYED_LINE
+                        : String.format(Voice.WIN_SURVIVED_LINE, night),
                 W / 2, H / 2 - 36);
         gc.setFill(Color.web("#8888AA"));
         gc.setFont(Font.font("Arial", 15));
-        gc.fillText(game.looks + " looks, " + game.drags + " drags heard, "
-                + game.silentSteps + " steps taken without a sound.",
+        gc.fillText(String.format(Voice.WIN_STATS, game.looks, game.drags,
+                        game.silentSteps),
                 W / 2, H / 2 + 4);
-        gc.fillText("The lamp cost " + Math.round(game.agitation * 100)
-                + "% of what it takes to wake it.", W / 2, H / 2 + 30);
-        gc.fillText("ESC to the menu", W / 2, H / 2 + 66);
+        gc.fillText(String.format(Voice.WIN_COST, Math.round(game.agitation * 100)),
+                W / 2, H / 2 + 30);
+        gc.fillText(Voice.SCARE_BACK, W / 2, H / 2 + 66);
         gc.setTextAlign(TextAlignment.LEFT);
     }
 }

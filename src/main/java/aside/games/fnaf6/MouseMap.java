@@ -51,6 +51,31 @@ public final class MouseMap {
     /** The agitation meter, in the band in the middle-right. */
     public static final double[] METER = {820, 22, 190, 26};
 
+    // ---- The thing in the chair, as the screen draws it ------------------
+    //
+    // There is one picture per unit and no picture per pose: the pose is
+    // drawn, by scaling the unit up and raising it out of the chair. These
+    // four numbers are that drawing, and they live here rather than in
+    // GameScreen because the phone build draws the same figure and has to
+    // draw it the same way. A unit that rose differently on a phone would
+    // be a unit whose pose the player reads differently, and the pose is
+    // the only thing on the screen they have to read at a glance.
+
+    /** How tall a unit is at the top of the climb, in scene pixels. */
+    public static final double UNIT_H = 470;
+    /** The scale it is drawn at while it is still slumped. */
+    public static final double UNIT_SCALE_MIN = 0.45;
+    /** The tilt it is drawn at while it is still slumped, in degrees. */
+    public static final double UNIT_TILT = -8.0;
+    /**
+     * How far below the scene's floor line the unit's feet sit.
+     *
+     * <p>Below the line on purpose, so the desk covers them and what the
+     * player sees is a figure rising rather than a figure standing on the
+     * table.
+     */
+    public static final double UNIT_BOTTOM = 26;
+
     public static final int NIGHTS = 5;
 
     /** The night rows on the night-select screen. */

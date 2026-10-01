@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05060A">
+<title>salvage</title>
+<style>
+  :root{
+    --bg:#05060A; --ink:#CCCCDD; --dim:#8888AA; --faint:#555577;
+    --red:#E94560; --gold:#FFD700; --edge:#1B1B26; --card:#0C0D14;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink);
+            font:16px/1.4 Arial,Helvetica,sans-serif; -webkit-text-size-adjust:100%}
+  html,body{height:100%}
+  body{height:100vh; height:100dvh; overflow:hidden}
+  #app{max-width:720px; margin:0 auto; height:100%; display:flex; flex-direction:column;
+       padding:env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
+
+  /* ---- the band: night, clock, the chair, the meter, the shock ---------
+     The desktop puts the shock in the band and the lamp in the strip, and
+     this keeps that: the two things you can do are as far apart as the
+     screen allows, because the shock is spent once a night and is not a
+     button anybody should reach for by reflex. */
+  #band{flex:0 0 auto; background:#05060A; border-bottom:1px solid var(--edge);
+        padding:8px 12px 10px}
+  #band .r1{display:flex; align-items:center; gap:10px}
+  #night{color:var(--red); font-size:15px; letter-spacing:.06em}
+  #clock{color:var(--ink); font-size:16px; margin:0 auto}
+  #shock{flex:0 0 auto; min-height:38px; padding:8px 12px; border-radius:8px;
+         border:1px solid var(--edge); color:var(--faint); font-size:13px;
+         letter-spacing:.04em; white-space:nowrap}
+  #shock.live{color:var(--gold); border-color:var(--red); background:rgba(233,69,96,.18)}
+  #shock.spent{color:var(--faint)}
+  #band .r2{display:flex; align-items:center; gap:10px; margin-top:7px}
+  #chair{font-size:11px; letter-spacing:.14em; color:var(--dim); white-space:nowrap}
+  #chair b{display:block; font-size:15px; letter-spacing:.02em; color:var(--gold);
+           font-weight:normal; margin-top:1px}
+  #meterwrap{flex:1 1 auto; min-width:0}
+  #meterlabel{font-size:10px; letter-spacing:.14em; color:var(--dim); margin-bottom:3px}
+  #meter{height:10px; background:rgba(255,255,255,.05); border:1px solid #2A2A38;
+         border-radius:3px; overflow:hidden}
+  #meter i{display:block; height:100%; width:0; background:#7FE3B0; opacity:.75;
+           transition:background .2s linear}
+
+  /* ---- the room --------------------------------------------------------
+     The desktop's scene is 1280x526 and a phone is nothing like it, so the
+     phone shows the same rows and crops the sides. The vertical framing --
+     the floor line, the desk line, the unit's height against the room --
+     is the desktop's exactly; only the empty dark wall at the edges is
+     given up. */
+  #stage{flex:1 1 auto; position:relative; min-height:0; background:#05060A}
+  #cv{display:block; width:100%; height:100%}
+
+  /* ---- the strip: the lamp, and what it is showing --------------------- */
+  #strip{flex:0 0 auto; border-top:1px solid var(--edge); padding:10px 12px 12px}
+  #strip .r1{display:flex; align-items:center; gap:12px}
+  #lamp{flex:0 0 auto; min-width:132px; min-height:52px; padding:12px 14px;
+        border-radius:10px; border:1px solid #3A3A4C; color:var(--ink);
+        font-size:15px; letter-spacing:.04em}
+  #lamp.on{color:var(--gold); border-color:var(--gold); background:rgba(255,214,150,.20)}
+  #showing{flex:1 1 auto; min-width:0}
+  #showing span{display:block; font-size:10px; letter-spacing:.14em; color:var(--dim)}
+  #showing b{display:block; font-size:20px; font-weight:normal; color:var(--faint);
+             margin-top:3px; overflow-wrap:anywhere}
+  #showing b.up{color:var(--red)}
+  #showing b.seen{color:var(--gold)}
+  #hint{font-size:11px; line-height:1.5; color:var(--faint); margin-top:9px}
+  #counts{font-size:10px; color:#3A3A4C; margin-top:5px; letter-spacing:.04em}
+
+  /* ---- the nights ------------------------------------------------------ */
+  #select{flex:1 1 auto; min-height:0; overflow-y:auto; padding:22px 16px 26px;
+          -webkit-overflow-scrolling:touch}
+  #select h1{font-size:22px; font-weight:normal; color:var(--red); margin:0 0 6px;
+             letter-spacing:.01em}
+  #select .sub{font-size:13px; color:var(--dim); margin:0 0 20px}
+  .nightrow{display:block; width:100%; text-align:left; padding:12px 14px; margin:0 0 9px;
+            background:var(--card); border:1px solid var(--edge); border-radius:10px}
+  .nightrow:active{background:#16171F}
+  /* Both are spans and both are blocks: the title and the note are two
+     lines, and inline they ran together as one. */
+  .nightrow .t{display:block; font-size:17px; color:var(--ink)}
+  .nightrow .n{display:block; font-size:12px; color:var(--dim); margin-top:3px}
+  .help{font-size:12px; line-height:1.6; color:var(--faint); margin-top:20px}
+  .help p{margin:0 0 9px}
+
+  /* ---- the end --------------------------------------------------------- */
+  #over{position:absolute; inset:0; display:none; flex-direction:column;
+        align-items:center; justify-content:center; text-align:center;
+        background:rgba(0,0,0,.84); padding:24px}
+  #over.on{display:flex}
+  #over h2{font-size:30px; font-weight:normal; margin:0 0 10px; color:var(--gold)}
+  #over.bad h2{color:var(--red)}
+  #over p{font-size:15px; color:var(--ink); margin:0 0 8px; max-width:34ch}
+  #over .st{font-size:12px; color:var(--dim); margin-top:10px}
+  #back{margin-top:22px; min-height:48px; padding:13px 22px; border-radius:10px;
+        border:1px solid #3A3A4C; color:var(--ink); font-size:15px}
+  #back:active{background:#16171F}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="select"></div>
+
+  <div id="band" hidden>
+    <div class="r1">
+      <span id="night"></span>
+      <span id="clock"></span>
+      <button id="shock"></button>
+    </div>
+    <div class="r2">
+      <span id="chair"></span>
+      <div id="meterwrap">
+        <div id="meterlabel"></div>
+        <div id="meter"><i></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="stage" hidden>
+    <canvas id="cv"></canvas>
+    <div id="over">
+      <h2 id="overtitle"></h2>
+      <p id="overline"></p>
+      <p class="st" id="overstats"></p>
+      <p class="st" id="overcost"></p>
+      <button id="back"></button>
+    </div>
+  </div>
+
+  <div id="strip" hidden>
+    <div class="r1">
+      <button id="lamp"></button>
+      <div id="showing">
+        <span id="showlabel"></span>
+        <b id="showpose"></b>
+      </div>
+    </div>
+    <div id="hint"></div>
+    <div id="counts"></div>
+  </div>
+
+</div>
+<script>
+"use strict";
+
+/* Everything the two builds have to agree about. Generated by
+   aside.games.fnaf6.WebSalvage from the engine itself -- the tables, the
+   cast, the thresholds and every fixed sentence come out of Salvage, Unit
+   and Voice, so there is no second copy of any of them here. */
+const C = /*__CONTENT__*/;
+
+// --------------------------------------------------------------- the night
+//
+// The engine below is a transliteration of aside.games.fnaf6.engine.Salvage,
+// line for line, including the RNG: java.util.Random is a 48-bit LCG and it
+// is reproduced here in BigInt so the same seed deals the same night in both
+// builds. That is not ceremony -- it is what makes a night reproducible when
+// something looks wrong, and a double would lose the low bits of the seed
+// before the first draw.
+
+const MASK48 = (1n << 48n) - 1n;
+
+/** Splitmix64 finalizer. See Salvage.mix -- java.util.Random's first draw
+    from nearby seeds is correlated with the seed, and this is the fix. */
+function mix(z) {
+  z = BigInt.asUintN(64, z + 0x9E3779B97F4A7C15n);
+  z = BigInt.asUintN(64, (z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n);
+  z = BigInt.asUintN(64, (z ^ (z >> 27n)) * 0x94D049BB133111EBn);
+  return BigInt.asUintN(64, z ^ (z >> 31n));
+}
+
+function Rng(seed) { this.s = (seed ^ 0x5DEECE66Dn) & MASK48; }
+Rng.prototype.next = function (bits) {
+  this.s = (this.s * 0x5DEECE66Dn + 0xBn) & MASK48;
+  return Number(this.s >> BigInt(48 - bits));
+};
+Rng.prototype.nextDouble = function () {
+  // Java: (((long) next(26)) << 27) + next(27), scaled by 2^-53. The shift
+  // is 27, so the multiplier is 2^27 -- written as a power rather than as
+  // the number, because the first version of this line said 2^26 and the
+  // only reason it was caught is that the phone's sweep disagreed with the
+  // desktop's on the first seed it tried.
+  return (this.next(26) * 134217728 + this.next(27)) / 9007199254740992;
+};
+Rng.prototype.nextBoolean = function () { return this.next(1) !== 0; };
+
+function Salvage(night, seed) {
+  this.night = night;
+  this.rng = new Rng(mix(seed));
+  this.unit = C.units[Math.min(Math.max(night - 1, 0), C.units.length - 1)];
+  this.hostile = this.rng.nextDouble() < C.hostileChance;
+
+  this.time = 0; this.hour = 0;
+  this.pose = 0; this.agitation = 0;
+  this.lit = false; this.litFor = 0;
+  this.shocks = 1; this.shocked = false; this.wasted = false;
+
+  this.dragAge = 999; this.creakAge = 999;
+  this.noises = 0; this.drags = 0; this.silentSteps = 0;
+
+  this.advanceTimer = this.drawAdvance();
+  this.creakTimer = this.drawCreak();
+
+  this.status = 'PLAYING'; this.killer = null;
+  this.looks = 0; this.sinceCue = 0;
+  this.cues = [];
+}
+
+const clampNight = n => Math.min(Math.max(n - 1, 0), C.advance.length - 1);
+
+Salvage.prototype.advance = function () { return C.advance[clampNight(this.night)]; };
+Salvage.prototype.litRate = function () { return C.litRate[clampNight(this.night)]; };
+Salvage.prototype.creakRate = function () { return C.creakRate[clampNight(this.night)]; };
+Salvage.prototype.silent = function () { return this.unit.silent; };
+
+Salvage.prototype.cue = function (name) { this.cues.push(name); };
+Salvage.prototype.drainCues = function () {
+  if (!this.cues.length) return [];
+  const out = this.cues.slice();
+  this.cues.length = 0;
+  return out;
+};
+
+Salvage.prototype.makeCreak = function () {
+  this.creakAge = 0; this.noises++;
+  this.cue(this.rng.nextBoolean() ? 'creak_a' : 'creak_b');
+};
+Salvage.prototype.makeDrag = function () {
+  this.dragAge = 0; this.noises++; this.drags++;
+  this.cue('drag');
+};
+
+/* One wait, drawn once per wait rather than per frame -- a per-frame draw
+   biases every move early, because the effective wait becomes the smallest
+   draw seen so far. */
+Salvage.prototype.drawAdvance = function () {
+  return this.advance() * (1 + C.intervalJitter * (this.rng.nextDouble() - 0.5));
+};
+Salvage.prototype.drawCreak = function () {
+  const r = Math.max(1e-6, this.rng.nextDouble());
+  return -Math.log(r) / this.creakRate();
+};
+
+Salvage.prototype.update = function (dt) {
+  if (this.status !== 'PLAYING') return;
+
+  this.time += dt;
+  this.hour = Math.floor(this.time / C.hourSeconds);
+  if (this.hour >= C.nightHours) {
+    this.status = 'SURVIVED';
+    this.cue('chime_6am');
+    return;
+  }
+
+  this.dragAge += dt;
+  this.creakAge += dt;
+  this.sinceCue += dt;
+
+  // The lamp. Agitation is the price of looking, and it is charged whether
+  // or not the look told you anything.
+  if (this.lit) {
+    this.litFor += dt;
+    this.agitation += this.litRate() * dt;
+    if (this.agitation >= C.agitationMax) {
+      this.agitation = C.agitationMax;
+      this.pose = C.poseMax;
+      this.lunge();
+      return;
+    }
+  } else {
+    this.litFor = 0;
+    this.agitation = Math.max(0, this.agitation - C.coolRate * dt);
+  }
+
+  // The building. A creak is a noise with nothing behind it, and it is the
+  // reason a noise is evidence rather than proof.
+  this.creakTimer -= dt;
+  if (this.creakTimer <= 0) {
+    this.creakTimer = this.drawCreak();
+    this.makeCreak();
+  }
+
+  // The thing in the chair. A dead unit never advances -- that is the whole
+  // difference between the two nights, and it is hidden.
+  if (this.hostile) {
+    this.advanceTimer -= dt;
+    if (this.advanceTimer <= 0) {
+      this.advanceTimer = this.drawAdvance();
+      this.pose++;
+      if (this.rng.nextDouble() < this.silent()) this.silentSteps++;
+      else this.makeDrag();
+      if (this.pose >= C.poseMax) { this.lunge(); return; }
+    }
+  }
+};
+
+Salvage.prototype.lunge = function () {
+  if (this.status !== 'PLAYING') return;
+  this.status = 'LUNGED';
+  this.killer = this.unit.name;
+  this.cue('lunge');
+};
+
+Salvage.prototype.revealed = function () {
+  return this.lit && this.litFor >= C.lampWarm;
+};
+Salvage.prototype.seen = function () {
+  return this.revealed() ? C.poses[Math.min(this.pose, C.poses.length - 1)] : null;
+};
+
+Salvage.prototype.toggleLamp = function () {
+  if (this.status !== 'PLAYING') return this.lit;
+  this.lit = !this.lit;
+  if (this.lit) { this.litFor = 0; this.looks++; this.cue('lamp_on'); }
+  else this.cue('lamp_off');
+  return this.lit;
+};
+
+Salvage.prototype.shock = function () {
+  if (this.status !== 'PLAYING') return false;
+  if (this.shocks <= 0) return false;
+  this.shocks--;
+  this.shocked = true;
+  this.cue('shock');
+  if (this.pose >= C.shockMin) {
+    this.status = 'DESTROYED';
+    this.killer = this.unit.name;
+    this.cue('shock_hit');
+    return true;
+  }
+  this.wasted = true;
+  this.cue('shock_miss');
+  return false;
+};
+
+Salvage.prototype.up = function () { return this.pose >= C.shockMin; };
+Salvage.prototype.canShock = function () {
+  return this.status === 'PLAYING' && this.shocks > 0;
+};
+Salvage.prototype.clock = function () {
+  return C.clocks[Math.min(this.hour, 6)];
+};
+
+// --------------------------------------------------------------- the sound
+//
+// Synthesised, so the page stays one file with no audio in it. The two cues
+// that matter are the drag and the creak, and they are the same length and
+// the same loudness on purpose: a drag is the sound of the thing in the
+// chair moving and a creak is the building, and the whole free channel of
+// the night is that a player can tell them apart. A phone that made them
+// the same sound would be a phone with no free channel at all.
+
+let AC = null;
+
+function ac() {
+  if (!AC) {
+    const K = window.AudioContext || window.webkitAudioContext;
+    if (!K) return null;
+    try { AC = new K(); } catch (e) { return null; }
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+
+function noiseBuf(a, dur) {
+  const n = Math.max(1, Math.floor(a.sampleRate * dur));
+  const b = a.createBuffer(1, n, a.sampleRate);
+  const d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+
+function tone(a, t, f0, f1, dur, type, gain) {
+  const o = a.createOscillator();
+  o.type = type;
+  o.frequency.setValueAtTime(f0, t);
+  if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+
+function hiss(a, t, dur, type, freq, q, gain, bendTo) {
+  const s = a.createBufferSource();
+  s.buffer = noiseBuf(a, dur);
+  const f = a.createBiquadFilter();
+  f.type = type;
+  f.frequency.setValueAtTime(freq, t);
+  if (bendTo) f.frequency.linearRampToValueAtTime(bendTo, t + dur);
+  f.Q.value = q;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(gain, t + Math.min(0.04, dur / 3));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f).connect(g).connect(a.destination);
+  s.start(t); s.stop(t + dur + 0.02);
+}
+
+function play(cue) {
+  const a = ac();
+  if (!a) return;
+  const t = a.currentTime;
+  switch (cue) {
+    case 'drag':
+      hiss(a, t, 0.20, 'lowpass', 300, 1, 0.85);
+      tone(a, t, 72, 58, 0.22, 'sine', 0.45);
+      break;
+    case 'creak_a':
+      hiss(a, t, 0.42, 'bandpass', 760, 9, 0.15, 540);
+      break;
+    case 'creak_b':
+      hiss(a, t, 0.42, 'bandpass', 1010, 9, 0.15, 720);
+      break;
+    case 'lamp_on':
+      hiss(a, t, 0.035, 'highpass', 1900, 1, 0.30);
+      break;
+    case 'lamp_off':
+      hiss(a, t, 0.030, 'highpass', 1500, 1, 0.24);
+      break;
+    case 'shock':
+      tone(a, t, 150, 38, 0.55, 'sawtooth', 0.30);
+      hiss(a, t, 0.30, 'bandpass', 2400, 3, 0.20);
+      break;
+    case 'shock_hit':
+      tone(a, t, 150, 38, 0.55, 'sawtooth', 0.32);
+      hiss(a, t, 0.35, 'lowpass', 420, 1, 0.55);
+      tone(a, t + 0.05, 60, 44, 0.40, 'sine', 0.40);
+      break;
+    case 'shock_miss':
+      hiss(a, t, 0.50, 'bandpass', 3000, 2, 0.16);
+      break;
+    case 'lunge':
+      tone(a, t, 900, 110, 1.10, 'sawtooth', 0.34);
+      hiss(a, t, 1.10, 'highpass', 900, 1, 0.30);
+      break;
+    case 'chime_6am':
+      tone(a, t, 880, 880, 0.55, 'sine', 0.22);
+      tone(a, t + 0.16, 1320, 1320, 0.60, 'sine', 0.18);
+      break;
+    default:
+      break;
+  }
+}
+
+// --------------------------------------------------------------- the screen
+
+const el = id => document.getElementById(id);
+const app = el('app'), band = el('band'), stage = el('stage'), strip = el('strip');
+const select = el('select'), cv = el('cv'), over = el('over');
+const ctx = cv.getContext('2d');
+
+const IMG = {};
+let imagesReady = false;
+{
+  const keys = Object.keys(C.assets);
+  let left = keys.length;
+  for (const k of keys) {
+    const im = new Image();
+    im.onload = im.onerror = () => { if (--left === 0) imagesReady = true; };
+    im.src = C.assets[k];
+    IMG[k] = im;
+  }
+  if (!keys.length) imagesReady = true;
+}
+
+let game = null;
+let screen = 'select';
+let pulse = 0, scareT = 0, last = 0, raf = 0;
+let view = null;
+/* Whether the end-of-night panel has been put up for this night. A flag
+   rather than a comparison against the previous frame's status, because the
+   status does not only change inside update(): a shock that lands ends the
+   night from the button's own handler, and a loop that watched for the
+   transition would watch it happen between two frames and never show the
+   panel. The first version did exactly that -- the salvage worked, and the
+   screen stayed on the room. */
+let ended = false;
+
+function computeView(w, h) {
+  const S = C.scene;
+  let win = S[3] * (w / h);
+  win = Math.max(C.viewMin, Math.min(C.viewMax, win));
+  // Fit, then widen. The window is chosen from the shape of the stage, but
+  // a wide short stage -- the shelf opened on a laptop rather than a phone
+  // -- cannot show a 2.43:1 room at the width it asks for without running
+  // off the top and bottom, so the scale gives way to the height and the
+  // window widens until the whole room is in. Past the room's own 1280
+  // there is nothing left to widen into, and the rest is a letterbox.
+  const scale = Math.min(w / win, h / S[3]);
+  const shown = Math.min(C.viewMax, w / scale);
+  return {
+    scale: scale, shown: shown,
+    left: (w - shown * scale) / 2,
+    ox: C.chairX - shown / 2,
+    // Bottom, not centred. A phone is taller than the room is wide, so the
+    // crop leaves a band of empty stage, and centring it turns that band
+    // into two letterbox bars. Put the room on the floor of the stage and
+    // the band is above the room's own dark ceiling, where it reads as the
+    // dark rather than as a frame.
+    oy: h - S[3] * scale,
+  };
+}
+
+function resize() {
+  const box = stage.getBoundingClientRect();
+  if (box.width < 2 || box.height < 2) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(box.width * dpr);
+  cv.height = Math.round(box.height * dpr);
+  view = computeView(cv.width, cv.height);
+}
+
+/** How lit the room is, 0 to 1. Ramps over LAMP_WARM rather than snapping,
+    so the player can see the lamp coming on and knows the pose is about to
+    become legible. */
+function lightLevel() {
+  if (!game || !game.lit) return 0;
+  return Math.min(1, game.litFor / C.lampWarm);
+}
+
+function drawScene() {
+  const S = C.scene;
+  const lit = lightLevel();
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#05060A';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  if (!view) return;
+
+  // The band of stage above the room. A phone is taller than the room is
+  // wide, so the crop always leaves one, and a flat black one is a visible
+  // letterbox bar -- the room's own top edge is a warm dark and the bar is
+  // not. So the room's top two rows are stretched up over it, and the light
+  // and the vignette are drawn over the extended rectangle, which is what
+  // makes the join disappear rather than merely move.
+  const band = Math.max(0, view.oy / view.scale);
+  const top = S[1] - band;
+  const R = [view.ox, top, view.shown, S[3] + band];
+
+  ctx.save();
+  ctx.translate(view.left, view.oy);
+  ctx.scale(view.scale, view.scale);
+  ctx.translate(-view.ox, -S[1]);
+
+  // The room. In the dark it is a photograph at a fifth of its brightness,
+  // which is enough to see a chair and not enough to see what is in it.
+  const room = IMG.room;
+  if (room && room.complete && room.naturalWidth) {
+    ctx.globalAlpha = 0.20 + 0.80 * lit;
+    ctx.drawImage(room, S[0], S[1], S[2], S[3]);
+    if (band > 0.5) {
+      ctx.drawImage(room, 0, 0, room.naturalWidth, 2,
+                    view.ox, top, view.shown, band + 2);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // The pool of light: centred on the chair, and the only warm thing on the
+  // screen. Drawn rather than photographed, because the lamp is a thing the
+  // player switches on and off and the light has to move with it.
+  if (lit > 0.01) {
+    const cx = C.chairX, cy = S[1] + S[3] * 0.62;
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 520);
+    g.addColorStop(0, 'rgba(255,214,150,' + (0.30 * lit).toFixed(3) + ')');
+    g.addColorStop(0.55, 'rgba(255,190,120,' + (0.10 * lit).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(255,190,120,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(R[0], R[1], R[2], R[3]);
+  }
+
+  drawUnit(lit);
+  drawDesk(lit);
+
+  // The vignette. The room has no other light in it.
+  const vg = ctx.createRadialGradient(C.chairX, S[1] + S[3] / 2, 0,
+                                      C.chairX, S[1] + S[3] / 2, 780);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.85)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(R[0], R[1], R[2], R[3]);
+
+  ctx.restore();
+}
+
+/** The thing in the chair: scaled and raised with the pose, tilted while it
+    is still slumped. In the dark it is a silhouette; the lamp makes it a
+    picture. */
+function drawUnit(lit) {
+  const img = IMG['unit:' + game.unit.key];
+  if (!img || !img.complete || !img.naturalWidth) return;
+  const S = C.scene;
+
+  const t = Math.min(1, game.pose / C.shockMin);
+  const scale = C.unitScaleMin + (1 - C.unitScaleMin) * t;
+  const tilt = C.unitTilt * (1 - t);
+  const bottom = S[1] + S[3] + C.unitBottom;
+  const h = C.unitH * scale;
+  const w = h * (img.naturalWidth / img.naturalHeight);
+
+  ctx.save();
+  ctx.globalAlpha = 0.16 + 0.84 * lit;
+  ctx.translate(C.chairX, bottom);
+  ctx.rotate(tilt * Math.PI / 180);
+  ctx.drawImage(img, -w / 2, -h, w, h);
+  ctx.restore();
+  ctx.globalAlpha = 1;
+
+  // The eyes catch the lamp before anything else does. A machine that is
+  // about to get up is a machine whose eyes are lit.
+  if (lit > 0.5 && game.pose >= C.shockMin - 1) {
+    const beat = 0.5 + 0.5 * Math.sin(pulse * 3);
+    ctx.fillStyle = 'rgba(233,69,96,' + (0.16 * beat * (lit - 0.5) * 2).toFixed(3) + ')';
+    ctx.fillRect(S[0], S[1], S[2], S[3]);
+  }
+}
+
+/** The desk, over the unit. This is the whole reason the desk is a separate
+    image: the unit is behind it, so the desk is what turns "a figure at a
+    scale" into "a figure rising out of a chair". */
+function drawDesk(lit) {
+  const img = IMG.desk;
+  if (!img || !img.complete || !img.naturalWidth) return;
+  const S = C.scene;
+  const h = S[2] * (img.naturalHeight / img.naturalWidth);
+  ctx.globalAlpha = 0.55 + 0.45 * lit;
+  ctx.drawImage(img, S[0], S[1] + S[3] - h, S[2], h);
+  ctx.globalAlpha = 1;
+}
+
+function drawScare() {
+  const img = IMG['scare:' + game.unit.key] || IMG['scare:scraptrap'];
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = 'rgba(0,0,0,' + Math.min(1, scareT * 1.4).toFixed(3) + ')';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  if (img && img.complete && img.naturalWidth) {
+    const s = Math.max(cv.width / img.naturalWidth, cv.height / img.naturalHeight) * 1.1;
+    const w = img.naturalWidth * s, h = img.naturalHeight * s;
+    ctx.drawImage(img, (cv.width - w) / 2, (cv.height - h) / 2, w, h);
+  }
+  ctx.fillStyle = 'rgba(233,69,96,0.22)';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+}
+
+// --------------------------------------------------------------- the words
+
+function setText(node, text) { if (node.textContent !== text) node.textContent = text; }
+
+function ui() {
+  if (!game) return;
+  setText(el('night'), C.bandNight.replace('%d', game.night));
+  setText(el('clock'), game.clock());
+  setText(el('chair'), '');
+  el('chair').innerHTML = '';
+  const ch = document.createElement('span');
+  ch.textContent = C.bandChair;
+  const nm = document.createElement('b');
+  nm.textContent = game.unit.name.toUpperCase();
+  el('chair').appendChild(ch); el('chair').appendChild(nm);
+
+  const v = Math.min(1, game.agitation / C.agitationMax);
+  const bar = el('meter').firstElementChild;
+  bar.style.width = (v * 100).toFixed(1) + '%';
+  bar.style.background = v > 0.75 ? '#E94560' : v > 0.45 ? '#C9A227' : '#7FE3B0';
+  setText(el('meterlabel'), C.meterLabel);
+
+  const shock = el('shock');
+  const live = game.canShock();
+  shock.className = live ? 'live' : 'spent';
+  setText(shock, live ? C.shockReady : C.shockSpent);
+
+  const lamp = el('lamp');
+  lamp.className = game.lit ? 'on' : '';
+  setText(lamp, game.lit ? C.lampOn : C.lampOff);
+
+  setText(el('showlabel'), C.stripLabel);
+  const seen = game.seen();
+  const pose = el('showpose');
+  if (seen) {
+    setText(pose, seen.toUpperCase());
+    pose.className = game.up() ? 'up' : 'seen';
+  } else if (game.lit) {
+    setText(pose, C.warming);
+    pose.className = '';
+  } else {
+    setText(pose, C.dark);
+    pose.className = '';
+  }
+
+  let hint;
+  if (game.status !== 'PLAYING') hint = C.hintOverPhone;
+  else if (game.up()) hint = C.hintUp;
+  else if (game.lit) hint = C.hintLit;
+  else if (game.agitation > 0.6) hint = C.hintCostly;
+  else hint = C.hintIdlePhone;
+  setText(el('hint'), hint);
+
+  setText(el('counts'), C.counts
+    .replace('%d', game.looks)
+    .replace('%d', game.drags)
+    .replace('%d', game.silentSteps));
+}
+
+// --------------------------------------------------------------- the flow
+
+function show(s) {
+  screen = s;
+  select.hidden = s !== 'select';
+  band.hidden = s !== 'play';
+  stage.hidden = s !== 'play';
+  strip.hidden = s !== 'play';
+  if (s === 'play') { resize(); }
+}
+
+function buildSelect() {
+  const h = [];
+  h.push('<h1>' + esc(C.title) + '</h1>');
+  h.push('<p class="sub">' + esc(C.subtitle) + '</p>');
+  for (let i = 1; i <= C.nights; i++) {
+    const u = C.units[Math.min(i - 1, C.units.length - 1)];
+    h.push('<button class="nightrow" data-n="' + i + '">'
+      + '<span class="t">' + esc(C.nightRow.replace('%d', i).replace('%s', u.name)) + '</span>'
+      + '<span class="n">' + esc(u.note) + '</span></button>');
+  }
+  h.push('<div class="help">'
+    + '<p>' + esc(C.selectHelp1Phone) + '</p>'
+    + '<p>' + esc(C.selectHelp2) + '</p>'
+    + '<p>' + esc(C.selectHelp3) + '</p>'
+    + '<p>' + esc(C.selectHelp4Phone) + '</p>'
+    + '</div>');
+  select.innerHTML = h.join('');
+  select.querySelectorAll('.nightrow').forEach(b => {
+    b.onclick = () => start(parseInt(b.dataset.n, 10));
+  });
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function start(night) {
+  ac();
+  const seed = BigInt(Date.now()) * 1000000n
+             + BigInt(Math.floor(Math.random() * 1000000));
+  game = new Salvage(night, seed);
+  scareT = 0; pulse = 0; last = 0; ended = false;
+  over.className = '';
+  show('play');
+  ui();
+  if (!raf) raf = requestAnimationFrame(loop);
+}
+
+function endNight() {
+  const destroyed = game.status === 'DESTROYED';
+  const lost = game.status === 'LUNGED';
+  over.className = (destroyed || lost) ? 'bad on' : 'on';
+  setText(el('overtitle'), lost ? C.scareOver
+    : destroyed ? C.winDestroyed : C.winSurvived);
+  // A night that ended with it standing at the desk gets the two things the
+  // desktop shows and nothing else: the words, and the way out. The counts
+  // are a report on a salvage, and there was no salvage.
+  el('overline').hidden = lost;
+  el('overstats').hidden = lost;
+  el('overcost').hidden = lost;
+  if (!lost) {
+    setText(el('overline'), destroyed ? C.winDestroyedLine
+      : C.winSurvivedLine.replace('%d', game.night));
+    setText(el('overstats'), C.winStats
+      .replace('%d', game.looks).replace('%d', game.drags).replace('%d', game.silentSteps));
+    setText(el('overcost'), C.winCost.replace('%d', Math.round(game.agitation * 100)));
+  }
+  setText(el('back'), C.backToNights);
+}
+
+function loop(ts) {
+  raf = requestAnimationFrame(loop);
+  if (screen !== 'play' || !game) { last = ts; return; }
+  if (!last) last = ts;
+  const frame = Math.min((ts - last) / 1000, 0.25);
+  last = ts;
+
+  game.update(frame);
+  for (const cue of game.drainCues()) play(cue);
+
+  pulse += frame;
+  if (game.status === 'LUNGED') scareT += frame;
+
+  if (game.status === 'LUNGED') drawScare();
+  else drawScene();
+  ui();
+
+  if (game.status !== 'PLAYING' && !ended) { ended = true; endNight(); }
+}
+
+el('lamp').onclick = () => { if (game) game.toggleLamp(); };
+el('shock').onclick = () => { if (game) game.shock(); };
+el('back').onclick = () => { show('select'); game = null; };
+
+// A desktop browser gets the desktop's keys, because the shelf opens in one.
+document.addEventListener('keydown', e => {
+  if (screen !== 'play' || !game) return;
+  if (e.key === 'l' || e.key === 'L') { game.toggleLamp(); e.preventDefault(); }
+  if (e.key === ' ' || e.key === 's' || e.key === 'S') { game.shock(); e.preventDefault(); }
+  if (e.key === 'Escape') { show('select'); game = null; }
+});
+
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 120));
+
+buildSelect();
+show('select');
+</script>
+</body>
+</html>

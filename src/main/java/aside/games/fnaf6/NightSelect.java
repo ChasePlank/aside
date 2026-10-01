@@ -72,11 +72,10 @@ public class NightSelect extends UiScreen {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(Color.web("#E94560"));
         gc.setFont(Font.font("Arial", 44));
-        gc.fillText("FIVE NIGHTS AT FREDDY'S 6", W / 2, 104);
+        gc.fillText(Voice.TITLE, W / 2, 104);
         gc.setFill(Color.web("#8888AA"));
         gc.setFont(Font.font("Arial", 16));
-        gc.fillText("One chair, one lamp, one shock -- and the lamp is what "
-                + "it is waiting for.", W / 2, 140);
+        gc.fillText(Voice.SUBTITLE, W / 2, 140);
 
         for (int i = 1; i <= NIGHTS; i++) {
             boolean on = i == focus;
@@ -91,7 +90,8 @@ public class NightSelect extends UiScreen {
             Unit u = Unit.forNight(i);
             gc.setFill(on ? Color.web("#FFD700") : Color.web("#CCCCCC"));
             gc.setFont(Font.font("Arial", on ? 24 : 21));
-            gc.fillText((on ? "\u25B6  " : "   ") + "Night " + i + "  \u2014  " + u.name(),
+            gc.fillText((on ? "\u25B6  " : "   ")
+                            + String.format(Voice.NIGHT_ROW, i, u.name()),
                     W / 2, row[1] + 26);
             gc.setFill(Color.web(on ? "#9A9AAE" : "#555566"));
             gc.setFont(Font.font("Arial", 12));
@@ -100,16 +100,12 @@ public class NightSelect extends UiScreen {
 
         gc.setFill(Color.web("#7777AA"));
         gc.setFont(Font.font("Arial", 15));
-        gc.fillText("L or click LAMP to light it     SPACE or click SHOCK to "
-                + "discharge", W / 2, H - 140);
+        gc.fillText(Voice.SELECT_HELP_1, W / 2, H - 140);
         gc.setFill(Color.web("#555577"));
         gc.setFont(Font.font("Arial", 13));
-        gc.fillText("It only gets up if it is going to. The lamp is the only "
-                + "way to see it, and the lamp is what wakes it.", W / 2, H - 110);
-        gc.fillText("The shock only reaches something that is already standing. "
-                + "You have one.", W / 2, H - 88);
-        gc.fillText("click a night or ENTER to start      ESC back to the library",
-                W / 2, H - 46);
+        gc.fillText(Voice.SELECT_HELP_2, W / 2, H - 110);
+        gc.fillText(Voice.SELECT_HELP_3, W / 2, H - 88);
+        gc.fillText(Voice.SELECT_HELP_4, W / 2, H - 46);
         gc.setTextAlign(TextAlignment.LEFT);
     }
 }

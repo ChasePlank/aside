@@ -83,6 +83,7 @@ public final class PhoneShelf {
             case "drift" -> "Scored, and dealt fresh every copy. Two records, one sitting.";
             case "lesson" -> "Keeps the handover in this browser. Three nights, and one shift.";
             case "tell" -> "Keeps the house in this browser. Five nights, and one sitting.";
+            case "fnaf6" -> "Real-time, like the desktop. Five nights, and one sitting.";
             case "overtime" -> "A visual novel. What you say carries.";
             default -> "";
         };

@@ -3,8 +3,10 @@ package aside.engine;
 import aside.game.PhoneShelf;
 import aside.game.Game;
 import aside.game.Games;
+import aside.games.fnaf6.WebSalvage;
 import aside.ui.LibraryLayout;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -532,6 +534,9 @@ public class SelfTest {
         storyExport("night-shift");
         storyExport("overtime");
 
+        System.out.println("\n--- the phone build ---");
+        phoneBuild();
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
     }
@@ -615,6 +620,143 @@ public class SelfTest {
         StringBuilder sb = new StringBuilder();
         for (byte b : md.digest(Files.readAllBytes(file))) sb.append(String.format("%02x", b));
         return sb.toString();
+    }
+
+    /**
+     * FNAF 6's phone build, which is the first FNAF game on the shelf.
+     *
+     * <p>Four ways this can be wrong and look right, and one of them is the
+     * reason this section exists at all:
+     *
+     * <ol>
+     *   <li>The page is stale -- the engine's tables moved and nobody
+     *       regenerated it. Caught by regenerating and comparing, the same
+     *       rule every other phone build is held to.</li>
+     *   <li>The page is current and empty -- it loads, it draws nothing,
+     *       and in a diff it looks exactly like a page that works. Caught
+     *       by asking for the art.</li>
+     *   <li>The art it inlines was built from art that has since changed.
+     *       Java cannot re-run tools/fnaf6-phone-art.py, but it can hash
+     *       the sources and compare them to the hashes the tool wrote.</li>
+     *   <li><b>The page carries a second copy of the rules and the copy has
+     *       drifted.</b> The phone steps the night itself, so it has its own
+     *       clock, its own budget and its own coin flip, and both builds go
+     *       on working while quietly being different games. Nothing above
+     *       can see that. So the check is a measurement: run the same
+     *       policies over the same seeds through both engines and compare
+     *       the week.</li>
+     * </ol>
+     *
+     * <p>The measurement needs node, and node is not part of the engine's
+     * requirements. If it is not there this says so and moves on rather
+     * than failing -- a suite that will not run without a second runtime is
+     * a suite people stop running.
+     */
+    static void phoneBuild() {
+        Path out = Path.of("web", "fnaf6.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here)");
+            return;
+        }
+        try {
+            String generated = WebSalvage.html();
+            check("web/fnaf6.html is current -- regenerate it with aside.games.fnaf6.WebSalvage",
+                    generated.equals(Files.readString(out)));
+
+            check("web/fnaf6.html carries the art it stages",
+                    generated.contains("data:image/") && generated.contains("\"assets\":{"));
+            check("web/fnaf6.html carries the cast it deals",
+                    generated.contains("\"unit:scraptrap\"")
+                            && generated.contains("\"scare:lefty\""));
+            check("web/fnaf6.html has no stray control characters",
+                    generated.chars().noneMatch(c -> c < 0x20 && c != '\n' && c != '\t'));
+        } catch (Exception e) {
+            check("the phone build can be generated from here (" + e.getMessage() + ")", false);
+        }
+
+        phoneArtIsCurrent();
+        phoneEngineAgrees();
+    }
+
+    /** The same rule as art/web/, one directory over. */
+    static void phoneArtIsCurrent() {
+        Path manifest = Path.of("art", "phone", "fnaf6", "MANIFEST");
+        if (!Files.exists(manifest)) {
+            check("art/phone/fnaf6/MANIFEST exists (run tools/fnaf6-phone-art.py)", false);
+            return;
+        }
+        try {
+            int checked = 0;
+            List<String> stale = new ArrayList<>();
+            for (String line : Files.readAllLines(manifest)) {
+                if (line.isBlank()) continue;
+                String[] parts = line.strip().split("\\s+", 2);
+                if (parts.length < 2) continue;
+                checked++;
+                Path src = Path.of(parts[1]);
+                if (!Files.exists(src)) { stale.add(parts[1] + " (gone)"); continue; }
+                if (!sha256(src).equals(parts[0])) stale.add(parts[1]);
+            }
+            check("art/phone/fnaf6/ was built from the art that is here now"
+                    + (stale.isEmpty() ? "" : " -- stale: " + stale), stale.isEmpty());
+            check("art/phone/fnaf6/MANIFEST covers the art it was built from", checked > 0);
+        } catch (Exception e) {
+            check("art/phone/fnaf6/MANIFEST can be read (" + e.getMessage() + ")", false);
+        }
+    }
+
+    /**
+     * The desktop's week, in the shape tools/fnaf6-sweep.mjs prints.
+     *
+     * <p>The seeds are the sweep's own -- {@code 1000 * night + i} -- and
+     * the policies are the four the ladder is read against. Both sides have
+     * to agree on all of it or the comparison means nothing.
+     */
+    static String javaSweep() {
+        // Fully qualified: this package has a Bot of its own, and it is the
+        // story engine's, not the salvage bay's.
+        StringBuilder b = new StringBuilder();
+        for (aside.games.fnaf6.engine.Bot.Policy p
+                : new aside.games.fnaf6.engine.Bot.Policy[]{
+                    aside.games.fnaf6.engine.Bot.Policy.IDLE,
+                    aside.games.fnaf6.engine.Bot.Policy.PATROL,
+                    aside.games.fnaf6.engine.Bot.Policy.LISTEN,
+                    aside.games.fnaf6.engine.Bot.Policy.PRO}) {
+            b.append(p).append(": ");
+            for (int n = 1; n <= 5; n++) {
+                if (n > 1) b.append(' ');
+                b.append(Math.round(
+                        aside.games.fnaf6.engine.Bot.survival(p, n, 200) * 100)).append('%');
+            }
+            b.append('\n');
+        }
+        return b.toString();
+    }
+
+    /** Run the phone's engine over the same week and compare the two tables. */
+    static void phoneEngineAgrees() {
+        String mine = javaSweep();
+        String theirs;
+        try {
+            ProcessBuilder pb = new ProcessBuilder("node", "tools/fnaf6-sweep.mjs");
+            pb.redirectErrorStream(true);
+            Process pr = pb.start();
+            theirs = new String(pr.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            if (pr.waitFor() != 0) {
+                check("the phone's engine can be swept (node exited " + pr.exitValue()
+                        + ": " + theirs.strip() + ")", false);
+                return;
+            }
+        } catch (Exception e) {
+            System.out.println("       (no node -- the phone's engine was not compared "
+                    + "to this one; run tools/fnaf6-sweep.mjs by hand)");
+            return;
+        }
+        check("the phone's engine plays the same week as this one"
+                + (mine.equals(theirs) ? "" : "\n         here:  "
+                        + mine.strip().replace("\n", "\n                ")
+                        + "\n         phone: " + theirs.strip().replace("\n", "\n                ")),
+                mine.equals(theirs));
     }
 
     static void runUntilBlocked(Vn vn) {
