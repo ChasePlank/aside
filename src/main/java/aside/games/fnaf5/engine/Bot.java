@@ -147,15 +147,18 @@ package aside.games.fnaf5.engine;
  * counters are decoration.
  *
  * <b>What is still open, and it is the honest part.</b> PRO -- the policy
- * that actually plays all three counters -- reads 0% on nights 3 to 5. The
- * stop is the right answer to Ballora and it is also exactly what Freddy is
- * built to punish, so a policy that uses it has to choose *where* to stop,
- * and this one does not: it stops wherever it happens to be, and Freddy
- * walks into the room while it waits. That is the next piece of work, and
- * it is a bot problem before it is a balance problem -- the redesign cannot
- * be judged until something in the suite can play it. The difficulty curve
- * is also generous on nights 1 to 3 (100% for HOLD), because the grace
- * table was set for an engine where the shock was the Ballora answer.
+ * that actually plays all three counters -- reads <b>75%</b> over the week,
+ * behind HOLD (91%) and FLEE (97%). It is not a broken policy any more: the
+ * first version read 16%, and the fix was one condition on the stop (only
+ * stand still while you still hold a charge), which moved its deaths off
+ * Freddy entirely. What is left is that <b>the stop is affordable but not
+ * profitable</b> -- HOLD and FLEE never stop, so they never pay its price,
+ * and nothing in the redesign yet rewards a player for paying it. That is
+ * the next piece of work, and it is a bot problem before it is a balance
+ * problem: the redesign cannot be judged until something in the suite can
+ * play it well. The difficulty curve is also generous on nights 1 to 3
+ * (100% for HOLD), because the grace table was set for an engine where the
+ * shock was the Ballora answer.
  */
 public final class Bot {
 
@@ -374,22 +377,31 @@ public final class Bot {
      * <pre>
      *   Freddy in the room   shock him; he is the one with no other answer
      *   Foxy in the room     turn the feed, then keep walking
-     *   Ballora in the room  stop, and put the monitor down while you wait
+     *   Ballora in the room  stop -- but only with a charge in hand
      *   nothing in the room  keep away from what you can perceive, and walk
      * </pre>
      *
      * The monitor stays down except when Foxy has to be turned, because the
      * feed is his fuel -- a player who parks it is a player being hunted.
      *
-     * <b>It is a first attempt and it is not good yet.</b> It reads 0% on
-     * nights 3 to 5 and dies to Funtime Freddy, because it stops for Ballora
-     * without a plan for the pursuer who is closing while it waits, and it
-     * runs out of shocks. That is a real finding rather than a bug in the
-     * measurement: the stop is the right answer to Ballora and it is also
-     * the thing Freddy is built to punish, so a policy that uses it has to
-     * choose *where* to stop, and this one does not. It is in the suite so
-     * the next pass has something to improve rather than something to
-     * invent.
+     * <b>The one condition that matters is on the stop.</b> The stop is the
+     * right answer to Ballora and it is also exactly what Freddy is built to
+     * punish, so it is only affordable when the player holds the answer to
+     * him -- and the answer to him is a charge. The first version of this
+     * stopped whenever Ballora was in the room and nothing was next door, and
+     * it read <b>16%</b> over the week: it spent all five charges inside the
+     * first fifty seconds and then died to Freddy with nothing left. Gating
+     * the stop on `g.shocks > 0` takes it to <b>75%</b>, and the deaths move
+     * off Freddy entirely (0 over the week) and onto the two threats it can
+     * no longer answer. That is the whole lesson of the policy, and it is the
+     * game's own lesson stated as arithmetic: <b>you may only stand still
+     * while you can still answer what standing still costs.</b>
+     *
+     * It is still behind HOLD (91%) and FLEE (97%), and it should be -- HOLD
+     * and FLEE never stop, so they never pay the stop's price, and the
+     * redesign has not yet made the stop *profitable* rather than merely
+     * affordable. It is in the suite so the next pass has something to
+     * improve rather than something to invent.
      */
     static void pro(Game g, Brain b) {
         boolean pursuit = false, attention = false, sound = false;
@@ -403,8 +415,18 @@ public final class Bot {
         if (pursuit && g.shocks > 0) { g.shock(); return; }
         // Foxy: turn the feed, then keep moving -- the feed is not a wall.
         if (attention) steer(g, b);
-        // Ballora: silence, and freeze Foxy while we wait her out.
-        else if (sound) { g.monitorDown(); return; }
+        // Ballora: silence, and freeze Foxy while we wait her out -- but
+        // only when the stop is affordable. Freddy is what the stop costs,
+        // and the only thing that pays for him is a charge, so a player with
+        // none in hand cannot afford to stand still however quiet the
+        // building is. This one condition is the difference between a policy
+        // that reads 16% and one that reads 75%: without it PRO stops
+        // wherever it happens to be, spends all five charges on the first
+        // fifty seconds, and then dies to Freddy with nothing left.
+        else if (sound) {
+            boolean canAfford = g.shocks > 0 && g.heardAge >= HEARD_WINDOW;
+            if (canAfford) { g.monitorDown(); return; }
+        }
 
         // Keep away from anything we can perceive.
         Room.Where danger = nearestPerceived(g);

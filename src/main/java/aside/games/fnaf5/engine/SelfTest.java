@@ -502,13 +502,14 @@ public final class SelfTest {
                 (best - worst) * 100);
 
         // PRO -- the policy that plays all three counters -- is printed and
-        // not asserted, because it is a first attempt and it is not good
-        // yet. It reads 0% on the last three nights and dies to Funtime
-        // Freddy: the stop is the right answer to Ballora and it is also
-        // what Freddy is built to punish, so a policy that uses it has to
-        // choose where to stop and this one does not. See Bot#pro. The
-        // redesign cannot be judged until something in the suite can play
-        // it, and that is the next piece of work.
+        // not asserted, because it is still behind HOLD and FLEE and the gap
+        // is the open question rather than a contract. It reads 75% over the
+        // week and its deaths are all Ballora and Foxy: the stop is the right
+        // answer to Ballora and it is also what Freddy is built to punish, so
+        // it is only affordable while the player still holds a charge, and
+        // gating on that took it from 16% to 75%. What is left is that the
+        // stop is affordable but not *profitable* -- HOLD and FLEE never stop
+        // and so never pay its price. See Bot#pro.
         System.out.printf("    the policy that plays all three counters: PRO %.0f%%"
                         + " (n1 %.0f%%, n5 %.0f%%)%n",
                 mean(pro) * 100, pro[0] * 100, pro[4] * 100);
