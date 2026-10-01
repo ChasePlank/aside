@@ -3,6 +3,8 @@ package aside.games.fnaf3.engine;
 import aside.games.fnaf3.MouseMap;
 
 import java.util.ArrayDeque;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * The FNAF 3 checks, runnable with no display.
@@ -43,6 +45,7 @@ public final class SelfTest {
         reboots();
         office();
         screen();
+        phone();
         survival();
         System.out.println();
         System.out.println(checks + " checks, " + failed + " failed");
@@ -420,6 +423,100 @@ public final class SelfTest {
     }
 
     // ------------------------------------------------------------ survival
+
+    /**
+     * The phone build.
+     *
+     * <p>Two different things, and they fail for different reasons.
+     *
+     * <p><b>Is it current?</b> A generated file that has gone stale is worse
+     * than no file: it is a second copy of the game quietly disagreeing with
+     * the first. So the page is regenerated and compared rather than
+     * spot-checked -- the same check every other ported game carries.
+     *
+     * <p><b>Is it the same game?</b> A staleness check proves the file matches
+     * its generator and says nothing about whether the generator is right. The
+     * failure that would otherwise be silent is a rule that lives in the page
+     * as a literal and has stopped matching the engine -- so every number the
+     * night is made of is asserted to be the engine's own value, and the
+     * building's graph is asserted to be the engine's own graph.
+     *
+     * <p>What is <i>not</i> checked here is the RNG or the update loop. The
+     * page reproduces {@code java.util.Random} in BigInt -- including
+     * {@code nextInt}, which is a rejection sampler rather than a modulo --
+     * and that was verified by driving both engines under the same scripted
+     * policy: night one on seed 1001 produces identical traces every five
+     * seconds (his room, whether he is in the office, the air, the lure and
+     * the phantoms) and both end JUMPSCARED at the same moment. It is not
+     * checkable from Java without a JavaScript engine, and the alternative (a
+     * page that deals its own nights) would make the two builds different
+     * games with the same rules.
+     */
+    static void phone() {
+        section("the phone build");
+
+        Path out = Path.of("web", "fnaf3.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here -- run from the repository root)");
+            return;
+        }
+        String page;
+        try {
+            page = Files.readString(out);
+        } catch (Exception e) {
+            check("web/fnaf3.html can be read", false);
+            return;
+        }
+        try {
+            check("web/fnaf3.html is current -- regenerate it with aside.games.fnaf3.WebHouse",
+                    aside.games.fnaf3.WebHouse.html().equals(page));
+        } catch (Exception e) {
+            check("web/fnaf3.html is current -- regenerate it with aside.games.fnaf3.WebHouse",
+                    false);
+        }
+
+        // The building, which is the game: every room has one way back toward
+        // the office, so drawing him into a room is drawing him onto a path.
+        boolean graph = true;
+        for (int r = 0; r <= House.ROOMS; r++) {
+            StringBuilder want = new StringBuilder("    [");
+            int[] n = House.neighbours(r);
+            for (int i = 0; i < n.length; i++) {
+                if (i > 0) want.append(", ");
+                want.append(n[i]);
+            }
+            want.append("]");
+            if (!page.contains(want)) graph = false;
+        }
+        check("the page carries the building's graph", graph);
+        check("the page carries how far every room is from the office",
+                page.contains("toOffice: [0, 1, 2, 3, 4, 4, 3, 2, 3, 3, 4]"));
+
+        // The rules, as numbers.
+        check("the page carries what a reboot costs",
+                page.contains("rebootTime: " + aside.games.fnaf3.WebHouse.num(Game.REBOOT_TIME)));
+        check("the page carries how long the lure plays",
+                page.contains("lureDuration: " + aside.games.fnaf3.WebHouse.num(Game.LURE_DURATION)));
+        check("the page carries the lure's cooldown",
+                page.contains("lureCooldown: " + aside.games.fnaf3.WebHouse.num(Game.LURE_COOLDOWN)));
+        check("the page carries how much faster he moves with the air off",
+                page.contains("ventFailSpeedup: " + aside.games.fnaf3.WebHouse.num(Game.VENT_FAIL_SPEEDUP)));
+        check("the page carries how long a phantom lasts",
+                page.contains("phantomLife: " + aside.games.fnaf3.WebHouse.num(Game.PHANTOM_LIFE)));
+        check("the page carries the phantom rate with the air on",
+                page.contains("phantomRateCalm: " + aside.games.fnaf3.WebHouse.num(Game.PHANTOM_RATE_CALM)));
+        check("the page carries the phantom rate with the air off",
+                page.contains("phantomRateFailing: " + aside.games.fnaf3.WebHouse.num(Game.PHANTOM_RATE_FAILING)));
+
+        // The drain table, which is the honest difficulty lever.
+        check("the page carries the drain table",
+                page.contains("drainMult: " + aside.games.fnaf3.WebHouse.table(0)));
+
+        // And the phantoms, which are the cost of a failed system.
+        for (String name : Game.PHANTOM_NAMES) {
+            check("the page carries " + name, page.contains(name));
+        }
+    }
 
     static void survival() {
         section("survival, 60 seeds a night");

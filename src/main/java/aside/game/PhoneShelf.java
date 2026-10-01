@@ -83,6 +83,7 @@ public final class PhoneShelf {
             case "drift" -> "Scored, and dealt fresh every copy. Two records, one sitting.";
             case "lesson" -> "Keeps the handover in this browser. Three nights, and one shift.";
             case "tell" -> "Keeps the house in this browser. Five nights, and one sitting.";
+            case "fnaf3" -> "Real-time, like the desktop. The only verb you have is a noise.";
             case "fnaf4" -> "Real-time, like the desktop. Four sides to the room, one body.";
             case "fnaf6" -> "Real-time, like the desktop. Five nights, and one sitting.";
             case "fnaf7" -> "Real-time, like the desktop. It comes to the side you are not looking at.";
