@@ -105,9 +105,10 @@ public class NightSelect extends UiScreen {
                 W / 2, H - 124);
         gc.setFill(Color.web("#555577"));
         gc.setFont(Font.font("Arial", 13));
-        gc.fillText("The camera cannot see the room you are in. Ballora is blind "
-                + "and follows sound. Funtime Foxy follows the camera.", W / 2, H - 94);
-        gc.fillText("Funtime Freddy follows you, and nothing but a shock stops it.",
+        gc.fillText("The camera cannot see the room you are in. Ballora is blind and "
+                + "follows sound; stand still and she loses you.", W / 2, H - 94);
+        gc.fillText("Funtime Foxy follows the camera, and the feed is what moves him. "
+                + "Funtime Freddy follows you, and only the shock stops him.",
                 W / 2, H - 72);
         gc.fillText("click a night or ENTER to start      ESC back to the library",
                 W / 2, H - 44);

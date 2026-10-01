@@ -23,6 +23,15 @@ import aside.games.fnaf5.MouseMap;
  * HOLD scored 0% on every night, so it was comparing an array of zeros to
  * itself. The game's own bot doc said HOLD was the good policy. A check
  * that cannot fail is worse than no check, because it reads as verified.
+ *
+ * <b>2026-10-01, later: three of these checks are new and they are the
+ * redesign written as assertions.</b> The shock removes the pursuer and
+ * nothing else; the feed is Funtime Foxy's fuel, so he is faster with the
+ * monitor up than with it down and the other two do not care; and Ballora's
+ * counter fits inside the grace on every night, which it did not before.
+ * Each one is a rule the game now rests on, and each one is here so that a
+ * later tuning pass cannot quietly undo it -- which is exactly what
+ * happened to the "week gets harder" check the first time.
  */
 public final class SelfTest {
 
@@ -211,6 +220,33 @@ public final class SelfTest {
         check("and is counted as wasted", w.wastedShocks == 1);
         check("and still costs a charge", w.shocks == Game.shockAllowance(1) - 1);
 
+        // THE RULE, and it is the redesign: the shock removes the pursuer
+        // and nothing else. Ballora is blind and follows sound, so a shock
+        // in her room is a reason for her to stay; Foxy follows the feed
+        // and does not care. Before 2026-10-01 the shock cleared all three,
+        // and the sweep said the universal answer beat every specific one.
+        Game b = new Game(1, 42);
+        byKey(b, "ballora").room = b.where;
+        check("Ballora is in the room", b.occupied());
+        check("and the shock does not remove her", !b.shock());
+        check("and she is still there", byKey(b, "ballora").room == b.where);
+        check("and the shock reads as wasted", b.wastedShocks == 1);
+
+        Game x = new Game(1, 42);
+        byKey(x, "foxy").room = x.where;
+        check("Foxy is in the room", x.occupied());
+        check("and the shock does not remove him", !x.shock());
+        check("and he is still there", byKey(x, "foxy").room == x.where);
+
+        // The pursuer is still the one it answers, even standing beside
+        // something it cannot touch.
+        Game m = new Game(1, 42);
+        byKey(m, "ballora").room = m.where;
+        byKey(m, "freddy").room = m.where;
+        check("the shock finds the pursuer", m.shock());
+        check("and removes him", byKey(m, "freddy").room != m.where);
+        check("and leaves Ballora where she was", byKey(m, "ballora").room == m.where);
+
         // The charges run out and do not come back.
         Game e = new Game(1, 42);
         for (int i = 0; i < Game.shockAllowance(1) + 3; i++) { e.busy = 0; e.shock(); }
@@ -264,6 +300,59 @@ public final class SelfTest {
         t.watch(Room.Where.PARTS);
         check("moving the camera makes Foxy move now",
                 tf.timer >= t.interval(tf));
+
+        // THE FEED IS HIS FUEL. He follows the camera, so the camera is
+        // what moves him: twice as fast with the monitor up, frozen with it
+        // down. Before 2026-10-01 he was the same speed either way, which
+        // made looking free and left the one threat whose whole rule is
+        // about looking with four kills in a week. See Game.FEED_PACE.
+        Game fp = new Game(1, 42);
+        Threat fpFoxy = byKey(fp, "foxy");
+        double up = fp.interval(fpFoxy);
+        fp.monitorDown();
+        double down = fp.interval(fpFoxy);
+        check("Foxy is faster with the feed up than with it down", up < down);
+        check("and the feed is worth exactly FEED_PACE",
+                Math.abs(up * Game.FEED_PACE - down) < 1e-9);
+
+        // And the feed does not touch the other two. Ballora is blind and
+        // Freddy is following you; neither of them has ever seen a camera.
+        Game fo = new Game(1, 42);
+        Threat foBallora = byKey(fo, "ballora");
+        Threat foFreddy = byKey(fo, "freddy");
+        double balUp = fo.interval(foBallora);
+        double freUp = fo.interval(foFreddy);
+        fo.monitorDown();
+        check("the feed does not move Ballora", fo.interval(foBallora) == balUp);
+        check("and it does not move Freddy", fo.interval(foFreddy) == freUp);
+
+        // BALLORA'S COUNTER HAS TO FIT INSIDE THE GRACE, on every night of
+        // the week. It did not before 2026-10-01: her patience was 1.8 and
+        // night 5's grace was also 1.8, so the book answer to her was a
+        // coin flip on the last night and the sweep's competent policy died
+        // to her on every seed of it.
+        for (int n = 1; n <= 5; n++) {
+            Game gn = new Game(n, 1);
+            check("silence loses Ballora before the grace on night " + n,
+                    Game.BALLORA_PATIENCE < gn.grace());
+        }
+
+        // And she is faster than the player once the week has started,
+        // which is what makes the stop a decision rather than a formality:
+        // at pace 1.00 she moved every 3.0 seconds on night 5 while the
+        // player moved every 1.5, so walking away was always an answer and
+        // silence never had to be. Nights 1 and 2 are the ramp -- she is
+        // still slower than the player there, and that is deliberate,
+        // because a first night that already demands the stop is not a
+        // first night.
+        for (int n = 3; n <= 5; n++) {
+            Game gn = new Game(n, 1);
+            check("Ballora is faster than the player on night " + n,
+                    gn.interval(byKey(gn, "ballora")) < Game.MOVE_TIME);
+        }
+        Game n1 = new Game(1, 1);
+        check("and the first night is still a night you can walk out of",
+                n1.interval(byKey(n1, "ballora")) > Game.MOVE_TIME);
     }
 
     // ------------------------------------------------------------ the clock
@@ -339,21 +428,23 @@ public final class SelfTest {
         section("the week");
 
         int runs = 60;
-        System.out.printf("    %-6s %7s %7s %7s %7s %7s%n",
-                "night", "IDLE", "REACT", "HOLD", "FLEE", "PANIC");
+        System.out.printf("    %-6s %7s %7s %7s %7s %7s %7s%n",
+                "night", "IDLE", "REACT", "HOLD", "FLEE", "PANIC", "PRO");
         double[] hold = new double[5];
         double[] react = new double[5];
         double[] flee = new double[5];
         double[] panic = new double[5];
+        double[] pro = new double[5];
         for (int n = 1; n <= 5; n++) {
             double idle = Bot.survival(n, runs, Bot.Policy.IDLE);
             react[n - 1] = Bot.survival(n, runs, Bot.Policy.REACT);
             hold[n - 1] = Bot.survival(n, runs, Bot.Policy.HOLD);
             flee[n - 1] = Bot.survival(n, runs, Bot.Policy.FLEE);
             panic[n - 1] = Bot.survival(n, runs, Bot.Policy.PANIC);
-            System.out.printf("    %-6d %6.0f%% %6.0f%% %6.0f%% %6.0f%% %6.0f%%%n",
+            pro[n - 1] = Bot.survival(n, runs, Bot.Policy.PRO);
+            System.out.printf("    %-6d %6.0f%% %6.0f%% %6.0f%% %6.0f%% %6.0f%% %6.0f%%%n",
                     n, idle * 100, react[n - 1] * 100, hold[n - 1] * 100,
-                    flee[n - 1] * 100, panic[n - 1] * 100);
+                    flee[n - 1] * 100, panic[n - 1] * 100, pro[n - 1] * 100);
         }
 
         // The shape, not the numbers. A player who does nothing must die on
@@ -385,21 +476,42 @@ public final class SelfTest {
                     hold[n - 1] >= hold[n] - 0.02);
         }
 
-        // The finding, and it is the open design problem rather than a
-        // tuning number: the moving policies converge. Running from
-        // Funtime Freddy is not worse than patrolling, and moving at random
-        // is not worse either, because in a line the player is faster than
-        // everything in it and the direction of a step barely matters. The
-        // design says the three threats demand contradictory things; what
-        // the sweep says is that only Ballora ever kills, so the
-        // contradiction is not being felt. Printed rather than asserted,
-        // because a fix should be allowed to break it.
+        // THE SHOCK IS NOT A UNIVERSAL ANSWER, and this is the check the
+        // redesign was for. Before 2026-10-01 the shock cleared the room of
+        // all three threats, so the policy that spammed it did not have to
+        // know which counter belonged to which threat -- and it won:
+        // PANIC 86%, FLEE 85%, HOLD 79%. The shock removes the pursuer
+        // only now, so panicking wastes charges on Ballora and Foxy and has
+        // none left when Freddy is the one in the room. A game whose best
+        // strategy is to panic is a game whose counters are decoration.
+        check("panicking is worse than playing the counters: HOLD beats PANIC",
+                holdMean > mean(panic));
+
+        // The finding that is still open, and it is now a *bot* finding
+        // rather than a balance one: the moving policies converge. Running
+        // from Funtime Freddy is not worse than patrolling, and moving at
+        // random is not worse either, because in a line the player is
+        // faster than everything in it and the direction of a step barely
+        // matters. Printed rather than asserted, because a fix should be
+        // allowed to break it.
         double best = Math.max(holdMean, Math.max(mean(flee), mean(panic)));
         double worst = Math.min(holdMean, Math.min(mean(flee), mean(panic)));
         System.out.printf("    the moving policies: HOLD %.0f%%, FLEE %.0f%%, PANIC %.0f%%"
                         + " (spread %.0f points)%n",
                 holdMean * 100, mean(flee) * 100, mean(panic) * 100,
                 (best - worst) * 100);
+
+        // PRO -- the policy that plays all three counters -- is printed and
+        // not asserted, because it is a first attempt and it is not good
+        // yet. It reads 0% on the last three nights and dies to Funtime
+        // Freddy: the stop is the right answer to Ballora and it is also
+        // what Freddy is built to punish, so a policy that uses it has to
+        // choose where to stop and this one does not. See Bot#pro. The
+        // redesign cannot be judged until something in the suite can play
+        // it, and that is the next piece of work.
+        System.out.printf("    the policy that plays all three counters: PRO %.0f%%"
+                        + " (n1 %.0f%%, n5 %.0f%%)%n",
+                mean(pro) * 100, pro[0] * 100, pro[4] * 100);
 
         // The building has to be able to surprise you. Before the die was
         // added to Threat.update, every seed produced the same night: the

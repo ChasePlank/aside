@@ -19,14 +19,17 @@ package aside.games.fnaf5.engine;
  * punishes standing still. Ballora punishes moving. Foxy punishes looking.
  * A player cannot satisfy all three, so the night is spent choosing which
  * one to be wrong about, and the controlled shock is the only thing that
- * answers all three at once -- which is why there are so few of them.
+ * answers Freddy -- which is why there are so few of them, and why the
+ * other two have to be answered by their own counters. See
+ * {@link Game#shock} for why the shock stopped being a universal answer on
+ * 2026-10-01, and {@link Game#FEED_PACE} for the other half of that change.
  *
- * Two of the three can be permanently evaded by a player who understands
- * them, and that is deliberate. Ballora can never find you if you never
- * move. Foxy can never reach you if you never park the camera. Neither of
- * those is a winning strategy, because Freddy does not care what you do,
- * and because the camera is the only way to know which room is safe to
- * walk into. The counters exist so that the player has something to learn;
+ * Two of the three can be held off by a player who understands them, and
+ * that is deliberate. Ballora loses you if the building stays quiet long
+ * enough, and Foxy stops dead if the monitor goes down. Neither of those is
+ * a winning strategy on its own, because Freddy does not care what you do,
+ * and because the camera is the only way to know which room is safe to walk
+ * into. The counters exist so that the player has something to learn;
  * Freddy exists so that learning it is not enough.
  */
 public final class Threat {

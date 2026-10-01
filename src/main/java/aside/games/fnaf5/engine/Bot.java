@@ -57,6 +57,9 @@ package aside.games.fnaf5.engine;
  *           assumed.
  *   PANIC   shocks the moment anything is in the room and never stops
  *           moving. Must be worse than HOLD, or the shock has no cost.
+ *   PRO     plays all three counters and keeps the monitor down unless
+ *           Foxy has to be turned. Added 2026-10-01, because the set did
+ *           not contain a competent player -- see {@link #pro}.
  *
  * <b>What the fixed sweep found.</b> HOLD beats REACT, which is the ladder
  * the design wants. FLEE is measurably *worse* than HOLD -- about ten
@@ -110,10 +113,53 @@ package aside.games.fnaf5.engine;
  * Freddy takes 1. The contradiction is never felt, and fixing that means
  * giving Freddy and Foxy a way to matter, which is a redesign rather than
  * a table.
+ *
+ * <h2>2026-10-01, later: the redesign, and what it moved</h2>
+ *
+ * The paragraph above was right about the diagnosis and wrong about one
+ * detail, and the detail is what made the fix possible.
+ *
+ * <b>The detail: the player was faster than everything, so the *stop* --
+ * Ballora's actual counter -- was never needed.</b> The note above says the
+ * direction of a step barely matters. What it does not say is that the
+ * reason is speed: Ballora moved every 3.0 seconds on night 5 while the
+ * player moved every 1.5, so a player who simply kept walking was always
+ * ahead of her, and the only thing that ever caught them was the end of the
+ * line. The design's answer to her is silence, and silence was a formality
+ * nobody had to use.
+ *
+ * <b>Three rules changed, and the numbers moved with them.</b>
+ *
+ *   1. {@link Game#shock} removes the pursuer only. The shock was a
+ *      universal answer, so "shock everything" beat "know which counter
+ *      belongs to which threat" -- PANIC 86%, HOLD 79%.
+ *   2. {@link Game#FEED_PACE} ties Funtime Foxy's speed to the monitor. He
+ *      was the same speed either way, so looking was free and the one
+ *      threat whose rule is about looking took 4 kills in a week.
+ *   3. Ballora is faster than the player (pace 2.60). Moving is no longer
+ *      an answer to her; stopping is.
+ *
+ * <b>What the sweep says now.</b> The ladder is FLEE 97%, HOLD 91%, PANIC
+ * 0% over the week, and the killers are 12 Ballora, 11 Funtime Foxy and 3
+ * Funtime Freddy -- three threats that all end nights, where there used to
+ * be one. PANIC is last instead of first, which is the specific thing the
+ * redesign was for: a game whose best strategy is to panic is a game whose
+ * counters are decoration.
+ *
+ * <b>What is still open, and it is the honest part.</b> PRO -- the policy
+ * that actually plays all three counters -- reads 0% on nights 3 to 5. The
+ * stop is the right answer to Ballora and it is also exactly what Freddy is
+ * built to punish, so a policy that uses it has to choose *where* to stop,
+ * and this one does not: it stops wherever it happens to be, and Freddy
+ * walks into the room while it waits. That is the next piece of work, and
+ * it is a bot problem before it is a balance problem -- the redesign cannot
+ * be judged until something in the suite can play it. The difficulty curve
+ * is also generous on nights 1 to 3 (100% for HOLD), because the grace
+ * table was set for an engine where the shock was the Ballora answer.
  */
 public final class Bot {
 
-    public enum Policy { IDLE, REACT, HOLD, FLEE, PANIC }
+    public enum Policy { IDLE, REACT, HOLD, FLEE, PANIC, PRO }
 
     /** How often the bot is allowed to change its mind, in seconds. */
     public static final double REACTION = 0.20;
@@ -188,6 +234,7 @@ public final class Bot {
             case REACT -> react(g, b);
             case HOLD -> hold(g, b);
             case FLEE -> flee(g, b);
+            case PRO -> pro(g, b);
             default -> { }
         }
     }
@@ -218,9 +265,9 @@ public final class Bot {
         if (!any) return false;
 
         // The three counters, in the order of how much they cost. Freddy
-        // first, because it is the only one that can end the night and
-        // because the shock clears the room, so it answers the other two as
-        // well.
+        // first, because the shock is the only answer he has -- and, since
+        // 2026-10-01, the only answer the shock *is*: it removes him and
+        // nothing else. See {@link Game#shock}.
         if (pursuit && g.shocks > 0) {
             g.shock();
             return true;
@@ -240,13 +287,14 @@ public final class Bot {
         if (pursuit) return false;
 
         // Ballora alone. The book answer is to do nothing -- she is blind
-        // and silence loses her -- and the sweep says the book answer does
-        // not work. Her patience is 1.8 seconds, but the move you were
-        // already making when she walked in has just made a noise, and the
-        // 1.8 seconds of silence she needs are owed *after* you stop. That
-        // is longer than the grace on every night of the week, so standing
-        // still is not a counter, it is a slower death. Walking is the only
-        // thing that has ever worked on her.
+        // and silence loses her -- and this returns false so the policy
+        // falls through to walking, which is what HOLD and FLEE do and
+        // what PRO deliberately does not. The note that used to live here
+        // said the book answer could not work, because her patience was
+        // 1.8 seconds and night 5's grace was also 1.8, so the stop was a
+        // coin flip. That was a real finding and it is why her patience is
+        // 1.2 now: a counter that only fits inside a generous night is not
+        // a counter. PRO uses it; see {@link #pro} for what it costs.
         return false;
     }
 
@@ -310,6 +358,92 @@ public final class Bot {
         if (tryStep(g, b, inward)) return;
         if (tryStep(g, b, -inward)) return;
         steer(g, b);
+    }
+
+    /**
+     * The player who has read all three rules and plays them.
+     *
+     * <b>Added 2026-10-01, because the sweep did not contain one.</b> HOLD
+     * was labelled "the competent player" and it is not: it answers Freddy
+     * and Foxy and then walks forever, which is two of the three counters.
+     * The third -- stop and let Ballora lose you -- was never played by any
+     * policy in the set, so the reading "the game does not reward
+     * competence" was taken from a policy that was not competent. This one
+     * plays all three:
+     *
+     * <pre>
+     *   Freddy in the room   shock him; he is the one with no other answer
+     *   Foxy in the room     turn the feed, then keep walking
+     *   Ballora in the room  stop, and put the monitor down while you wait
+     *   nothing in the room  keep away from what you can perceive, and walk
+     * </pre>
+     *
+     * The monitor stays down except when Foxy has to be turned, because the
+     * feed is his fuel -- a player who parks it is a player being hunted.
+     *
+     * <b>It is a first attempt and it is not good yet.</b> It reads 0% on
+     * nights 3 to 5 and dies to Funtime Freddy, because it stops for Ballora
+     * without a plan for the pursuer who is closing while it waits, and it
+     * runs out of shocks. That is a real finding rather than a bug in the
+     * measurement: the stop is the right answer to Ballora and it is also
+     * the thing Freddy is built to punish, so a policy that uses it has to
+     * choose *where* to stop, and this one does not. It is in the suite so
+     * the next pass has something to improve rather than something to
+     * invent.
+     */
+    static void pro(Game g, Brain b) {
+        boolean pursuit = false, attention = false, sound = false;
+        for (Threat t : g.threats) {
+            if (!t.inYourRoom(g)) continue;
+            if (t.rule == Threat.Rule.PURSUIT) pursuit = true;
+            if (t.rule == Threat.Rule.ATTENTION) attention = true;
+            if (t.rule == Threat.Rule.SOUND) sound = true;
+        }
+        // Freddy: the shock is the only answer, and it clears the room.
+        if (pursuit && g.shocks > 0) { g.shock(); return; }
+        // Foxy: turn the feed, then keep moving -- the feed is not a wall.
+        if (attention) steer(g, b);
+        // Ballora: silence, and freeze Foxy while we wait her out.
+        else if (sound) { g.monitorDown(); return; }
+
+        // Keep away from anything we can perceive.
+        Room.Where danger = nearestPerceived(g);
+        if (danger != null && Room.distance(danger, g.where) <= 2) {
+            int away = Integer.compare(Room.index(g.where), Room.index(danger));
+            if (away == 0) away = b.dir;
+            if (tryStep(g, b, away)) return;
+            if (tryStep(g, b, -away)) return;
+        }
+
+        // The feed is Foxy's fuel: leave it down unless we need it.
+        if (g.monitorOn && !attention) { g.monitorDown(); return; }
+
+        int here = Room.index(g.where);
+        int next = here + b.dir;
+        if (next < 0 || next >= Room.COUNT) { b.dir = -b.dir; next = here + b.dir; }
+        if (tryStep(g, b, b.dir)) return;
+        b.dir = -b.dir;
+        if (tryStep(g, b, b.dir)) return;
+        steer(g, b);
+    }
+
+    /**
+     * The nearest room the bot has a reason to believe holds something.
+     *
+     * The same two channels a player has for a room they are not standing
+     * in -- the monitor, and a step heard next door -- and nothing else.
+     */
+    static Room.Where nearestPerceived(Game g) {
+        Room.Where best = null;
+        int bestD = 99;
+        for (Threat t : g.threats) {
+            boolean known = perceived(g, t.room)
+                    || (g.heardAt == t.room && g.heardAge < HEARD_WINDOW);
+            if (!known) continue;
+            int d = Room.distance(t.room, g.where);
+            if (d < bestD) { bestD = d; best = t.room; }
+        }
+        return best;
     }
 
     /** True at the two ends of the line, which are the only traps in it. */

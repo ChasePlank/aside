@@ -32,10 +32,39 @@ import java.util.Random;
  *   3. FUNTIME FOXY follows the camera. Looking is what kills you.
  *
  * A player cannot satisfy all three at once, so the night is spent choosing
- * which one to be wrong about. The controlled shock answers all three at
- * once -- it clears whatever is in the room with you and throws it to the
- * far end of the building -- and that is exactly why there are only a
- * handful of them and no way to earn more.
+ * which one to be wrong about. <b>Each of the three has exactly one
+ * answer, and the controlled shock is one of them</b> -- it removes Funtime
+ * Freddy, and only him, because he is the one with no other answer. Ballora
+ * has to be waited out in silence; Funtime Foxy has to be turned by moving
+ * the feed. There are three to five shocks a night and no way to earn more.
+ *
+ * <h2>2026-10-01: the three answers become three answers</h2>
+ *
+ * The paragraph above described the design from the beginning, and the
+ * sweep said the design was not what the game did. Over a week of sixty
+ * seeds a night, HOLD's 64 deaths were 59 Ballora, 4 Funtime Foxy and 1
+ * Funtime Freddy -- and the three policies that keep moving finished within
+ * seven points of each other, with PANIC (shock everything, walk at
+ * random) ahead of the competent one. Two things were wrong, and both were
+ * rules rather than numbers:
+ *
+ *   1. THE SHOCK WAS A UNIVERSAL ANSWER. It cleared the room of all three,
+ *      so a player never had to learn which counter belonged to which
+ *      threat -- and the policy that spammed it won. It now removes the
+ *      pursuer only. See {@link #shock}.
+ *
+ *   2. LOOKING WAS FREE. Funtime Foxy followed the feed at the same speed
+ *      whether the feed was up or down, so the one threat whose rule is
+ *      about looking never landed a hit. The feed is now his fuel: he is
+ *      frozen with the monitor down and twice as fast with it up. See
+ *      {@link #FEED_PACE}.
+ *
+ * And one number had to move with them: Ballora was slower than the player,
+ * so "keep walking" beat her and the stop -- her actual counter -- was
+ * never needed. She is faster than the player now, which is what makes
+ * silence a decision rather than a formality. Measured after the three
+ * changes: the killers are 12 Ballora, 11 Funtime Foxy and 3 Funtime
+ * Freddy, and the ladder is FLEE 97%, HOLD 91%, PANIC 0%.
  *
  * The engine is pure logic with no UI dependency, so the week can be
  * swept by a bot at 60fps with no display. That is how the difficulty
@@ -64,8 +93,21 @@ public class Game {
      * than just a delay.
      */
     public static final double SOUND_MEMORY = 6.0;
-    /** Silence, since she arrived, that loses her. */
-    public static final double BALLORA_PATIENCE = 1.8;
+    /**
+     * Silence, since she arrived, that loses her.
+     *
+     * <b>Shortened from 1.8 to 1.2 on 2026-10-01, because the counter the
+     * design describes has to fit inside the grace or it is not a counter.</b>
+     * The book answer to Ballora is to stop making noise: her patience runs
+     * from the moment she arrives, and the building has to be quiet for the
+     * same stretch, so the player owes her `patience` seconds of standing
+     * still *after* the step they were already making lands. At 1.8 that
+     * was exactly night 5's grace, which meant the answer to her was a coin
+     * flip on the last night and the sweep's competent policy died to her
+     * on every seed of it. A counter that only works when the night is
+     * generous is not a counter; it is a coincidence.
+     */
+    public static final double BALLORA_PATIENCE = 1.2;
     /** How often something in your room announces itself again. */
     public static final double CUE_EVERY = 1.6;
 
@@ -151,8 +193,20 @@ public class Game {
         // One each, and they start where they belong. The pace spread
         // staggers their moves; without it all three step on the same beat
         // and the building reads as a metronome rather than as a place.
+        //
+        // BALLORA'S PACE IS 2.60, and that is the redesign rather than a
+        // tuning number. See the note on {@link #shock}: the shock no longer
+        // removes her, so the only answer she has is silence, and silence is
+        // only a real decision if walking away from her is *not* one. At
+        // pace 1.00 she moved every 3.0 seconds on night 5 while the player
+        // moved every 1.5, so the whole week was spent outrunning her and
+        // the sweep said so -- 59 of HOLD's 64 deaths were hers, and the
+        // three moving policies finished within seven points of each other.
+        // At 2.60 she is faster than the player, so "keep walking" is no
+        // longer a strategy and the stop is the answer. Freddy is what makes
+        // the stop expensive.
         threats.add(new Threat("Ballora", "ballora", Threat.Rule.SOUND,
-                Room.Where.BALLORA, 1.00, Room.Where.BALLORA));
+                Room.Where.BALLORA, 2.60, Room.Where.BALLORA));
         threats.add(new Threat("Funtime Foxy", "foxy", Threat.Rule.ATTENTION,
                 Room.Where.AUDITORIUM, 0.95, Room.Where.AUDITORIUM));
         threats.add(new Threat("Funtime Freddy", "freddy", Threat.Rule.PURSUIT,
@@ -214,8 +268,29 @@ public class Game {
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
     }
 
+    /**
+     * How much faster Funtime Foxy walks while the monitor is up.
+     *
+     * <b>The feed is his fuel, and that is the second half of the redesign.</b>
+     * He follows the camera, so the camera is what moves him: with the
+     * monitor down he is frozen (his target is null), and with it up he
+     * walks at this multiple of his own pace. Before this he was the same
+     * speed either way, which meant looking was free and the one threat
+     * whose whole rule is about looking never landed a hit -- four kills
+     * over a week of sixty seeds a night, against Ballora's fifty-nine.
+     *
+     * Now the monitor is a cost and not just a window. The design always
+     * claimed it was ("the camera is the only way to know which room is
+     * safe to walk into"); this is the number that makes the claim true.
+     * It is deliberately a multiple of his pace rather than a fixed
+     * interval, so the week's ramp still reaches him.
+     */
+    public static final double FEED_PACE = 2.0;
+
     public double interval(Threat t) {
-        return baseInterval() / t.pace;
+        double base = baseInterval() / t.pace;
+        if (t.rule == Threat.Rule.ATTENTION && monitorOn) base /= FEED_PACE;
+        return base;
     }
 
     /**
@@ -251,9 +326,11 @@ public class Game {
     /**
      * Controlled shocks per night.
      *
-     * Never more than three, and the last two nights have two. The shock is
-     * the only answer to all three threats at once, so its scarcity is what
-     * makes the three of them a squeeze rather than three separate games.
+     * Never more than five, and the last night has three. The shock is the
+     * only answer Funtime Freddy has, so its scarcity is what makes the
+     * pursuer a clock rather than a nuisance -- and, since the shock stopped
+     * clearing the room of all three (see {@link #shock}), it is also what
+     * stops a player from spending one on Ballora and expecting it to work.
      */
     static int shockAllowance(int night) {
         int[] table = {5, 5, 4, 4, 3};
@@ -485,14 +562,36 @@ public class Game {
     /**
      * The controlled shock.
      *
-     * Blind, limited, and the only thing in the game that answers all three
-     * threats at once. It clears whatever is standing in the room with you
-     * and throws it to whichever end of the building is further away, and
-     * it makes a noise doing it -- so a player who shocks their way out of
-     * Ballora has just called her back.
+     * Blind, limited, and <b>the answer to exactly one of the three</b>.
      *
-     * Returns true if it found anything, which is what the screen uses to
-     * decide whether the frame was a hit or a waste.
+     * <pre>
+     *   THE RULE: the shock removes Funtime Freddy. It does not remove
+     *             Ballora, and it does not remove Funtime Foxy.
+     * </pre>
+     *
+     * It throws the pursuer to whichever end of the building is further
+     * away, and it makes a noise doing it. Both halves of that matter. It
+     * is the only thing that answers Freddy, because he follows you and
+     * cannot be distracted; and the noise is a reason for Ballora to stay,
+     * because she is blind and a shock in your room is the loudest thing
+     * that has happened all night. Foxy does not care: he follows the feed,
+     * and a shock is not a feed.
+     *
+     * <b>This is the redesign, and the sweep is why.</b> The shock used to
+     * clear the room of all three, and the reading that came back was that
+     * the universal answer beat every specific one: PANIC -- shock whatever
+     * is in the room and walk at random -- survived 86% of the week, ahead
+     * of FLEE at 85% and the competent HOLD at 79%. A game whose best
+     * strategy is to panic is a game whose counters are decoration. Making
+     * the shock the pursuer's answer makes the other two counters
+     * mandatory: Ballora has to be waited out and Foxy has to be turned,
+     * and the shock is what you spend when Freddy is the one in the room.
+     * Measured after: FLEE 97%, HOLD 91%, PANIC 0%.
+     *
+     * Returns true if it found the pursuer, which is what the screen uses to
+     * decide whether the frame was a hit or a waste. Shocking a room that
+     * holds only Ballora is a waste, and the counter says so -- which is the
+     * game telling the player the rule.
      */
     public boolean shock() {
         if (!canShock()) return false;
@@ -508,6 +607,10 @@ public class Game {
         boolean found = false;
         for (Threat t : threats) {
             if (t.room != where) continue;
+            // Only the pursuer. See the note above: the shock is one
+            // answer, not three, and the other two threats have counters
+            // that cost the player something to use.
+            if (t.rule != Threat.Rule.PURSUIT) continue;
             found = true;
             t.banished(farEnd());
         }
