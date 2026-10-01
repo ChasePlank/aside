@@ -47,7 +47,14 @@ package aside.games.fnaf5.engine;
  *
  *   IDLE    does nothing at all. Must die on every night.
  *   REACT   answers what is in the room with it, and nothing else. The
- *           player who has learned the three counters and stops there.
+ *           player who has learned the three counters and stops there --
+ *           literally. It was the second-best policy in the set until
+ *           2026-10-01, because never moving meant never making a sound,
+ *           so Ballora never found it and its whole night was a race
+ *           between Freddy's arrival rate and five charges. The pursuer
+ *           charges for stillness now (see {@link Game#STILL_WINDOW}), so
+ *           it is behind both of the policies that walk: 0% over the week,
+ *           2% on the first night.
  *   HOLD    does that too, and keeps walking. It was labelled "the
  *           competent player" for most of the game's life and it is not
  *           one: it plays two of the three counters and never stops. Since
@@ -269,6 +276,40 @@ package aside.games.fnaf5.engine;
  * are Ballora's on every night of the week -- 590, 589, 582, 546 and 528
  * out of 600 -- which is the redesign stated as a count.
  *
+ * <h2>2026-10-01, the fourth pass: the second place in the ladder</h2>
+ *
+ * The table above is right about the top and wrong about the runner-up.
+ * <b>REACT -- the policy that never takes a step -- was second at 20%</b>,
+ * and on the first night it beat the competent policy outright, 92% to
+ * 86%. The cause is not a number: every cost in the building was charged
+ * to a player who is <i>doing</i> something. A step is a noise and the
+ * noise is Ballora's; the feed is Funtime Foxy's fuel. A player who never
+ * moves pays neither, so REACT had opted out of two of the three demands
+ * and the only thing left to charge it was the pursuer -- whose answer,
+ * the shock, is a finite resource that five charges made sufficient on an
+ * easy night.
+ *
+ * <b>The fix is the rule the pursuer was always missing.</b> Past
+ * {@link Game#STILL_WINDOW} seconds without a step, Funtime Freddy closes
+ * at {@link Game#STILL_PACE}. He follows you, and a player who never moves
+ * is a player he does not have to follow. Measured over 200 seeds a night:
+ *
+ * <pre>
+ *   policy   before (week)   after (week)   after (n1..n5)
+ *   IDLE          0%             0%         0  0  0  0  0
+ *   REACT        20%             0%         2  0  0  0  0
+ *   HOLD          5%             6%         1  3  5  8 14
+ *   FLEE         10%            11%         9  9  5 19 13
+ *   PANIC         0%             1%         1  1  3  1  0
+ *   PRO          61%            62%        84 79 67 52 28
+ * </pre>
+ *
+ * The competent policy does not move, which is the point: the tax falls
+ * only on a player who has stopped, and PRO's stops are about a second
+ * long. The ladder now has the shape the design describes -- the policy
+ * that plays all three counters first, and the policy that never moves
+ * behind both of the policies that do.
+ *
  * <b>And three of PRO's own rules were bugs, all three found by the same
  * instrument.</b> The stop was an `else` after the Foxy counter, so a room
  * holding Foxy skipped it; it was gated on holding a charge, which was
@@ -416,8 +457,8 @@ public final class Bot {
         // what PRO deliberately does not. That split is the whole ladder
         // now: since Ballora's clock is shorter than a step, walking is
         // not an answer to her, so the policies that walk are the policies
-        // that die. Measured over 600 seeds a night, HOLD 5%, FLEE 10%,
-        // REACT 20%, PRO 61%. See {@link #pro}.
+        // that die. Measured over 200 seeds a night, HOLD 6%, FLEE 11%,
+        // REACT 0%, PRO 62%. See {@link #pro}.
         return false;
     }
 

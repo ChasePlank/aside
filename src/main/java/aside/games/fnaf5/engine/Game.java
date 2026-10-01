@@ -103,6 +103,29 @@ import java.util.Random;
  * first time in the game's life, and the killers are Ballora's: HOLD dies
  * to her on every night of the week.
  *
+ * <h2>2026-10-01, the fourth pass: stillness gets a price</h2>
+ *
+ * The pass above left one thing wrong, and it was the second place in the
+ * ladder rather than the first. <b>REACT -- the policy that answers the
+ * room and never takes a step -- read 20% over the week, behind only the
+ * policy that plays all three counters.</b> Its whole night was a race
+ * between Funtime Freddy's arrival rate and five charges, and on the first
+ * night the charges won: 92%. The reason is that every cost in the
+ * building was charged to a player who is <i>doing</i> something -- a step
+ * is a noise and the noise is Ballora's, and the feed is Funtime Foxy's
+ * fuel -- so a player who never moves paid neither and had opted out of
+ * two of the three demands.
+ *
+ * The fix is a rule and it belongs to the pursuer, because he is the only
+ * threat left with anything to charge: <b>past {@link #STILL_WINDOW}
+ * seconds without a step, Funtime Freddy closes at {@link #STILL_PACE}.</b>
+ * He follows you, and a player who never moves is a player he does not
+ * have to follow -- he already knows where they are. Measured over 200
+ * seeds a night: REACT 20% -> <b>0%</b> over the week and 92% -> 2% on the
+ * first night, with the competent policy unchanged at 62%. The ladder now
+ * reads PRO 62%, FLEE 11%, HOLD 6%, PANIC 1%, REACT 0%, IDLE 0% -- the
+ * policy that never moves is behind both of the policies that do.
+ *
  * The engine is pure logic with no UI dependency, so the week can be
  * swept by a bot at 60fps with no display. That is how the difficulty
  * table was set, rather than by playing twenty nights by hand.
@@ -273,6 +296,16 @@ public class Game {
     public int arrivals;
     /** How many rooms you have walked through. Read by the report. */
     public int moves;
+    /**
+     * Seconds since you last finished a move.
+     *
+     * The one number in the building that is charged to a player for
+     * <i>not</i> doing something. Every other price is paid by moving -- a
+     * step is a noise and the noise is Ballora's, and the feed is Funtime
+     * Foxy's fuel -- so a player who never moves pays neither. This is what
+     * Funtime Freddy charges them. See {@link #STILL_WINDOW}.
+     */
+    public double stillTime;
     /** How many times you put the monitor on a different room. */
     public int cameraSwitches;
 
@@ -416,9 +449,73 @@ public class Game {
      */
     public static final double FEED_PACE = 2.0;
 
+    /**
+     * How long you can stand still before Funtime Freddy starts closing
+     * faster.
+     *
+     * <pre>
+     *   THE RULE: he follows you, and a player who never moves is a player
+     *             he does not have to follow -- he already knows where you
+     *             are.
+     * </pre>
+     *
+     * <b>This is what stillness costs when the player has chosen it, and
+     * it was the one price the building did not charge.</b> Every other
+     * cost in FNAF 5 is paid by a player who is <i>doing</i> something: a
+     * step is a noise and the noise is Ballora's, and the feed is Funtime
+     * Foxy's fuel. A player who never moves pays neither -- and the sweep
+     * said so. REACT, the policy that answers the room and never takes a
+     * step, read <b>92% on the first night</b> and 20% over the week,
+     * second only to the policy that plays all three counters, because
+     * never moving means never making a sound, so Ballora never finds it
+     * and the whole night is a race between Funtime Freddy's arrival rate
+     * and five charges. On the first night the charges win.
+     *
+     * <b>Why the fix is a rule rather than a number.</b> The design says
+     * the three demands contradict: walk and Ballora comes, stop and
+     * Freddy comes, look and Foxy comes. The contradiction is only felt by
+     * a player who is moving. A player who never moves has opted out of
+     * two of the three, and the only threat left to charge them is the
+     * pursuer -- who is also the one threat with no counter but the shock.
+     * So the pursuer is where the price of stillness has to live, and the
+     * price is that he stops having to find you: past this many seconds
+     * without a step, he closes at {@link #STILL_PACE}.
+     *
+     * <b>Three seconds, and both bounds on it are measured.</b> It has to
+     * be longer than a step (1.50s) or a player who is walking is charged
+     * for the gaps between their own footsteps, and it has to be longer
+     * than a stop for Ballora (her patience is 0.8s, so the competent
+     * policy's stops are around a second) or the counter the whole
+     * 2026-10-01 pass is built on would be taxed by the fix meant to tax
+     * the turtle. Measured over 200 seeds a night: the window is not the
+     * dial -- 3.0 and 5.0 read the same -- and the competent policy is
+     * unchanged at 62%.
+     */
+    public static final double STILL_WINDOW = 3.0;
+
+    /**
+     * How much faster the pursuer closes once you have stood still past
+     * {@link #STILL_WINDOW}.
+     *
+     * A multiple of his own pace rather than a fixed interval, so the
+     * week's ramp still reaches him. Measured over 200 seeds a night with
+     * the window at 3.0: 2.0, 2.5 and 3.0 take REACT's week from 20% to
+     * 2%, 0.4% and 0%, and leave the competent policy at 62% throughout --
+     * the fix is a threshold like {@link #BALLORA_GRACE} and not a knife
+     * edge, so the value is chosen to be clearly past the threshold rather
+     * than tuned against a curve.
+     */
+    public static final double STILL_PACE = 2.5;
+
     public double interval(Threat t) {
         double base = baseInterval() / t.pace;
         if (t.rule == Threat.Rule.ATTENTION && monitorOn) base /= FEED_PACE;
+        // The pursuer closes faster on a player who has stopped moving.
+        // See STILL_WINDOW: he is the only threat that can charge for
+        // stillness, because the other two are paid for by moving.
+        if (t.rule == Threat.Rule.PURSUIT && stillTime >= STILL_WINDOW) {
+            base /= STILL_PACE;
+        }
         return base;
     }
 
@@ -556,6 +653,9 @@ public class Game {
         // the thing you are doing.
         soundAge += dt;
         heardAge += dt;
+        // Stillness is the one thing in the building that is charged for
+        // not doing anything. See STILL_WINDOW.
+        stillTime += dt;
 
         if (busy > 0) {
             busy -= dt;
@@ -586,6 +686,7 @@ public class Game {
         where = heading;
         heading = null;
         moves++;
+        stillTime = 0;
         if (camera == where) {
             camera = null;
             cue("static");

@@ -401,6 +401,52 @@ public final class SelfTest {
         Game first = new Game(1, 1), last = new Game(5, 1);
         check("and the last night's Freddy is faster than the first night's",
                 last.freddyPace() > first.freddyPace());
+
+        // STILLNESS HAS A PRICE, AND IT IS THE PURSUER'S. Every other cost
+        // in the building is charged to a player who is *doing* something:
+        // a step is a noise and the noise is Ballora's, and the feed is
+        // Funtime Foxy's fuel. A player who never moves pays neither, and
+        // the sweep said so -- REACT, the policy that answers the room and
+        // never takes a step, read 92% on the first night and 20% over the
+        // week, second only to the policy that plays all three counters.
+        // See Game.STILL_WINDOW.
+        //
+        // The window has two bounds and both are rules rather than numbers:
+        // it has to be longer than a step, or a player who is walking is
+        // charged for the gaps between their own footsteps; and longer than
+        // a stop for Ballora, or the counter the whole pass is built on is
+        // taxed by the fix meant to tax the turtle.
+        check("standing still is charged for, but not while you are walking",
+                Game.STILL_WINDOW > Game.MOVE_TIME);
+        check("and not while you are stopping for Ballora",
+                Game.STILL_WINDOW > Game.BALLORA_PATIENCE);
+        check("and the price is real: the pursuer closes faster",
+                Game.STILL_PACE > 1.0);
+
+        Game st = new Game(1, 42);
+        Threat stFreddy = byKey(st, "freddy");
+        Threat stBallora = byKey(st, "ballora");
+        Threat stFoxy = byKey(st, "foxy");
+        double walking = st.interval(stFreddy);
+        st.stillTime = Game.STILL_WINDOW;
+        double standing = st.interval(stFreddy);
+        check("the pursuer closes on a player who has stopped moving",
+                standing < walking);
+        check("and it is worth exactly STILL_PACE",
+                Math.abs(walking / Game.STILL_PACE - standing) < 1e-9);
+
+        // And stillness does not move the other two. Ballora is blind and
+        // Foxy follows the feed; neither of them can tell whether you have
+        // taken a step, and only one of the three threats is allowed to
+        // charge you for not taking one.
+        Game so = new Game(1, 42);
+        Threat soBallora = byKey(so, "ballora");
+        Threat soFoxy = byKey(so, "foxy");
+        double balStill = so.interval(soBallora);
+        double foxyStill = so.interval(soFoxy);
+        so.stillTime = Game.STILL_WINDOW * 3;
+        check("standing still does not move Ballora", so.interval(soBallora) == balStill);
+        check("and it does not move Funtime Foxy", so.interval(soFoxy) == foxyStill);
     }
 
     // ------------------------------------------------------------ the clock
@@ -512,8 +558,7 @@ public final class SelfTest {
         // room and keep walking" -- beat REACT and PANIC, because HOLD was
         // believed to be the competent player. It is not one: it plays two
         // of the three counters and never stops, and since Ballora's clock
-        // became shorter than a step, never stopping is fatal. Measured
-        // over 600 seeds a night, HOLD reads 5% and REACT 20%, so the old
+        // became shorter than a step, never stopping is fatal. So the old
         // check would now be asserting the wrong thing in the wrong
         // direction.
         //
@@ -521,6 +566,8 @@ public final class SelfTest {
         // plays all three counters -- and it is the reading the whole
         // 2026-10-01 pass exists to produce: the competent policy is the
         // best one, and every policy that skips a counter is behind it.
+        // Measured over 200 seeds a night after the stillness rule landed:
+        // PRO 62%, FLEE 11%, HOLD 6%, PANIC 1%, REACT 0%, IDLE 0%.
         double reactMean = mean(react);
         double holdMean = mean(hold);
         double proMean = mean(pro);
@@ -529,6 +576,21 @@ public final class SelfTest {
         check("and beats never stopping: PRO beats HOLD", proMean > holdMean);
         check("and beats never stopping in the other direction: PRO beats FLEE",
                 proMean > mean(flee));
+
+        // AND NEVER MOVING IS WORSE THAN WALKING. This is the other half of
+        // the ladder, and it was upside down until 2026-10-01: REACT read
+        // 20% over the week against HOLD's 5% and FLEE's 10%, because never
+        // moving meant never making a sound, so Ballora never found it and
+        // its whole night was a race between Funtime Freddy's arrival rate
+        // and five charges -- a race the charges won on the first night.
+        // The price of stillness is the pursuer's now (see
+        // Game.STILL_WINDOW), and this is the reading that says so: the
+        // policy that never takes a step is behind both of the policies
+        // that do.
+        check("a policy that never moves is worse than one that walks: REACT behind HOLD",
+                reactMean < holdMean);
+        check("and behind the one that runs: REACT behind FLEE",
+                reactMean < mean(flee));
 
         // THE WEEK GETS HARDER -- the thing Chase asked the franchise for,
         // and the check that could not fail before 2026-10-01. It used to
