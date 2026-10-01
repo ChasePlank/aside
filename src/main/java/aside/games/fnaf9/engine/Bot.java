@@ -319,6 +319,23 @@ public final class Bot {
      * it.</b> The suite asserts the relationship rather than pretending it is
      * not there, so that a future fire that does fix it is told it has.
      *
+     * <p><b>And the shape of that failure is worth naming, because a second
+     * game was built on it and lost.</b> Every one of the seven levers above
+     * is a cost that only binds when <i>both</i> halls are busy -- the door is
+     * expensive exactly when it is covering two arrivals -- and a cost of that
+     * shape is a <b>threshold rather than a gradient</b>: it either sustains
+     * the joint hold or it does not, and there is no middle. The reason there
+     * is no middle is that <b>the player has no lever that changes the
+     * walkers.</b> The only lever here is the feed, which changes what the
+     * player <i>knows</i>, and that is why this game has a difficulty table at
+     * all. A tenth game was designed around the opposite idea -- a delay on
+     * the player's orders rather than on their information -- and it died on
+     * exactly this: with no lever on the walkers, every cost it could impose
+     * was a threshold, and the competent policy read 0% or 100% and nothing in
+     * between. See [[reference/fnaf10.md]] in memory for the two builds and
+     * the measurements. <b>Before adding a cost to a night, ask what the
+     * player can do about it.</b>
+     *
      * <p><b>And SENSE is on the ladder because the office's own description
      * of itself does not survive being played.</b> {@link Feed}'s javadoc says
      * the sensor "is the only way to know the doorway has emptied, which is
