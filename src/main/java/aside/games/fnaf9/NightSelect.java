@@ -62,11 +62,10 @@ public class NightSelect extends UiScreen {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(Color.web("#E94560"));
         gc.setFont(Font.font("Arial", 44));
-        gc.fillText("FIVE NIGHTS AT FREDDY'S 9", W / 2, 104);
+        gc.fillText(Voice.TITLE, W / 2, 104);
         gc.setFill(Color.web("#8888AA"));
         gc.setFont(Font.font("Arial", 16));
-        gc.fillText("Two halls, one door and one monitor -- and the picture is "
-                + "as old as the time you have spent watching it.", W / 2, 140);
+        gc.fillText(Voice.SUBTITLE, W / 2, 140);
 
         for (int i = 1; i <= NIGHTS; i++) {
             boolean on = i == focus;
@@ -81,8 +80,7 @@ public class NightSelect extends UiScreen {
             Pair p = Pair.forNight(i);
             gc.setFill(on ? Color.web("#FFD700") : Color.web("#CCCCCC"));
             gc.setFont(Font.font("Arial", on ? 24 : 21));
-            gc.fillText((on ? "\u25B6  " : "   ") + "Night " + i + "  \u2014  "
-                    + p.left().name() + " and " + p.right().name(),
+            gc.fillText((on ? "\u25B6  " : "   ") + Voice.nightRow(i),
                     W / 2, row[1] + 26);
             gc.setFill(Color.web(on ? "#9A9AAE" : "#555566"));
             gc.setFont(Font.font("Arial", 12));
@@ -91,18 +89,13 @@ public class NightSelect extends UiScreen {
 
         gc.setFill(Color.web("#7777AA"));
         gc.setFont(Font.font("Arial", 15));
-        gc.fillText("A / D or MON to watch a hall     SPACE or HOLD to bring "
-                + "the door down", W / 2, H - 140);
+        gc.fillText(Voice.HELP_1, W / 2, H - 140);
         gc.setFill(Color.web("#555577"));
         gc.setFont(Font.font("Arial", 13));
-        gc.fillText("The monitor is a delay line: a glance is live and a stare "
-                + "is a photograph.", W / 2, H - 110);
-        gc.fillText("Past its own patience with a bad picture a walker is not "
-                + "drawn at all -- so the longer you watch,", W / 2, H - 88);
-        gc.fillText("the emptier the hall looks. The sensor on the door is the "
-                + "only thing here that never lies.", W / 2, H - 70);
-        gc.fillText("click a night or ENTER to start      ESC back to the library",
-                W / 2, H - 40);
+        gc.fillText(Voice.HELP_2, W / 2, H - 110);
+        gc.fillText(Voice.HELP_3, W / 2, H - 88);
+        gc.fillText(Voice.HELP_4, W / 2, H - 70);
+        gc.fillText(Voice.HELP_5, W / 2, H - 40);
         gc.setTextAlign(TextAlignment.LEFT);
     }
 }

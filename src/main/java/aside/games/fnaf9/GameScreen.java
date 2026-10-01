@@ -217,8 +217,8 @@ public class GameScreen extends UiScreen {
 
         Side m = game.monitorSide();
         if (m == null) {
-            label("MONITOR OFF", r[0] + r[2] / 2, r[1] + r[3] / 2, "#3A3A4E", 26);
-            label("nothing is being recorded", r[0] + r[2] / 2,
+            label(Voice.MON_OFF_1, r[0] + r[2] / 2, r[1] + r[3] / 2, "#3A3A4E", 26);
+            label(Voice.MON_OFF_2, r[0] + r[2] / 2,
                     r[1] + r[3] / 2 + 30, "#2A2A3A", 13);
             return;
         }
@@ -229,8 +229,8 @@ public class GameScreen extends UiScreen {
             // Past this walker's patience with a bad picture the monitor does
             // not hold it. Not faint -- absent. So the screen says so.
             drawStatic(r);
-            label("PICTURE TOO OLD", r[0] + r[2] / 2, r[1] + r[3] / 2, "#6A5A2A", 22);
-            label("the feed is not holding anything at " + fmt(game.feed) + "s",
+            label(Voice.FADED_1, r[0] + r[2] / 2, r[1] + r[3] / 2, "#6A5A2A", 22);
+            label(String.format(Voice.FADED_2, game.feed),
                     r[0] + r[2] / 2, r[1] + r[3] / 2 + 28, "#4A4030", 13);
         } else {
             double d = game.shown(m);
@@ -238,7 +238,8 @@ public class GameScreen extends UiScreen {
         }
 
         // The hall's name, bottom left of the screen.
-        label(m.shout + " HALL", r[0] + 18, r[1] + r[3] - 18, "#556070", 14);
+        label(String.format(Voice.HALL, m.shout),
+                r[0] + 18, r[1] + r[3] - 18, "#556070", 14);
     }
 
     /** The corridor, in one-point perspective. */
@@ -339,7 +340,7 @@ public class GameScreen extends UiScreen {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#E94560"));
         gc.setFont(Font.font("Arial", 20));
-        gc.fillText("NIGHT " + night, 24, 44);
+        gc.fillText(String.format(Voice.BAND_NIGHT, night), 24, 44);
 
         gc.setFill(Color.web("#CCCCDD"));
         gc.setFont(Font.font("Arial", 20));
@@ -370,7 +371,7 @@ public class GameScreen extends UiScreen {
 
         gc.setFill(Color.web("#777790"));
         gc.setFont(Font.font("Arial", 11));
-        gc.fillText("THE PICTURE IS", r[0] + 12, r[1] + 17);
+        gc.fillText(Voice.FEED_HEAD, r[0] + 12, r[1] + 17);
 
         double x0 = r[0] + 12, y0 = r[1] + 26, bw = r[2] - 24, bh = 12;
         gc.setFill(Color.rgb(255, 255, 255, 0.08));
@@ -406,7 +407,7 @@ public class GameScreen extends UiScreen {
 
         gc.setFill(Color.web("#777790"));
         gc.setFont(Font.font("Arial", 11));
-        gc.fillText("DOOR SENSOR", r[0] + 12, r[1] + 17);
+        gc.fillText(Voice.SENSOR_HEAD, r[0] + 12, r[1] + 17);
 
         boolean down = game.blocking();
         boolean touching = game.sensor();
@@ -415,8 +416,7 @@ public class GameScreen extends UiScreen {
         gc.setFill(lamp);
         gc.fillOval(r[0] + 14, r[1] + 26, 14, 14);
 
-        String word = !down ? "NOT DOWN"
-                : touching ? "SOMETHING AGAINST IT" : "CLEAR";
+        String word = Voice.sensorWord(game);
         gc.setFill(!down ? Color.web("#555568") : Color.web("#CCCCDD"));
         gc.setFont(Font.font("Arial", 14));
         gc.fillText(word, r[0] + 38, r[1] + 38);
@@ -437,36 +437,24 @@ public class GameScreen extends UiScreen {
         gc.setStroke(Color.rgb(233, 69, 96, 0.35));
         gc.strokeLine(0, 596, W, 596);
 
-        button(MouseMap.MON_LEFT, "MON LEFT",
+        button(MouseMap.MON_LEFT, Voice.BTN_MON_LEFT,
                 game.circuit == Feed.Circuit.MON_LEFT, false);
-        button(MouseMap.MON_RIGHT, "MON RIGHT",
+        button(MouseMap.MON_RIGHT, Voice.BTN_MON_RIGHT,
                 game.circuit == Feed.Circuit.MON_RIGHT, false);
-        button(MouseMap.DARK, "DARK", game.circuit == Feed.Circuit.DARK, false);
-        button(MouseMap.HOLD, "HOLD DOOR", game.circuit == Feed.Circuit.HOLD,
+        button(MouseMap.DARK, Voice.BTN_DARK,
+                game.circuit == Feed.Circuit.DARK, false);
+        button(MouseMap.HOLD, Voice.BTN_HOLD,
+                game.circuit == Feed.Circuit.HOLD,
                 game.jammed);
 
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(Color.web("#8A8FA8"));
         gc.setFont(Font.font("Arial", 13));
-        gc.fillText(whatTheCircuitIsDoing(), W / 2, 618);
+        gc.fillText(Voice.circuitLine(game), W / 2, 618);
         gc.setFill(Color.web("#555577"));
         gc.setFont(Font.font("Arial", 11));
-        gc.fillText("A / D  watch      SPACE  dark      S  hold the door      "
-                + "ESC  pause", W / 2, 700);
+        gc.fillText(Voice.KEYS, W / 2, 700);
         gc.setTextAlign(TextAlignment.LEFT);
-    }
-
-    String whatTheCircuitIsDoing() {
-        if (game.jammed) return "the mechanism has let go -- it will not take "
-                + "another hold until it cools";
-        return switch (game.circuit) {
-            case DARK -> "everything off -- the feed is catching up";
-            case MON_LEFT -> "watching the left hall -- the picture is "
-                    + fmt(game.feed) + "s old";
-            case MON_RIGHT -> "watching the right hall -- the picture is "
-                    + fmt(game.feed) + "s old";
-            case HOLD -> "the door is coming down -- you are blind while it is";
-        };
     }
 
     void button(double[] r, String label, boolean on, boolean blocked) {
@@ -508,13 +496,13 @@ public class GameScreen extends UiScreen {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(Color.web("#E94560"));
         gc.setFont(Font.font("Arial", 36));
-        gc.fillText("IT WAS IN THE DOORWAY", W / 2, H - 108);
+        gc.fillText(Voice.TAKEN_HEAD, W / 2, H - 108);
         gc.setFill(Color.web("#9A9AAE"));
         gc.setFont(Font.font("Arial", 15));
-        gc.fillText("The picture said you had time.", W / 2, H - 70);
+        gc.fillText(Voice.TAKEN_LINE, W / 2, H - 70);
         gc.setFill(Color.web("#555577"));
         gc.setFont(Font.font("Arial", 13));
-        gc.fillText("ESC to pause, then Quit to Menu", W / 2, H - 44);
+        gc.fillText(Voice.TAKEN_HINT, W / 2, H - 44);
         gc.setTextAlign(TextAlignment.LEFT);
     }
 
@@ -524,14 +512,13 @@ public class GameScreen extends UiScreen {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(Color.web("#FFD700"));
         gc.setFont(Font.font("Arial", 76));
-        gc.fillText("6 AM", W / 2, H / 2 - 10);
+        gc.fillText(Voice.WIN_HEAD, W / 2, H / 2 - 10);
         gc.setFill(Color.web("#9A9AAE"));
         gc.setFont(Font.font("Arial", 16));
-        gc.fillText("Nothing came through the door. The halls are empty again.",
-                W / 2, H / 2 + 34);
+        gc.fillText(Voice.WIN_LINE, W / 2, H / 2 + 34);
         gc.setFill(Color.web("#555577"));
         gc.setFont(Font.font("Arial", 13));
-        gc.fillText("ESC to pause, then Quit to Menu", W / 2, H / 2 + 70);
+        gc.fillText(Voice.WIN_HINT, W / 2, H / 2 + 70);
         gc.setTextAlign(TextAlignment.LEFT);
     }
 
@@ -541,9 +528,5 @@ public class GameScreen extends UiScreen {
         gc.setFont(Font.font("Arial", size));
         gc.fillText(text, x, y);
         gc.setTextAlign(TextAlignment.LEFT);
-    }
-
-    static String fmt(double v) {
-        return String.format("%.1f", v);
     }
 }

@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05060A">
+<title>the picture is not now</title>
+<style>
+  :root{
+    --bg:#05060A; --ink:#CCCCDD; --dim:#8888AA; --faint:#555577;
+    --red:#E94560; --gold:#FFD700; --edge:#1B1B26; --card:#0C0D14;
+    --green:#7FD1AE; --amber:#FFD27F;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink);
+            font:16px/1.4 Arial,Helvetica,sans-serif; -webkit-text-size-adjust:100%}
+  html,body{height:100%}
+  body{height:100vh; height:100dvh; overflow:hidden}
+  #app{max-width:720px; margin:0 auto; height:100%; display:flex; flex-direction:column;
+       padding:env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
+
+  /* ---- the band -------------------------------------------------------
+     Three rows, because the band is carrying three separate facts and two
+     of them are bars. The desktop puts all of this in one 70px strip across
+     a 1280px screen; a phone has a fifth of that width, so the rows stack.
+     The order is the desktop's: night, clock, how old the picture is, then
+     the door sensor. */
+  #band{flex:0 0 auto; background:#05060A; border-bottom:1px solid var(--edge);
+        padding:8px 12px 10px}
+  #band .r1{display:flex; align-items:baseline; gap:10px}
+  #night{color:var(--red); font-size:15px; letter-spacing:.06em; white-space:nowrap}
+  #clock{color:var(--ink); font-size:16px; white-space:nowrap}
+  #feedlabel{margin-left:auto; font-size:12px; color:var(--dim); white-space:nowrap}
+  #band .r2{display:flex; align-items:center; gap:8px; margin-top:7px}
+  .lab{font-size:10px; letter-spacing:.14em; color:var(--dim); white-space:nowrap}
+  #feedbar{flex:1 1 auto; min-width:0; height:10px; background:rgba(255,255,255,.05);
+           border:1px solid #2A2A38; border-radius:3px; overflow:hidden}
+  #feedbar i{display:block; height:100%; width:0; background:var(--green); opacity:.8}
+  #band .r3{display:flex; align-items:center; gap:8px; margin-top:8px}
+  #lamp{flex:0 0 auto; width:11px; height:11px; border-radius:50%;
+        background:#3A3A4E; box-shadow:none}
+  #lamp.down{background:var(--green)}
+  #lamp.touch{background:var(--red); box-shadow:0 0 8px rgba(233,69,96,.7)}
+  #sensorword{font-size:13px; color:var(--faint); white-space:nowrap}
+  #sensorword.live{color:var(--ink)}
+  #holdbar{flex:1 1 auto; min-width:0; height:5px; background:rgba(255,255,255,.05);
+           border-radius:2px; overflow:hidden}
+  #holdbar i{display:block; height:100%; width:0; background:#8A8FA8}
+
+  /* ---- the stage ------------------------------------------------------
+     The desktop draws a room with a monitor in it. The phone draws the
+     monitor and nothing else, full bleed, because the monitor is the only
+     thing in that room that is not empty dark. The corridor inside it is
+     the desktop's, at the desktop's proportions. */
+  #stage{flex:1 1 auto; position:relative; min-height:0; background:#02030A}
+  #cv{display:block; width:100%; height:100%}
+
+  /* ---- the strip ------------------------------------------------------
+     Four buttons, and the four of them are the whole control surface,
+     because there are only four things the one circuit can do. They are a
+     2x2 grid rather than a row: four across is 960 pixels on the desktop
+     and a phone is not 960 pixels. The order is still the desktop's --
+     left, right, dark, hold -- read row by row. */
+  #strip{flex:0 0 auto; border-top:1px solid var(--edge); padding:10px 12px 12px}
+  #strip .grid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  #strip button{min-height:50px; border-radius:10px; border:1px solid #3A3A4C;
+                color:var(--ink); font-size:15px; letter-spacing:.03em}
+  #strip button:active{background:#16171F}
+  #strip button.on{color:var(--gold); border-color:var(--red);
+                   background:rgba(233,69,96,.22)}
+  #strip button.blocked{color:var(--faint); border-color:#2A2A38}
+  #doing{font-size:12px; line-height:1.45; color:var(--dim); margin-top:9px;
+         min-height:2.6em}
+
+  /* ---- the nights ------------------------------------------------------ */
+  #select{flex:1 1 auto; min-height:0; overflow-y:auto; padding:22px 16px 26px;
+          -webkit-overflow-scrolling:touch}
+  #select h1{font-size:20px; font-weight:normal; color:var(--red); margin:0 0 6px}
+  #select .sub{font-size:13px; color:var(--dim); margin:0 0 20px; line-height:1.5}
+  .nightrow{display:block; width:100%; text-align:left; padding:12px 14px; margin:0 0 9px;
+            background:var(--card); border:1px solid var(--edge); border-radius:10px}
+  .nightrow:active{background:#16171F}
+  .nightrow .t{display:block; font-size:16px; color:var(--ink)}
+  .nightrow .n{display:block; font-size:12px; color:var(--dim); margin-top:3px}
+  .help{font-size:12px; line-height:1.6; color:var(--faint); margin-top:20px}
+  .help p{margin:0 0 9px}
+
+  /* ---- the end --------------------------------------------------------- */
+  #over{position:absolute; inset:0; display:none; flex-direction:column;
+        align-items:center; justify-content:center; text-align:center;
+        background:rgba(0,0,0,.84); padding:24px}
+  #over.on{display:flex}
+  #over h2{font-size:28px; font-weight:normal; margin:0 0 10px; color:var(--gold)}
+  #over.bad h2{color:var(--red)}
+  #over p{font-size:15px; color:var(--ink); margin:0 0 8px; max-width:34ch}
+  #back{margin-top:22px; min-height:48px; padding:13px 22px; border-radius:10px;
+        border:1px solid #3A3A4C; color:var(--ink); font-size:15px}
+  #back:active{background:#16171F}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="select"></div>
+
+  <div id="band" hidden>
+    <div class="r1">
+      <span id="night"></span>
+      <span id="clock"></span>
+      <span id="feedlabel"></span>
+    </div>
+    <div class="r2">
+      <span class="lab" id="feedhead"></span>
+      <div id="feedbar"><i></i></div>
+    </div>
+    <div class="r3">
+      <span class="lab" id="sensorhead"></span>
+      <span id="lamp"></span>
+      <span id="sensorword"></span>
+      <div id="holdbar"><i></i></div>
+    </div>
+  </div>
+
+  <div id="stage" hidden>
+    <canvas id="cv"></canvas>
+    <div id="over">
+      <h2 id="overtitle"></h2>
+      <p id="overline"></p>
+      <button id="back"></button>
+    </div>
+  </div>
+
+  <div id="strip" hidden>
+    <div class="grid">
+      <button id="monleft"></button>
+      <button id="monright"></button>
+      <button id="dark"></button>
+      <button id="hold"></button>
+    </div>
+    <div id="doing"></div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* Everything the two builds have to agree about. Generated by
+   aside.games.fnaf9.WebFeed from the engine itself -- the tables, the cast,
+   the thresholds and every fixed sentence come out of Feed, Walker, Pair and
+   Voice, so there is no second copy of any of them here. Voice exists because
+   of this port: the two desktop screens read the same strings. */
+const C = /*__CONTENT__*/;
+
+// --------------------------------------------------------------- the night
+//
+// The engine below is a transliteration of aside.games.fnaf9.engine.Feed,
+// line for line, including the RNG: java.util.Random is a 48-bit LCG and it
+// is reproduced here in BigInt so the same seed deals the same night in both
+// builds. That is not ceremony -- it is what makes a night reproducible when
+// something looks wrong, and a double would lose the low bits of the seed
+// before the first draw.
+
+const MASK48 = (1n << 48n) - 1n;
+
+/** Splitmix64 finalizer. See Feed.mix -- java.util.Random's first draw from
+    nearby seeds is correlated with the seed, and this is the fix. */
+function mix(z) {
+  z = BigInt.asUintN(64, z + 0x9E3779B97F4A7C15n);
+  z = BigInt.asUintN(64, (z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n);
+  z = BigInt.asUintN(64, (z ^ (z >> 27n)) * 0x94D049BB133111EBn);
+  return BigInt.asUintN(64, z ^ (z >> 31n));
+}
+
+function Rng(seed) { this.s = (seed ^ 0x5DEECE66Dn) & MASK48; }
+Rng.prototype.next = function (bits) {
+  this.s = (this.s * 0x5DEECE66Dn + 0xBn) & MASK48;
+  return Number(this.s >> BigInt(48 - bits));
+};
+Rng.prototype.nextDouble = function () {
+  // Java: (((long) next(26)) << 27) + next(27), scaled by 2^-53.
+  return (this.next(26) * 134217728 + this.next(27)) / 9007199254740992;
+};
+
+/** How many samples a hall's delay line keeps. Feed.HIST, and the reason it
+    is a number the page is told rather than one it knows is that the delay
+    line is the game: a phone that guessed it would be a phone whose picture
+    ages differently from the desktop's. */
+const HIST = C.hist;
+
+const clampNight = n => Math.min(Math.max(n - 1, 0), C.pairs.length - 1);
+
+function Feed(night, seed) {
+  this.night = night;
+  this.rng = new Rng(mix(seed));
+  this.pair = C.pairs[clampNight(night)];
+
+  this.time = 0; this.hour = 0;
+
+  // Distance from the doorway, per hall, in steps. Continuous, not a step
+  // count -- see Feed.d. A walker that moves in whole steps is a walker
+  // whose picture carries no information about where in its step it was.
+  this.d = [C.max, C.max];
+  this.waited = [0, 0];
+  this.blocked = [0, 0];
+
+  this.circuit = 'DARK';
+  this.feed = 0;
+  this.shutT = C.shutTime;
+  this.heat = 0;
+  this.jammed = false;
+
+  this.status = 'PLAYING';
+  this.takenAt = -1; this.takenSide = null; this.takenBy = null;
+
+  this.arrivals = 0; this.gaveUp = 0; this.steps = 0; this.switches = 0;
+  this.watched = 0; this.held = 0; this.jams = 0;
+  this.lastStepSide = null;
+
+  this.histT = [[], []];
+  this.histD = [[], []];
+  this.cues = [];
+
+  // The two of them do not start in step. A night where both walkers left
+  // the far end on the same frame is a night where both arrive on the same
+  // frame, and with one door and one duty cycle that is a night with an
+  // unwinnable moment in it.
+  this.d[0] = C.max - 2.0 * this.rng.nextDouble();
+  this.d[1] = C.max - 2.0 * this.rng.nextDouble();
+  this.record(0);
+  this.record(1);
+}
+
+Feed.prototype.ageRate = function () { return C.ageRate[clampNight(this.night)]; };
+Feed.prototype.ageDecay = function () { return C.ageDecay[clampNight(this.night)]; };
+Feed.prototype.pace = function () { return C.pace[clampNight(this.night)]; };
+Feed.prototype.grace = function () { return C.grace[clampNight(this.night)]; };
+
+Feed.prototype.unit = function (k) { return k === 0 ? this.pair.left : this.pair.right; };
+
+Feed.prototype.cue = function (name) { this.cues.push(name); };
+Feed.prototype.drainCues = function () {
+  if (!this.cues.length) return [];
+  const out = this.cues.slice();
+  this.cues.length = 0;
+  return out;
+};
+
+// ---- reading the board ---------------------------------------------------
+
+Feed.prototype.monitorOn = function () {
+  return this.circuit === 'MON_LEFT' || this.circuit === 'MON_RIGHT';
+};
+Feed.prototype.monitorSide = function () {
+  return this.circuit === 'MON_LEFT' ? 0 : this.circuit === 'MON_RIGHT' ? 1 : -1;
+};
+Feed.prototype.holding = function () { return this.circuit === 'HOLD'; };
+Feed.prototype.blocking = function () {
+  return this.circuit === 'HOLD' && this.shutT <= 0;
+};
+/** The contact sensor: live, free, one bit, and only readable while the door
+    is down. That last part is the whole of its design. */
+Feed.prototype.sensor = function () {
+  return this.blocking() && (this.d[0] <= 0 || this.d[1] <= 0);
+};
+Feed.prototype.holdLeft = function () {
+  return Math.max(0, 1 - this.heat / C.holdMax);
+};
+
+/** Where the picture says a walker is: the distance it had `feed` seconds
+    ago. Read out of the delay line rather than computed, because it is not a
+    formula -- a walker that arrived, waited and gave up inside the window has
+    to be drawn as having done that, and only a history knows. */
+Feed.prototype.apparent = function (k) {
+  const target = this.time - this.feed;
+  const t = this.histT[k], d = this.histD[k];
+  let i = t.length - 1;
+  while (i > 0 && t[i] > target) i--;
+  return d[i];
+};
+
+/** What the monitor is drawing for a hall, or -1 for nothing at all. Three
+    ways to get nothing and the player cannot tell them apart -- which is the
+    point, and the reason this returns one number rather than a reason code. */
+Feed.prototype.shown = function (k) {
+  if (this.monitorSide() !== k) return -1;
+  if (this.feed > this.unit(k).sharp) return -1;
+  return this.apparent(k);
+};
+Feed.prototype.faded = function (k) {
+  return this.monitorSide() === k && this.feed > this.unit(k).sharp;
+};
+
+Feed.prototype.clock = function () {
+  return C.clocks[Math.min(this.hour, C.clocks.length - 1)];
+};
+Feed.prototype.feedLabel = function () {
+  if (!this.monitorOn()) return 'FEED IDLE';
+  return 'FEED ' + this.feed.toFixed(1) + 's BEHIND';
+};
+
+// ---- the update ----------------------------------------------------------
+
+Feed.prototype.update = function (dt) {
+  if (this.status !== 'PLAYING') return;
+
+  this.time += dt;
+  this.hour = Math.floor(this.time / C.hourSeconds);
+  if (this.hour >= C.nightHours) {
+    this.status = 'SURVIVED';
+    this.cue('chime_6am');
+    return;
+  }
+
+  // The feed. This is the only place the picture's age changes, and it is
+  // the only thing in the office that is about you rather than about them.
+  if (this.monitorOn()) {
+    this.watched += dt;
+    this.feed = Math.min(C.ageMax, this.feed + this.ageRate() * dt);
+  } else {
+    this.feed = Math.max(0, this.feed - this.ageDecay() * dt);
+  }
+
+  // The door mechanism. Held, it runs up; let go, it runs down; and at the
+  // top it lets go on its own and will not take another hold until it has
+  // cooled past the re-arm point.
+  if (this.holding()) {
+    this.held += dt;
+    this.heat += dt;
+    this.shutT = Math.max(0, this.shutT - dt);
+    if (this.heat >= C.holdMax) {
+      this.heat = C.holdMax;
+      this.jammed = true;
+      this.jams++;
+      this.circuit = 'DARK';
+      this.cue('f9_jam');
+    }
+  } else {
+    // Letting go drops the door instantly -- it is held by the mechanism,
+    // not lowered by it -- so the only thing the door costs is the time it
+    // takes to come down.
+    this.shutT = C.shutTime;
+    this.heat = Math.max(0, this.heat - C.cool * dt);
+    if (this.jammed && this.heat <= C.holdMax * C.rearm) this.jammed = false;
+  }
+
+  // The doorway. A walker that has stood at a shut door for its whole
+  // patience loses interest -- and that is the only way the doorway ever
+  // empties, because nothing in this office can push a walker back. Both
+  // clocks accumulate while it is in the doorway and reset only when it
+  // leaves; resetting on a door change made flickering the door a way to win.
+  for (let k = 0; k < 2; k++) {
+    if (this.d[k] > 0) { this.waited[k] = 0; this.blocked[k] = 0; continue; }
+    if (this.blocking()) {
+      this.blocked[k] += dt;
+      if (this.blocked[k] >= this.unit(k).patience) {
+        this.d[k] = C.max;
+        this.waited[k] = 0;
+        this.blocked[k] = 0;
+        this.gaveUp++;
+        this.record(k);
+        this.cue('f9_gives_up');
+      }
+      continue;
+    }
+    // The door is open and something is standing in the doorway.
+    this.waited[k] += dt;
+    if (this.waited[k] >= this.grace()) {
+      this.status = 'TAKEN';
+      this.takenAt = Math.floor(this.time);
+      this.takenSide = k;
+      this.takenBy = this.unit(k);
+      this.cue('f9_taken');
+      return;
+    }
+  }
+
+  // The two of them, walking.
+  for (let k = 0; k < 2; k++) {
+    if (this.d[k] <= 0) continue;
+    const before = this.d[k];
+    this.d[k] = Math.max(0, this.d[k] - dt * this.walkRate(k));
+    if (Math.floor(before) !== Math.floor(this.d[k])) {
+      this.steps++;
+      this.lastStepSide = k;
+      this.cue('f9_step');
+    }
+    if (this.d[k] <= 0 && before > 0) {
+      this.arrivals++;
+      this.cue('f9_door');
+    }
+    this.record(k);
+  }
+};
+
+/** Push one sample onto a hall's delay line. Every frame, not every time the
+    walker moves: recording only the whole-step crossings quantized the
+    picture to a step on top of the lag, and the belief read 0.75 while the
+    walker was at 0.04. A delay line has to sample the thing it is delaying. */
+Feed.prototype.record = function (k) {
+  const t = this.histT[k], d = this.histD[k];
+  if (t.length === HIST) {
+    // Full. Drop the oldest half rather than the oldest one: the window we
+    // need is AGE_MAX seconds wide, so half a buffer is several seconds more
+    // than enough.
+    t.splice(0, HIST / 2);
+    d.splice(0, HIST / 2);
+  }
+  t.push(this.time);
+  d.push(this.d[k]);
+};
+
+/** Seconds to this hall's next step. Nothing in this office changes it --
+    there is no lamp and no beam and no counter -- so this is the night's
+    tempo divided by the walker's own speed and nothing else. */
+Feed.prototype.interval = function (k) {
+  return this.pace() / this.unit(k).speed;
+};
+
+/** The same, with the night's jitter on it, for one frame of walking. The
+    jitter is applied to the speed rather than per step so the walker still
+    takes about `interval` seconds per step on average, and the variance is
+    what a belief drifts against. */
+Feed.prototype.walkRate = function (k) {
+  return (1.0 + C.jitter * (this.rng.nextDouble() - 0.5)) / this.interval(k);
+};
+
+// ---- the controls --------------------------------------------------------
+
+Feed.prototype.set = function (c) {
+  if (this.status !== 'PLAYING') return false;
+  if (c === 'HOLD' && this.jammed) return false;
+  if (this.circuit === c) return false;
+  this.circuit = c;
+  this.switches++;
+  this.cue('f9_switch');
+  return true;
+};
+
+// --------------------------------------------------------------- the sound
+//
+// Synthesised, so the page stays one file with no audio in it. The design
+// note is FNAF 8's one step further on: FNAF 8 had no directional channel
+// because the lamp was the only way to know where anything was; FNAF 9 has
+// no directional channel *and no live channel at all*, because the monitor
+// is a picture of the past and the only thing that reads now is a contact
+// sensor on the door. So the audio cannot carry position and it cannot carry
+// "something is coming". What is left is texture and the mechanism, and
+// f9_jam is the one cue in the franchise that means *the building did
+// something to you*. The two halls share one footfall, and a check in the
+// suite keeps it that way.
+
+let AC = null;
+
+function ac() {
+  if (!AC) {
+    const K = window.AudioContext || window.webkitAudioContext;
+    if (!K) return null;
+    try { AC = new K(); } catch (e) { return null; }
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+
+function noiseBuf(a, dur) {
+  const n = Math.max(1, Math.floor(a.sampleRate * dur));
+  const b = a.createBuffer(1, n, a.sampleRate);
+  const d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+
+function tone(a, t, f0, f1, dur, type, gain) {
+  const o = a.createOscillator();
+  o.type = type;
+  o.frequency.setValueAtTime(f0, t);
+  if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+
+function hiss(a, t, dur, type, freq, q, gain, bendTo) {
+  const s = a.createBufferSource();
+  s.buffer = noiseBuf(a, dur);
+  const f = a.createBiquadFilter();
+  f.type = type;
+  f.frequency.setValueAtTime(freq, t);
+  if (bendTo) f.frequency.linearRampToValueAtTime(bendTo, t + dur);
+  f.Q.value = q;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(gain, t + Math.min(0.04, dur / 3));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f).connect(g).connect(a.destination);
+  s.start(t); s.stop(t + dur + 0.02);
+}
+
+function play(cue) {
+  const a = ac();
+  if (!a) return;
+  const t = a.currentTime;
+  switch (cue) {
+    case 'f9_step':
+      hiss(a, t, 0.36, 'lowpass', 1700, 1, 0.64);
+      tone(a, t, 98, 80, 0.30, 'sine', 0.50);
+      break;
+    case 'f9_gives_up':
+      // A footfall receding. The one good sound in the game.
+      hiss(a, t, 0.62, 'lowpass', 1200, 1, 0.46, 620);
+      tone(a, t, 80, 62, 0.50, 'sine', 0.34);
+      break;
+    case 'f9_door':
+      // A knock, and heavier than FNAF 8's: this door has a travel time.
+      hiss(a, t, 0.50, 'bandpass', 3000, 1, 0.80, 900);
+      tone(a, t, 112, 88, 0.42, 'sine', 0.58);
+      break;
+    case 'f9_switch':
+      // The monitor waking on a hall. A click and a ping -- the picture is a
+      // device, and it has to sound like one.
+      hiss(a, t, 0.06, 'highpass', 5200, 1, 0.52);
+      tone(a, t + 0.01, 1150, 1150, 0.16, 'sine', 0.24);
+      break;
+    case 'f9_jam':
+      // The mechanism giving out at HOLD_MAX. A clunk and a grind that
+      // falls -- the only cue the player never chose.
+      hiss(a, t, 0.85, 'lowpass', 2200, 1, 0.86, 420);
+      tone(a, t, 150, 44, 0.80, 'sawtooth', 0.60);
+      break;
+    case 'f9_taken':
+      tone(a, t, 2400, 90, 1.10, 'sawtooth', 0.34);
+      hiss(a, t, 1.10, 'highpass', 900, 1, 0.30);
+      break;
+    case 'chime_6am':
+      tone(a, t, 880, 880, 0.55, 'sine', 0.22);
+      tone(a, t + 0.16, 1320, 1320, 0.60, 'sine', 0.18);
+      break;
+    default:
+      break;
+  }
+}
+
+// --------------------------------------------------------------- the screen
+
+const el = id => document.getElementById(id);
+const app = el('app'), band = el('band'), stage = el('stage'), strip = el('strip');
+const select = el('select'), cv = el('cv'), over = el('over');
+const ctx = cv.getContext('2d');
+
+let game = null;
+let screen = 'select';
+let pulse = 0, scareT = 0, last = 0, raf = 0;
+let view = null;
+/* Whether the end-of-night panel has been put up for this night. A flag
+   rather than a comparison against the previous frame's status, because the
+   status does not only change inside update() -- a jam ends the hold from
+   inside the mechanism -- and a loop that watched for the transition would
+   watch it happen between two frames and never show the panel. */
+let ended = false;
+
+/**
+ * The rectangle the corridor is drawn into.
+ *
+ * The desktop draws it into MouseMap.SCREEN, 940x440 inside a 1280x526 room.
+ * The phone draws it into the stage, and it fills it: the monitor is the
+ * whole screen here, and the readout the night is made of -- how big the
+ * walker is against the doorway -- is a *ratio*, so it survives any aspect.
+ * What aspect changes is only how much of the screen the walker gets, and
+ * full bleed gives it the most.
+ *
+ * The one clamp is at the wide end. The shelf opens in a browser as well as
+ * on a phone, and a laptop's stage is very wide and very short: a corridor
+ * drawn into a 3:1 letterbox has almost no height left to judge a distance
+ * against, so past MAX the rect stops widening and the rest is the monitor's
+ * own dark.
+ */
+function computeView(w, h) {
+  const MAX = 2.60;
+  let vw = w, vh = h;
+  if (w / h > MAX) vw = h * MAX;
+  return { x: (w - vw) / 2, y: (h - vh) / 2, w: vw, h: vh };
+}
+
+function resize() {
+  const box = stage.getBoundingClientRect();
+  if (box.width < 2 || box.height < 2) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(box.width * dpr);
+  cv.height = Math.round(box.height * dpr);
+  view = computeView(cv.width, cv.height);
+}
+
+const G = C.corridor;
+
+/** The corridor, in one-point perspective. The desktop's proportions, drawn
+    into whatever rectangle the stage gave us. */
+function drawCorridor(r) {
+  const cx = r[0] + r[2] / 2, cy = r[1] + r[3] * G.vanishY;
+  const far = G.far;
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= G.rungs; i++) {
+    const t = i / G.rungs;
+    const y = r[1] + r[3] * (G.rungTop + G.rungSpan * t);
+    const half = r[2] * (far + (0.5 - far) * Math.pow(1 - t, G.rungCurve));
+    ctx.globalAlpha = 0.10 + 0.22 * (1 - t);
+    ctx.strokeStyle = 'rgba(120,140,170,0.30)';
+    ctx.beginPath(); ctx.moveTo(cx - half, y); ctx.lineTo(cx + half, y); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // The walls.
+  ctx.strokeStyle = 'rgba(120,140,170,0.22)';
+  const top = r[1] + r[3] * G.rungTop, bot = r[1] + r[3] * (G.rungTop + G.rungSpan);
+  ctx.beginPath();
+  ctx.moveTo(cx - r[2] * 0.5, top); ctx.lineTo(cx - r[2] * far, cy);
+  ctx.moveTo(cx + r[2] * 0.5, top); ctx.lineTo(cx + r[2] * far, cy);
+  ctx.moveTo(cx - r[2] * 0.5, bot); ctx.lineTo(cx - r[2] * far, cy);
+  ctx.moveTo(cx + r[2] * 0.5, bot); ctx.lineTo(cx + r[2] * far, cy);
+  ctx.stroke();
+
+  // The doorway, at the near end, and it is the thing the whole night is
+  // about.
+  ctx.strokeStyle = 'rgba(233,69,96,0.45)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx - r[2] * G.doorHalf, r[1] + r[3] * G.doorTop,
+                 r[2] * G.doorHalf * 2, r[3] * G.doorH);
+}
+
+/** One of them, at the distance the picture says. Scale is the whole readout:
+    a walker at the doorway fills it, and a walker at the far end is a small
+    dark shape at the back of a lit corridor. */
+function drawWalker(r, d) {
+  const cx = r[0] + r[2] / 2;
+  const cy = r[1] + r[3] * G.vanishY;
+  const t = Math.min(1, Math.max(0, d / C.max));
+  const depth = 1 - G.walkerShrink * t;
+  const h = r[3] * G.walkerH * depth;
+  const w = h * G.walkerW;
+  const x = cx - w / 2;
+  // Feet rise toward the vanishing point as it gets further away, which is
+  // the half of perspective that scale alone does not give you. A walker
+  // that only shrinks reads as a small walker in the same place.
+  const feetNear = r[1] + r[3] * G.feetNear;
+  const feet = cy + (feetNear - cy) * depth;
+  const y = feet - h;
+
+  ctx.globalAlpha = 0.22 + 0.70 * depth;
+  ctx.fillStyle = '#0A0A10';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = 'rgba(150,160,180,' + (0.30 + 0.40 * depth).toFixed(3) + ')';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, w, h);
+  // Two points of light where a head would be.
+  const r0 = Math.max(1.5, w * 0.075);
+  const ey = y + h * G.eyeY;
+  const glow = 0.35 + 0.65 * depth;
+  ctx.fillStyle = 'rgba(255,120,90,' + glow.toFixed(3) + ')';
+  for (let i = -1; i <= 1; i += 2) {
+    ctx.beginPath();
+    ctx.arc(cx + i * w * G.eyeSpread, ey, r0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/** Scan lines and noise, for a picture the monitor will not hold. */
+function drawStatic(r) {
+  ctx.fillStyle = 'rgba(30,30,40,0.55)';
+  ctx.fillRect(r[0], r[1], r[2], r[3]);
+  ctx.strokeStyle = 'rgba(160,170,190,0.10)';
+  ctx.lineWidth = 1;
+  for (let y = r[1]; y < r[1] + r[3]; y += 4) {
+    ctx.beginPath(); ctx.moveTo(r[0], y); ctx.lineTo(r[0] + r[2], y); ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(200,210,230,0.05)';
+  for (let i = 0; i < 90; i++) {
+    const x = r[0] + ((i * 97 + Math.floor(pulse * 240)) % Math.max(1, Math.floor(r[2])));
+    const y = r[1] + ((i * 61) % Math.max(1, Math.floor(r[3])));
+    ctx.fillRect(x, y, 2, 2);
+  }
+}
+
+function centre(text, x, y, colour, size) {
+  ctx.textAlign = 'center';
+  ctx.fillStyle = colour;
+  ctx.font = size + 'px Arial,Helvetica,sans-serif';
+  ctx.fillText(text, x, y);
+  ctx.textAlign = 'left';
+}
+
+function drawScene() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#02030A';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  if (!view) return;
+
+  const r = [view.x, view.y, view.w, view.h];
+  const m = game.monitorSide();
+
+  if (m < 0) {
+    centre(C.monOff1, r[0] + r[2] / 2, r[1] + r[3] / 2, '#3A3A4E', 22);
+    centre(C.monOff2, r[0] + r[2] / 2, r[1] + r[3] / 2 + 26, '#2A2A3A', 12);
+    return;
+  }
+
+  drawCorridor(r);
+
+  if (game.faded(m)) {
+    // Past this walker's patience with a bad picture the monitor does not
+    // hold it. Not faint -- absent. So the screen says so.
+    drawStatic(r);
+    centre(C.faded1, r[0] + r[2] / 2, r[1] + r[3] / 2, '#6A5A2A', 19);
+    centre(C.faded2.replace('%.1f', game.feed.toFixed(1)),
+           r[0] + r[2] / 2, r[1] + r[3] / 2 + 24, '#4A4030', 12);
+  } else {
+    const d = game.shown(m);
+    if (d >= 0) drawWalker(r, d);
+  }
+
+  // The hall's name, bottom left of the screen.
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#556070';
+  ctx.font = '12px Arial,Helvetica,sans-serif';
+  ctx.fillText(C.hall.replace('%s', m === 0 ? 'LEFT' : 'RIGHT'),
+               r[0] + 14, r[1] + r[3] - 14);
+}
+
+function drawScare() {
+  const t = Math.min(1, scareT * 3);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.86 * t).toFixed(3) + ')';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  // A face, drawn rather than photographed: two points of light and a shape
+  // around them, which is how this office has drawn everything.
+  const w = Math.min(cv.width, cv.height) * 0.62;
+  const x = (cv.width - w) / 2, y = cv.height / 2 - w * 0.62;
+  ctx.fillStyle = 'rgba(10,10,14,' + t.toFixed(3) + ')';
+  ctx.fillRect(x, y, w, w);
+  ctx.strokeStyle = 'rgba(233,69,96,' + (0.55 * t).toFixed(3) + ')';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, w);
+  ctx.fillStyle = 'rgba(255,90,70,' + t.toFixed(3) + ')';
+  for (let i = -1; i <= 1; i += 2) {
+    ctx.beginPath();
+    ctx.arc(cv.width / 2 + i * w * 0.19, y + w * 0.33, w * 0.062, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// --------------------------------------------------------------- the words
+
+function setText(node, text) { if (node.textContent !== text) node.textContent = text; }
+
+function ui() {
+  if (!game) return;
+  setText(el('night'), C.bandNight.replace('%d', game.night));
+  setText(el('clock'), game.clock());
+  setText(el('feedlabel'), game.feedLabel());
+  setText(el('feedhead'), C.feedHead);
+
+  const frac = game.monitorOn() ? Math.min(1, game.feed / C.ageMax) : 0;
+  const fb = el('feedbar').firstElementChild;
+  fb.style.width = (frac * 100).toFixed(1) + '%';
+  fb.style.background = frac > 0.75 ? '#E94560' : frac > 0.45 ? '#FFD27F' : '#7FD1AE';
+
+  setText(el('sensorhead'), C.sensorHead);
+  const down = game.blocking(), touching = game.sensor();
+  const lamp = el('lamp');
+  lamp.className = !down ? '' : touching ? 'touch' : 'down';
+  const word = el('sensorword');
+  setText(word, !down ? C.sensorNotDown : touching ? C.sensorTouching : C.sensorClear);
+  word.className = down ? 'live' : '';
+  const hb = el('holdbar').firstElementChild;
+  hb.style.width = (game.holdLeft() * 100).toFixed(1) + '%';
+  hb.style.background = game.holdLeft() < 0.25 ? '#E94560' : '#8A8FA8';
+
+  setButton('monleft', C.btnMonLeft, game.circuit === 'MON_LEFT', false);
+  setButton('monright', C.btnMonRight, game.circuit === 'MON_RIGHT', false);
+  setButton('dark', C.btnDark, game.circuit === 'DARK', false);
+  setButton('hold', C.btnHold, game.circuit === 'HOLD', game.jammed);
+
+  let doing;
+  if (game.jammed) doing = C.circuitJammed;
+  else if (game.circuit === 'DARK') doing = C.circuitDark;
+  else if (game.circuit === 'HOLD') doing = C.circuitHold;
+  else doing = C.circuitWatch.replace('%s', game.circuit === 'MON_LEFT' ? 'left' : 'right')
+                             .replace('%.1f', game.feed.toFixed(1));
+  setText(el('doing'), doing);
+}
+
+function setButton(id, label, on, blocked) {
+  const b = el(id);
+  setText(b, label);
+  b.className = blocked ? 'blocked' : on ? 'on' : '';
+}
+
+// --------------------------------------------------------------- the flow
+
+function show(s) {
+  screen = s;
+  select.hidden = s !== 'select';
+  band.hidden = s !== 'play';
+  stage.hidden = s !== 'play';
+  strip.hidden = s !== 'play';
+  if (s === 'play') resize();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function buildSelect() {
+  const h = [];
+  h.push('<h1>' + esc(C.title) + '</h1>');
+  h.push('<p class="sub">' + esc(C.subtitle) + '</p>');
+  for (let i = 1; i <= C.nights; i++) {
+    const p = C.pairs[Math.min(i - 1, C.pairs.length - 1)];
+    h.push('<button class="nightrow" data-n="' + i + '">'
+      + '<span class="t">' + esc(C.nightRow.replace('%d', i)
+          .replace('%s', p.left.name).replace('%s', p.right.name)) + '</span>'
+      + '<span class="n">' + esc(p.note) + '</span></button>');
+  }
+  h.push('<div class="help">'
+    + '<p>' + esc(C.help1Phone) + '</p>'
+    + '<p>' + esc(C.help2) + '</p>'
+    + '<p>' + esc(C.help3) + '</p>'
+    + '<p>' + esc(C.help4) + '</p>'
+    + '<p>' + esc(C.help5Phone) + '</p>'
+    + '</div>');
+  select.innerHTML = h.join('');
+  select.querySelectorAll('.nightrow').forEach(b => {
+    b.onclick = () => start(parseInt(b.dataset.n, 10));
+  });
+}
+
+function start(night) {
+  ac();
+  const seed = BigInt(Date.now()) * 1000000n
+             + BigInt(Math.floor(Math.random() * 1000000));
+  game = new Feed(night, seed);
+  scareT = 0; pulse = 0; last = 0; ended = false;
+  over.className = '';
+  show('play');
+  ui();
+  if (!raf) raf = requestAnimationFrame(loop);
+}
+
+function endNight() {
+  const lost = game.status === 'TAKEN';
+  over.className = lost ? 'bad on' : 'on';
+  setText(el('overtitle'), lost ? C.takenHead : C.winHead);
+  setText(el('overline'), lost ? C.takenLine : C.winLine);
+  setText(el('back'), C.backToNights);
+}
+
+function loop(ts) {
+  raf = requestAnimationFrame(loop);
+  if (screen !== 'play' || !game) { last = ts; return; }
+  if (!last) last = ts;
+  const frame = Math.min((ts - last) / 1000, 0.25);
+  last = ts;
+
+  game.update(frame);
+  for (const cue of game.drainCues()) play(cue);
+
+  pulse += frame;
+  if (game.status === 'TAKEN') scareT += frame;
+
+  if (game.status === 'TAKEN') drawScare();
+  else drawScene();
+  ui();
+
+  if (game.status !== 'PLAYING' && !ended) { ended = true; endNight(); }
+}
+
+// The four buttons. Tapping the one that is already on turns everything off,
+// because the circuit has to be able to reach DARK without a fifth control --
+// and DARK is the state the competent player spends most of the night in.
+el('monleft').onclick = () => { if (game) game.set('MON_LEFT'); };
+el('monright').onclick = () => { if (game) game.set('MON_RIGHT'); };
+el('dark').onclick = () => { if (game) game.set('DARK'); };
+el('hold').onclick = () => { if (game) game.set('HOLD'); };
+el('back').onclick = () => { show('select'); game = null; };
+
+// A desktop browser gets the desktop's keys, because the shelf opens in one.
+document.addEventListener('keydown', e => {
+  if (screen !== 'play' || !game) return;
+  if (e.key === 'a' || e.key === 'A') { game.set('MON_LEFT'); e.preventDefault(); }
+  if (e.key === 'd' || e.key === 'D') { game.set('MON_RIGHT'); e.preventDefault(); }
+  if (e.key === ' ') { game.set('DARK'); e.preventDefault(); }
+  if (e.key === 's' || e.key === 'S' || e.key === 'h' || e.key === 'H') {
+    game.set('HOLD'); e.preventDefault();
+  }
+  if (e.key === 'Escape') { show('select'); game = null; }
+});
+
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 120));
+
+buildSelect();
+show('select');
+</script>
+</body>
+</html>

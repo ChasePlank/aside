@@ -87,6 +87,7 @@ public final class SelfTest {
         instrument();
         cues();
         mouse();
+        phone();
         survival();
         System.out.println();
         System.out.println(checks + " checks, " + failed + " failed");
@@ -741,6 +742,130 @@ public final class SelfTest {
             check("night " + n + "'s deaths are not one-sided",
                     hi <= 2 * Math.max(1, lo));
         }
+    }
+
+    /**
+     * The phone build.
+     *
+     * <p>Two different things are checked here and they fail for different
+     * reasons.
+     *
+     * <p><b>Is it current?</b> A generated file that has gone stale is worse
+     * than no file: it is a second copy of the game quietly disagreeing with
+     * the first. So the page is regenerated and compared, rather than
+     * spot-checked -- the same check every other ported game carries.
+     *
+     * <p><b>Is it the same game?</b> A staleness check proves the file
+     * matches its generator and says nothing about whether the generator is
+     * right. The failure that would otherwise be silent is a line that exists
+     * in {@link aside.games.fnaf9.Voice} and never reaches the page, or a
+     * number the page restates instead of reading -- so every fixed sentence
+     * is asserted present, and the thresholds the night is tuned against are
+     * asserted to be the engine's own values rather than copies of them.
+     *
+     * <p>The one thing that is genuinely copied rather than read is the
+     * corridor's proportions, which live inside {@code GameScreen}'s drawing
+     * code and cannot be reached from here. That is why they are gathered in
+     * one place in the generator: they are the only numbers in this port with
+     * two homes, and a check that cannot see both is not worth writing.
+     */
+    static void phone() {
+        section("the phone build");
+
+        Path out = Path.of("web", "fnaf9.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here -- run from the repository root)");
+            return;
+        }
+        String page;
+        try {
+            page = Files.readString(out);
+        } catch (Exception e) {
+            check("web/fnaf9.html can be read", false);
+            return;
+        }
+        try {
+            check("web/fnaf9.html is current -- regenerate it with aside.games.fnaf9.WebFeed",
+                    aside.games.fnaf9.WebFeed.html().equals(page));
+        } catch (Exception e) {
+            check("web/fnaf9.html is current -- regenerate it with aside.games.fnaf9.WebFeed",
+                    false);
+        }
+
+        // Every fixed sentence the desktop says is on the phone. The failure
+        // this catches is a line added to Voice and never emitted, which is
+        // invisible in every other check in this file.
+        String[] lines = {
+                aside.games.fnaf9.Voice.TITLE,
+                aside.games.fnaf9.Voice.SUBTITLE,
+                aside.games.fnaf9.Voice.HELP_2,
+                aside.games.fnaf9.Voice.HELP_3,
+                aside.games.fnaf9.Voice.HELP_4,
+                aside.games.fnaf9.Voice.BAND_NIGHT,
+                aside.games.fnaf9.Voice.FEED_HEAD,
+                aside.games.fnaf9.Voice.SENSOR_HEAD,
+                aside.games.fnaf9.Voice.SENSOR_NOT_DOWN,
+                aside.games.fnaf9.Voice.SENSOR_TOUCHING,
+                aside.games.fnaf9.Voice.SENSOR_CLEAR,
+                aside.games.fnaf9.Voice.MON_OFF_1,
+                aside.games.fnaf9.Voice.MON_OFF_2,
+                aside.games.fnaf9.Voice.FADED_1,
+                aside.games.fnaf9.Voice.HALL,
+                aside.games.fnaf9.Voice.BTN_MON_LEFT,
+                aside.games.fnaf9.Voice.BTN_MON_RIGHT,
+                aside.games.fnaf9.Voice.BTN_DARK,
+                aside.games.fnaf9.Voice.BTN_HOLD,
+                aside.games.fnaf9.Voice.CIRCUIT_JAMMED,
+                aside.games.fnaf9.Voice.CIRCUIT_DARK,
+                aside.games.fnaf9.Voice.CIRCUIT_HOLD,
+                aside.games.fnaf9.Voice.TAKEN_HEAD,
+                aside.games.fnaf9.Voice.TAKEN_LINE,
+                aside.games.fnaf9.Voice.WIN_HEAD,
+                aside.games.fnaf9.Voice.WIN_LINE,
+                aside.games.fnaf9.Voice.BACK_TO_NIGHTS,
+        };
+        int missing = 0;
+        for (String line : lines) if (!page.contains(line)) missing++;
+        check("every fixed sentence the desktop says is on the phone (" + lines.length
+                + " lines, " + missing + " missing)", missing == 0);
+
+        // The thresholds, as the engine's own values. A page that restated
+        // them would be a page that could disagree about the night.
+        check("the phone reads the door's ceiling from the engine, not a copy",
+                page.contains("\"holdMax\":" + aside.games.fnaf9.WebFeed.num(Feed.HOLD_MAX)));
+        check("the phone reads the door's travel from the engine, not a copy",
+                page.contains("\"shutTime\":" + aside.games.fnaf9.WebFeed.num(Feed.SHUT_TIME)));
+        check("the phone reads the picture's ceiling from the engine, not a copy",
+                page.contains("\"ageMax\":" + aside.games.fnaf9.WebFeed.num(Feed.AGE_MAX)));
+        check("the phone reads the delay line's length from the engine, not a copy",
+                page.contains("\"hist\":" + Feed.HIST));
+        check("the phone reads the hall's length from the engine, not a copy",
+                page.contains("\"max\":" + Feed.MAX));
+
+        // The cast, by name, so a re-tuned pair reaches the phone. Night four
+        // is the one that was re-tuned by measurement, so it is the one worth
+        // naming.
+        int castMissing = 0;
+        for (int n = 1; n <= MouseMap.NIGHTS; n++) {
+            Pair p = Pair.forNight(n);
+            if (!page.contains(p.left().name()) || !page.contains(p.right().name())) castMissing++;
+            if (!page.contains(p.note())) castMissing++;
+        }
+        check("every night's pair and note is on the phone", castMissing == 0);
+
+        // One footfall for both halls. This is the design rule the audio tool
+        // states and the desktop's cue table keeps; the phone has its own cue
+        // table, so it needs its own check. A page that gave the two halls
+        // different footfalls would hand the player the one thing the monitor
+        // exists to sell them.
+        check("the phone's footfall carries no direction",
+                !page.contains("step_left") && !page.contains("step_right"));
+        check("the phone has one footfall cue", page.contains("case 'f9_step':"));
+
+        // The delay line is the game, so the page has to actually keep one.
+        check("the phone keeps a delay line", page.contains("Feed.prototype.record"));
+        check("the phone reads the picture out of the delay line, not a formula",
+                page.contains("Feed.prototype.apparent"));
     }
 
     private SelfTest() {}

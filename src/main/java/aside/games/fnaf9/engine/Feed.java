@@ -415,7 +415,15 @@ public class Feed {
     // the picture is read out of that list at `feed` seconds behind now.
     // Sampling every frame instead would work and would be 60 times the memory
     // for the same answer, because a walker only moves every couple of seconds.
-    static final int HIST = 1024;
+    /**
+     * How many samples a hall's delay line keeps.
+     *
+     * <p>Public because the phone build has to keep the same number: the
+     * delay line <i>is</i> the game, and a phone whose buffer was a different
+     * length would be a phone whose picture ages differently from the
+     * desktop's. {@link aside.games.fnaf9.WebFeed} emits it into the page.
+     */
+    public static final int HIST = 1024;
     final double[][] histT = new double[2][HIST];
     final double[][] histD = new double[2][HIST];
     final int[] histN = new int[2];
