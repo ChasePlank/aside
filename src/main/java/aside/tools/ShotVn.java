@@ -53,7 +53,7 @@ public class ShotVn extends Application {
         int steps = 0;
         if ("choice".equals(stopAt)) {
             while (vn.mode != Vn.Mode.CHOOSING && steps++ < 400) vn.advance();
-        } else if ("history".equals(stopAt) || "menu".equals(stopAt)) {
+        } else if ("toast".equals(stopAt) || "history".equals(stopAt) || "menu".equals(stopAt)) {
             // Walk a little way into the story first, so the history has something in it and the menu is not
             // opened on an empty screen.
             for (int i = 0; i < 6 && steps++ < 400; i++) {
@@ -77,9 +77,14 @@ public class ShotVn extends Application {
         screen.enter();
         // Press a key after entering, for the views that are opened rather than navigated to. Synthesised rather
         // than clicked because the screen takes KeyEvents, and these two overlays have never been looked at.
-        if ("history".equals(stopAt) || "menu".equals(stopAt)) {
-            javafx.scene.input.KeyCode code = "history".equals(stopAt)
-                    ? javafx.scene.input.KeyCode.H : javafx.scene.input.KeyCode.ESCAPE;
+        if ("toast".equals(stopAt) || "history".equals(stopAt) || "menu".equals(stopAt)) {
+            // The toast is the one view that only exists for a couple of seconds - it is the save/load
+            // confirmation, and nothing had ever looked at it. F5 saves, which raises it.
+            javafx.scene.input.KeyCode code = switch (stopAt) {
+                case "toast" -> javafx.scene.input.KeyCode.F5;
+                case "history" -> javafx.scene.input.KeyCode.H;
+                default -> javafx.scene.input.KeyCode.ESCAPE;
+            };
             screen.handleKey(new javafx.scene.input.KeyEvent(javafx.scene.input.KeyEvent.KEY_PRESSED, "", "",
                     code, false, false, false, false));
             System.out.println("DIAG pressed " + code);
