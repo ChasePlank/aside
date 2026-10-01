@@ -31,6 +31,91 @@ public class SelfTest {
         else    { fail++; System.out.println("  FAIL " + name); }
     }
 
+    /**
+     * The retired games still compile against the engine.
+     *
+     * <p><b>This closes the one cost the cull knowingly took.</b> Retiring
+     * a game is a move, not a delete, and `retired-games/` is out of the
+     * build -- `javac` never sees it and the retired suites no longer run.
+     * That was written down as a deliberate cost in the cull's README:
+     * *"retired code can rot against the engine without anything telling
+     * you."* It can, and this is the thing that tells you.
+     *
+     * <p>It is a compile and not a test run, on purpose. Running a retired
+     * suite would mean its `SelfTest` still had to pass, and a game that
+     * was retired because it repeated a mechanic is a game nobody is going
+     * to fix when its numbers drift. Compiling is the line that matters:
+     * it is the difference between *"we could bring this back with a
+     * `git mv`"* and *"we could bring this back with an afternoon."*
+     *
+     * <p>Skips rather than fails when there is no compiler on the
+     * classpath, because a JRE is a legitimate way to run the engine and a
+     * check that cannot run is not a check that failed.
+     */
+    static void retiredStillCompiles(Path retiredRoot) {
+        javax.tools.JavaCompiler jc = javax.tools.ToolProvider.getSystemJavaCompiler();
+        if (jc == null) {
+            System.out.println("       (no compiler on this JVM -- skipping the compile check)");
+            return;
+        }
+        List<java.io.File> files = new ArrayList<>();
+        try (var walk = Files.walk(retiredRoot.resolve(Path.of("src", "main", "java")))) {
+            walk.filter(p -> p.toString().endsWith(".java"))
+                    .forEach(p -> files.add(p.toFile()));
+        } catch (Exception e) {
+            check("the retired sources can be listed (" + e.getMessage() + ")", false);
+            return;
+        }
+        check("there are retired sources to compile", !files.isEmpty());
+
+        Path out;
+        try {
+            out = Files.createTempDirectory("aside-retired");
+        } catch (Exception e) {
+            check("a scratch directory for the retired compile", false);
+            return;
+        }
+        // The engine is run with JavaFX on the MODULE path and everything
+        // else on the class path, so a compile that only reads
+        // java.class.path cannot see javafx at all and reports eight games
+        // as broken when the problem is the harness. Both are joined.
+        String cp = System.getProperty("java.class.path", ".");
+        String modules = System.getProperty("jdk.module.path");
+        if (modules != null && !modules.isBlank()) cp = cp + java.io.File.pathSeparator + modules;
+
+        javax.tools.DiagnosticCollector<javax.tools.JavaFileObject> diags =
+                new javax.tools.DiagnosticCollector<>();
+        boolean ok;
+        try (javax.tools.StandardJavaFileManager fm =
+                     jc.getStandardFileManager(diags, null, null)) {
+            ok = jc.getTask(null, fm, diags,
+                    List.of("-nowarn", "-d", out.toString(), "-classpath", cp),
+                    null, fm.getJavaFileObjectsFromFiles(files)).call();
+        } catch (Exception e) {
+            check("the retired compile can be run (" + e.getMessage() + ")", false);
+            return;
+        }
+
+        List<String> errors = new ArrayList<>();
+        boolean sawJavafx = false;
+        for (var d : diags.getDiagnostics()) {
+            if (d.getKind() != javax.tools.Diagnostic.Kind.ERROR) continue;
+            String msg = d.getMessage(null);
+            errors.add(d.getSource() + ":" + d.getLineNumber() + " " + msg);
+            if (msg != null && msg.contains("javafx")) sawJavafx = true;
+        }
+        // A check that cannot see the toolkit is a check that did not run.
+        // Saying so is better than reporting eight games as rotten when the
+        // fault is in the harness that ran the check.
+        if (!ok && sawJavafx) {
+            System.out.println("       (JavaFX is not on this compiler's path -- "
+                    + "skipping the compile check)");
+            return;
+        }
+        for (String e : errors) System.out.println("       " + e);
+        check("every retired game still compiles against the engine", ok);
+    }
+
     public static void main(String[] args) throws Exception {
         System.out.println("=== Aside engine self-test ===\n");
 
@@ -429,6 +514,8 @@ public class SelfTest {
                 check("every retired game is accounted for", declaredIds.size() == onDisk.size());
                 System.out.println("       retired: " + declared.size() + " games; library now "
                         + Games.all().size());
+
+                retiredStillCompiles(retiredRoot);
             }
         } catch (Exception e) {
             check("the retired list can be read from here (" + e.getMessage() + ")", false);
