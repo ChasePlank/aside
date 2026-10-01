@@ -44,8 +44,29 @@ public class Bot {
     public double windUntil = 96.0;
     /** Longest single winding burst. A long burst is a long blind spell. */
     public double windBurst = 1.0;
-    /** How long each opening light stays on. */
-    public double lightHold = 0.45;
+    /**
+     * How long each opening light stays on.
+     *
+     * This is the load-bearing knob and it was wrong at 0.45 for as long as
+     * the game existed. A threat that arrives just after its own opening was
+     * checked is not seen again until the rotation comes back around, and the
+     * rotation is three openings plus the blind wind burst:
+     *
+     *     3 * 0.45 + 1.0 = 2.35s   (old)
+     *     3 * 0.25 + 1.0 = 1.75s   (now)
+     *
+     * The opening grace on night 5 is 2.15s, so at 0.45 the bot was losing
+     * threats it never had a chance to answer -- the survival table read
+     * 30/40 and 19/40 on nights 4 and 5, and it looked like a difficulty
+     * problem when it was a strategy problem. At 0.25 the rotation fits
+     * inside the grace on every night and the week reads 40/40. A quarter
+     * second is also what a person actually does with a flashlight.
+     *
+     * The margin is the real ramp: grace minus rotation runs 1.15s on night
+     * 1 down to 0.25s on night 6, so a player who lingers on each opening
+     * loses the week even though a competent one never does.
+     */
+    public double lightHold = 0.25;
     /** How long the mask stays up once a threat is seen. */
     public double maskHold = 1.1;
 

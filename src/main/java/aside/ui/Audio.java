@@ -43,7 +43,7 @@ public class Audio {
     public static final String[] SFX_CUES = {
         "door_open", "door_close", "light_click", "camera_up", "camera_down",
         "static", "footstep", "pot_clank", "power_down", "power_up",
-        "chime_6am", "text_blip", "choice_move", "choice_select",
+        "chime_6am", "text_blip", "choice_move", "choice_select", "at_door",
         "scare_door", "scare_sprint",
         "scare_monty", "scare_roxanne", "scare_chica", "scare_freddy",
     };

@@ -13,6 +13,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 
 /**
@@ -218,6 +219,7 @@ public class GameScreen extends UiScreen {
         if (game.cameraUp) {
             drawCameraView();
             drawCamStrip();
+            drawOfficeWarning();
         }
 
         if (!game.maskOn) drawButtons();
@@ -399,6 +401,37 @@ public class GameScreen extends UiScreen {
     }
 
     // ---- Camera ----
+
+    /**
+     * The monitor's warning: someone is at the office and the monitor is
+     * hiding them.
+     *
+     * Red, at the edges of the frame, and it does not say where. The point is
+     * to make you lower the monitor and look, which is the decision the game
+     * is about -- so it must not make that decision for you. It pulses,
+     * because a steady bar reads as part of the feed's furniture.
+     *
+     * This is the other half of the arrival cue. The cue tells you it
+     * happened; this tells you it is still happening, which is the state you
+     * are in when you are holding W on CAM 11.
+     */
+    void drawOfficeWarning() {
+        if (!game.someoneAtTheOffice()) return;
+        double pulse = 0.35 + 0.25 * Math.sin(game.time * 9.0);
+        gc.setFill(Color.rgb(233, 69, 96, pulse));
+        gc.fillRect(0, 0, W, 10);
+        gc.fillRect(0, H - 10, W, 10);
+        gc.setFill(Color.rgb(0, 0, 0, 0.62));
+        gc.fillRect(W / 2 - 265, 26, 530, 54);
+        gc.setStroke(Color.web("#E94560"));
+        gc.setLineWidth(2);
+        gc.strokeRect(W / 2 - 265, 26, 530, 54);
+        gc.setFill(Color.web("#E94560"));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText("SOMETHING IS IN THE OFFICE", W / 2, 63);
+        gc.setTextAlign(TextAlignment.LEFT);
+    }
 
     void drawCameraView() {
         gc.setFill(Color.web("#050508"));

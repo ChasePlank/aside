@@ -465,21 +465,86 @@ public class SelfTest {
             check("a click after the night is over does nothing", !g.maskOn);
         }
 
-        // 14. Bot survival across nights, for the record.
+        // 14. The competent bot survives the week.
+        //
+        // This used to be a printout, and it read 40/40, 40/40, 40/40,
+        // 30/40, 19/40 -- a game that looked unfair on its last two nights.
+        // It was not: the bot's own light hold was 0.45s, so its rotation
+        // (three openings plus the blind wind burst) took 2.35s while the
+        // night 5 grace was 2.15s, and it lost threats it never had a chance
+        // to see. The knob is 0.25 now and the week is clean. A printout
+        // would have let that drift back; this is a check, so it cannot.
+        //
+        // The margin is printed too, because it is the ramp: the competent
+        // bot wins every night, so the week's difficulty lives entirely in
+        // how much slack is left between the rotation and the grace.
         System.out.println();
-        for (int night = 1; night <= 5; night++) {
-            int wins = 0;
-            for (int seed = 1; seed <= 40; seed++) {
-                Game g = new Game(night, seed * 7919L);
-                Bot bot = new Bot(g, seed * 104729L);
-                int steps = 0;
-                while (g.status == Game.Status.PLAYING && steps++ < 60 * 300) {
-                    bot.play(1.0 / 60);
-                    g.update(1.0 / 60);
+        {
+            int runs = 40;
+            // Worst case: a threat arrives just after its own opening was
+            // checked and waits out the rest of the rotation, wind included.
+            Bot probe = new Bot(new Game(1, 1L), 1L);
+            double rotation = 3 * probe.lightHold + probe.windBurst;
+            for (int night = 1; night <= 5; night++) {
+                int wins = 0;
+                for (int seed = 1; seed <= runs; seed++) {
+                    Game g = new Game(night, seed * 7919L);
+                    Bot bot = new Bot(g, seed * 104729L);
+                    int steps = 0;
+                    while (g.status == Game.Status.PLAYING && steps++ < 60 * 300) {
+                        bot.play(1.0 / 60);
+                        g.update(1.0 / 60);
+                    }
+                    if (g.status == Game.Status.SURVIVED) wins++;
                 }
-                if (g.status == Game.Status.SURVIVED) wins++;
+                double margin = new Game(night, 1L).openingGrace() - rotation;
+                System.out.printf("  night %d: bot survived %d/%d, margin %.2fs%n",
+                        night, wins, runs, margin);
+                check("a competent bot survives night " + night
+                        + " (" + wins + "/" + runs + ")", wins >= runs - 2);
+                check("night " + night + " leaves the rotation room inside the grace"
+                        + " (margin " + String.format("%.2f", margin) + "s)", margin > 0);
             }
-            System.out.printf("  night %d: bot survived %d/40%n", night, wins);
+        }
+
+        // 15. Every arrival is announced, and the monitor says so.
+        //
+        // Both of these were written down as fixed and were not in the code.
+        // The six path-walkers arrived in silence (only Foxy raised a cue),
+        // and the monitor said nothing when they did -- which is exactly the
+        // failure Chase reported from playtest: on the monitor, winding the
+        // box, jumpscared by something he never had a chance to see. A check
+        // that only ran Foxy would have missed it, so this one runs a walker.
+        {
+            // Night 6 puts aiLevel at 20, so the roll always succeeds and the
+            // arrival is deterministic rather than a wait on a 10% chance.
+            Game g = new Game(6, 7L);
+            Animatronic walker = g.toyBonnie;
+            walker.pathIndex = walker.path.length - 1;
+            boolean cued = false;
+            for (int i = 0; i < 60 * 60 && !cued; i++) {
+                walker.update(1.0 / 60);
+                if (g.drainCues().contains("at_door")) cued = true;
+            }
+            check("a path-walker's arrival raises at_door", cued);
+            check("and it is standing in an opening", walker.atOpening());
+            check("the office warning is up while it stands there",
+                    g.someoneAtTheOffice());
+
+            // The mask answers it, and the warning clears with it.
+            g.maskOn = true;
+            g.update(1.0 / 60);
+            check("answering the opening clears the warning",
+                    !g.someoneAtTheOffice());
+
+            // Foxy counts too -- he is the one that kills you from a doorway
+            // the monitor is covering.
+            Game f = new Game(1, 7L);
+            f.witheredFoxy.stages = 3;
+            check("Foxy in the hall raises the warning", f.someoneAtTheOffice());
+
+            check("an empty office does not warn",
+                    !new Game(1, 7L).someoneAtTheOffice());
         }
 
         System.out.printf("%n%d checks, %d failed%n", checks, failed);

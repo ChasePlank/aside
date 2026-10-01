@@ -299,6 +299,26 @@ public class Game {
                 witheredBonnie, balloonBoy};
     }
 
+    /**
+     * Is anybody standing at the office right now?
+     *
+     * This is the monitor's warning, and it is deliberately coarse: it says
+     * that someone is there, not which opening. Lowering the monitor to look
+     * is the decision the game is about, so the warning must not make that
+     * decision for the player.
+     *
+     * It covers Foxy in the hall as well as the six who walk a path, because
+     * the failure it exists to prevent -- being on the monitor when something
+     * arrives -- is the same failure for all seven.
+     */
+    public boolean someoneAtTheOffice() {
+        if (witheredFoxy.stages >= 3) return true;
+        for (Animatronic a : visitors()) {
+            if (a.atOpening() && !a.resolved) return true;
+        }
+        return false;
+    }
+
     /** Everyone, for the camera sweep. */
     public Animatronic[] cast() {
         return new Animatronic[]{toyFreddy, witheredFoxy, toyBonnie, toyChica,

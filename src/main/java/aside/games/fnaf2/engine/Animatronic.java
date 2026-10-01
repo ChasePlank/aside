@@ -100,6 +100,15 @@ public class Animatronic {
             if (atOpening()) {
                 officeTimer = 0;
                 resolved = false;
+                // Announced, like Foxy's arrival. A visitor used to reach the
+                // office in silence, and since the monitor hides the office
+                // there was no way to know it had happened until the
+                // jumpscare -- Chase's playtest note, verbatim: "I checked
+                // lights, went to wind the music box, and got jumpscared. If
+                // the timer between entering and killing is 5 seconds, then
+                // they arent visible." The grace is what makes the arrival
+                // survivable; the cue is what makes it fair.
+                game.cue("at_door");
             }
         }
     }
