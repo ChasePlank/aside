@@ -2,6 +2,9 @@ package aside.games.fnaf4.engine;
 
 import aside.games.fnaf4.MouseMap;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /**
  * The FNAF 4 checks, runnable with no display.
  *
@@ -40,6 +43,7 @@ public final class SelfTest {
         fredbear();
         strip();
         clock();
+        phone();
         survival();
         System.out.println();
         System.out.println(checks + " checks, " + failed + " failed");
@@ -338,6 +342,95 @@ public final class SelfTest {
     }
 
     // ------------------------------------------------------------ survival
+
+    /**
+     * The phone build.
+     *
+     * <p>Two different things, and they fail for different reasons.
+     *
+     * <p><b>Is it current?</b> A generated file that has gone stale is worse
+     * than no file: it is a second copy of the game quietly disagreeing with
+     * the first. So the page is regenerated and compared rather than
+     * spot-checked -- the same check every other ported game carries.
+     *
+     * <p><b>Is it the same game?</b> A staleness check proves the file matches
+     * its generator and says nothing about whether the generator is right. The
+     * failure that would otherwise be silent is a rule that lives in the page
+     * as a literal and has stopped matching the engine -- so every number the
+     * night is made of is asserted to be the engine's own value, and the three
+     * night tables are asserted to be the engine's own tables.
+     *
+     * <p>What is <i>not</i> checked here is the RNG or the update loop. The
+     * page reproduces {@code java.util.Random} in BigInt -- including
+     * {@code nextInt}, which is a rejection sampler and not a modulo -- so the
+     * same seed deals the same night in both builds, and that was verified by
+     * driving both engines under the same scripted policy: night one on seed
+     * 1001 produces identical traces every two seconds (the station, the
+     * noise, all four distances and Fredbear's position) and both end
+     * JUMPSCARED to the same killer at the same moment. It is not checkable
+     * from Java without a JavaScript engine, and the alternative (a page that
+     * deals its own nights) would make the two builds different games with the
+     * same rules.
+     */
+    static void phone() {
+        section("the phone build");
+
+        Path out = Path.of("web", "fnaf4.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here -- run from the repository root)");
+            return;
+        }
+        String page;
+        try {
+            page = Files.readString(out);
+        } catch (Exception e) {
+            check("web/fnaf4.html can be read", false);
+            return;
+        }
+        try {
+            check("web/fnaf4.html is current -- regenerate it with aside.games.fnaf4.WebRoom",
+                    aside.games.fnaf4.WebRoom.html().equals(page));
+        } catch (Exception e) {
+            check("web/fnaf4.html is current -- regenerate it with aside.games.fnaf4.WebRoom",
+                    false);
+        }
+
+        // The rules, as numbers. A port whose hop is 1.2 rather than 1.15
+        // plays differently and looks identical.
+        check("the page carries the hop",
+                page.contains("hopTime: " + aside.games.fnaf4.WebRoom.num(Game.HOP_TIME)));
+        check("the page carries the flash",
+                page.contains("flashTime: " + aside.games.fnaf4.WebRoom.num(Game.FLASH_TIME)));
+        check("the page carries how long a station stays lit",
+                page.contains("litTime: " + aside.games.fnaf4.WebRoom.num(Game.LIT_TIME)));
+        check("the page carries where the light sends something it catches",
+                page.contains("pushTo: " + Game.PUSH_TO));
+        check("the page carries the length of the room",
+                page.contains("distMax: " + Game.DIST_MAX));
+        check("the page carries what a flash costs in noise",
+                page.contains("noisePerFlash: " + aside.games.fnaf4.WebRoom.num(Game.NOISE_PER_FLASH)));
+        check("the page carries how much more often Fredbear comes at full noise",
+                page.contains("noiseWeight: " + aside.games.fnaf4.WebRoom.num(Game.NOISE_WEIGHT)));
+        check("the page carries Fredbear's grace",
+                page.contains("fredbearGrace: " + aside.games.fnaf4.WebRoom.num(Game.FREDBEAR_GRACE)));
+
+        // The three night tables, which are the whole of the difficulty ramp.
+        for (String t : new String[]{"baseInterval", "grace", "fredbearRate"}) {
+            String want = aside.games.fnaf4.WebRoom.table(
+                    switch (t) {
+                        case "baseInterval" -> 0;
+                        case "grace" -> 1;
+                        default -> 2;
+                    });
+            check("the page carries the " + t + " table", page.contains(t + ": " + want));
+        }
+
+        // And the four threats, which are the four stations.
+        for (String name : new String[]{"Nightmare Bonnie", "Nightmare Chica",
+                "Nightmare Foxy", "Nightmare Freddy"}) {
+            check("the page carries " + name, page.contains(name));
+        }
+    }
 
     static void survival() {
         section("survival, 60 seeds a night");
