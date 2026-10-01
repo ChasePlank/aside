@@ -156,8 +156,14 @@ public class Tutorial {
                 s.add(new Sign(30 * 32, y, "KEY  -  opens the door"));
             }
             case 7 -> {
-                s.add(new Sign(10 * 32, y - 60, "WHAT IS OUT THERE"));
-                s.add(new Sign(10 * 32, y - 34, "spider        snake        bat"));
+                s.add(new Sign(20 * 32, y - 60, "WHAT IS OUT THERE"));
+                // One name per creature, at the creature's own column. This was a single string with eight
+                // literal spaces between the words, starting at column 10, so the names could not track boxes
+                // at 12, 24 and 36 - reported from play as "the enemies level didn't space the names to match
+                // the creature". Literal spaces cannot align to anything; positions can.
+                s.add(new Sign(11 * 32, y - 34, "spider"));
+                s.add(new Sign(23 * 32, y - 34, "snake"));
+                s.add(new Sign(35 * 32, y - 34, "bat"));
             }
             case 8 -> {
                 s.add(new Sign(10 * 32, y, "SPIKES"));
