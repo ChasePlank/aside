@@ -1,0 +1,169 @@
+# A short story for the Aside engine.
+# Third register. Night Shift is a demo, Overtime is horror and performance, The Lamp Room is warm and about
+# tending. This one is quiet, wry, and slightly haunted: a night auditor reconciling a day that does not balance,
+# and the thing in the ledger that should not be there. Six scenes, three endings, one sitting.
+
+title: The Discrepancy
+author: Roxanne
+start: desk
+
+== desk ==
+bg office_night
+music sea_swell
+The night audit is the same every night, which is the point of it.
+Room 101 paid in full. Room 104 left early and was not charged. Room 112 is still in there and will be until
+Thursday, and has asked twice for a pot that does not exist.
+
+You are halfway through the folio when you find the line that does not belong.
+
+* Look at it properly. -> read
+* Skip it. It is not your job to be curious. -> skip
+
+== skip ==
+You move the cursor down and finish the sheet. The totals balance. They always balance.
+The line is still there in the morning, because lines do not get tired.
+-> morning
+
+== read ==
+sfx clank
+ROOM 000. CHECK-IN: YESTERDAY. CHECK-OUT: —. RATE: 0.00. NAME: (unreadable).
+
+There is no room 000. You have worked here eleven years and you would know.
+The rate is zero and the stay is open, which is how the system records a room that is occupied by nothing
+and has been for a long time.
+
+* Ask the system to explain it. -> ask_system
+* Open the room's notes. -> notes
+* Print the line and put it in your pocket. -> print
+
+== ask_system ==
+~ asked true
+SYSTEM: Room 000 is not in the property management plan.
+SYSTEM: Room 000 was not added by any user.
+SYSTEM: Room 000 has one note.
+-> notes
+
+== notes ==
+~ read_note true
+The note is one line long and it is in your handwriting.
+
+"Check on her at 3."
+
+You do not remember writing it. You remember writing it every night for eleven years.
+-> three_am
+
+== print ==
+The printer takes the sheet and gives it back warm, and you fold it twice and put it in your coat,
+which is what you do with things you intend to think about later.
+-> three_am
+
+== three_am ==
+bg cove
+music music_box
+At three the building is at its quietest, which is not the same as its emptiest.
+You stand outside 000 for a while, which is to say you stand at a wall, because 000 is a wall.
+
+* Knock. -> knock
+* Put your hand flat on it and wait. -> wait
+* Go back to the desk and finish the audit. -> back
+
+== knock ==
+sfx door_open
+You knock. It is a wall. You knock anyway, which is the sort of thing you would have to explain to anyone
+watching, and nobody is.
+A long pause. Then, from the other side of the wall, a voice you have heard before and cannot place:
+keeper: You are late tonight.
+~ heard true
+-> answer
+
+== wait ==
+You put your hand flat on the wall and wait. The building does what it does at three in the morning, which is
+mostly nothing, at length.
+After eleven minutes you feel it: not a knock, just warmth, the way a kettle is warm before it is hot.
+keeper: You are late tonight.
+~ heard true
+-> answer
+
+== back ==
+~ left true
+You go back to the desk and finish the audit. The totals balance. They always balance.
+In the morning the line for room 000 is still there, and you have worked here eleven years, and you will be
+here eleven more.
+-> morning
+
+== answer ==
+keeper: I keep the other shift.
+keeper: Somebody has to be awake in this building at three, and it turns out you have been doing it
+for eleven years, and so have I, and neither of us has ever said hello.
+
+* Say hello. -> hello [if heard]
+* Ask who she is. -> who
+* Say nothing. -> quiet_end
+
+== who ==
+keeper: Nobody in the file. That is the whole trick of it.
+keeper: A rate of zero and a stay that never closes. You can be here forever if nobody is paying.
+~ knows true
+-> hello
+
+== hello ==
+keeper: There. That was not difficult.
+keeper: Same time tomorrow.
+~ greeted true
+-> morning
+
+== quiet_end ==
+bg office_dawn
+music sea_swell
+You say nothing, and she waits, and the waiting is not unkind, and then it is three-forty and you are
+standing at a wall with your hand on it and no reason you could give anyone.
+-> morning
+
+== morning ==
+bg office_dawn
+music sea_swell
+The morning shift arrives at six and finds the audit finished and the desk tidy, which is how they find it
+every day, and they do not ask how.
+
+* Look for the line for room 000. -> found [if greeted]
+* Look for it anyway, the way you do every morning. -> found_quiet [if left]
+* Ask about room 000. -> asking [if asked]
+* Check whether the note is still in your handwriting. -> note_again [if read_note]
+* Ask who she is. -> who_she_is [if knows]
+* Go home. -> home
+
+== found ==
+The line is there. It has a check-out time now, at 3:47, and a rate of 0.00, and a name.
+
+The name is yours, which is not the answer you were hoping for and is, on reflection, the only one that fits.
+-> home
+
+== found_quiet ==
+The line is there, and there is a second line under it, in the same unreadable hand.
+
+It says: "She came back. She always comes back."
+-> home
+
+== who_she_is ==
+The morning manager does not know. The file does not know. The wall, if you asked it, might.
+
+You do not ask the wall. You have eleven years of practice at not asking the wall.
+-> home
+
+== note_again ==
+The note is still there. It is still your handwriting.
+
+Under it, in the same hand, is a second line you did not write and did not not-write:
+"Same time tomorrow."
+-> home
+
+== asking ==
+The morning manager looks at you for a moment longer than the question deserves.
+manager: There is no room 000. There has never been a room 000. Go home, you look like you have been up.
+-> home
+
+== home ==
+bg office_dawn
+You walk home in the grey part of the morning, and the sea is on your left because the sea is always on your
+left, and it sounds the way it sounded at three.
+-> END

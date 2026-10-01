@@ -19,6 +19,7 @@ public final class Games {
         g.add(new FnafGame());
         g.add(new FruitJumpGame());
         g.add(new aside.games.lamproom.LampRoomGame());
+        g.add(new aside.games.discrepancy.DiscrepancyGame());
         return g;
     }
 
