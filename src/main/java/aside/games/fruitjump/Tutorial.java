@@ -95,9 +95,13 @@ public class Tutorial {
                 box(g, 36, 9, 'b');
             }
             case 8 -> {
-                // The ground hazards, two tiles wide so they are legible.
-                for (int c = 18; c <= 19; c++) { g[FLOOR - 1][c] = '^'; g[FLOOR][c] = '#'; }
-                for (int c = 30; c <= 31; c++) { g[FLOOR - 1][c] = '^'; g[FLOOR][c] = '#'; }
+                // The ground hazards, two tiles wide so they are legible, and set INTO the floor rather than on
+                // top of it. They were at FLOOR - 1 with solid '#' directly below, so they rendered as spikes
+                // sitting on the ground - while the sign two lines below them promises "a pit costs you a heart,
+                // not the run - climb out". Reported from play as "the spike level had them above ground, not a
+                // pit". Clearing the row above and putting the spike in the floor is what makes it a pit.
+                for (int c = 18; c <= 19; c++) { g[FLOOR - 1][c] = ' '; g[FLOOR][c] = '^'; }
+                for (int c = 30; c <= 31; c++) { g[FLOOR - 1][c] = ' '; g[FLOOR][c] = '^'; }
             }
             default -> { }
         }
@@ -156,8 +160,14 @@ public class Tutorial {
                 s.add(new Sign(30 * 32, y, "KEY  -  opens the door"));
             }
             case 7 -> {
-                s.add(new Sign(10 * 32, y - 60, "WHAT IS OUT THERE"));
-                s.add(new Sign(10 * 32, y - 34, "spider        snake        bat"));
+                s.add(new Sign(20 * 32, y - 60, "WHAT IS OUT THERE"));
+                // One name per creature, at the creature's own column. This was a single string with eight
+                // literal spaces between the words, starting at column 10, so the names could not track boxes
+                // at 12, 24 and 36 - reported from play as "the enemies level didn't space the names to match
+                // the creature". Literal spaces cannot align to anything; positions can.
+                s.add(new Sign(11 * 32, y - 34, "spider"));
+                s.add(new Sign(23 * 32, y - 34, "snake"));
+                s.add(new Sign(35 * 32, y - 34, "bat"));
             }
             case 8 -> {
                 s.add(new Sign(10 * 32, y, "SPIKES"));
