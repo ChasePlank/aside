@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05060A">
+<title>it has yours</title>
+<style>
+  :root{--bg:#05060A; --ink:#D8D8E4; --dim:#7A7A90; --red:#E94560; --gold:#FFD700;
+        --panel:#0B0D14; --line:#1E2030}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font:15px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;overscroll-behavior:none}
+  #app{max-width:560px;margin:0 auto;padding:14px 14px 22px;min-height:100%;
+    display:flex;flex-direction:column;gap:12px}
+  h1{font-size:19px;letter-spacing:.10em;color:var(--red);margin:2px 0 0;text-transform:uppercase}
+  .sub{color:var(--dim);font-size:13px;margin:0}
+  .nightrow{display:block;width:100%;text-align:left;padding:12px 14px;margin:0 0 9px;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--ink);
+    font:inherit;cursor:pointer}
+  .nightrow:active{background:#16171F}
+  .nightrow .t{display:block;font-size:16px}
+  .nightrow .n{display:block;font-size:12px;color:var(--dim);margin-top:3px}
+  .help{color:var(--dim);font-size:12px;line-height:1.6}
+  #band{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    font-size:13px;color:var(--dim);border-bottom:1px solid var(--line);padding-bottom:8px}
+  #night{color:var(--red);letter-spacing:.06em}
+  .meter{height:6px;background:#141620;border-radius:3px;overflow:hidden;width:74px}
+  .meter i{display:block;height:100%;width:100%;background:#5A6A8A}
+  .meter.low i{background:var(--red)}
+  #stage{position:relative;background:#02030A;border:1px solid var(--line);border-radius:10px;
+    overflow:hidden}
+  canvas{display:block;width:100%;height:auto}
+  #readout{font-size:13px;letter-spacing:.05em;color:var(--gold);min-height:20px}
+  #readout small{color:var(--dim);letter-spacing:0}
+  #strip{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #strip button{padding:13px 8px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+  #strip button:active{background:#16171F}
+  #strip button.wide{grid-column:1 / -1}
+  #strip button[disabled]{opacity:.35}
+  #over{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+    align-items:center;gap:6px;background:rgba(2,3,10,.86);text-align:center;padding:18px}
+  #over h2{margin:0;font-size:22px;color:var(--red);letter-spacing:.06em}
+  #over p{margin:0;color:var(--dim);font-size:13px}
+  #over button{margin-top:10px;padding:10px 18px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;color:var(--ink);font:inherit;cursor:pointer}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Five Nights at Freddy's 7</h1>
+  <p class="sub">Two doors, one bar and one light -- and it does not have a pattern. It has yours.</p>
+
+  <div id="select"></div>
+
+  <div id="band" hidden>
+    <span id="night"></span>
+    <span id="clock"></span>
+    <span>FILAMENT <span class="meter" id="fil"><i></i></span></span>
+  </div>
+
+  <div id="stage" hidden>
+    <canvas id="cv" width="720" height="420"></canvas>
+    <div id="over" hidden>
+      <h2 id="overtitle"></h2>
+      <p id="overtext"></p>
+      <button id="again">Again</button>
+    </div>
+  </div>
+
+  <div id="readout" hidden></div>
+
+  <div id="strip" hidden>
+    <button id="bl">LOOK LEFT</button>
+    <button id="br">LOOK RIGHT</button>
+    <button id="blb">BAR LEFT</button>
+    <button id="brb">BAR RIGHT</button>
+    <button id="bd" class="wide">DARK</button>
+  </div>
+
+  <p class="help" id="help"></p>
+</div>
+
+<script>
+const C = {
+  units: [
+    {key:"baby", name:"Circus Baby", note:"You will hear her cross the floor.", tell:0.75},
+    {key:"ennard", name:"Ennard", note:"Several things moving at once. Loud, and hard to place.", tell:0.55},
+    {key:"glitchtrap", name:"Glitchtrap", note:"It does not have feet. The room is what sounds wrong.", tell:0.4},
+    {key:"vanny", name:"Vanny", note:"Quiet, and deliberate about it.", tell:0.28},
+    {key:"mimic", name:"The Mimic", note:"It is not imitating anyone tonight.", tell:0.15}
+  ],
+  away: [6, 5.4, 4.8, 4.2, 3.6],
+  approach: [4.4, 4, 3.6, 3.2, 2.8],
+  explore: [0.08, 0.11, 0.14, 0.17, 0.2],
+  memory: [16, 14, 12, 10, 8],
+  hourSeconds: 25,
+  nightHours: 6,
+  lightWarm: 0.45,
+  lightMax: 3.2,
+  lightCool: 10,
+  lightReset: 0.55,
+  barMove: 0.6,
+  strike: 1.5,
+  sure: 0.8,
+  help: "One bar, two doors, and one pair of hands: the bar cannot move while the light is on. The light has to warm up before it shows you anything, and the filament only lasts so long. The readout says where it thinks you are -- so it comes to the other side."
+};
+
+
+// --------------------------------------------------------------- the night
+//
+// A faithful port of aside.games.fnaf7.engine.Shift. The rules are the
+// desktop's, to the number: the light has a warm-up, the filament is a
+// budget, the bar cannot move while the light is on, the record is a decayed
+// integral of where the light has been, and the unit comes to the side the
+// record does not hold. What is different is only the presentation -- the
+// office is drawn rather than photographed, because the page has to be one
+// file and the desktop's art is three megabytes of it.
+//
+// java.util.Random is reproduced in BigInt so the same seed deals the same
+// night in both builds. That is not ceremony: it is what makes a night
+// reproducible when the two are compared.
+
+function RNG(seed) {
+  this.s = (BigInt(seed) ^ 0x5DEECE66Dn) & ((1n << 48n) - 1n);
+}
+RNG.prototype.next = function (bits) {
+  this.s = (this.s * 0x5DEECE66Dn + 0xBn) & ((1n << 48n) - 1n);
+  return Number(this.s >> BigInt(48 - bits));
+};
+RNG.prototype.nextDouble = function () {
+  return (this.next(26) * 134217728 + this.next(27)) / 9007199254740992;
+};
+RNG.prototype.nextBoolean = function () { return this.next(1) !== 0; };
+
+function mix(z) {
+  z = BigInt(z) + 0x9E3779B97F4A7C15n;
+  z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & ((1n << 64n) - 1n);
+  z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & ((1n << 64n) - 1n);
+  return z ^ (z >> 31n);
+}
+
+const HOUR_SECONDS = 25.0, NIGHT_HOURS = 6;
+const LIGHT_WARM = 0.45, LIGHT_MAX = 3.2, LIGHT_COOL = 10.0, LIGHT_RESET = 0.55;
+const BAR_MOVE = 0.60, STRIKE = 1.50, LOOK_WEIGHT = 1.0, SURE = 0.8;
+// The night's tables come from the engine rather than from this file, so the
+// two builds cannot drift. See aside.games.fnaf7.WebShift.
+const AWAY = C.away, APPROACH = C.approach, EXPLORE = C.explore, MEMORY = C.memory;
+
+function Shift(night, seed) {
+  this.night = night;
+  this.rng = new RNG(mix(seed));
+  this.unit = C.units[night - 1];
+  this.time = 0; this.hour = 0;
+  this.where = "AWAY"; this.target = "LEFT"; this.timer = this.away();
+  this.barAt = "RIGHT"; this.barMoving = false; this.barTo = null; this.barTimer = 0;
+  this.lit = false; this.lightSide = "LEFT"; this.litFor = 0;
+  this.heat = 0; this.blown = false;
+  this.attendL = 0; this.attendR = 0;
+  this.status = "PLAYING"; this.killer = null; this.caughtAt = -1;
+  this.strikes = 0; this.repels = 0; this.looks = 0; this.moves = 0; this.knocked = 0;
+  this.heardSide = null; this.cues = [];
+}
+Shift.prototype.away = function () { return AWAY[Math.min(this.night - 1, 4)]; };
+Shift.prototype.approach = function () { return APPROACH[Math.min(this.night - 1, 4)]; };
+Shift.prototype.explore = function () { return EXPLORE[Math.min(this.night - 1, 4)]; };
+Shift.prototype.memory = function () { return MEMORY[Math.min(this.night - 1, 4)]; };
+
+Shift.prototype.attend = function (s) { return s === "LEFT" ? this.attendL : this.attendR; };
+Shift.prototype.belief = function () {
+  const d = this.attendL - this.attendR;
+  if (Math.abs(d) < SURE) return null;
+  return d > 0 ? "LEFT" : "RIGHT";
+};
+Shift.prototype.confidence = function () {
+  const t = this.attendL + this.attendR;
+  if (t <= 1e-6) return 0;
+  return Math.min(1, Math.abs(this.attendL - this.attendR) / t);
+};
+Shift.prototype.predicted = function () {
+  const b = this.belief();
+  return b === null ? null : (b === "LEFT" ? "RIGHT" : "LEFT");
+};
+Shift.prototype.coin = function () { return this.rng.nextBoolean() ? "LEFT" : "RIGHT"; };
+Shift.prototype.choose = function () {
+  if (this.rng.nextDouble() < this.explore()) return this.coin();
+  const b = this.belief();
+  return b === null ? this.coin() : (b === "LEFT" ? "RIGHT" : "LEFT");
+};
+
+Shift.prototype.inHall = function () { return this.where === "HALL_LEFT" || this.where === "HALL_RIGHT"; };
+Shift.prototype.whereSide = function () {
+  if (this.where === "HALL_LEFT" || this.where === "DOOR_LEFT") return "LEFT";
+  if (this.where === "HALL_RIGHT" || this.where === "DOOR_RIGHT") return "RIGHT";
+  return null;
+};
+Shift.prototype.revealed = function () { return this.lit && this.litFor >= LIGHT_WARM; };
+Shift.prototype.visible = function () {
+  return this.revealed() && this.inHall() && this.whereSide() === this.lightSide;
+};
+Shift.prototype.filament = function () { return 1 - this.heat; };
+Shift.prototype.barred = function (s) { return this.barAt === s; };
+Shift.prototype.clock = function () {
+  const h = Math.min(this.hour, 6);
+  return h === 0 ? "12 AM" : (h < 6 ? h + " AM" : "6 AM");
+};
+
+Shift.prototype.cue = function (n) { this.cues.push(n); };
+Shift.prototype.drain = function () { const c = this.cues; this.cues = []; return c; };
+
+Shift.prototype.update = function (dt) {
+  if (this.status !== "PLAYING") return;
+  this.time += dt;
+  this.hour = Math.floor(this.time / HOUR_SECONDS);
+  if (this.hour >= NIGHT_HOURS) { this.status = "SURVIVED"; this.cue("chime_6am"); return; }
+
+  if (this.lit) {
+    this.litFor += dt;
+    this.heat = Math.min(1, this.heat + dt / LIGHT_MAX);
+    if (this.heat >= 1) { this.lit = false; this.litFor = 0; this.blown = true; this.cue("light_blown"); }
+  } else {
+    this.litFor = 0;
+    this.heat = Math.max(0, this.heat - dt / LIGHT_COOL);
+    if (this.blown && this.heat <= LIGHT_RESET) { this.blown = false; this.cue("light_ready"); }
+  }
+
+  const k = Math.exp(-dt / this.memory());
+  this.attendL *= k; this.attendR *= k;
+  if (this.lit) {
+    if (this.lightSide === "LEFT") this.attendL += LOOK_WEIGHT * dt;
+    else this.attendR += LOOK_WEIGHT * dt;
+  }
+
+  if (this.barMoving) {
+    this.barTimer -= dt;
+    if (this.barTimer <= 0) { this.barAt = this.barTo; this.barMoving = false; this.barTo = null; this.cue("bar_set"); }
+  }
+
+  this.timer -= dt;
+  if (this.timer <= 0) this.stepUnit();
+};
+
+Shift.prototype.stepUnit = function () {
+  if (this.where === "AWAY") {
+    this.target = this.choose();
+    this.where = this.target === "LEFT" ? "HALL_LEFT" : "HALL_RIGHT";
+    this.timer = this.approach();
+    if (this.rng.nextDouble() < this.unit.tell) {
+      this.heardSide = this.target;
+      this.cue(this.target === "LEFT" ? "step_left" : "step_right");
+    } else {
+      this.heardSide = null;
+    }
+  } else if (this.inHall()) {
+    this.where = this.target === "LEFT" ? "DOOR_LEFT" : "DOOR_RIGHT";
+    this.timer = STRIKE;
+    this.cue("at_door");
+  } else {
+    const s = this.whereSide();
+    this.strikes++;
+    if (this.barAt === s) {
+      this.repels++; this.knocked++;
+      this.barAt = null; this.barMoving = false; this.barTo = null; this.barTimer = 0;
+      this.where = "AWAY"; this.timer = this.away(); this.heardSide = null;
+      this.cue("repel");
+    } else {
+      this.caughtAt = Math.floor(this.time);
+      this.heardSide = null;
+      this.status = "CAUGHT"; this.killer = this.unit.name;
+      this.cue("caught");
+    }
+  }
+};
+
+Shift.prototype.aim = function (s) {
+  if (this.status !== "PLAYING") return this.lit;
+  if (this.barMoving || this.blown) return this.lit;
+  if (this.lit && this.lightSide === s) return this.lit;
+  this.lit = true; this.lightSide = s; this.litFor = 0; this.looks++;
+  this.cue("light_on");
+  return true;
+};
+Shift.prototype.dark = function () {
+  if (this.status !== "PLAYING") return this.lit;
+  if (!this.lit) return this.lit;
+  this.lit = false; this.litFor = 0; this.cue("light_off");
+  return false;
+};
+Shift.prototype.moveBar = function (s) {
+  if (this.status !== "PLAYING") return false;
+  if (this.lit || this.barMoving || this.barAt === s) return false;
+  this.barMoving = true; this.barTo = s; this.barAt = null; this.barTimer = BAR_MOVE; this.moves++;
+  this.cue("bar_move");
+  return true;
+};
+
+// --------------------------------------------------------------- the office
+
+const cv = document.getElementById("cv"), cx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+
+function drawOffice(g) {
+  cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  // Two doorways, one at each end of the room.
+  const doors = { LEFT: [40, 90, 150, 250], RIGHT: [W - 190, 90, 150, 250] };
+  for (const s of ["LEFT", "RIGHT"]) {
+    const d = doors[s];
+    cx.fillStyle = "#0A0C14"; cx.fillRect(d[0], d[1], d[2], d[3]);
+    cx.strokeStyle = "#1E2030"; cx.lineWidth = 2; cx.strokeRect(d[0], d[1], d[2], d[3]);
+    // The bar, when it is on this door.
+    if (g.barred(s)) {
+      cx.fillStyle = "#3A2A2E";
+      cx.fillRect(d[0] - 6, d[1] + d[3] / 2 - 14, d[2] + 12, 28);
+      cx.strokeStyle = "#E94560"; cx.strokeRect(d[0] - 6, d[1] + d[3] / 2 - 14, d[2] + 12, 28);
+    }
+    // The light, when it is on this side.
+    if (g.lit && g.lightSide === s) {
+      const warm = g.revealed();
+      const grd = cx.createLinearGradient(d[0], 0, d[0] + d[2], 0);
+      grd.addColorStop(0, warm ? "rgba(255,220,150,0.16)" : "rgba(255,220,150,0.05)");
+      grd.addColorStop(1, "rgba(255,220,150,0)");
+      cx.fillStyle = grd; cx.fillRect(d[0], d[1], d[2], d[3]);
+      cx.fillStyle = warm ? "#FFDCA0" : "#6A5A3A";
+      cx.fillRect(d[0] + d[2] / 2 - 16, d[1] - 12, 32, 6);
+    }
+    cx.fillStyle = "#556070"; cx.font = "13px Arial"; cx.textAlign = "center";
+    cx.fillText(s, d[0] + d[2] / 2, d[1] + d[3] + 22);
+  }
+  // The bar in the air.
+  if (g.barMoving) {
+    const t = 1 - g.barTimer / BAR_MOVE;
+    const x = g.barTo === "LEFT" ? W / 2 - (W / 2 - 115) * (1 - t) : W / 2 + (W / 2 - 115) * (1 - t);
+    cx.fillStyle = "#3A2A2E"; cx.fillRect(x - 40, H / 2 - 12, 80, 24);
+    cx.strokeStyle = "#E94560"; cx.strokeRect(x - 40, H / 2 - 12, 80, 24);
+  }
+  // The unit, when the light holds it.
+  if (g.visible()) {
+    const d = doors[g.whereSide()];
+    const t = 1 - g.timer / g.approach();
+    const x = d[0] + d[2] / 2, y = d[1] + d[3] * (0.25 + 0.55 * t);
+    cx.fillStyle = "rgba(233,69,96,0.85)";
+    cx.beginPath(); cx.ellipse(x, y, 26, 52, 0, 0, Math.PI * 2); cx.fill();
+    cx.fillStyle = "#FFD700";
+    cx.beginPath(); cx.arc(x - 9, y - 30, 4, 0, Math.PI * 2); cx.fill();
+    cx.beginPath(); cx.arc(x + 9, y - 30, 4, 0, Math.PI * 2); cx.fill();
+  }
+  // The floor.
+  cx.strokeStyle = "#12141E"; cx.beginPath();
+  cx.moveTo(0, H - 60); cx.lineTo(W, H - 60); cx.stroke();
+}
+
+// --------------------------------------------------------------- the page
+
+let g = null, raf = 0, last = 0;
+
+function start(night) {
+  g = new Shift(night, Date.now() & 0xffff);
+  document.getElementById("select").hidden = true;
+  document.getElementById("band").hidden = false;
+  document.getElementById("stage").hidden = false;
+  document.getElementById("readout").hidden = false;
+  document.getElementById("strip").hidden = false;
+  document.getElementById("over").hidden = true;
+  document.getElementById("help").textContent = C.help;
+  last = performance.now();
+  if (!raf) raf = requestAnimationFrame(loop);
+}
+
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (g) { g.update(dt); paint(); }
+  raf = requestAnimationFrame(loop);
+}
+
+function paint() {
+  drawOffice(g);
+  document.getElementById("night").textContent = "NIGHT " + g.night;
+  document.getElementById("clock").textContent = g.clock();
+  const f = document.getElementById("fil");
+  f.firstElementChild.style.width = Math.round(g.filament() * 100) + "%";
+  f.className = "meter" + (g.filament() < 0.25 ? " low" : "");
+
+  const b = g.belief();
+  const r = document.getElementById("readout");
+  if (g.heardSide) {
+    r.innerHTML = "A STEP, " + g.heardSide + " <small>&mdash; you do not have to look</small>";
+  } else if (b === null) {
+    r.innerHTML = "IT EXPECTS YOU AT: &mdash; <small>&mdash; the record has not separated</small>";
+  } else {
+    r.innerHTML = "IT EXPECTS YOU AT: " + b
+      + " <small>&mdash; so it comes " + (b === "LEFT" ? "RIGHT" : "LEFT") + "</small>";
+  }
+
+  const st = g.status;
+  document.getElementById("bl").disabled = st !== "PLAYING" || g.blown;
+  document.getElementById("br").disabled = st !== "PLAYING" || g.blown;
+  document.getElementById("blb").disabled = st !== "PLAYING" || g.lit;
+  document.getElementById("brb").disabled = st !== "PLAYING" || g.lit;
+  document.getElementById("bd").disabled = st !== "PLAYING";
+
+  if (st !== "PLAYING" && document.getElementById("over").hidden) {
+    document.getElementById("over").hidden = false;
+    document.getElementById("overtitle").textContent =
+      st === "SURVIVED" ? "6 AM" : "IT CAME THROUGH";
+    document.getElementById("overtext").textContent =
+      st === "SURVIVED" ? "It never got through. " + g.repels + " turned back."
+                        : g.killer + " came through an open door.";
+  }
+}
+
+document.getElementById("bl").onclick = () => g && g.aim("LEFT");
+document.getElementById("br").onclick = () => g && g.aim("RIGHT");
+document.getElementById("blb").onclick = () => g && g.moveBar("LEFT");
+document.getElementById("brb").onclick = () => g && g.moveBar("RIGHT");
+document.getElementById("bd").onclick = () => g && g.dark();
+document.getElementById("again").onclick = () => { const n = g.night; start(n); };
+
+(function build() {
+  const sel = document.getElementById("select");
+  for (let n = 1; n <= 5; n++) {
+    const u = C.units[n - 1];
+    const b = document.createElement("button");
+    b.className = "nightrow";
+    b.innerHTML = '<span class="t">Night ' + n + " &mdash; " + u.name + "</span>"
+      + '<span class="n">' + u.note + "</span>";
+    b.onclick = () => start(n);
+    sel.appendChild(b);
+  }
+  document.getElementById("help").textContent = C.help;
+})();
+</script>
+</body>
+</html>

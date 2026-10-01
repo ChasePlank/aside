@@ -2,6 +2,9 @@ package aside.games.fnaf7.engine;
 
 import aside.games.fnaf7.MouseMap;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /**
  * The FNAF 7 checks, runnable with no display.
  *
@@ -41,6 +44,7 @@ public final class SelfTest {
         lamp();
         instrument();
         mouse();
+        phone();
         survival();
         System.out.println();
         System.out.println(checks + " checks, " + failed + " failed");
@@ -481,6 +485,89 @@ public final class SelfTest {
     }
 
     // ------------------------------------------------------------- the week
+
+    /**
+     * The phone build.
+     *
+     * <p>Two different things, and they fail for different reasons.
+     *
+     * <p><b>Is it current?</b> A generated file that has gone stale is worse
+     * than no file: it is a second copy of the game quietly disagreeing with
+     * the first. So the page is regenerated and compared rather than
+     * spot-checked -- the same check every other ported game carries.
+     *
+     * <p><b>Is it the same game?</b> A staleness check proves the file matches
+     * its generator and says nothing about whether the generator is right. The
+     * failure that would otherwise be silent is a rule that lives in the page
+     * as a literal and has stopped matching the engine -- so every number the
+     * night is made of is asserted to be the engine's own value, and the four
+     * night tables are asserted to be the engine's own tables.
+     *
+     * <p>What is <i>not</i> checked here is the RNG. The page reproduces
+     * {@code java.util.Random} in BigInt so the same seed deals the same night
+     * in both builds, and that was verified by hand against the desktop for
+     * three seeds -- it is not checkable from Java without a JavaScript
+     * engine, and the alternative (a page that deals its own nights) would
+     * make the two builds different games with the same rules.
+     */
+    static void phone() {
+        section("the phone build");
+
+        Path out = Path.of("web", "fnaf7.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here -- run from the repository root)");
+            return;
+        }
+        String page;
+        try {
+            page = Files.readString(out);
+        } catch (Exception e) {
+            check("web/fnaf7.html can be read", false);
+            return;
+        }
+        try {
+            check("web/fnaf7.html is current -- regenerate it with aside.games.fnaf7.WebShift",
+                    aside.games.fnaf7.WebShift.html().equals(page));
+        } catch (Exception e) {
+            check("web/fnaf7.html is current -- regenerate it with aside.games.fnaf7.WebShift",
+                    false);
+        }
+
+        // The rules, as numbers. A port whose warm-up is 0.4 rather than 0.45
+        // is a port that plays differently and looks identical.
+        check("the page carries the light's warm-up",
+                page.contains("lightWarm: " + aside.games.fnaf7.WebShift.num(Shift.LIGHT_WARM)));
+        check("the page carries the filament's budget",
+                page.contains("lightMax: " + aside.games.fnaf7.WebShift.num(Shift.LIGHT_MAX)));
+        check("the page carries the filament's cooling",
+                page.contains("lightCool: " + aside.games.fnaf7.WebShift.num(Shift.LIGHT_COOL)));
+        check("the page carries the bar's crossing time",
+                page.contains("barMove: " + aside.games.fnaf7.WebShift.num(Shift.BAR_MOVE)));
+        check("the page carries how long it stands at the door",
+                page.contains("strike: " + aside.games.fnaf7.WebShift.num(Shift.STRIKE)));
+        check("the page carries the record's threshold",
+                page.contains("sure: " + aside.games.fnaf7.WebShift.num(Shift.SURE)));
+
+        // The four night tables, which are the whole of the difficulty ramp.
+        for (String t : new String[]{"away", "approach", "explore", "memory"}) {
+            String want = aside.games.fnaf7.WebShift.table(
+                    switch (t) {
+                        case "away" -> 0;
+                        case "approach" -> 1;
+                        case "explore" -> 2;
+                        default -> 3;
+                    });
+            check("the page carries the " + t + " table", page.contains(t + ": " + want));
+        }
+
+        // And the cast, which is the one thing the player reads before the
+        // night starts.
+        for (int n = 1; n <= 5; n++) {
+            Unit u = Unit.forNight(n);
+            check("the page carries night " + n + "'s unit, " + u.name(),
+                    page.contains(u.name()) && page.contains(u.note()));
+        }
+    }
 
     static void survival() {
         section("the week");

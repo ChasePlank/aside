@@ -1,0 +1,110 @@
+package aside.games.fnaf7;
+
+import aside.games.fnaf7.engine.Shift;
+import aside.games.fnaf7.engine.Unit;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+/**
+ * Build {@code web/fnaf7.html} from the page template and the engine.
+ *
+ * <p>Same shape as FNAF 6's {@code WebSalvage} and FNAF 9's {@code WebFeed},
+ * and for the same reason: a phone build that is written by hand is a second
+ * copy of the game, and a second copy of the game is a copy that disagrees
+ * with the first one eventually. So the page carries the layout and the
+ * drawing, and <b>everything with a number in it comes from the engine</b> --
+ * the five units, the four night tables, and the numbers the rules are made
+ * of.
+ *
+ * <p>What the port does <i>not</i> carry is the desktop's art. The unit
+ * sprites and the room are three megabytes, and the page has to be one file;
+ * so the office is drawn and the unit is a shape, which is the same choice
+ * FNAF 9's phone build made. The rules are the desktop's to the number, and
+ * {@code java.util.Random} is reproduced in BigInt so the same seed deals the
+ * same night in both builds.
+ *
+ *     java -cp classes aside.games.fnaf7.WebShift
+ */
+public final class WebShift {
+
+    public static void main(String[] args) throws Exception {
+        Path out = Path.of(args.length > 0 ? args[0] : "web/fnaf7.html");
+        Files.writeString(out, html(), StandardCharsets.UTF_8);
+        System.out.println("wrote " + out + " (" + Files.size(out) / 1024 + " KB)");
+    }
+
+    /** The finished page. */
+    public static String html() throws Exception {
+        String tpl = new String(WebShift.class.getResourceAsStream("/fnaf7/web.html")
+                .readAllBytes(), StandardCharsets.UTF_8);
+        return tpl.replace("/*__CONTENT__*/", content());
+    }
+
+    /** Everything the page needs that the engine owns. */
+    static String content() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("const C = {\n");
+        sb.append("  units: [");
+        Unit[] all = Unit.all();
+        for (int i = 0; i < 5; i++) {
+            Unit u = Unit.forNight(i + 1);
+            if (i > 0) sb.append(",");
+            sb.append("\n    {key:").append(str(u.key()))
+              .append(", name:").append(str(u.name()))
+              .append(", note:").append(str(u.note()))
+              .append(", tell:").append(num(u.tell())).append("}");
+        }
+        sb.append("\n  ],\n");
+        sb.append("  away: ").append(table(0)).append(",\n");
+        sb.append("  approach: ").append(table(1)).append(",\n");
+        sb.append("  explore: ").append(table(2)).append(",\n");
+        sb.append("  memory: ").append(table(3)).append(",\n");
+        sb.append("  hourSeconds: ").append(num(Shift.HOUR_SECONDS)).append(",\n");
+        sb.append("  nightHours: ").append(Shift.NIGHT_HOURS).append(",\n");
+        sb.append("  lightWarm: ").append(num(Shift.LIGHT_WARM)).append(",\n");
+        sb.append("  lightMax: ").append(num(Shift.LIGHT_MAX)).append(",\n");
+        sb.append("  lightCool: ").append(num(Shift.LIGHT_COOL)).append(",\n");
+        sb.append("  lightReset: ").append(num(Shift.LIGHT_RESET)).append(",\n");
+        sb.append("  barMove: ").append(num(Shift.BAR_MOVE)).append(",\n");
+        sb.append("  strike: ").append(num(Shift.STRIKE)).append(",\n");
+        sb.append("  sure: ").append(num(Shift.SURE)).append(",\n");
+        sb.append("  help: ").append(str(HELP)).append("\n");
+        sb.append("};\n");
+        return sb.toString();
+    }
+
+    /** One of the night's four tables, read out of the engine. */
+    public static String table(int which) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int n = 1; n <= 5; n++) {
+            Shift s = new Shift(n, 1);
+            double v = switch (which) {
+                case 0 -> s.away();
+                case 1 -> s.approach();
+                case 2 -> s.explore();
+                default -> s.memory();
+            };
+            if (n > 1) sb.append(", ");
+            sb.append(num(v));
+        }
+        return sb.append("]").toString();
+    }
+
+    static final String HELP =
+            "One bar, two doors, and one pair of hands: the bar cannot move "
+            + "while the light is on. The light has to warm up before it shows "
+            + "you anything, and the filament only lasts so long. The readout "
+            + "says where it thinks you are -- so it comes to the other side.";
+
+    static String str(String s) {
+        return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+    }
+
+    /** A number the page and the engine can agree on exactly. */
+    public static String num(double d) {
+        if (d == Math.rint(d) && Math.abs(d) < 1e9) return String.valueOf((long) d);
+        return String.valueOf(d);
+    }
+}
