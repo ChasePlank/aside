@@ -43,6 +43,10 @@ import aside.games.fnaf9.engine.Feed.Side;
  *   SIEGE    PRO, but the hold is sized to cover    The player who holds
  *            the OTHER hall as well whenever that   through both of them.
  *            hall is within {@link #SIEGE_AT}.
+ *   SENSE    PRO, but the door is let go the moment The player who trusts
+ *            the contact sensor says the doorway is  the door's own sensor.
+ *            empty, instead of when the belief says
+ *            the walker must have lost interest.
  * </pre>
  *
  * <p><b>SIEGE is on the ladder because it beats PRO, and that is an open
@@ -66,7 +70,7 @@ import aside.games.fnaf9.engine.Feed.Side;
  */
 public final class Bot {
 
-    public enum Policy { IDLE, STARE, EARLY, GLANCE, PRO, SIEGE }
+    public enum Policy { IDLE, STARE, EARLY, GLANCE, PRO, SIEGE, SENSE }
 
     /**
      * How much warning the bot needs before it will shut the door, in seconds.
@@ -123,6 +127,8 @@ public final class Bot {
     public Side holdSide = Side.LEFT;
     /** Seconds the current hold has lasted. */
     public double holdFor = 0;
+    /** True once the contact sensor has read something against the door. */
+    public boolean sawOccupied = false;
     /**
      * Seconds the current hold has to last.
      *
@@ -149,9 +155,16 @@ public final class Bot {
      */
     public final boolean extendHold;
 
+    /**
+     * True when this policy lets go on the contact sensor rather than on the
+     * belief. Set from the policy, like {@link #extendHold}.
+     */
+    public final boolean sensorRelease;
+
     public Bot(Policy policy) {
         this.policy = policy;
         this.extendHold = policy == Policy.SIEGE;
+        this.sensorRelease = policy == Policy.SENSE;
     }
 
     /**
@@ -168,7 +181,7 @@ public final class Bot {
             case STARE -> stare(m);
             case EARLY -> early(m, dt);
             case GLANCE -> glance(m, dt);
-            case PRO, SIEGE -> play(m, dt);
+            case PRO, SIEGE, SENSE -> play(m, dt);
         }
     }
 
@@ -295,6 +308,25 @@ public final class Bot {
      * longer than the competent policy holds, and no single constant fixes
      * it.</b> The suite asserts the relationship rather than pretending it is
      * not there, so that a future fire that does fix it is told it has.
+     *
+     * <p><b>And SENSE is on the ladder because the office's own description
+     * of itself does not survive being played.</b> {@link Feed}'s javadoc says
+     * the sensor "is the only way to know the doorway has emptied, which is
+     * the only way to know when it is safe to let go of the door and go back
+     * to looking". A policy that does exactly that -- hold until the sensor
+     * has read something against the door and then gone clear -- reads
+     * <b>92/80/0/0/0, a week of 34%</b> against PRO's 86/74/62/48/35. It
+     * <i>beats</i> PRO on the two nights whose walkers hold together on a bad
+     * picture, and it <b>loses every seed of nights three, four and five</b>.
+     * That is the whole finding in one row: the sensor says the doorway is
+     * empty and says nothing about the hall behind it, so on a night where
+     * the two halls come apart a release into the hall nobody has looked at
+     * is the move that kills, and it kills every time. What actually decides
+     * the release is the belief, and the belief can decide it because the
+     * walker's patience is a constant. <b>That is the same defect as the
+     * extended hold seen from the other end: the sensor is decorative, and
+     * the fix is to make the walker's departure something a player cannot
+     * compute.</b>
      */
     public static final double SIEGE_AT = 2.50;
 
@@ -302,6 +334,7 @@ public final class Bot {
     void beginHold(Feed m, Side s) {
         m.hold();
         holding = true;
+        sawOccupied = false;
         holdSide = s;
         holdFor = 0;
         holdNeed = holdNeeded(m, s);
@@ -334,7 +367,24 @@ public final class Bot {
         // empty at 29.0, release, walker arrives at 30.2 into an open door.
         // <b>The sensor says the doorway is empty. It does not say nothing is
         // coming.</b> So the hold has to run its length as well.
-        if (m.clear() && holdFor >= holdNeed) {
+        // SENSE: the office says the sensor is the only way to know the
+        // doorway has emptied, so this policy waits for it to say so. It has
+        // to have SEEN something first -- otherwise the door is let go the
+        // moment it finishes coming down, because the walker it was shut for
+        // has not arrived yet -- and the hold's own length is the timeout for
+        // a press that turns out to have been wrong.
+        if (sensorRelease) {
+            if (m.sensor()) sawOccupied = true;
+            if (sawOccupied && m.clear()) {
+                holding = false;
+                m.watch(holdSide);
+                est[i] = Feed.MAX;
+                age[i] = 99;
+                return true;
+            }
+        }
+
+        if (!sensorRelease && m.clear() && holdFor >= holdNeed) {
             holding = false;
             // Let go <b>and look</b>, rather than letting go into the dark.
             // The sensor proves the doorway is empty; it says nothing about

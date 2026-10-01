@@ -71,7 +71,14 @@ import java.util.Set;
  *       duty cycle is not tight enough to stop it. <b>No single constant
  *       closes the gap</b>; see {@link Bot#SIEGE_AT} for the five things that
  *       were tried, all of them measured. The fix is a redesign of the door's
- *       economy plus a re-tune of the patience table, not a tuning pass.</li>
+ *       economy plus a re-tune of the patience table, not a tuning pass.
+ *       <b>And the same defect has a second face:</b> the office says the
+ *       sensor is the only way to know the doorway has emptied, and a policy
+ *       that plays exactly that ({@link Bot.Policy#SENSE}) reads 92/80/0/0/0
+ *       -- better than the competent player on the two nights whose walkers
+ *       hold together on a bad picture, and wiped out on the three where they
+ *       come apart. The sensor is decoration, and what decides the release is
+ *       the belief.</li>
  * </ul>
  */
 public final class SelfTest {
@@ -771,26 +778,48 @@ public final class SelfTest {
      * least as good as the competent player" -- rather than as a bug, because
      * the day it stops being true is the day the door's economy has been
      * redesigned, and the check failing is how that fire finds out it worked.
+     *
+     * <p><b>The other end of the same defect is here too.</b> {@link Feed}'s
+     * javadoc says the sensor is the only way to know the doorway has emptied.
+     * {@link Bot.Policy#SENSE} is that play, and it reads 92/80/0/0/0 -- it
+     * beats the competent policy on the two nights whose walkers hold together
+     * on a bad picture and loses <i>every seed</i> of the three where they
+     * come apart. Both rows say the same thing from opposite sides: the
+     * release is decided by the belief, the belief can decide it because the
+     * walker's patience is a constant, and the sensor is decoration.
      */
     static void siege() {
-        section("the extended hold, and why it wins");
+        section("the two ends of the same defect");
 
         int seeds = 200;
         double[] pro = new double[5];
         double[] sie = new double[5];
+        double[] sen = new double[5];
         for (int n = 1; n <= 5; n++) {
             pro[n - 1] = Bot.survival(Bot.Policy.PRO, n, seeds);
             sie[n - 1] = Bot.survival(Bot.Policy.SIEGE, n, seeds);
+            sen[n - 1] = Bot.survival(Bot.Policy.SENSE, n, seeds);
         }
         System.out.println("       PRO   " + row(pro) + "   week "
                 + Math.round(week(pro) * 100) + "%");
         System.out.println("       SIEGE " + row(sie) + "   week "
                 + Math.round(week(sie) * 100) + "%");
+        System.out.println("       SENSE " + row(sen) + "   week "
+                + Math.round(week(sen) * 100) + "%");
 
         check("the extended hold is still at least as good as the competent player",
                 week(sie) >= week(pro));
         check("and it is the better policy on the middle of the week",
                 sie[1] > pro[1] && sie[2] > pro[2] && sie[3] > pro[3]);
+
+        // The other end of the same defect. The office says the sensor is the
+        // only way to know the doorway has emptied; a policy that believes it
+        // is fine on the two nights whose walkers hold together on a bad
+        // picture and is wiped out on the three where they come apart.
+        check("trusting the door's own sensor loses the back half of the week",
+                sen[2] == 0 && sen[3] == 0 && sen[4] == 0);
+        check("and it is still better than the competent player on the front half",
+                sen[0] > pro[0] && sen[1] > pro[1]);
 
         // Why. The trace, not the percentage: a survival number cannot tell
         // you what killed you, and this one is entirely about the moment the

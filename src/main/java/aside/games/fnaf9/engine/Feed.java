@@ -72,10 +72,13 @@ import java.util.Random;
  * and the doorway is genuinely empty at that moment. The second half is the
  * one the sweep does not support. A policy that holds until the sensor has
  * <i>seen</i> something and then gone clear -- the play this paragraph
- * describes -- scores <b>13% on the week</b> against the competent policy's
- * 61%, because the sensor says the doorway is empty and says nothing about
- * the hall behind it, and a release into a hall nobody has looked at is the
- * move that kills. What actually decides the night is the <i>belief</i>: the
+ * describes, and a rung of the ladder now ({@code Bot.Policy.SENSE}) -- reads
+ * <b>92/80/0/0/0, a week of 34%</b> against the competent policy's 86/74/62/
+ * 48/35. It beats it on the two nights whose walkers hold together on a bad
+ * picture and <b>loses every seed of nights three, four and five</b>, because
+ * the sensor says the doorway is empty and says nothing about the hall behind
+ * it, and a release into a hall nobody has looked at is the move that kills.
+ * What actually decides the night is the <i>belief</i>: the
  * walker's patience is a constant, so a player who has been keeping a hall in
  * their head knows when the doorway will empty without asking the door. That
  * is the open design item, and it is why the extended hold beats the competent
