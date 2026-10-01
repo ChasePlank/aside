@@ -302,6 +302,16 @@ public final class Bot {
      *       <i>patience</i>, which is night one's whole cast, so the ramp
      *       inverts: PRO reads 49/76/62/43/14. That is a re-tune of the
      *       patience table and a re-sweep, not a constant.</li>
+     *   <li><b>Shortening the door's travel makes the game trivial rather than
+     *       closing the gap.</b> {@link Feed#SHUT_TIME} 0.80 -> PRO 61% /
+     *       SIEGE 91%; 0.70 -> 86% / 95%; 0.55 -> 95% / 98%; 0.40 -> 100% /
+     *       99%. PRO climbs and SIEGE stays on top of it, and the week stops
+     *       ramping on the way (PRO's night five goes 35% -> 78% -> 84% ->
+     *       100%), so the travel is what makes the night a night and it cannot
+     *       be spent on this. Seventh lever tried, seventh that does not close
+     *       it -- and the only one whose failure mode is losing the game
+     *       rather than losing the ramp, which is why {@code SelfTest} now
+     *       asserts that no policy wins the week.</li>
      * </ul>
      *
      * <p>So the honest state of this game is: <b>the night rewards holding

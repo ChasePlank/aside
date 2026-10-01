@@ -812,6 +812,15 @@ public final class SelfTest {
         check("and it is the better policy on the middle of the week",
                 sie[1] > pro[1] && sie[2] > pro[2] && sie[3] > pro[3]);
 
+        // And the night is not winnable, which is the thing seven separate
+        // attempts to close the gap above all failed to preserve. The door's
+        // travel is what keeps it that way: shortening it takes PRO from 61%
+        // to 86% (0.70), 95% (0.55) and 100% (0.40) while SIEGE stays on top
+        // of it, so a fire that shortens the travel to close the gap finds
+        // the gap still there and the game gone. This check is the one that
+        // says so.
+        check("no policy wins the week", week(sie) < 0.98 && week(pro) < 0.90);
+
         // The other end of the same defect. The office says the sensor is the
         // only way to know the doorway has emptied; a policy that believes it
         // is fine on the two nights whose walkers hold together on a bad
