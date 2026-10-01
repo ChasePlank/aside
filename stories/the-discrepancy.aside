@@ -8,7 +8,7 @@ author: Roxanne
 start: desk
 
 == desk ==
-bg office_night
+bg hotel_desk
 music sea_swell
 The night audit is the same every night, which is the point of it.
 Room 101 paid in full. Room 104 left early and was not charged. Room 112 is still in there and will be until
@@ -58,7 +58,7 @@ which is what you do with things you intend to think about later.
 -> three_am
 
 == three_am ==
-bg cove
+bg back_corridor
 music music_box
 At three the building is at its quietest, which is not the same as its emptiest.
 You stand outside 000 for a while, which is to say you stand at a wall, because 000 is a wall.
@@ -113,14 +113,14 @@ keeper: Same time tomorrow.
 -> morning
 
 == quiet_end ==
-bg office_dawn
+bg lobby_dawn
 music sea_swell
 You say nothing, and she waits, and the waiting is not unkind, and then it is three-forty and you are
 standing at a wall with your hand on it and no reason you could give anyone.
 -> morning
 
 == morning ==
-bg office_dawn
+bg lobby_dawn
 music sea_swell
 The morning shift arrives at six and finds the audit finished and the desk tidy, which is how they find it
 every day, and they do not ask how.
@@ -163,7 +163,7 @@ manager: There is no room 000. There has never been a room 000. Go home, you loo
 -> home
 
 == home ==
-bg office_dawn
+bg lobby_dawn
 You walk home in the grey part of the morning, and the sea is on your left because the sea is always on your
 left, and it sounds the way it sounded at three.
 -> END
