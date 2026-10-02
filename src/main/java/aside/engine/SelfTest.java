@@ -564,6 +564,14 @@ public class SelfTest {
         System.out.println("\n--- the platformer's water ---");
         waterIsAPool();
 
+        // The release's own water suite, ported. It is 30 checks on behaviour the shape check
+        // cannot see - buoyancy equilibrium, the breath meter, the breach hop, drag at two frame
+        // rates, and a bot swimming a 25-tile river and climbing out. It lived only on a branch
+        // of the OTHER repository, where the engine does not live, so nothing here ran it.
+        int waterFailures = aside.games.fruitjump.engine.WaterSuite.runAll();
+        check("water: the release's water suite passes on this engine (" + waterFailures + " failures)",
+                waterFailures == 0);
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
     }
