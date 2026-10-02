@@ -87,6 +87,41 @@
 <script>
 /*__CONTENT__*/
 
+/*__AUDIO__*/
+
+/**
+ * FNAF7's cue names, on the shared palette.
+ *
+ * The ears are the one free channel in this game, and the engine says
+ * what they are worth: "an arrival you can place is an arrival you can answer
+ * without spending a look -- and a look is the only thing keeping the record
+ * sharp." A silent port hands the player the light and takes away the reason
+ * the light is a decision.
+ */
+function sfx(cue) {
+  // The cues this engine builds from a name at runtime.
+  if (cue.startsWith("step_left")) { voice("step"); return; }
+  if (cue.startsWith("step_right")) { voice("step"); return; }
+  switch (cue) {
+    case "at_door": voice("knock"); break;
+    case "bar_move": voice("clank"); break;
+    case "bar_set": voice("click"); break;
+    case "caught": voice("scream"); break;
+    case "chime_6am": voice("chime"); break;
+    case "light_blown": voice("down"); break;
+    case "light_off": voice("click"); break;
+    case "light_on": voice("click"); break;
+    case "light_ready": voice("up"); break;
+    case "repel": voice("knock"); break;
+    default: break;
+  }
+}
+
+/** Play everything the engine raised this frame. */
+function sfxAll() {
+  for (const c of g.drain()) sfx(c);
+}
+
 // --------------------------------------------------------------- the night
 //
 // A faithful port of aside.games.fnaf7.engine.Shift. The rules are the
@@ -349,7 +384,7 @@ function start(night) {
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  if (g) { g.update(dt); paint(); }
+  if (g) { g.update(dt); sfxAll(); paint(); }
   raf = requestAnimationFrame(loop);
 }
 

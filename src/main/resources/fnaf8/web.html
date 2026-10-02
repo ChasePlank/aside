@@ -84,6 +84,40 @@
 <script>
 /*__CONTENT__*/
 
+/*__AUDIO__*/
+
+/**
+ * FNAF8's cue names, on the shared palette.
+ *
+ * And this one is the counter-example that proves the palette is
+ * about information rather than about sound. FNAF 8 has *no directional
+ * channel at all*, deliberately: both halls emit the same footfall, because
+ * the lamp is the only way to know where either of them is, and a cue that
+ * said which hall it came from would hand the player that knowledge for free.
+ * The suite keeps it that way, so the port must not invent a distinction the
+ * desktop refuses to make.
+ */
+function sfx(cue) {
+  switch (cue) {
+    case "chime_6am": voice("chime"); break;
+    case "f8_back": voice("footstep"); break;
+    case "f8_door": voice("knock"); break;
+    case "f8_gives_up": voice("footstep"); break;
+    case "f8_met": voice("scream"); break;
+    case "f8_off": voice("click"); break;
+    case "f8_push": voice("step"); break;
+    case "f8_set": voice("click"); break;
+    case "f8_step": voice("footstep"); break;
+    case "f8_swivel": voice("click"); break;
+    default: break;
+  }
+}
+
+/** Play everything the engine raised this frame. */
+function sfxAll() {
+  for (const c of g.drain()) sfx(c);
+}
+
 // --------------------------------------------------------------- the night
 //
 // A faithful port of aside.games.fnaf8.engine.Meeting. Two units walk up two
@@ -330,7 +364,7 @@ function start(night) {
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  if (g) { g.update(dt); paint(); }
+  if (g) { g.update(dt); sfxAll(); paint(); }
   raf = requestAnimationFrame(loop);
 }
 

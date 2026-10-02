@@ -655,5 +655,29 @@ public class SelfTest {
             check("the page carries " + a.name + "'s path, opening and answer",
                     page.contains(want));
         }
-    }
+    
+        // The sound. This game's arrival cue is not decoration: the engine carries Chase's own
+        // playtest note -- "I checked lights, went to wind the music box, and got
+        // jumpscared. If the timer between entering and killing is 5 seconds, then they
+        // arent visible." The grace is what makes an arrival survivable; the cue is what
+        // makes it fair, and a silent port is an unfair one.
+        check("the page carries the shared synthesiser",
+                page.contains("function voice(") && page.contains("function sfx("));
+        check("the page has a voice for the at_door cue",
+                page.contains("case \"at_door\""));
+        check("the page has a voice for the camera_down cue",
+                page.contains("case \"camera_down\""));
+        check("the page has a voice for the chime_6am cue",
+                page.contains("case \"chime_6am\""));
+        check("the page has a voice for the door_close cue",
+                page.contains("case \"door_close\""));
+        check("the page has a voice for the light_click cue",
+                page.contains("case \"light_click\""));
+        check("the page has a voice for the music_box cue",
+                page.contains("case \"music_box\""));
+        check("the page has a voice for the power_down cue",
+                page.contains("case \"power_down\""));
+        check("the page has a voice for the static cue",
+                page.contains("case \"static\""));
+}
 }

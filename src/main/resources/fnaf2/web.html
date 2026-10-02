@@ -90,6 +90,31 @@
 <script>
 /*__CONTENT__*/
 
+/*__AUDIO__*/
+
+/**
+ * FNAF2's cue names, on the shared palette.
+ *
+ * This game's arrival cue is not decoration: the engine carries Chase's
+ * own playtest note -- "I checked lights, went to wind the music box, and got
+ * jumpscared. If the timer between entering and killing is 5 seconds, then
+ * they arent visible." The grace is what makes an arrival survivable; the cue
+ * is what makes it fair. A silent port is an unfair one.
+ */
+function sfx(cue) {
+  switch (cue) {
+    case "at_door": voice("knock"); break;
+    case "camera_down": voice("click"); break;
+    case "chime_6am": voice("chime"); break;
+    case "door_close": voice("knock"); break;
+    case "light_click": voice("click"); break;
+    case "music_box": voice("down"); break;
+    case "power_down": voice("down"); break;
+    case "static": voice("static"); break;
+    default: break;
+  }
+}
+
 // --------------------------------------------------------------- the night
 //
 // A faithful port of aside.games.fnaf2.engine.Game. FNAF 2 cannot block
@@ -485,6 +510,7 @@ function loop(now) {
 
 function cues() {
   for (const c of g.drain()) {
+    sfx(c);
     if (c === "at_door") heard = "SOMETHING IS AT AN OPENING <small>&mdash; the mask answers it, and the mask costs you the box</small>";
     else if (c === "door_close") heard = "IT WENT AWAY";
     else if (c === "music_box") heard = "THE BOX IS EMPTY <small>&mdash; the Puppet is coming and nothing stops it</small>";

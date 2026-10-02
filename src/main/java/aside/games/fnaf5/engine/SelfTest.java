@@ -636,7 +636,35 @@ public final class SelfTest {
                             + t.home.name() + "\", pace:"
                             + aside.games.fnaf5.WebRental.num(t.pace)));
         }
-    }
+    
+        // The sound. Ballora is blind and follows sound, so the cue is not atmosphere here -- it is
+        // the only channel that says something is next door, and the engine records what
+        // happened when it was missing: "the bot walked straight into the room she had
+        // just left, on every seed, because the only channel that says 'something is next
+        // door' was never fired."
+        check("the page carries the shared synthesiser",
+                page.contains("function voice(") && page.contains("function sfx("));
+        check("the page has a voice for the camera_down cue",
+                page.contains("case \"camera_down\""));
+        check("the page has a voice for the camera_up cue",
+                page.contains("case \"camera_up\""));
+        check("the page has a voice for the chime_6am cue",
+                page.contains("case \"chime_6am\""));
+        check("the page has a voice for the footstep cue",
+                page.contains("case \"footstep\""));
+        check("the page has a voice for the scare_sprint cue",
+                page.contains("case \"scare_sprint\""));
+        check("the page has a voice for the shock cue",
+                page.contains("case \"shock\""));
+        check("the page has a voice for the static cue",
+                page.contains("case \"static\""));
+        check("the page has a voice for the here_* cues",
+                page.contains("startsWith(\"here_\")"));
+        check("the page has a voice for the step_* cues",
+                page.contains("startsWith(\"step_\")"));
+        check("the page has a voice for the lost_* cues",
+                page.contains("startsWith(\"lost_\")"));
+}
 
     static void survival() {
         section("the week");

@@ -567,7 +567,39 @@ public final class SelfTest {
             check("the page carries night " + n + "'s unit, " + u.name(),
                     page.contains(u.name()) && page.contains(u.note()));
         }
-    }
+    
+        // The sound. The ears are the one free channel in this game, and the engine says what they
+        // are worth: "an arrival you can place is an arrival you can answer without
+        // spending a look -- and a look is the only thing keeping the record sharp." A
+        // silent port hands the player the light and takes away the reason the light is a
+        // decision.
+        check("the page carries the shared synthesiser",
+                page.contains("function voice(") && page.contains("function sfx("));
+        check("the page has a voice for the at_door cue",
+                page.contains("case \"at_door\""));
+        check("the page has a voice for the bar_move cue",
+                page.contains("case \"bar_move\""));
+        check("the page has a voice for the bar_set cue",
+                page.contains("case \"bar_set\""));
+        check("the page has a voice for the caught cue",
+                page.contains("case \"caught\""));
+        check("the page has a voice for the chime_6am cue",
+                page.contains("case \"chime_6am\""));
+        check("the page has a voice for the light_blown cue",
+                page.contains("case \"light_blown\""));
+        check("the page has a voice for the light_off cue",
+                page.contains("case \"light_off\""));
+        check("the page has a voice for the light_on cue",
+                page.contains("case \"light_on\""));
+        check("the page has a voice for the light_ready cue",
+                page.contains("case \"light_ready\""));
+        check("the page has a voice for the repel cue",
+                page.contains("case \"repel\""));
+        check("the page has a voice for the step_left* cues",
+                page.contains("startsWith(\"step_left\")"));
+        check("the page has a voice for the step_right* cues",
+                page.contains("startsWith(\"step_right\")"));
+}
 
     static void survival() {
         section("the week");

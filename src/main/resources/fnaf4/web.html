@@ -87,6 +87,34 @@
 <script>
 /*__CONTENT__*/
 
+/*__AUDIO__*/
+
+/**
+ * FNAF4's cue names, on the shared palette.
+ *
+ * This is the game where the sound *is* the countdown. The engine's
+ * design note says it: "the countdown is audible -- a step when it is one move
+ * out, a breath when it is standing there." The step cue names which of the
+ * four is close, and that name is what the entire pre-empt half of the game
+ * runs on: without it a player would know something was near and not what, and
+ * "go and look" would be a guess rather than a decision.
+ */
+function sfx(cue) {
+
+  // The cues this engine builds from a name at runtime.
+  if (cue.startsWith("breath_")) { voice("breath"); return; }
+  if (cue.startsWith("step_")) { voice("step"); return; }
+  switch (cue) {
+    case "chime_6am": voice("chime"); break;
+    case "door_close": voice("knock"); break;
+    case "footstep": voice("footstep"); break;
+    case "fredbear_laugh": voice("laugh"); break;
+    case "light_click": voice("click"); break;
+    case "scare_sprint": voice("scream"); break;
+    default: break;
+  }
+}
+
 // --------------------------------------------------------------- the night
 //
 // A faithful port of aside.games.fnaf4.engine.Game. The room has four sides
@@ -413,6 +441,7 @@ function loop(now) {
 // footstep is something moving that you cannot place.
 function cues() {
   for (const c of g.drain()) {
+    sfx(c);
     if (c.startsWith("step_")) {
       say("A STEP", "one move out, and it is " + nameOf(c.slice(5)));
     } else if (c.startsWith("breath_")) {

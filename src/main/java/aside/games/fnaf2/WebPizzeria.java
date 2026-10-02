@@ -40,7 +40,8 @@ public final class WebPizzeria {
     public static String html() throws Exception {
         String tpl = new String(WebPizzeria.class.getResourceAsStream("/fnaf2/web.html")
                 .readAllBytes(), StandardCharsets.UTF_8);
-        return tpl.replace("/*__CONTENT__*/", content());
+        return tpl.replace("/*__CONTENT__*/", content())
+                .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
     }
 
     /** Everything the page needs that the engine owns. */

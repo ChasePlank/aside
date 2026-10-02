@@ -512,6 +512,20 @@ public final class SelfTest {
         check("the page carries the drain table",
                 page.contains("drainMult: " + aside.games.fnaf3.WebHouse.table(0)));
 
+        // The sound. This game's only verb is a noise and its only channel
+        // for where Springtrap is, is a footstep, so a silent port is a port
+        // of a different game. Every cue the engine can emit has to have a
+        // voice on the page -- and the list below is the engine's own cue
+        // names, gathered from the four files that raise them.
+        check("the page carries the shared synthesiser",
+                page.contains("function voice(") && page.contains("function sfx("));
+        for (String cue : new String[]{"footstep", "at_door", "door_close", "static",
+                "pot_clank", "power_down", "power_up", "light_click", "chime_6am",
+                "scare_sprint"}) {
+            check("the page has a voice for the " + cue + " cue",
+                    page.contains("case \"" + cue + "\""));
+        }
+
         // And the phantoms, which are the cost of a failed system.
         for (String name : Game.PHANTOM_NAMES) {
             check("the page carries " + name, page.contains(name));

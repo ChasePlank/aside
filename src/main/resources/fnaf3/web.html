@@ -360,6 +360,37 @@ Game.prototype.canReboot = function (s) {
   return this.status === "PLAYING" && this.rebooting < 0 && !this.online[i];
 };
 
+/*__AUDIO__*/
+
+/**
+ * FNAF 3's cue names, on the shared palette.
+ *
+ * This mapping is the game's own business, and for this game it is close to
+ * the whole game: the only verb the player has is a noise, and the only
+ * channel that says where Springtrap is, is a footstep. The desktop plays a
+ * different recording for each of these; what has to survive the port is the
+ * *distinction* -- a step somewhere in the building against a step one room
+ * away against something arriving at the door -- because that gradient is
+ * the information model. A silent port of this game is a port of a different,
+ * easier game: without the footsteps the graph is invisible and the lure is
+ * a guess.
+ */
+function sfx(cue) {
+  switch (cue) {
+    case "footstep": voice("footstep"); break;
+    case "at_door": voice("knock"); break;
+    case "door_close": voice("knock"); break;
+    case "static": voice("static"); break;
+    case "pot_clank": voice("clank"); break;
+    case "power_down": voice("down"); break;
+    case "power_up": voice("up"); break;
+    case "light_click": voice("click"); break;
+    case "chime_6am": voice("chime"); break;
+    case "scare_sprint": voice("scream"); break;
+    default: break;
+  }
+}
+
 // --------------------------------------------------------------- the office
 
 const cv = document.getElementById("cv"), cx = cv.getContext("2d");
@@ -467,6 +498,7 @@ function loop(now) {
 
 function cues() {
   for (const c of g.drain()) {
+    sfx(c);
     if (c === "footstep") heard = "A FOOTSTEP <small>&mdash; he is walking</small>";
     else if (c === "at_door") heard = "HE IS IN THE OFFICE <small>&mdash; the lure is the only thing that reaches him</small>";
     else if (c === "door_close") heard = "HE LEFT <small>&mdash; back to the hall</small>";

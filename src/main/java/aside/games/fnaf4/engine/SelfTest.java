@@ -430,7 +430,31 @@ public final class SelfTest {
                 "Nightmare Foxy", "Nightmare Freddy"}) {
             check("the page carries " + name, page.contains(name));
         }
-    }
+    
+        // The sound. This is the game where the sound *is* the countdown. The engine says it:
+        // "a step when it is one move out, a breath when it is standing there." The step
+        // cue names which of the four is close, and that name is what the whole pre-empt
+        // half of the game runs on -- without it a player would know something was near
+        // and not what, and "go and look" would be a guess rather than a decision.
+        check("the page carries the shared synthesiser",
+                page.contains("function voice(") && page.contains("function sfx("));
+        check("the page has a voice for the chime_6am cue",
+                page.contains("case \"chime_6am\""));
+        check("the page has a voice for the door_close cue",
+                page.contains("case \"door_close\""));
+        check("the page has a voice for the footstep cue",
+                page.contains("case \"footstep\""));
+        check("the page has a voice for the fredbear_laugh cue",
+                page.contains("case \"fredbear_laugh\""));
+        check("the page has a voice for the light_click cue",
+                page.contains("case \"light_click\""));
+        check("the page has a voice for the scare_sprint cue",
+                page.contains("case \"scare_sprint\""));
+        check("the page has a voice for the breath_* cues",
+                page.contains("startsWith(\"breath_\")"));
+        check("the page has a voice for the step_* cues",
+                page.contains("startsWith(\"step_\")"));
+}
 
     static void survival() {
         section("survival, 60 seeds a night");

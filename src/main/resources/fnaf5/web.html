@@ -86,6 +86,35 @@
 <script>
 /*__CONTENT__*/
 
+/*__AUDIO__*/
+
+/**
+ * FNAF5's cue names, on the shared palette.
+ *
+ * Ballora is blind and follows sound, so the cue is not atmosphere
+ * here -- it is the only channel that says something is next door, and the
+ * engine's own note records what happened when it was missing: "the bot walked
+ * straight into the room she had just left, on every seed, because the only
+ * channel that says 'something is next door' was never fired."
+ */
+function sfx(cue) {
+
+  // The cues this engine builds from a name at runtime.
+  if (cue.startsWith("here_")) { voice("knock"); return; }
+  if (cue.startsWith("step_")) { voice("step"); return; }
+  if (cue.startsWith("lost_")) { voice("breath"); return; }
+  switch (cue) {
+    case "camera_down": voice("click"); break;
+    case "camera_up": voice("click"); break;
+    case "chime_6am": voice("chime"); break;
+    case "footstep": voice("footstep"); break;
+    case "scare_sprint": voice("scream"); break;
+    case "shock": voice("clank"); break;
+    case "static": voice("static"); break;
+    default: break;
+  }
+}
+
 // --------------------------------------------------------------- the night
 //
 // A faithful port of aside.games.fnaf5.engine.Game. Five rooms in a line,
@@ -466,6 +495,7 @@ function loop(now) {
 
 function cues() {
   for (const c of g.drain()) {
+    sfx(c);
     if (c.startsWith("here_")) {
       heard = "IT IS IN HERE <small>&mdash; " + nameOf(c.slice(5)) + "</small>";
     } else if (c.startsWith("step_")) {

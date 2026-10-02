@@ -602,7 +602,35 @@ public final class SelfTest {
                     page.contains(p.left().name()) && page.contains(p.right().name())
                             && page.contains(p.note()));
         }
-    }
+    
+        // The sound. And this one is the counter-example that proves the palette is about
+        // information rather than about sound. FNAF 8 has *no directional channel at all*,
+        // deliberately: both halls emit the same footfall, because the lamp is the only
+        // way to know where either of them is. The port must not invent a distinction the
+        // desktop refuses to make.
+        check("the page carries the shared synthesiser",
+                page.contains("function voice(") && page.contains("function sfx("));
+        check("the page has a voice for the chime_6am cue",
+                page.contains("case \"chime_6am\""));
+        check("the page has a voice for the f8_back cue",
+                page.contains("case \"f8_back\""));
+        check("the page has a voice for the f8_door cue",
+                page.contains("case \"f8_door\""));
+        check("the page has a voice for the f8_gives_up cue",
+                page.contains("case \"f8_gives_up\""));
+        check("the page has a voice for the f8_met cue",
+                page.contains("case \"f8_met\""));
+        check("the page has a voice for the f8_off cue",
+                page.contains("case \"f8_off\""));
+        check("the page has a voice for the f8_push cue",
+                page.contains("case \"f8_push\""));
+        check("the page has a voice for the f8_set cue",
+                page.contains("case \"f8_set\""));
+        check("the page has a voice for the f8_step cue",
+                page.contains("case \"f8_step\""));
+        check("the page has a voice for the f8_swivel cue",
+                page.contains("case \"f8_swivel\""));
+}
 
     static void survival() {
         section("the week, 500 seeds a night");
