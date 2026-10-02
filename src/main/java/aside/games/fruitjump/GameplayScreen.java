@@ -67,6 +67,10 @@ public class GameplayScreen extends UiScreen {
 
     // Input state (held keys)
     private boolean left, right;
+    // Held while the key is down. UP/W is jump on land and the swim-up stroke in
+    // water; DOWN/S does nothing on land and dives. The water system reads one
+    // of these every frame, so a stroke that is not held is not a stroke.
+    private boolean up, down;
 
     // Facing direction (1=right, -1=left). Persists after keys release —
     // weapons fire where you're looking (playtest suggestion).
@@ -254,10 +258,23 @@ public class GameplayScreen extends UiScreen {
         // Player input → velocity (skipped while hookshot pulls)
         if (stunned) {
             player.vx = 0;
+            world.water.setVerticalInput(0);   // a climber flat on the ground does not stroke
         } else if (!pulling) {
-            player.vx = 0;
-            if (left) player.vx -= RUN_SPEED;
-            if (right) player.vx += RUN_SPEED;
+            double desired = 0;
+            if (left) desired -= RUN_SPEED;
+            if (right) desired += RUN_SPEED;
+            // Vertical: one of these every frame, and the water system applies it
+            // only while the body is actually in the pool.
+            world.water.setVerticalInput(up ? -1 : (down ? 1 : 0));
+            // Horizontal. On land this is the assignment it always was. In water it
+            // goes through the water system: swimming STEERS, so a body keeps its
+            // momentum in and out of the pool instead of snapping to a new speed,
+            // and wading is a multiplier on the run. Assigning vx directly still
+            // works on land, but it gives water no horizontal effect at all - the
+            // pool would slow nothing and nothing would carry through it.
+            player.vx = world.water.swimming(player)
+                ? world.water.steerVx(player, desired, dt)
+                : desired * world.water.speedMultiplier(player);
             // Facing persists after keys release — weapons fire where
             // you're LOOKING, not where you're holding (playtest:
             // "bombs default right, shift that to where youre facing")
@@ -268,6 +285,13 @@ public class GameplayScreen extends UiScreen {
         // Engine step
         world.update(dt);
         combat.update(dt);
+
+        // Drowning: air ran out a beat ago. The ticks arrive pre-metered (~1/s) and
+        // draining them is what spends them, so the damage stays on the engine's
+        // clock rather than this loop's - a frame that runs long does not hurt more.
+        for (int i = 0; i < world.water.drainDrownTicks(player); i++) {
+            combat.hurtPlayer(player, player.x + 1);
+        }
 
         // Damage cue. Watching the HP itself rather than hooking each damage
         // source means the flash fires for spikes, enemies, and anything
@@ -396,7 +420,16 @@ public class GameplayScreen extends UiScreen {
                     // Ground-ish cells only. A door, key, heart or enemy
                     // floating above the surface is not terrain and must
                     // not define where the ground starts.
-                    if (ch == '#' || ch == 'C' || ch == '^' || ch == '/' || ch == '\\') {
+                    //
+                    // Water counts, and it is the reason this pass is right:
+                    // a flooded gap is a pit in the terrain, so the column's
+                    // "inside the rock" begins at the pool's SURFACE, not at
+                    // the floor under it. Left out, the pool was drawn over
+                    // open sky and came out the colour of sky and water mixed
+                    // -- a flat grey panel hanging in the air rather than a
+                    // pool in a pit. The pit is the thing that makes it read
+                    // as water.
+                    if (ch == '#' || ch == 'C' || ch == '^' || ch == '/' || ch == '\\' || ch == '~') {
                         top = r;
                         break;
                     }
@@ -418,6 +451,39 @@ public class GameplayScreen extends UiScreen {
             if (bedrockY < CANVAS_H) {
                 gc.setFill(Color.web("#0D0A09"));
                 gc.fillRect(0, bedrockY, CANVAS_W, CANVAS_H - bedrockY);
+            }
+        }
+
+        // Water: after every background (sky, sun, the underground fill, the
+        // bedrock) and BEFORE the terrain, so a pool reads as water sitting in
+        // a pit with the tiles as its walls rather than as a panel drawn over
+        // them. Drawn before the sky it would be painted over, which is how
+        // the release's first water frame came back sky-coloured where the
+        // pool should have been.
+        //
+        // This is the piece the upstream port left behind. Water arrived here
+        // with its generation, its physics, its breath meter and its probe -
+        // the field existed, a body could swim in it, and not one pixel of it
+        // had ever reached a screen. The one part of the system no unit test
+        // can cover is the part that needs a screen.
+        //
+        // Widths are scaled by S. worldToScreen returns PHYSICAL pixels, so a
+        // rect measured in world units is S times too small if it is not. The
+        // release draws its water at 1x while its tiles are at 2x, which is
+        // why its pools come out at half the width of the gap they sit in.
+        //
+        // Rects are merged water runs, not one per tile, so a wide pool is a
+        // few fillRects instead of one per cell.
+        Water waterField = world.water.water();
+        if (waterField != null && !waterField.isEmpty()) {
+            for (double[] r : waterField.rects) {
+                double sx = camera.worldToScreenX(r[0]), sy = camera.worldToScreenY(r[1]);
+                double w = (r[2] - r[0]) * S, h = (r[3] - r[1]) * S;
+                if (sx > CANVAS_W || sy > CANVAS_H || sx + w < 0 || sy + h < 0) continue;
+                gc.setFill(Color.web("#2E86C1", 0.55));
+                gc.fillRect(sx, sy, w, h);
+                gc.setFill(Color.web("#7FD4F0", 0.85));   // surface line
+                gc.fillRect(sx, sy, w, 3);
             }
         }
 
@@ -683,6 +749,16 @@ public class GameplayScreen extends UiScreen {
         // Keys
         gc.setFill(Color.GOLD);
         gc.fillText("Key x" + inventory.keys, 40, 120);
+        // Air: drawn only while it is actually draining, so a climber who is not
+        // swimming never sees a bar they do not need, and the bar's arrival is
+        // itself the warning that they are under.
+        double air = world.water.airFraction(player);
+        if (air < 1.0) {
+            gc.setFill(Color.web("#0B3D5C"));
+            gc.fillRect(40, 138, 160, 16);
+            gc.setFill(air > 0.35 ? Color.web("#7FD4F0") : Color.web("#E74C3C"));
+            gc.fillRect(40, 138, 160 * air, 16);
+        }
         // Level
         gc.setFill(Color.WHITE);
         gc.fillText(tutorial ? "Tutorial " + levelNum + " / " + Tutorial.LAST : "Level " + levelNum,
@@ -704,9 +780,18 @@ public class GameplayScreen extends UiScreen {
             case LEFT, A -> { left = true; e.consume(); }
             case RIGHT, D -> { right = true; e.consume(); }
             case SPACE, UP, W -> {
-                if (player.grounded) player.vy = JUMP_V;
+                // Held as well as pressed: on land this is only a jump, but in
+                // water the hold is the swim-up stroke and the press is the
+                // impulse. jumpV answers all three cases - a breach hop at the
+                // surface (which is how a pool is escaped), a weaker paddle
+                // when fully under, and the plain jump when dry.
+                up = true;
+                if (player.grounded || world.water.swimming(player)) {
+                    player.vy = world.water.jumpV(player, JUMP_V);
+                }
                 e.consume();
             }
+            case DOWN, S -> { down = true; e.consume(); }
             case X -> {
                 // Hookshot: X while pulling = cancel (player agency —
                 // a pull must never hold the player hostage).
@@ -745,6 +830,8 @@ public class GameplayScreen extends UiScreen {
         switch (e.getCode()) {
             case LEFT, A -> left = false;
             case RIGHT, D -> right = false;
+            case SPACE, UP, W -> up = false;
+            case DOWN, S -> down = false;
         }
     }
 }
