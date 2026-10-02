@@ -810,12 +810,20 @@ public class SelfTest {
      */
     static void audioLogIsBounded() {
         var sys = new aside.games.fruitjump.engine.AudioSystem();
-        int events = 5000;
         // toggleMute is public and logs; playSfx takes a package-private enum, so this is the one event this
         // side of the package can fire. The bound is on the log, not on the event.
-        for (int i = 0; i < events; i++) sys.toggleMute();
-        check("audio: the event log is bounded (" + sys.eventLog.size() + " kept of " + events + " events)",
-                sys.eventLog.size() <= aside.games.fruitjump.engine.AudioSystem.LOG_LIMIT);
+        //
+        // RELATIONAL, NOT ABSOLUTE. The first version asserted `eventLog.size() <= AudioSystem.LOG_LIMIT` -
+        // which compares the log against the very constant the log is trimmed by, so it passes whatever that
+        // constant is, including a number large enough to be no bound at all. It is the same mistake as a test
+        // that reads its own expectation. This asks the property instead: does the log STOP GROWING. Four
+        // thousand more events must change nothing.
+        for (int i = 0; i < 1000; i++) sys.toggleMute();
+        int afterThousand = sys.eventLog.size();
+        for (int i = 0; i < 4000; i++) sys.toggleMute();
+        check("audio: the event log stops growing (" + afterThousand + " entries after 1000 events, "
+                + sys.eventLog.size() + " after 5000)",
+                afterThousand > 0 && sys.eventLog.size() == afterThousand);
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
