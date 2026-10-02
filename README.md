@@ -74,14 +74,20 @@ memory. It is the mode to use on anything long.
 ## Tests
 
 ```bash
-java -cp out aside.engine.SelfTest              # the engine and the auditor, 48 checks
+java -cp out aside.engine.SelfTest              # the engine and the auditor, 261 checks
 java -cp out aside.games.fnaf.engine.SelfTest  # the FNAF module's nights, with real assertions
 java -cp out aside.audio.AudioTest             # every cue the scripts ask for is present
+java -cp out aside.games.fruitjump.engine.WaterProbe   # every pool is the shape it was built to be
 ```
 
 `aside.audio.AudioTest` exits non-zero if any cue is missing, so it works as a gate rather than a report.
 The FNAF self-test prints win rates *and* asserts the invariants that were once bugs — every animatronic
 moves at least once a night, and a doorway kill waits at least two seconds.
+
+`WaterProbe` exits non-zero if any pool is the wrong shape: it asserts every water run is two rows with a
+solid floor under it and no spike directly beneath, not just that the total cell count looks reasonable.
+The count was 17 for a long time and the count was right — the map was wrong. (The 48 in the line above was
+also wrong for a long time. Both are rule 17: a claim traces to a run or a file, never to a recollection.)
 
 ## What is in here
 
@@ -112,4 +118,11 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`games/fnaf/`** — the FNAF Glamrock game as an engine module. A standalone copy lives in its own
   repository; the two are kept behaviourally identical, verified by their self-tests reporting the same
   numbers rather than by diffing text.
+- **`games/fruitjump/`** — the platformer, as an engine module. It has water: pools form in the gaps in
+  the walk, a body swims in them, holds its breath, and gets out by a breach hop at the surface. Controls
+  are the usual left/right, **UP or W** to jump on land and to stroke upward in water, **DOWN or S** to
+  dive. `tools/ShotWater` is the only check that can see any of it: it drives the screen directly, captures
+  three frames, counts water-coloured pixels and reads the climber back out by reflection. A capture tool
+  whose subject is off-screen still writes a png and still prints PASS, which is how the first version
+  walked 165 frames and stopped 85px short of the pool.
 - **`audio/`** — the cues the scripts ask for.
