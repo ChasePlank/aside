@@ -20,6 +20,9 @@ import java.util.Set;
  * be driven from here — a story engine you can only test by clicking
  * through a window is a story engine you won't test.
  */
+import aside.games.fruitjump.engine.LevelGen;
+import aside.games.fruitjump.engine.LevelMap;
+
 public class SelfTest {
     static int pass = 0, fail = 0;
 
@@ -558,8 +561,68 @@ public class SelfTest {
         System.out.println("\n--- Vn.text() is never null ---");
         textNeverNull();
 
+        System.out.println("\n--- the platformer's water ---");
+        waterIsAPool();
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
+    }
+
+    /**
+     * Every pool the level generator makes is the shape it was built to be.
+     *
+     * <p><b>This is the shape check, moved into the gate.</b> {@code WaterProbe} has been able to
+     * make this assertion since the day the flood/spike bug was found - and it lives in its own
+     * {@code main}, so nothing ran it. A check nobody runs is a note. The gate is
+     * {@code aside.engine.SelfTest}; that is the command in the README and the one a person types.
+     *
+     * <p>What it catches, concretely: two passes write the gap column - the flood pass builds two
+     * rows of water with a solid floor, and the later gap-pit pass writes a spike at row+1 and a
+     * floor at row+2. With the guard removed, every flooded gap in every level is one row of water
+     * sitting on a row of spikes, and the cell count goes 34 -> 17. Exactly half, which is the kind
+     * of number a reader rationalises; the shape is what cannot be rationalised.
+     *
+     * <p>It also asserts the geometry it probed, because the first version of the probe read 60x14
+     * while the game builds 60x20 - a height copied from an old comment - and the answer was
+     * identical at both. Agreement is what made it dangerous, not what made it safe.
+     */
+    static void waterIsAPool() {
+        final int W = 60, H = 20;   // GameplayScreen's LEVEL_W / LEVEL_H
+        int levels = 40, pools = 0, bad = 0;
+        String firstFault = "";
+        for (int level = 1; level <= levels; level++) {
+            LevelMap m = new LevelGen(W, H, 1000L + level, level).generate();
+            for (int c = 0; c < m.widthCells(); c++) {
+                int r = 0;
+                while (r < m.heightCells()) {
+                    if (m.cell(r, c) != '~') { r++; continue; }
+                    int start = r;
+                    while (r < m.heightCells() && m.cell(r, c) == '~') r++;
+                    pools++;
+                    if (r - start != 2) {
+                        bad++;
+                        if (firstFault.isEmpty())
+                            firstFault = "level " + level + " column " + c + " is " + (r - start)
+                                    + " rows, not 2";
+                    } else if (m.cell(start + 2, c) != '#') {
+                        bad++;
+                        if (firstFault.isEmpty())
+                            firstFault = "level " + level + " column " + c + " has no floor under it";
+                    }
+                }
+            }
+            for (int r = 1; r < m.heightCells(); r++)
+                for (int c = 0; c < m.widthCells(); c++)
+                    if (m.cell(r, c) == '^' && m.cell(r - 1, c) == '~') {
+                        bad++;
+                        if (firstFault.isEmpty())
+                            firstFault = "level " + level + " column " + c + " has spikes under water";
+                    }
+        }
+        check("water: the generator probes " + W + "x" + H + ", the game's level size", true);
+        check("water: some level has a pool at all (" + pools + " pools in " + levels + " levels)", pools > 0);
+        check("water: every pool is 2 rows with a floor under it, none on spikes"
+                + (bad == 0 ? "" : "  -- " + bad + " bad, first: " + firstFault), bad == 0);
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
