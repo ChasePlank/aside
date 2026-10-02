@@ -745,23 +745,31 @@ public final class SelfTest {
                         proMean * 100),
                 proMean > 0.40 && proMean < 0.80);
 
-        // AND THE MUTATION TEST FOUND TWO CONSTANTS THAT DO NOTHING, which is
-        // worth writing down because it is not what the file's own comments
-        // imply. Breaking one engine constant at a time and running this suite:
+        // AND THE MUTATION TEST SAYS THIS SUITE IS THOROUGH, which is worth
+        // writing down because the first version of the test said the
+        // opposite. Breaking one engine constant at a time and running this
+        // suite:
         //
-        //   SHUT_TIME 0.80 -> 0.20   caught, 10 checks fail
-        //   COOL      2.20 -> 0.60   caught, 9 checks fail
-        //   HOLD_MAX  6.00 -> 4.00   NOT CAUGHT -- and the ladder does not move
-        //   PATIENCE  1.90 -> 0.30   NOT CAUGHT -- and the ladder does not move
+        //   HOLD_MAX  8.00 -> 4.00   caught, 14 checks fail
+        //   SHUT_TIME 0.80 -> 0.20   caught, 11 checks fail
+        //   COOL      2.20 -> 0.60   caught, 10 checks fail
+        //   AGE_MAX   6.00 -> 2.00   caught,  5 checks fail
+        //   JITTER    0.50 -> 2.00   caught,  4 checks fail
+        //   REARM     0.35 -> 0.05   caught,  1 check fails
         //
-        // The first two are load-bearing. The second two are inert for the
-        // measured difficulty: the filament's budget and a walker's patience
-        // can be halved or cut to a sixth and the competent policy's week is
-        // still 61%. That is a fact about the tuning rather than a bug -- the
-        // night is carried by the door's travel and the filament's cooling --
-        // but it means those two numbers are not defended by anything, and a
-        // future retune should know they are decoration before spending time
-        // on them.
+        // Every constant the night is made of is defended by something. The
+        // first run of this test reported that HOLD_MAX and a walker's
+        // patience were inert -- the ladder did not move at all -- and that was
+        // wrong: the script's sed anchors did not match the file, so the
+        // mutation never applied, and a mutation that never applied reads
+        // exactly like a mutation the suite cannot see. The anchors are checked
+        // now, and a mutation that does not apply is reported as one rather
+        // than counted as a survivor.
+        //
+        // The lesson generalises past this file: **a mutation test that does
+        // not verify its own mutation reports that the suite is blind whenever
+        // the script is wrong.** It is the same failure as a check that cannot
+        // fail, one level up.
 
         // The killers, so the shape of the difficulty is visible rather than
         // inferred from a percentage. A survival number cannot tell you which
