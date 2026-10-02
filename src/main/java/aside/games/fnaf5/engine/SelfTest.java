@@ -2,6 +2,9 @@ package aside.games.fnaf5.engine;
 
 import aside.games.fnaf5.MouseMap;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /**
  * The FNAF 5 checks, runnable with no display.
  *
@@ -67,6 +70,7 @@ public final class SelfTest {
         clock();
         mouse();
         cues();
+        phone();
         survival();
         System.out.println();
         System.out.println(checks + " checks, " + failed + " failed");
@@ -517,6 +521,112 @@ public final class SelfTest {
     }
 
     // ---------------------------------------------------------- the difficulty
+
+    /**
+     * The phone build.
+     *
+     * <p>Two different things, and they fail for different reasons.
+     *
+     * <p><b>Is it current?</b> A generated file that has gone stale is worse
+     * than no file: it is a second copy of the game quietly disagreeing with
+     * the first. So the page is regenerated and compared rather than
+     * spot-checked -- the same check every other ported game carries.
+     *
+     * <p><b>Is it the same game?</b> A staleness check proves the file matches
+     * its generator and says nothing about whether the generator is right. The
+     * failure that would otherwise be silent is a rule that lives in the page
+     * as a literal and has stopped matching the engine -- so every number the
+     * night is made of is asserted to be the engine's own value, and the three
+     * rules that make the three threats different problems are asserted to be
+     * the engine's own rules.
+     *
+     * <p>What is <i>not</i> checked here is the RNG or the update loop. The
+     * page reproduces {@code java.util.Random} in BigInt -- including
+     * {@code nextInt}, which is a rejection sampler rather than a modulo, and
+     * the die in this game is a d20 against the night's AI level -- and that
+     * was verified by driving both engines under the same scripted policy:
+     * night one on seed 1001 produces identical traces every five seconds (the
+     * room you are in, all three threats' rooms, and the shocks left) and both
+     * end JUMPSCARED to the same killer at the same moment. It is not
+     * checkable from Java without a JavaScript engine, and the alternative (a
+     * page that deals its own nights) would make the two builds different
+     * games with the same rules.
+     */
+    static void phone() {
+        section("the phone build");
+
+        Path out = Path.of("web", "fnaf5.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here -- run from the repository root)");
+            return;
+        }
+        String page;
+        try {
+            page = Files.readString(out);
+        } catch (Exception e) {
+            check("web/fnaf5.html can be read", false);
+            return;
+        }
+        try {
+            check("web/fnaf5.html is current -- regenerate it with aside.games.fnaf5.WebRental",
+                    aside.games.fnaf5.WebRental.html().equals(page));
+        } catch (Exception e) {
+            check("web/fnaf5.html is current -- regenerate it with aside.games.fnaf5.WebRental",
+                    false);
+        }
+
+        // The rules, as numbers. A port whose feed pace is 1.8 rather than 2.0
+        // plays differently and looks identical.
+        check("the page carries the move",
+                page.contains("moveTime: " + aside.games.fnaf5.WebRental.num(Game.MOVE_TIME)));
+        check("the page carries the shock",
+                page.contains("shockTime: " + aside.games.fnaf5.WebRental.num(Game.SHOCK_TIME)));
+        check("the page carries how long the building remembers a sound",
+                page.contains("soundMemory: " + aside.games.fnaf5.WebRental.num(Game.SOUND_MEMORY)));
+        check("the page carries Ballora's patience",
+                page.contains("balloraPatience: " + aside.games.fnaf5.WebRental.num(Game.BALLORA_PATIENCE)));
+        check("the page carries Ballora's clock",
+                page.contains("balloraGrace: " + aside.games.fnaf5.WebRental.num(Game.BALLORA_GRACE)));
+        check("the page carries how long silence buys",
+                page.contains("balloraCooldown: " + aside.games.fnaf5.WebRental.num(Game.BALLORA_COOLDOWN)));
+        check("the page carries the feed pace",
+                page.contains("feedPace: " + aside.games.fnaf5.WebRental.num(Game.FEED_PACE)));
+        check("the page carries the stillness window",
+                page.contains("stillWindow: " + aside.games.fnaf5.WebRental.num(Game.STILL_WINDOW)));
+        check("the page carries the stillness pace",
+                page.contains("stillPace: " + aside.games.fnaf5.WebRental.num(Game.STILL_PACE)));
+        check("the page carries the interval jitter",
+                page.contains("intervalJitter: " + aside.games.fnaf5.WebRental.num(Game.INTERVAL_JITTER)));
+
+        // The tables, which are the whole of the difficulty ramp.
+        for (String t : new String[]{"baseInterval", "freddyPace", "grace", "shockAllowance", "aiLevel"}) {
+            StringBuilder want = new StringBuilder(t + ": [");
+            for (int n = 1; n <= 5; n++) {
+                Game g = new Game(n, 1);
+                if (n > 1) want.append(", ");
+                want.append(switch (t) {
+                    case "baseInterval" -> aside.games.fnaf5.WebRental.num(g.baseInterval());
+                    case "freddyPace" -> aside.games.fnaf5.WebRental.num(g.freddyPace());
+                    case "grace" -> aside.games.fnaf5.WebRental.num(g.grace());
+                    case "shockAllowance" -> String.valueOf(Game.shockAllowance(n));
+                    default -> String.valueOf(Game.aiLevel(n));
+                });
+            }
+            want.append("]");
+            check("the page carries the " + t + " table", page.contains(want));
+        }
+
+        // And the three rules, which are the whole difference between the
+        // three threats.
+        Game g = new Game(1, 1);
+        for (Threat t : g.threats) {
+            check("the page carries " + t.name + " following " + t.rule,
+                    page.contains("name:\"" + t.name + "\", key:\"" + t.key
+                            + "\", rule:\"" + t.rule.name() + "\", home:\""
+                            + t.home.name() + "\", pace:"
+                            + aside.games.fnaf5.WebRental.num(t.pace)));
+        }
+    }
 
     static void survival() {
         section("the week");

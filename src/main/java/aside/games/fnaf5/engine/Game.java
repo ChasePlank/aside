@@ -366,7 +366,7 @@ public class Game {
      * player can walk is a threat the player can learn, and FNAF 5 is the
      * first game in the franchise where that is true.
      */
-    static int aiLevel(int night) {
+    public static int aiLevel(int night) {
         int[] table = {4, 7, 11, 15, 20};
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
     }
@@ -589,7 +589,7 @@ public class Game {
      * clearing the room of all three (see {@link #shock}), it is also what
      * stops a player from spending one on Ballora and expecting it to work.
      */
-    static int shockAllowance(int night) {
+    public static int shockAllowance(int night) {
         int[] table = {5, 5, 4, 4, 3};
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
     }

@@ -86,6 +86,7 @@ public final class PhoneShelf {
             case "fnaf2" -> "Real-time, like the desktop. Three openings, no doors.";
             case "fnaf3" -> "Real-time, like the desktop. The only verb you have is a noise.";
             case "fnaf4" -> "Real-time, like the desktop. Four sides to the room, one body.";
+            case "fnaf5" -> "Real-time, like the desktop. The camera cannot see the room you are in.";
             case "fnaf6" -> "Real-time, like the desktop. Five nights, and one sitting.";
             case "fnaf7" -> "Real-time, like the desktop. It comes to the side you are not looking at.";
             case "fnaf8" -> "Real-time, like the desktop. They are not coming for you.";
