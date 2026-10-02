@@ -639,6 +639,23 @@ public class GameplayScreen extends UiScreen {
             if (p.type == Projectile.Type.ARROW) {
                 gc.drawImage(Sprites.arrow2x, camera.worldToScreenX(p.x - 6), camera.worldToScreenY(p.y - 2), 12 * S, 4 * S);
             } else {
+                // The blast radius, drawn while the fuse burns.
+                //
+                // Before this the only way to learn how far was safe was to be
+                // hit by it, which is not something a player can be expected to
+                // learn from. It brightens as the fuse runs down, so the circle
+                // doubles as the countdown. The radius drawn is the DAMAGE
+                // radius - the one that matters - and the bomb breaks tiles a
+                // little further out than it hurts.
+                double r = Projectile.BLAST_DAMAGE_RANGE * S;
+                double bx = camera.worldToScreenX(p.x);
+                double by = camera.worldToScreenY(p.y);
+                double urgency = 1.0 - Math.max(0, Math.min(1, p.timer / Projectile.FUSE_TIME));
+                if (bx + r > 0 && bx - r < CANVAS_W) {
+                    gc.setStroke(Color.web("#ffffff", 0.16 + 0.32 * urgency));
+                    gc.setLineWidth((1.5 + 1.5 * urgency) * S);
+                    gc.strokeOval(bx - r, by - r, r * 2, r * 2);
+                }
                 // Bomb: red flash as fuse burns
                 gc.drawImage(p.timer < 0.4 ? Sprites.bombFlash2x : Sprites.bomb2x,
                         camera.worldToScreenX(p.x - 6), camera.worldToScreenY(p.y - 6), 12 * S, 12 * S);
