@@ -585,6 +585,8 @@ public class SelfTest {
         check("doors: 100 generated levels are all completable by the validator bot ("
                 + doorFailures + " unfinished)", doorFailures == 0);
 
+        tutorialLevelsArePlayable();
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
     }
@@ -692,6 +694,60 @@ public class SelfTest {
                 + JUMPABLE_CELLS, widest > 0 && widest <= JUMPABLE_CELLS);
         check("gaps: no generated gap is wider than the jump"
                 + (tooWide == 0 ? "" : "  -- " + tooWide + " too wide, first: " + where), tooWide == 0);
+    }
+
+    /**
+     * Every hand-built tutorial level can actually be played.
+     *
+     * <p><b>These are the only levels in the game a human typed.</b> Everything else is generated, and
+     * the generator's levels are checked by the validator bot in the hundreds. The tutorial is eight
+     * level strings assembled in code, and nothing has ever run a bot through them - so a level with a
+     * wall the player cannot pass, a spawn in mid-air, or a missing exit would ship, and the first
+     * person to find out would be a player.
+     *
+     * <p>It is the same class of gap as the rest of this file: the check existed ({@code
+     * LevelValidator.validateLevel} takes a map, not a generator) and nothing called it on the content
+     * that most needs it. Hand-authored content is where a silent break is most likely and least
+     * visible, because there is no generator contract to violate and nothing that regenerates it.
+     */
+    static void tutorialLevelsArePlayable() {
+        int total = 0, grounded = 0, botChecked = 0, botFinished = 0;
+        StringBuilder bad = new StringBuilder();
+        StringBuilder skipped = new StringBuilder();
+        for (int level = 1; level <= aside.games.fruitjump.Tutorial.LAST; level++) {
+            total++;
+            aside.games.fruitjump.engine.LevelMap map = aside.games.fruitjump.Tutorial.map(level);
+            if (map == null) { bad.append("L").append(level).append(":no map "); continue; }
+            // A spawn that is not standing on anything reads as "the game is broken" rather than
+            // "this level is odd", so it is checked for every level, before any skipping.
+            boolean onGround = false;
+            int sc = (int) (map.spawnX / 32);
+            for (int r = 0; r < map.heightCells(); r++) if (map.cell(r, sc) == '#') onGround = true;
+            if (onGround) grounded++; else bad.append("L").append(level).append(":spawn has no ground ");
+
+            // THE EXCLUSION IS NARROW AND IT IS NAMED. The validator bot only jumps: no bomb, no
+            // hookshot, no weapon. Level 3 is built to teach the bomb - a breakable column, floor to
+            // ceiling - so the bot stops at the wall and stays there. Reporting that as a broken
+            // level would be this check lying about what it measured, and loosening the check to make
+            // it pass would be worse: the wall is exactly the thing a bot cannot see. So a level that
+            // contains a breakable tile is skipped BY THAT RULE and its number is printed, which
+            // keeps the exclusion visible and keeps it narrow - a new level with an unjumpable wall
+            // and no breakable tile still fails.
+            boolean needsBomb = false;
+            for (int r = 0; r < map.heightCells(); r++)
+                for (int c = 0; c < map.widthCells(); c++)
+                    if (map.cell(r, c) == 'C') needsBomb = true;
+            if (needsBomb) { skipped.append("L").append(level).append(" "); continue; }
+
+            botChecked++;
+            if (aside.games.fruitjump.engine.LevelValidator.validateLevel(map, 40.0)) botFinished++;
+            else bad.append("L").append(level).append(":bot stuck ");
+        }
+        check("tutorial: every one of the " + total + " hand-built levels spawns on solid ground"
+                + (bad.isEmpty() ? "" : "  -- " + bad), grounded == total);
+        check("tutorial: the bot finishes every level that needs only jumping (" + botFinished + "/"
+                + botChecked + " checked; skipped as bomb-only: " + skipped.toString().trim() + ")",
+                botChecked > 0 && botFinished == botChecked);
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
