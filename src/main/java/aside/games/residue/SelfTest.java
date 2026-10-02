@@ -48,6 +48,29 @@ public final class SelfTest {
         if (!same) { failed++; System.out.println("FAIL  " + what + "  (got " + a + ", want " + b + ")"); }
     }
 
+    /**
+     * A trace's age, or -1 when the room has lost it.
+     *
+     * <p><b>This exists because the suite used to CRASH here rather than fail.</b>
+     * Four checks read {@code r.traceOf(thing).age} directly, and when a
+     * mutation makes the room lose that thing the accessor returns null and the
+     * suite dies with a NullPointerException instead of reporting a failed
+     * check. A suite that dies takes every check after it with it, so the
+     * mutation hides everything downstream rather than one assertion -- found by
+     * mutating the seeded table (a decay of 9 instead of 2) and watching the
+     * run end in a stack trace rather than a count.
+     */
+    static int ageOf(Room r, Thing thing) {
+        Trace t = r.traceOf(thing);
+        return t == null ? -1 : t.age;
+    }
+
+    /** A trace's gesture, or a marker when the room has lost it. */
+    static String gestureOf(Room r, Thing thing) {
+        Trace t = r.traceOf(thing);
+        return t == null ? "(gone)" : t.gesture;
+    }
+
     public static void main(String[] args) throws Exception {
         theThings();
         theSeededRoom();
@@ -126,8 +149,8 @@ public final class SelfTest {
         Room r = Room.seeded();
         r.advance();
         eq(r.visits, 1, "walking in makes it one visit");
-        eq(r.traceOf(Thing.CHAIR).age, 3, "the chair ages a step");
-        eq(r.traceOf(Thing.BOOK).age, 2, "and so does the book");
+        eq(ageOf(r, Thing.CHAIR), 3, "the chair ages a step");
+        eq(ageOf(r, Thing.BOOK), 2, "and so does the book");
 
         // The book was left at 1 with a decay of 3, so one more visit finishes
         // it. The chair was left at 2 with a decay of 5, so it has two visits
@@ -136,7 +159,7 @@ public final class SelfTest {
         // visit, before the player has done anything at all.
         r.advance();
         ok(r.traceOf(Thing.BOOK) == null, "the book is gone on the second visit");
-        eq(r.traceOf(Thing.CHAIR).age, 4, "the chair is still here at four");
+        eq(ageOf(r, Thing.CHAIR), 4, "the chair is still here at four");
         r.advance();
         ok(r.traceOf(Thing.CHAIR) == null, "and is cleared out on arrival at five, not in front of you");
         eq(r.visits, 3, "three visits in");
@@ -161,7 +184,7 @@ public final class SelfTest {
         // second one: you cannot have two chairs, and the lamp has one switch.
         r.leave(Thing.CHAIR, "turned", true);
         eq(r.traces.size(), 3, "leaving the chair again does not make a second chair");
-        eq(r.traceOf(Thing.CHAIR).gesture, "turned", "it changes what the chair is doing");
+        eq(gestureOf(r, Thing.CHAIR), "turned", "it changes what the chair is doing");
 
         // Full: the oldest goes, and it goes because it was pushed out rather
         // than because it was old.
