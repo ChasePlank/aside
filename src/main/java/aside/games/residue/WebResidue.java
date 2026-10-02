@@ -63,7 +63,8 @@ public final class WebResidue {
         int at = t.indexOf(MARKER);
         if (at < 0) throw new IllegalStateException("the template has no " + MARKER + " in it");
         return (t.substring(0, at) + content() + t.substring(at + MARKER.length()))
-                .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
+                .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js())
+                .replace(aside.game.WebArt.MARKER, aside.game.WebArt.css("residue"));
     }
 
     // ------------------------------------------------------------- content
