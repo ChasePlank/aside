@@ -422,6 +422,35 @@ public final class Bot {
      * that takes time to move needs the guard to be
      * {@code if (same setting) return false;}
      *
+     * <p><b>The tenth attempt tried to supply the missing "reason for some
+     * steps to matter more than others" by making the light not carry, and it
+     * produced the best ladder of the ten without producing a game.</b> The
+     * light's effect on a step now scales with how close the walker is --
+     * {@code reach(d) = 1 - FALLOFF * d / MAX} -- so a block at the far end of
+     * the hall buys almost nothing and a block in the doorway stops it dead.
+     * The intent was that waiting would become the play: spend nothing while it
+     * is far, spend everything when it is close.
+     *
+     * <p>Measured at a stride of 0.20 and no falloff, the policies finally
+     * <i>spread</i> the way a ladder should: <b>EARLY 76%, WAIT 50%, LOCK 45%,
+     * RHYTHM 18%, IDLE 0%</b> -- five distinct rungs, where nine earlier
+     * designs had two. <b>But EARLY is the policy that never waits</b>, and it
+     * is on top. The falloff <i>penalizes</i> waiting rather than rewarding it,
+     * because blocking early is cheap: the light is only up briefly, so the
+     * filament survives it, and a walker that is never allowed to approach is a
+     * walker that never has to be stopped. Tightening the filament does not
+     * separate them either (HOLD_MAX 6.0 through 1.4 leaves EARLY and WAIT
+     * within three points of each other).
+     *
+     * <p><b>So the next thing to try is not a falloff but a cost that depends
+     * on the walker's distance</b> -- an early block has to cost more than a
+     * late one, not merely buy less. That is a state-dependent cost, and FNAF
+     * 9's own eighth lever is the warning: a state-dependent cost on its own
+     * came back a cliff. Ten attempts now, and the ladder is closer than it has
+     * ever been; the thing that is still missing is the same thing, stated
+     * once more: <b>a reason for the early steps to be the wrong ones to
+     * spend on.</b>
+     *
      * <p><b>And SENSE is on the ladder because the office's own description
      * of itself does not survive being played.</b> {@link Feed}'s javadoc says
      * the sensor "is the only way to know the doorway has emptied, which is
