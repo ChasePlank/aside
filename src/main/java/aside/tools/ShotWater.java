@@ -71,10 +71,47 @@ public class ShotWater extends Application {
 
         double dt = 1.0 / 60;
         int atLip = 125, inPool = 400, dive = 180;
+        int splashTick = -1, lastSplashes = 0, splashShootAt = -1;
+        boolean jumped = false;
         for (int i = 0; i < inPool; i++) {
+            // Jump just before the lip. Walking in produces no splash at all - the
+            // surface is level with the walk, so the crossing happens on the first
+            // frame of the fall, with vy about 20, and the system requires
+            // SPLASH_MIN_V (120) of impact speed. A jump comes down into the pool with
+            // speed, which is also what a missed jump looks like, and a missed jump is
+            // the case the pool exists for.
+            //
+            // Triggered on the climber's own x, not on a frame count: the first attempt
+            // jumped at frame 115 and the climber was still 190px short of the pool, so
+            // it landed on the ground and the splash never happened.
+            if (!jumped && playerX(screen) > 420) {
+                jumped = true;
+                screen.handleKey(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.SPACE, false, false, false, false));
+                screen.handleKeyReleased(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.SPACE, false, false, false, false));
+            }
             screen.tick(dt);
             if (i + 1 == atLip) shoot(scene, dir + "/water-lip.png", "at the lip");
+            // The splash is the shortest-lived thing in the system (droplets last
+            // 0.25-0.6s), so catching it by picking a frame by hand would be luck.
+            // The water system counts crossings; watch the counter and shoot on the
+            // frame it moves.
+            int now = splashEvents(screen);
+            if (now > lastSplashes) {
+                lastSplashes = now;
+                splashTick = i;
+                // Not this frame. Emitters update BEFORE bodies in World.update, so a
+                // burst spawned during the body step has not been drawn yet - the
+                // crossing frame shows the pool and nothing else. Three frames on, the
+                // droplets are out and still inside their 0.25-0.6s lifetime.
+                splashShootAt = i + 3;
+            }
+            if (splashShootAt >= 0 && i == splashShootAt) {
+                splashShootAt = -1;
+                shoot(scene, dir + "/water-splash.png", "droplets, three frames after the crossing");
+            }
         }
+        System.out.println("  splash registered on frame " + splashTick
+                + " (" + (splashTick / 60.0) + "s in), events=" + lastSplashes);
         shoot(scene, dir + "/water-pool.png", "in the pool");
 
         // Dive. This is the half of the water system that only the controls can
@@ -107,6 +144,30 @@ public class ShotWater extends Application {
     }
 
     /** Where the climber is and whether the water still has them. Reflection, so the names cannot go stale. */
+    /** How many surface crossings the water system has reported. */
+    private static double playerX(GameplayScreen screen) {
+        try {
+            var f = GameplayScreen.class.getDeclaredField("player");
+            f.setAccessible(true);
+            return aside.games.fruitjump.engine.Physics.Body.class.getField("x").getDouble(f.get(screen));
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
+    private static int splashEvents(GameplayScreen screen) {
+        try {
+            var wf = GameplayScreen.class.getDeclaredField("world");
+            wf.setAccessible(true);
+            Object world = wf.get(screen);
+            var waterField = world.getClass().getField("water");
+            Object water = waterField.get(world);
+            return (int) water.getClass().getMethod("splashEvents").invoke(water);
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
     private static void report(GameplayScreen screen, String when) {
         try {
             var f = GameplayScreen.class.getDeclaredField("player");

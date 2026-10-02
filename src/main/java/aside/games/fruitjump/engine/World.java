@@ -163,6 +163,9 @@ public class World {
     }
     
     /** Add an emitter. */
+    /** The particle pool, for the view. Particles are simulated here and drawn there. */
+    public ParticlePool particles() { return particles; }
+
     public void addEmitter(Emitter e) {
         emitters.add(e);
     }
@@ -403,6 +406,27 @@ public class World {
         }
     }
     
+    /**
+     * A splash of droplets at a surface crossing, scaled by impact speed.
+     *
+     * The water system has known how to report a crossing since it came upstream
+     * - splashEvents(), consumeSplash(), splashX/Y/Speed - and nothing here ever
+     * asked. So a body could enter a pool and the pool said nothing: no droplets,
+     * no sound, nothing to tell a player the water was a place they had arrived
+     * at rather than a colour they had walked into.
+     */
+    void spawnSplash(double x, double y, double speed) {
+        double s = Math.min(1.0, speed / 400.0);
+        emitters.add(Emitter.burst(x, y, (int) (6 + 10 * s))
+            .speed(30 + 60 * s, 80 + 160 * s)
+            .angle(-Math.PI * 0.95, -Math.PI * 0.05)
+            .lifetime(0.25, 0.6)
+            .size(2, 2 + 3 * s)
+            .gravity(600)
+            .color(0.85, 0.95, 1.0));   // pale water, so a droplet reads against the pool
+        if (audio != null) audio.playSfx(AudioSystem.Sfx.SPLASH);
+    }
+
     /** Handle bomb explosion: damage enemies, destroy cracked tiles. */
     void handleExplosion(double x, double y) {
         if (audio != null) audio.playSfx(AudioSystem.Sfx.EXPLOSION);
@@ -485,6 +509,9 @@ public class World {
         // Water state at the post-move position. Runs after the move so a body that has just entered or left
         // the water this frame is measured where it actually ended up, not where it started.
         water.postStep(b, dt);
+        // The splash has to be spent here, for the same reason: the crossing happens DURING the move, so only
+        // comparing pre-move and post-move state can tell an entry from a body already floating.
+        if (water.consumeSplash()) spawnSplash(water.splashX(), water.splashY(), water.splashSpeed());
 
         // Slope resolution: snap feet to slope surfaces.
         // Runs AFTER the sweep so slopes never fight the solid collision.

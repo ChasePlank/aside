@@ -677,6 +677,24 @@ public class GameplayScreen extends UiScreen {
             }
         }
 
+        // Particles, on top of everything. The pool has existed since the engine came
+        // over and NOTHING has ever drawn it: the only emitter in the codebase is the
+        // splash, so every droplet the engine has simulated since the port was
+        // simulated invisibly. Drawn last, because a droplet belongs in front of the
+        // wall it landed beside - behind it, it is a colour nobody sees.
+        //
+        // Squares, not circles: at 2-5 physical pixels a filled oval and a filled rect
+        // are the same handful of pixels, and the rect is one call.
+        for (Particle p : world.particles().getAll()) {
+            if (!p.isActive()) continue;
+            double px = camera.worldToScreenX(p.px()) - p.psize() * S / 2;
+            double py = camera.worldToScreenY(p.py()) - p.psize() * S / 2;
+            double size = p.psize() * S;
+            if (px > CANVAS_W || py > CANVAS_H || px + size < 0 || py + size < 0) continue;
+            gc.setFill(new Color(p.pr(), p.pg(), p.pb(), p.palpha()));
+            gc.fillRect(px, py, size, size);
+        }
+
         renderHUD();
     }
 
