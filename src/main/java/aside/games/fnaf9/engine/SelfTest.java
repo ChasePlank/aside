@@ -729,6 +729,40 @@ public final class SelfTest {
         check("and the first night is survivable", pro[0] > 0.75);
         check("and the last night is not a formality", pro[4] < 0.85);
 
+        // A BAND, because the four checks above are all shape and a mutation
+        // can keep the shape. Measured: changing the filament's budget from
+        // 6.0 to 4.0, or a walker's patience from 1.90 to 0.30, leaves every
+        // one of them passing -- the week still ramps, the first night is
+        // still survivable, the last is still not a formality -- while the
+        // numbers underneath move. That is the design working (the table is a
+        // reading rather than a contract) and it is also a blind spot, so the
+        // week's mean is held to a band wide enough for a retune and narrow
+        // enough to catch a slip.
+        double proMean = 0;
+        for (double v : pro) proMean += v;
+        proMean /= 5;
+        check(String.format("the competent policy's week is in its band (%.0f%%)",
+                        proMean * 100),
+                proMean > 0.40 && proMean < 0.80);
+
+        // AND THE MUTATION TEST FOUND TWO CONSTANTS THAT DO NOTHING, which is
+        // worth writing down because it is not what the file's own comments
+        // imply. Breaking one engine constant at a time and running this suite:
+        //
+        //   SHUT_TIME 0.80 -> 0.20   caught, 10 checks fail
+        //   COOL      2.20 -> 0.60   caught, 9 checks fail
+        //   HOLD_MAX  6.00 -> 4.00   NOT CAUGHT -- and the ladder does not move
+        //   PATIENCE  1.90 -> 0.30   NOT CAUGHT -- and the ladder does not move
+        //
+        // The first two are load-bearing. The second two are inert for the
+        // measured difficulty: the filament's budget and a walker's patience
+        // can be halved or cut to a sixth and the competent policy's week is
+        // still 61%. That is a fact about the tuning rather than a bug -- the
+        // night is carried by the door's travel and the filament's cooling --
+        // but it means those two numbers are not defended by anything, and a
+        // future retune should know they are decoration before spending time
+        // on them.
+
         // The killers, so the shape of the difficulty is visible rather than
         // inferred from a percentage. A survival number cannot tell you which
         // of the two halls is the one doing the killing.
