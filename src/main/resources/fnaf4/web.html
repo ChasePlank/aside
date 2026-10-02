@@ -152,6 +152,21 @@ RNG.prototype.nextInt = function (bound) {
   }
 };
 
+// The art, as data URIs in the content. Loaded once, and the drawing waits
+// for them rather than drawing a half-built frame.
+const IMG = {};
+let artReady = false;
+{
+  const keys = Object.keys(C.assets);
+  let left = keys.length;
+  for (const k of keys) {
+    const im = new Image();
+    im.onload = im.onerror = () => { if (--left === 0) artReady = true; };
+    im.src = C.assets[k];
+    IMG[k] = im;
+  }
+}
+
 const HOUR_SECONDS = C.hourSeconds, NIGHT_HOURS = C.nightHours;
 const HOP_TIME = C.hopTime, FLASH_TIME = C.flashTime, LIT_TIME = C.litTime;
 const DIST_MAX = C.distMax, PUSH_TO = C.pushTo, BREATH_EVERY = C.breathEvery;
@@ -347,64 +362,75 @@ const LABEL = { BED: "THE BED", LEFT: "LEFT DOOR", RIGHT: "RIGHT DOOR", CLOSET: 
 function drawRoom(g) {
   cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
 
-  // The spokes, so the shape of the room is legible: the bed is the hub.
-  cx.strokeStyle = "#12141E"; cx.lineWidth = 2;
-  for (const w of ["LEFT", "RIGHT", "CLOSET"]) {
-    cx.beginPath();
-    cx.moveTo(BOX.BED[0] + BOX.BED[2] / 2, BOX.BED[1] + BOX.BED[3] / 2);
-    cx.lineTo(BOX[w][0] + BOX[w][2] / 2, BOX[w][1] + BOX[w][3] / 2);
-    cx.stroke();
+  // The station you are standing at, in the state it is in. The three frames
+  // are the game: dark is a station you have not lit, lit is the answer to
+  // the question you were asking, and here is the thing standing in it.
+  const withYou = g.standingAt(g.where);
+  const state = withYou ? "here" : (g.lit > 0 ? "lit" : "dark");
+  const key = g.where + ":" + state;
+  const FRAME_H = 300;
+  const im = IMG[key];
+  if (im && im.complete && im.naturalWidth) {
+    cx.drawImage(im, 0, 0, W, FRAME_H);
+  } else {
+    cx.fillStyle = "#0A0C14"; cx.fillRect(0, 0, W, FRAME_H);
   }
 
-  for (const w of WHERE) {
-    const b = BOX[w];
+  // Fredbear, when the light finds him. He is composited rather than framed,
+  // because he does not stand in a doorway -- he is simply somewhere.
+  if (g.fredbearAt === g.where && g.lit > 0 && IMG.fredbear && IMG.fredbear.complete) {
+    const f = IMG.fredbear;
+    const h = FRAME_H * 0.86;
+    const w = h * (f.naturalWidth / f.naturalHeight);
+    cx.drawImage(f, W / 2 - w / 2, FRAME_H - h, w, h);
+  }
+
+  if (withYou) {
+    cx.fillStyle = "rgba(233,69,96,0.20)"; cx.fillRect(0, 0, W, FRAME_H);
+    cx.fillStyle = "#E94560"; cx.font = "16px Arial"; cx.textAlign = "center";
+    cx.fillText(withYou.name + " IS IN HERE", W / 2, FRAME_H - 16);
+    const left = Math.max(0, 1 - withYou.hereFor / g.grace());
+    cx.fillStyle = "#141620"; cx.fillRect(40, FRAME_H - 10, W - 80, 6);
+    cx.fillStyle = left < 0.35 ? "#E94560" : "#5A6A8A";
+    cx.fillRect(40, FRAME_H - 10, (W - 80) * left, 6);
+  } else if (g.lit > 0) {
+    cx.fillStyle = "rgba(255,220,150,0.10)"; cx.fillRect(0, 0, W, FRAME_H);
+  }
+
+  // The room, as a strip: four stations and where you are in it. The bed is
+  // the hub, so the shape has to stay legible even when the stage is a
+  // photograph -- a door is one hop away and the doors are two from each
+  // other, and that is the whole cost of a wrong guess.
+  const y = FRAME_H + 24;
+  const bw = (W - 40) / WHERE.length;
+  for (let i = 0; i < WHERE.length; i++) {
+    const w = WHERE[i];
+    const x = 20 + i * bw;
     const here = g.where === w;
     const going = g.heading === w;
-    cx.fillStyle = "#070910"; cx.fillRect(b[0], b[1], b[2], b[3]);
+    cx.fillStyle = here ? "#2A0E16" : "#0A0C14";
+    cx.fillRect(x + 2, y, bw - 4, 62);
     cx.strokeStyle = here ? "#E94560" : (going ? "#6A5A3A" : "#1E2030");
-    cx.lineWidth = here ? 3 : 2;
-    cx.strokeRect(b[0], b[1], b[2], b[3]);
-
-    // The light, if it is lit here.
-    if (here && g.lit > 0) {
-      cx.fillStyle = "rgba(255,220,150,0.16)";
-      cx.fillRect(b[0] + 4, b[1] + 4, b[2] - 8, b[3] - 8);
-    }
-
-    // Something standing here: you can see it when it is in front of you.
-    const t = g.standingAt(w);
-    if (t) {
-      const x = b[0] + b[2] / 2, y = b[1] + b[3] / 2 + 6;
-      cx.fillStyle = "rgba(233,69,96,0.85)";
-      cx.beginPath(); cx.ellipse(x, y, 22, 34, 0, 0, Math.PI * 2); cx.fill();
-      cx.fillStyle = "#FFD700";
-      cx.beginPath(); cx.arc(x - 8, y - 14, 4, 0, Math.PI * 2); cx.fill();
-      cx.beginPath(); cx.arc(x + 8, y - 14, 4, 0, Math.PI * 2); cx.fill();
-    }
-
-    // And how long it will wait, if it is here.
-    if (t) {
-      const left = Math.max(0, 1 - t.hereFor / g.grace());
-      cx.fillStyle = "#141620"; cx.fillRect(b[0] + 12, b[1] + b[3] - 14, b[2] - 24, 5);
-      cx.fillStyle = left < 0.35 ? "#E94560" : "#5A6A8A";
-      cx.fillRect(b[0] + 12, b[1] + b[3] - 14, (b[2] - 24) * left, 5);
-    }
-
+    cx.lineWidth = here ? 3 : 1;
+    cx.strokeRect(x + 2, y, bw - 4, 62);
     cx.fillStyle = here ? "#E94560" : "#556070";
-    cx.font = "13px Arial"; cx.textAlign = "center";
-    cx.fillText(LABEL[w], b[0] + b[2] / 2, b[1] - 10);
+    cx.font = "10px Arial"; cx.textAlign = "center";
+    cx.fillText(LABEL[w].replace("THE ", ""), x + bw / 2, y + 24);
+    if (here) cx.fillText("YOU", x + bw / 2, y + 44);
   }
+  cx.strokeStyle = "#12141E"; cx.lineWidth = 2;
+  cx.beginPath(); cx.moveTo(0, H - 30); cx.lineTo(W, H - 30); cx.stroke();
+}
 
-  // You.
-  const b = BOX[g.where];
-  cx.fillStyle = "#D8D8E4";
-  cx.beginPath(); cx.arc(b[0] + b[2] / 2, b[1] + 16, 6, 0, Math.PI * 2); cx.fill();
-
-  // Fredbear, when he has been found -- and only then.
-  if (g.fredbearAt === g.where && g.lit > 0) {
-    const f = BOX[g.where];
-    cx.fillStyle = "#FFD700";
-    cx.beginPath(); cx.arc(f[0] + f[2] / 2, f[1] + f[3] - 26, 9, 0, Math.PI * 2); cx.fill();
+/** The face, filling the screen. The one frame the art is for. */
+function drawScare(g) {
+  const name = (g.killer || "").replace("Nightmare ", "").toLowerCase();
+  const im = IMG["scare:" + name] || IMG["scare:fredbear"];
+  cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  if (im && im.complete && im.naturalWidth) {
+    const s = Math.max(W / im.naturalWidth, H / im.naturalHeight) * 1.08;
+    const w = im.naturalWidth * s, h = im.naturalHeight * s;
+    cx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
   }
 }
 
@@ -462,7 +488,7 @@ function nameOf(key) {
 }
 
 function paint() {
-  drawRoom(g);
+  if (g.status === "JUMPSCARED") drawScare(g); else drawRoom(g);
   document.getElementById("night").textContent = "NIGHT " + g.night;
   document.getElementById("clock").textContent = g.clock();
   const nz = document.getElementById("nz");

@@ -425,6 +425,23 @@ public final class SelfTest {
             check("the page carries the " + t + " table", page.contains(t + ": " + want));
         }
 
+        // The art. The desktop draws each station in three states and the
+        // difference between them is the game, so every station has to have
+        // all three -- and the keys are the engine's own station names,
+        // because the page looks a station up by name.
+        for (String st : new String[]{"BED", "LEFT", "RIGHT", "CLOSET"}) {
+            for (String state : new String[]{"dark", "lit", "here"}) {
+                check("the page carries the " + state + " frame for " + st,
+                        page.contains("\"" + st + ":" + state + "\":\"data:image/jpeg;base64,"));
+            }
+        }
+        check("the page carries Fredbear",
+                page.contains("\"fredbear\":\"data:image/webp;base64,"));
+        for (String key : new String[]{"bonnie", "chica", "foxy", "fredbear", "freddy"}) {
+            check("the page carries the scare frame for " + key,
+                    page.contains("\"scare:" + key + "\":\"data:image/jpeg;base64,"));
+        }
+
         // And the four threats, which are the four stations.
         for (String name : new String[]{"Nightmare Bonnie", "Nightmare Chica",
                 "Nightmare Foxy", "Nightmare Freddy"}) {
