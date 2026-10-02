@@ -626,6 +626,24 @@ public final class SelfTest {
         }
         check("the page labels every room by the name the engine uses", tags);
 
+        // The art. The desktop draws five room photographs and three "it is
+        // in the room with you" frames; the phone carries its own downscaled
+        // copies, built by tools/fnaf5-phone-art.py and inlined as data URIs,
+        // because the build has to be one file. Every room has to have one,
+        // keyed by the name the engine uses -- the page looks a room up by
+        // name, and an array here would index by a string and put the player
+        // in the wrong photograph while looking perfectly fine.
+        for (int i = 0; i < Room.COUNT; i++) {
+            check("the page carries the art for " + Room.ALL[i].name(),
+                    page.contains("\"room:" + Room.ALL[i].name() + "\":\"data:image/jpeg;base64,"));
+        }
+        for (String key : new String[]{"ballora", "foxy", "freddy"}) {
+            check("the page carries the frame for " + key + " in the room with you",
+                    page.contains("\"here:" + key + "\":\"data:image/jpeg;base64,"));
+            check("the page carries the scare frame for " + key,
+                    page.contains("\"scare:" + key + "\":\"data:image/jpeg;base64,"));
+        }
+
         // And the three rules, which are the whole difference between the
         // three threats.
         Game g = new Game(1, 1);

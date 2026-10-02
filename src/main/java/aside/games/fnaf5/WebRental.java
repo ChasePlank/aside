@@ -7,6 +7,7 @@ import aside.games.fnaf5.engine.Threat;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
 /**
  * Build {@code web/fnaf5.html} from the page template and the engine.
@@ -47,7 +48,7 @@ public final class WebRental {
     }
 
     /** Everything the page needs that the engine owns. */
-    static String content() {
+    static String content() throws Exception {
         Game g = new Game(1, 1);
         StringBuilder sb = new StringBuilder();
         sb.append("const C = {\n");
@@ -130,7 +131,8 @@ public final class WebRental {
         sb.append("  stillWindow: ").append(num(Game.STILL_WINDOW)).append(",\n");
         sb.append("  stillPace: ").append(num(Game.STILL_PACE)).append(",\n");
         sb.append("  intervalJitter: ").append(num(Game.INTERVAL_JITTER)).append(",\n");
-        sb.append("  help: ").append(str(HELP)).append("\n");
+        sb.append("  help: ").append(str(HELP)).append(",\n");
+        sb.append("  assets: ").append(assets()).append("\n");
         sb.append("};\n");
         return sb.toString();
     }
@@ -167,6 +169,51 @@ public final class WebRental {
             + "follows the camera, so looking is what kills you. The controlled "
             + "shock answers exactly one of them -- the one that follows you -- "
             + "and there are only three to five a night.";
+
+    /** Where the phone's own copies of the art live. */
+    static final Path ART = Path.of("art", "phone", "fnaf5");
+
+    /**
+     * The art, as data URIs.
+     *
+     * <p>Inlined rather than linked, because the build has to be one file --
+     * that is the whole point of the shelf. The copies are downscaled by
+     * {@code tools/fnaf5-phone-art.py} and committed, so this method is
+     * reproducible from Java alone and {@code SelfTest} can regenerate the
+     * page and compare it to the checked-in one.
+     *
+     * <p>The room keys are the engine's own room names, so a page that looks
+     * a room up by name cannot get the wrong photograph -- which is the bug
+     * the labels had, and the reason this map is keyed by name rather than by
+     * index.
+     */
+    static String assets() throws Exception {
+        StringBuilder b = new StringBuilder("{\n");
+        boolean first = true;
+        for (int i = 0; i < Room.COUNT; i++) {
+            if (!first) b.append(",\n");
+            first = false;
+            b.append("  \"room:").append(Room.ALL[i].name()).append("\":")
+             .append(uri("room" + i + ".jpg", "image/jpeg"));
+        }
+        for (String key : new String[]{"ballora", "foxy", "freddy"}) {
+            b.append(",\n  \"here:").append(key).append("\":")
+             .append(uri("here_" + key + ".jpg", "image/jpeg"));
+            b.append(",\n  \"scare:").append(key).append("\":")
+             .append(uri("scare_" + key + ".jpg", "image/jpeg"));
+        }
+        return b.append("\n}").toString();
+    }
+
+    static String uri(String name, String mime) throws Exception {
+        Path f = ART.resolve(name);
+        if (!Files.exists(f)) {
+            throw new IllegalStateException("no " + f + " -- build it with: "
+                    + "python3 tools/fnaf5-phone-art.py");
+        }
+        return "\"data:" + mime + ";base64,"
+                + Base64.getEncoder().encodeToString(Files.readAllBytes(f)) + "\"";
+    }
 
     static String str(String s) {
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";

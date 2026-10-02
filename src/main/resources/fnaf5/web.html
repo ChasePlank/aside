@@ -150,6 +150,21 @@ RNG.prototype.nextInt = function (bound) {
   }
 };
 
+// The art, as data URIs in the content. Loaded once, and the drawing waits
+// for them rather than drawing a half-built frame.
+const IMG = {};
+let artReady = false;
+{
+  const keys = Object.keys(C.assets);
+  let left = keys.length;
+  for (const k of keys) {
+    const im = new Image();
+    im.onload = im.onerror = () => { if (--left === 0) artReady = true; };
+    im.src = C.assets[k];
+    IMG[k] = im;
+  }
+}
+
 const HOUR_SECONDS = C.hourSeconds, NIGHT_HOURS = C.nightHours;
 const MOVE_TIME = C.moveTime, SHOCK_TIME = C.shockTime, SHOCK_FLASH = C.shockFlash;
 const SOUND_MEMORY = C.soundMemory;
@@ -417,54 +432,92 @@ const BOX = (() => {
 
 function drawBuilding(g) {
   cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+
+  // The stage is the room the monitor is on, or the thing standing in the
+  // room with you -- which is the one fact the camera cannot give you,
+  // because the camera cannot see the room you are in.
+  const withYou = g.standingWith();
   const view = g.view();
-  for (const w of ROOMS) {
-    const b = BOX[w];
+  const ROOM_H = 300;
+
+  if (withYou) {
+    const key = "here:" + withYou.key;
+    if (IMG[key] && IMG[key].complete && IMG[key].naturalWidth) {
+      cx.drawImage(IMG[key], 0, 0, W, ROOM_H);
+    } else {
+      cx.fillStyle = "#0A0C14"; cx.fillRect(0, 0, W, ROOM_H);
+    }
+    cx.fillStyle = "rgba(233,69,96,0.18)"; cx.fillRect(0, 0, W, ROOM_H);
+    cx.fillStyle = "#E94560"; cx.font = "16px Arial"; cx.textAlign = "center";
+    cx.fillText(withYou.name + " IS IN HERE", W / 2, ROOM_H - 18);
+  } else if (view !== null) {
+    const key = "room:" + view;
+    if (IMG[key] && IMG[key].complete && IMG[key].naturalWidth) {
+      cx.drawImage(IMG[key], 0, 0, W, ROOM_H);
+    } else {
+      cx.fillStyle = "#0A0C14"; cx.fillRect(0, 0, W, ROOM_H);
+    }
+    const t = g.standingIn(view);
+    if (t) {
+      cx.fillStyle = "rgba(233,69,96,0.75)";
+      cx.beginPath();
+      cx.ellipse(W / 2, ROOM_H * 0.62, 40, 62, 0, 0, Math.PI * 2);
+      cx.fill();
+      cx.fillStyle = "#FFD700"; cx.font = "14px Arial"; cx.textAlign = "center";
+      cx.fillText(t.name, W / 2, ROOM_H - 18);
+    }
+    cx.fillStyle = "rgba(2,3,10,0.35)"; cx.fillRect(0, 0, W, 22);
+    cx.fillStyle = "#FFD700"; cx.font = "13px Arial"; cx.textAlign = "left";
+    cx.fillText("CAM " + C.roomTag[view], 10, 16);
+  } else {
+    cx.fillStyle = "#0A0C14"; cx.fillRect(0, 0, W, ROOM_H);
+    cx.fillStyle = "#3A3A4E"; cx.font = "15px Arial"; cx.textAlign = "center";
+    cx.fillText(g.monitorOn ? "no feed -- the camera was pointed where you are" : "monitor down",
+            W / 2, ROOM_H / 2);
+  }
+
+  // The building, as a strip: five rooms, and where you are in it. This is
+  // the shape of the game and it has to stay legible even when the stage is
+  // a photograph.
+  const y = ROOM_H + 24;
+  const bw = (W - 40) / ROOMS.length;
+  for (let i = 0; i < ROOMS.length; i++) {
+    const w = ROOMS[i];
+    const x = 20 + i * bw;
     const here = g.where === w;
     const going = g.heading === w;
-    const watched = view === w;
-    cx.fillStyle = "#070910"; cx.fillRect(b[0], b[1], b[2], b[3]);
-    cx.strokeStyle = here ? "#E94560" : (watched ? "#FFD700" : (going ? "#6A5A3A" : "#1E2030"));
-    cx.lineWidth = (here || watched) ? 3 : 2;
-    cx.strokeRect(b[0], b[1], b[2], b[3]);
+    cx.fillStyle = here ? "#2A0E16" : "#0A0C14";
+    cx.fillRect(x + 2, y, bw - 4, 62);
+    cx.strokeStyle = here ? "#E94560" : (going ? "#6A5A3A" : "#1E2030");
+    cx.lineWidth = here ? 3 : 1;
+    cx.strokeRect(x + 2, y, bw - 4, 62);
     cx.fillStyle = here ? "#E94560" : "#556070";
-    cx.font = "11px Arial"; cx.textAlign = "center";
-    cx.fillText(C.roomTag[w], b[0] + b[2] / 2, b[1] - 8);
+    cx.font = "10px Arial"; cx.textAlign = "center";
+    const tag = C.roomTag[w];
+    cx.fillText(tag.length > 12 ? tag.slice(0, 11) + "\u2026" : tag, x + bw / 2, y + 22);
+    if (here) { cx.fillText("YOU", x + bw / 2, y + 42); }
+  }
 
-    // The rule of the game, drawn: the camera cannot see the room you are
-    // in, so your own room is dark to you and everything else is not.
-    if (here) {
-      cx.fillStyle = "#D8D8E4";
-      cx.beginPath(); cx.arc(b[0] + b[2] / 2, b[1] + b[3] / 2, 7, 0, Math.PI * 2); cx.fill();
-      cx.fillStyle = "#3A3A4E"; cx.font = "11px Arial";
-      cx.fillText("no feed here", b[0] + b[2] / 2, b[1] + b[3] / 2 + 26);
-    } else if (watched) {
-      const t = g.standingIn(w);
-      if (t) {
-        const x = b[0] + b[2] / 2, y = b[1] + b[3] / 2;
-        cx.fillStyle = "rgba(233,69,96,0.85)";
-        cx.beginPath(); cx.ellipse(x, y, 26, 40, 0, 0, Math.PI * 2); cx.fill();
-        cx.fillStyle = "#FFD700"; cx.font = "11px Arial";
-        cx.fillText(t.name, x, b[1] + b[3] + 16);
-      } else {
-        cx.fillStyle = "#3A3A4E"; cx.font = "11px Arial";
-        cx.fillText("empty", b[0] + b[2] / 2, b[1] + b[3] / 2 + 4);
-      }
-    } else if (!g.monitorOn) {
-      cx.fillStyle = "#1E2030"; cx.font = "11px Arial";
-      cx.fillText("no feed", b[0] + b[2] / 2, b[1] + b[3] / 2 + 4);
-    }
-
-    // Something standing in your room is not drawn -- you cannot see it --
-    // but the shock is the one thing that reaches it, so the room lights up
-    // when the shock fires.
-    if (here && g.shockT > 0) {
-      cx.fillStyle = "rgba(255,220,150,0.22)";
-      cx.fillRect(b[0] + 4, b[1] + 4, b[2] - 8, b[3] - 8);
-    }
+  // The shock, when it fires: the one thing that reaches the room you are in.
+  if (g.shockT > 0) {
+    cx.fillStyle = "rgba(255,220,150,0.20)";
+    cx.fillRect(0, 0, W, ROOM_H);
   }
   cx.strokeStyle = "#12141E"; cx.lineWidth = 2;
-  cx.beginPath(); cx.moveTo(0, H - 40); cx.lineTo(W, H - 40); cx.stroke();
+  cx.beginPath(); cx.moveTo(0, H - 30); cx.lineTo(W, H - 30); cx.stroke();
+}
+
+/** The face, filling the screen. The one frame the art is for. */
+function drawScare(g) {
+  const key = "scare:" + (g.killer === "Ballora" ? "ballora"
+            : g.killer === "Funtime Foxy" ? "foxy" : "freddy");
+  const im = IMG[key];
+  cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  if (im && im.complete && im.naturalWidth) {
+    const s = Math.max(W / im.naturalWidth, H / im.naturalHeight) * 1.08;
+    const w = im.naturalWidth * s, h = im.naturalHeight * s;
+    cx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
+  }
 }
 
 // --------------------------------------------------------------- the page
@@ -531,7 +584,7 @@ function buildRooms() {
 }
 
 function paint() {
-  drawBuilding(g);
+  if (g.status === "JUMPSCARED") drawScare(g); else drawBuilding(g);
   document.getElementById("night").textContent = "NIGHT " + g.night;
   document.getElementById("clock").textContent = g.clock();
   document.getElementById("shocks").textContent = "SHOCKS " + g.shocks;
