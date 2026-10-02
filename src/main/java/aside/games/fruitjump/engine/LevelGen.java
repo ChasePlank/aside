@@ -281,6 +281,16 @@ public class LevelGen {
         // there, so the bot must still jump it), but it is now two cells
         // deep with a spike floor instead of bottomless. Falling in
         // costs a hit and a 2-cell climb out rather than the run.
+        //
+        // A FLOODED gap is not a spike pit. The flood pass above writes two
+        // rows of water with a solid floor under them, and this pass then
+        // wrote '^' straight over the water's second row - so every flooded
+        // gap in every level was one row of water sitting on a row of spikes,
+        // and the pool floor it was built with was gone. What showed it was
+        // the count, not the code: 17 water cells across 40 levels, where two
+        // rows over four pools of two to five columns is more than twice
+        // that. Both passes were written as if they owned the gap column.
+        // They are alternatives, so the flooded one keeps it.
         for (int c = 1; c < width - 1; c++) {
             if (pathFloor[c] != -1) continue;
             int row = -1;
@@ -288,6 +298,7 @@ public class LevelGen {
                 if (pathFloor[k] >= 0) { row = pathFloor[k]; break; }
             }
             if (row < 0 || row + 2 >= height) continue;
+            if (g[row][c] == '~') continue;   // flooded: the water is the cost, not the spikes
             g[row + 1][c] = '^';
             g[row + 2][c] = '#';
         }
