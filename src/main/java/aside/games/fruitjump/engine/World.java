@@ -462,8 +462,17 @@ public class World {
     void step(Physics.Body b, double dt) {
         boolean wasGrounded = b.grounded;  // previous frame's support state
 
+        // Water runs BEFORE gravity. When the body is swimming, water has already
+        // accounted for vertical motion, so gravity must not also apply - both in one
+        // frame double-counts. In shallow water this returns false and gravity applies
+        // as normal.
+        //
+        // Ported from the Fruit-Jump release. Note it does NOT carry that copy's
+        // gravityScale factor, which aside does not have: an integration, not a copy.
+        boolean mediumApplied = water.applyMedium(b, dt);
+
         // Apply gravity (unless disabled)
-        if (!b.noGravity) {
+        if (!b.noGravity && !mediumApplied) {
             b.vy += Physics.GRAVITY * dt;
         }
 
@@ -472,6 +481,10 @@ public class World {
 
         // Move and collide (AABB sweep handles all solid geometry)
         moveBody(b, dt);
+
+        // Water state at the post-move position. Runs after the move so a body that has just entered or left
+        // the water this frame is measured where it actually ended up, not where it started.
+        water.postStep(b, dt);
 
         // Slope resolution: snap feet to slope surfaces.
         // Runs AFTER the sweep so slopes never fight the solid collision.
