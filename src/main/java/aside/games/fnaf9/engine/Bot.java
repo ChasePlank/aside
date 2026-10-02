@@ -442,14 +442,29 @@ public final class Bot {
      * separate them either (HOLD_MAX 6.0 through 1.4 leaves EARLY and WAIT
      * within three points of each other).
      *
-     * <p><b>So the next thing to try is not a falloff but a cost that depends
-     * on the walker's distance</b> -- an early block has to cost more than a
-     * late one, not merely buy less. That is a state-dependent cost, and FNAF
-     * 9's own eighth lever is the warning: a state-dependent cost on its own
-     * came back a cliff. Ten attempts now, and the ladder is closer than it has
-     * ever been; the thing that is still missing is the same thing, stated
-     * once more: <b>a reason for the early steps to be the wrong ones to
-     * spend on.</b>
+     * <p><b>The eleventh attempt tried exactly that -- a cost that depends on
+     * the walker's distance -- and it is a negative result, which is why it is
+     * written down.</b> The filament is no longer spent at a flat rate: the
+     * heat rises at {@code brightness * (1 + WASTE * (1 - reach(d)))} per
+     * second, so lighting something at the far end of the hall burns the budget
+     * for almost nothing. That is the prescription the tenth attempt's own note
+     * wrote, carried out to the letter.
+     *
+     * <p>Measured: <b>it closes the gap and does not invert it.</b> At a waste
+     * of zero, EARLY 43% against WAIT 40%; at 1.5, 40% against 40%; at 3.0 and
+     * 5.0, 40% against 40%. The policy that never waits stops being <i>better</i>
+     * than the policy that rations, and never becomes worse -- and the ladder
+     * collapses at night 3 either way (100/100/0/0/0), so the week has no ramp
+     * to read.
+     *
+     * <p><b>So the distance-dependent cost is not the missing piece either, and
+     * that is the third prescribed idea in a row to be tried and ruled out.</b>
+     * Eleven attempts now. What is known, all measured: the lever must be
+     * sampled (that kills the cadence); the dimmer should have inertia (a real
+     * cost); the light should not carry (the best ladder of the eleven); and a
+     * cost that scales with distance does not put the rationing policy on top.
+     * <b>A twelfth attempt should not be made without a genuinely new idea, and
+     * the honest reading of eleven is that the idea is not close.</b>
      *
      * <p><b>And SENSE is on the ladder because the office's own description
      * of itself does not survive being played.</b> {@link Feed}'s javadoc says
