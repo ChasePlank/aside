@@ -44,8 +44,7 @@ public class Fnaf7Game implements Game {
     @Override public String title() { return "Five Nights at Freddy's 7"; }
 
     @Override public String blurb() {
-        return "Two doors, one bar, one light -- and it does not have a "
-                + "pattern, it has yours.";
+        return "Five nights with two doors and one bar. It has no pattern -- it has yours, and it comes to the side you are not watching.";
     }
 
     @Override

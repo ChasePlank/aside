@@ -23,9 +23,9 @@ public class DriftGame implements Game {
     @Override public String title() { return "Drift"; }
 
     @Override public String blurb() {
-        return "Two copies of one record. " + Drift.cap(Drift.word(Drift.CHANGED))
-                + " lines differ. " + Drift.cap(Drift.word(Drift.REWORDED))
-                + " of them say the same thing.";
+        return "Two copies of a log you kept. " + Drift.cap(Drift.word(Drift.CHANGED))
+                + " lines changed, " + Drift.word(Drift.REWORDED)
+                + " were only reworded, and a false flag costs you a real one.";
     }
 
     @Override

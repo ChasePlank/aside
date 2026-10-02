@@ -26,7 +26,7 @@ public class Fnaf3Game implements Game {
     @Override public String title() { return "Five Nights at Freddy's 3"; }
 
     @Override public String blurb() {
-        return "No doors, no mask. A speaker, a screwdriver, and one thing that will not stop walking.";
+        return "Five nights with nothing to hide behind. One thing walks at you, and your only tool is a noise somewhere else.";
     }
 
     @Override

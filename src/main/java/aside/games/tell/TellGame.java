@@ -23,8 +23,7 @@ public class TellGame implements Game {
     @Override public String title() { return "Tell"; }
 
     @Override public String blurb() {
-        return "Something in the house cannot see you. It is counting which "
-                + "doors you use, and it tells you what it expects.";
+        return "Something in the house cannot see you and is counting which doors you use. It shows you what it expects.";
     }
 
     @Override

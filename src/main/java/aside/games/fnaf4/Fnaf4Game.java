@@ -27,7 +27,7 @@ public class Fnaf4Game implements Game {
     @Override public String title() { return "Five Nights at Freddy's 4"; }
 
     @Override public String blurb() {
-        return "No cameras. Four sides to the room, one body, and a light that tells them where you are.";
+        return "Five nights in a room with four sides and one body. The flashlight pushes things back and tells them where you are.";
     }
 
     @Override

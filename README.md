@@ -138,14 +138,17 @@ rule.
 ## Tests
 
 ```bash
-java --module-path $FX --add-modules $MODS -cp out aside.engine.SelfTest              # 287 checks
+java --module-path $FX --add-modules $MODS -cp out aside.engine.SelfTest              # prints its own count
 java --module-path $FX --add-modules $MODS -cp out aside.games.fnaf.engine.SelfTest  # the FNAF module
 java --module-path $FX --add-modules $MODS -cp out aside.audio.AudioTest             # needs a display
 java -cp out aside.games.fruitjump.engine.WaterProbe   # every pool is the shape it was built to be
 ```
 
 `aside.engine.SelfTest` is the gate: it covers the engine, the auditor, the
-shelf, and every game's own suite is run separately. `aside.audio.AudioTest`
+shelf, and every game's own suite is run separately. **It prints its own check
+count, and the README deliberately does not repeat it** -- the number was
+written down here and went stale three times in two days, which is what a
+hand-maintained copy of a generated number does. `aside.audio.AudioTest`
 exits non-zero if any cue is missing, so it works as a gate rather than a
 report — but it opens a window, so it wants a display.
 The FNAF self-test prints win rates *and* asserts the invariants that were once bugs — every animatronic

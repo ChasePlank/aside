@@ -23,7 +23,7 @@ public class Fnaf2Game implements Game {
     @Override public String title() { return "Five Nights at Freddy's 2"; }
 
     @Override public String blurb() {
-        return "No doors. A mask, a flashlight, and a music box you cannot stop winding.";
+        return "Five nights with no doors. Hide behind a mask, check the vents, and keep the music box wound.";
     }
 
     @Override

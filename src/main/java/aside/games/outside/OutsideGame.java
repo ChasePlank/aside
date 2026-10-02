@@ -24,7 +24,7 @@ public class OutsideGame implements Game {
     @Override public String title() { return "Outside"; }
 
     @Override public String blurb() {
-        return "You can see it. It can only hear you.";
+        return "Report to a dispatcher who cannot see. It believes the first thing you told it, so nothing later can correct it.";
     }
 
     @Override

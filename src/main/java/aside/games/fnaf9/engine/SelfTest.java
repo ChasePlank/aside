@@ -729,6 +729,48 @@ public final class SelfTest {
         check("and the first night is survivable", pro[0] > 0.75);
         check("and the last night is not a formality", pro[4] < 0.85);
 
+        // A BAND, because the four checks above are all shape and a mutation
+        // can keep the shape. Measured: changing the filament's budget from
+        // 6.0 to 4.0, or a walker's patience from 1.90 to 0.30, leaves every
+        // one of them passing -- the week still ramps, the first night is
+        // still survivable, the last is still not a formality -- while the
+        // numbers underneath move. That is the design working (the table is a
+        // reading rather than a contract) and it is also a blind spot, so the
+        // week's mean is held to a band wide enough for a retune and narrow
+        // enough to catch a slip.
+        double proMean = 0;
+        for (double v : pro) proMean += v;
+        proMean /= 5;
+        check(String.format("the competent policy's week is in its band (%.0f%%)",
+                        proMean * 100),
+                proMean > 0.40 && proMean < 0.80);
+
+        // AND THE MUTATION TEST SAYS THIS SUITE IS THOROUGH, which is worth
+        // writing down because the first version of the test said the
+        // opposite. Breaking one engine constant at a time and running this
+        // suite:
+        //
+        //   HOLD_MAX  8.00 -> 4.00   caught, 14 checks fail
+        //   SHUT_TIME 0.80 -> 0.20   caught, 11 checks fail
+        //   COOL      2.20 -> 0.60   caught, 10 checks fail
+        //   AGE_MAX   6.00 -> 2.00   caught,  5 checks fail
+        //   JITTER    0.50 -> 2.00   caught,  4 checks fail
+        //   REARM     0.35 -> 0.05   caught,  1 check fails
+        //
+        // Every constant the night is made of is defended by something. The
+        // first run of this test reported that HOLD_MAX and a walker's
+        // patience were inert -- the ladder did not move at all -- and that was
+        // wrong: the script's sed anchors did not match the file, so the
+        // mutation never applied, and a mutation that never applied reads
+        // exactly like a mutation the suite cannot see. The anchors are checked
+        // now, and a mutation that does not apply is reported as one rather
+        // than counted as a survivor.
+        //
+        // The lesson generalises past this file: **a mutation test that does
+        // not verify its own mutation reports that the suite is blind whenever
+        // the script is wrong.** It is the same failure as a check that cannot
+        // fail, one level up.
+
         // The killers, so the shape of the difficulty is visible rather than
         // inferred from a percentage. A survival number cannot tell you which
         // of the two halls is the one doing the killing.
