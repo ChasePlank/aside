@@ -14,6 +14,10 @@ public class Physics {
         public int id = 0;            // entity ID for networking
         public double x, y;           // position (center)
         public double vx, vy;         // velocity
+        // Water state, set by WaterSystem each step. Present on every body so nothing that never touches
+        // water has to check for a null - the system is a no-op when no field is set.
+        public boolean inWater;       // any part of the body below a water surface
+        public double submersion;     // 0..1, how much of the body is under
         public double hw, hh;         // half-width, half-height (AABB)
         public boolean grounded;      // touching ground this frame
         public boolean oneway;        // can jump through from below

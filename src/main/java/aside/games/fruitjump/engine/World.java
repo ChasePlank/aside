@@ -15,6 +15,15 @@ import java.util.List;
 public class World {
     final List<Physics.Body> bodies = new ArrayList<>();
     public final List<Physics.AABB> tiles = new ArrayList<>();
+
+    /** Water: buoyancy, drag, currents, breath. Always present; with no field set it is a no-op, so nothing that
+     *  does not use water pays for it. Ported from the Fruit-Jump release, where it lived alone. */
+    public final WaterSystem water = new WaterSystem();
+
+    /** Set the level's water field (see LevelMap.buildWater). */
+    public void setWater(Water w) {
+        water.setWater(w);
+    }
     public final List<Physics.AABB> oneways = new ArrayList<>(); // platforms to jump through
     final List<MovingPlatform> movers = new ArrayList<>(); // kinematic platforms
     public final List<Projectile> projectiles = new ArrayList<>();
