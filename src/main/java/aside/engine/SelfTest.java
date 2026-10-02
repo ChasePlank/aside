@@ -21,6 +21,7 @@ import java.util.Set;
  * through a window is a story engine you won't test.
  */
 import aside.games.fruitjump.engine.Bat;
+import aside.games.fruitjump.engine.Combat;
 import aside.games.fruitjump.engine.GameLoop;
 import aside.games.fruitjump.engine.LevelGen;
 import aside.games.fruitjump.engine.LevelMap;
@@ -570,6 +571,9 @@ public class SelfTest {
         weaponsDoWhatTheySay();
         batsChaseWhatIsNear();
 
+        System.out.println("\n--- damage timing ---");
+        damageIsMetered();
+
         System.out.println("\n--- the audio cues ---");
         audioCuesArePresent();
         audioLogIsBounded();
@@ -920,6 +924,57 @@ public class SelfTest {
             closest = Math.min(closest, Math.hypot(bat.body.x - p.x, bat.body.y - p.y));
         }
         return closest;
+    }
+
+    /**
+     * Being hit has a rhythm: a second hit in the same instant does nothing, and one after the wait lands.
+     *
+     * <p>The third and fourth gaps the mutation sweep found - `Combat.INVULN_TIME = 1.0 -> 0.01` and
+     * `SPIKE_COOLDOWN = 3.5 -> 0.05` both came back NOT CAUGHT. These two numbers are how punishing the game
+     * is: at 0.01 the player loses all three hearts to one spike in three frames, and at 30 they walk through
+     * everything. Nothing in 301 checks touched either.
+     *
+     * <p>Asserted as durations in real seconds, in both directions - not against the constants, which would
+     * pass whatever they are (rule 32).
+     */
+    static void damageIsMetered() {
+        Physics.Body p = new Physics.Body(200, 100, 24, 44);
+
+        // SAMPLED FROM BOTH SIDES. The first version hit twice in the same instant and then once after 1.2s,
+        // which passes for any wait between zero and 1.2 - so `INVULN_TIME -> 0.01` slipped through it. A
+        // duration needs a sample on each side of it: too soon must be ignored, late enough must land.
+        Combat c = new Combat();
+        c.playerHP = 3;
+        c.hurtPlayer(p, 0);
+        int afterOne = (int) c.playerHP;
+        step(c, 0.2);
+        c.hurtPlayer(p, 0);
+        check("damage: a hit 0.2s later is still ignored (" + afterOne + " -> " + (int) c.playerHP + ")",
+                (int) c.playerHP == afterOne);
+        step(c, 1.0);
+        c.hurtPlayer(p, 0);
+        check("damage: a hit 1.2s later lands (" + afterOne + " -> " + (int) c.playerHP + ")",
+                (int) c.playerHP < afterOne);
+
+        // Spikes have their own, much longer cooldown: a pit is a cost, not a grinder. Same shape, and the
+        // 2.0s sample is the one that separates the two durations - past the i-frames, inside the cooldown.
+        Combat sp = new Combat();
+        sp.playerHP = 3;
+        sp.hurtBySpike(p, 0);
+        int afterSpike = (int) sp.playerHP;
+        step(sp, 2.0);
+        sp.hurtBySpike(p, 0);
+        check("damage: a spike 2s later does not bite again (" + afterSpike + " -> " + (int) sp.playerHP + ")",
+                (int) sp.playerHP == afterSpike);
+        step(sp, 2.0);
+        sp.hurtBySpike(p, 0);
+        check("damage: and it bites again after four seconds (" + afterSpike + " -> "
+                + (int) sp.playerHP + ")", (int) sp.playerHP < afterSpike);
+    }
+
+    /** Advance a combat clock by `seconds`, in engine steps. */
+    static void step(Combat c, double seconds) {
+        for (double t = 0; t < seconds; t += GameLoop.DT) c.update(GameLoop.DT);
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
