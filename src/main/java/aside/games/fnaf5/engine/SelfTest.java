@@ -45,6 +45,29 @@ import java.nio.file.Path;
  * Each one is a rule the game now rests on, and each one is here so that a
  * later tuning pass cannot quietly undo it -- which is exactly what
  * happened to the "week gets harder" check the first time.
+ *
+ * <p><b>2026-10-02: mutation-tested, and every constant is caught.</b>
+ * Breaking one of the thirteen constants this game is made of and running the
+ * suite (tools/mutate.sh):
+ *
+ * <pre>
+ *   BALLORA_PATIENCE 0.8 -> 2.0      caught, 14 checks fail
+ *   SHOCK_TIME       0.55 -> 2.00    caught, 13 checks fail
+ *   BALLORA_GRACE    1.40 -> 3.00    caught,  6 checks fail
+ *   STILL_PACE       2.5 -> 1.0      caught,  6 checks fail
+ *   MOVE_TIME        1.50 -> 0.20    caught,  6 checks fail
+ *   FEED_PACE        2.0 -> 1.0      caught,  4 checks fail
+ *   BALLORA_COOLDOWN 10.0 -> 0.5     caught,  2 checks fail
+ *   STILL_WINDOW     3.0 -> 30.0     caught,  2 checks fail
+ *   SOUND_MEMORY     6.0 -> 60.0     caught,  2 checks fail
+ *   INTERVAL_JITTER  0.5 -> 0.0      caught,  2 checks fail
+ * </pre>
+ *
+ * <p>That is the answer to the question this file's own comment raises -- a
+ * later tuning pass cannot quietly undo a rule, because it cannot change any
+ * of these numbers without something failing. The three constants not listed
+ * (HOUR_SECONDS, SHOCK_FLASH, CUE_EVERY) are the clock and two presentation
+ * timings, and are not expected to move the ladder.
  */
 public final class SelfTest {
 

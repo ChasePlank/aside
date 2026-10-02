@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+# Ask a suite what it does not cover.
+#
+#   tools/mutate.sh <suite-class> <file> <anchor> <replacement> [more...]
+#
+# Breaks one constant at a time, runs a suite after each, and restores the file.
+# A mutation the suite does not notice is a mutation no check covers.
+#
+# WHY THIS EXISTS, AND WHY IT CHECKS ITS OWN MUTATION. The first version of this
+# test was written by hand and its sed anchors did not match the file it was
+# editing, so two mutations silently did nothing -- and a mutation that never
+# applied reads EXACTLY like a mutation the suite cannot see. It reported that
+# two of FNAF 9's engine constants were inert. They are not: every one of them
+# is caught. A mutation test that does not verify its own mutation reports that
+# the suite is blind whenever the script is wrong, which is the same failure as
+# a check that cannot fail, one level up.
+#
+# So every mutation here is verified to have applied before the suite is run,
+# and a mutation that does not apply is reported as ANCHOR MISSING rather than
+# counted as a survivor.
+#
+# EXAMPLES
+#
+#   tools/mutate.sh aside.games.fnaf5.engine.SelfTest \
+#       src/main/java/aside/games/fnaf5/engine/Game.java \
+#       "BALLORA_GRACE = 1.40" "BALLORA_GRACE = 3.00" \
+#       "FEED_PACE = 2.0"      "FEED_PACE = 1.0"
+#
+# Run from the repository root, after building into classes/.
+#
+set -u
+cd "$(dirname "$0")/.." || exit 2
+
+if [ $# -lt 4 ]; then
+  sed -n '2,10p' "$0"
+  exit 2
+fi
+
+SUITE="$1"; shift
+FILE="$1"; shift
+if [ $(( $# % 2 )) -ne 0 ]; then
+  echo "pairs of <anchor> <replacement> expected after the file" >&2
+  exit 2
+fi
+if [ ! -f "$FILE" ]; then
+  echo "no such file: $FILE" >&2
+  exit 2
+fi
+
+FX=${FX:-/usr/share/openjfx/lib}
+CP=$(ls "$FX"/*.jar 2>/dev/null | tr '\n' ':')
+BAK=$(mktemp)
+cp "$FILE" "$BAK"
+trap 'cp "$BAK" "$FILE"; rm -f "$BAK"' EXIT
+
+fail=0
+while [ $# -gt 0 ]; do
+  FROM="$1"; TO="$2"; shift 2
+  cp "$BAK" "$FILE"
+  if ! grep -qF "$FROM" "$FILE"; then
+    printf '%-44s ANCHOR MISSING\n' "$FROM"
+    fail=1
+    continue
+  fi
+  sed -i "s|$FROM|$TO|" "$FILE"
+  if ! grep -qF "$TO" "$FILE"; then
+    printf '%-44s MUTATION DID NOT APPLY\n' "$FROM"
+    fail=1
+    continue
+  fi
+  if ! javac -nowarn -cp "$CP" -d classes $(find src/main/java -name '*.java') 2>/dev/null; then
+    printf '%-44s COMPILE FAIL\n' "$FROM"
+    fail=1
+    continue
+  fi
+  OUT=$(java -cp "classes:$CP" "$SUITE" 2>&1 | tail -1)
+  case "$OUT" in
+    *"0 failed"*) printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT" ;;
+    *)            printf '%-44s caught       %s\n' "$FROM" "$OUT" ;;
+  esac
+done
+
+cp "$BAK" "$FILE"
+javac -nowarn -cp "$CP" -d classes $(find src/main/java -name '*.java') 2>/dev/null
+exit $fail
