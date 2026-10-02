@@ -20,8 +20,12 @@ import java.util.Set;
  * be driven from here — a story engine you can only test by clicking
  * through a window is a story engine you won't test.
  */
+import aside.games.fruitjump.engine.GameLoop;
 import aside.games.fruitjump.engine.LevelGen;
 import aside.games.fruitjump.engine.LevelMap;
+import aside.games.fruitjump.engine.Physics;
+import aside.games.fruitjump.engine.Projectile;
+import aside.games.fruitjump.engine.World;
 
 public class SelfTest {
     static int pass = 0, fail = 0;
@@ -561,6 +565,9 @@ public class SelfTest {
         System.out.println("\n--- Vn.text() is never null ---");
         textNeverNull();
 
+        System.out.println("\n--- the weapons ---");
+        weaponsDoWhatTheySay();
+
         System.out.println("\n--- the audio cues ---");
         audioCuesArePresent();
         audioLogIsBounded();
@@ -824,6 +831,51 @@ public class SelfTest {
         check("audio: the event log stops growing (" + afterThousand + " entries after 1000 events, "
                 + sys.eventLog.size() + " after 5000)",
                 afterThousand > 0 && sys.eventLog.size() == afterThousand);
+    }
+
+    /**
+     * The weapons do what their constants say, at the speed and on the schedule they claim.
+     *
+     * <p><b>Found by asking the gate what it does not cover.</b> `tools/mutate.sh` breaks one constant at a
+     * time and reports whether a suite notices - and against this gate, `ARROW_SPEED = 700 -> 1`,
+     * `BOMB_SPEED = 70 -> 700` and `FUSE_TIME = 1.3 -> 0.05` all came back NOT CAUGHT. The gate is strong on
+     * generation, water, doors, the tutorial and audio, and it had nothing at all about the things the player
+     * actually does. The release covers the weapons through its screen; aside, which is the source of truth,
+     * covered them nowhere.
+     *
+     * <p>ABSOLUTE EXPECTATIONS, NOT THE CONSTANTS. Asserting `advanced < ARROW_SPEED * t` would read the same
+     * constant the code uses and pass whatever it is - rule 32, which this session already learned once. These
+     * are ranges in real units, so a speed of 1 or a fuse of 0.05 fails them.
+     */
+    static void weaponsDoWhatTheySay() {
+        double dt = GameLoop.DT;
+
+        // BARE WORLDS, no map. A projectile's own speed and fuse are what is under test, and a level in the
+        // way would put terrain, culling and collisions into the measurement. Nothing here needs ground.
+        World aw = new World();
+        Projectile arrow = Projectile.arrow(200, 100, 1);
+        aw.addProjectile(arrow);
+        double arrowX0 = arrow.x;
+        for (double t = 0; t < 0.1; t += dt) aw.update(dt);
+        double flown = arrow.x - arrowX0;
+        check("weapons: an arrow flies ~70px in a tenth of a second (" + (int) flown + "px)",
+                arrow.active && flown > 50 && flown < 95);
+
+        // A bomb is a short toss - roughly 70px/s - and its fuse is about a second and a third. The drift is
+        // measured horizontally, so the throw arc does not matter; the fuse is a duration and is asserted as
+        // one: armed at one second, gone by one and a half.
+        World bw = new World();
+        Projectile bomb = Projectile.bomb(200, 100, 1);
+        bw.addProjectile(bomb);
+        double bombX0 = bomb.x;
+        for (double t = 0; t < 0.1; t += dt) bw.update(dt);
+        double drifted = bomb.x - bombX0;
+        check("weapons: a bomb drifts ~7px in a tenth of a second (" + (int) drifted + "px)",
+                bomb.active && drifted > 3 && drifted < 12);
+        for (double t = 0.1; t < 1.0; t += dt) bw.update(dt);
+        check("weapons: the bomb is still armed one second in", bomb.active);
+        for (double t = 0; t < 0.5; t += dt) bw.update(dt);
+        check("weapons: the bomb has gone off by one and a half seconds", !bomb.active);
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
