@@ -155,6 +155,21 @@ function mix(z) {
   return z ^ (z >> 31n);
 }
 
+// The art, as data URIs in the content. Loaded once, and the drawing waits
+// for them rather than drawing a half-built frame.
+const IMG = {};
+let artReady = false;
+{
+  const keys = Object.keys(C.assets);
+  let left = keys.length;
+  for (const k of keys) {
+    const im = new Image();
+    im.onload = im.onerror = () => { if (--left === 0) artReady = true; };
+    im.src = C.assets[k];
+    IMG[k] = im;
+  }
+}
+
 const HOUR_SECONDS = 25.0, NIGHT_HOURS = 6;
 const LIGHT_WARM = 0.45, LIGHT_MAX = 3.2, LIGHT_COOL = 10.0, LIGHT_RESET = 0.55;
 const BAR_MOVE = 0.60, STRIKE = 1.50, LOOK_WEIGHT = 1.0, SURE = 0.8;
@@ -316,6 +331,14 @@ const W = cv.width, H = cv.height;
 
 function drawOffice(g) {
   cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  // The office itself, with its two doorways.
+  const rm = IMG.room;
+  if (rm && rm.complete && rm.naturalWidth) {
+    cx.drawImage(rm, 0, 0, W, H);
+    // Only a little dark on top: the office photograph is already a dark
+    // room, and the first version of this put a third of a screen of black
+    // over it and the room disappeared.
+  }
   // Two doorways, one at each end of the room.
   const doors = { LEFT: [40, 90, 150, 250], RIGHT: [W - 190, 90, 150, 250] };
   for (const s of ["LEFT", "RIGHT"]) {
@@ -348,20 +371,39 @@ function drawOffice(g) {
     cx.fillStyle = "#3A2A2E"; cx.fillRect(x - 40, H / 2 - 12, 80, 24);
     cx.strokeStyle = "#E94560"; cx.strokeRect(x - 40, H / 2 - 12, 80, 24);
   }
-  // The unit, when the light holds it.
+  // The unit, when the light holds it. It is drawn from the far end of the
+  // hall toward the doorway, so how big it is against the frame is the
+  // distance -- which is the only thing the light is for.
   if (g.visible()) {
     const d = doors[g.whereSide()];
     const t = 1 - g.timer / g.approach();
     const x = d[0] + d[2] / 2, y = d[1] + d[3] * (0.25 + 0.55 * t);
-    cx.fillStyle = "rgba(233,69,96,0.85)";
-    cx.beginPath(); cx.ellipse(x, y, 26, 52, 0, 0, Math.PI * 2); cx.fill();
-    cx.fillStyle = "#FFD700";
-    cx.beginPath(); cx.arc(x - 9, y - 30, 4, 0, Math.PI * 2); cx.fill();
-    cx.beginPath(); cx.arc(x + 9, y - 30, 4, 0, Math.PI * 2); cx.fill();
+    const u = IMG["unit:" + g.unit.key];
+    if (u && u.complete && u.naturalWidth) {
+      const h = d[3] * (0.45 + 0.75 * t);
+      const w = h * (u.naturalWidth / u.naturalHeight);
+      cx.drawImage(u, x - w / 2, y - h / 2, w, h);
+    } else {
+      cx.fillStyle = "rgba(233,69,96,0.85)";
+      cx.beginPath(); cx.ellipse(x, y, 26, 52, 0, 0, Math.PI * 2); cx.fill();
+    }
+    cx.fillStyle = "#FFD700"; cx.font = "13px Arial"; cx.textAlign = "center";
+    cx.fillText(g.unit.name, x, d[1] + d[3] + 40);
   }
   // The floor.
   cx.strokeStyle = "#12141E"; cx.beginPath();
   cx.moveTo(0, H - 60); cx.lineTo(W, H - 60); cx.stroke();
+}
+
+/** The face, filling the screen. The one frame the art is for. */
+function drawScare(g) {
+  const im = IMG["scare:" + g.unit.key];
+  cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  if (im && im.complete && im.naturalWidth) {
+    const s = Math.max(W / im.naturalWidth, H / im.naturalHeight) * 1.08;
+    const w = im.naturalWidth * s, h = im.naturalHeight * s;
+    cx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
+  }
 }
 
 // --------------------------------------------------------------- the page
@@ -389,7 +431,7 @@ function loop(now) {
 }
 
 function paint() {
-  drawOffice(g);
+  if (g.status === "CAUGHT") drawScare(g); else drawOffice(g);
   document.getElementById("night").textContent = "NIGHT " + g.night;
   document.getElementById("clock").textContent = g.clock();
   const f = document.getElementById("fil");

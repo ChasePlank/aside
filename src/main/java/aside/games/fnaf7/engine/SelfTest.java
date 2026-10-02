@@ -560,6 +560,21 @@ public final class SelfTest {
             check("the page carries the " + t + " table", page.contains(t + ": " + want));
         }
 
+        // The art. The desktop draws an office, five units at 780 px tall with
+        // alpha and five scares; the phone carries its own WebP copies, built
+        // by tools/fnaf7-phone-art.py and inlined as data URIs, because the
+        // build has to be one file. The unit keys are the engine's own, so a
+        // night cannot show the wrong one.
+        check("the page carries the office",
+                page.contains("\"room\":\"data:image/webp;base64,"));
+        for (int n = 1; n <= 5; n++) {
+            Unit u = Unit.forNight(n);
+            check("the page carries the frame for " + u.name(),
+                    page.contains("\"unit:" + u.key() + "\":\"data:image/webp;base64,"));
+            check("the page carries the scare for " + u.name(),
+                    page.contains("\"scare:" + u.key() + "\":\"data:image/webp;base64,"));
+        }
+
         // And the cast, which is the one thing the player reads before the
         // night starts.
         for (int n = 1; n <= 5; n++) {
