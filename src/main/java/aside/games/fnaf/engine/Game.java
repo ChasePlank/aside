@@ -30,6 +30,25 @@ import java.util.*;
  * Difficulty scales per night via animatronic AI levels.
  */
 public class Game {
+
+    /**
+     * How long an animatronic stands in an open doorway before it kills you.
+     *
+     * Was 3.0, and playtest said so: "chica showed up on the left and before i could
+     * even say 'oh chicas there' she jumpscared me, and thats with the monitor down".
+     * The window runs from ARRIVAL, not from when you notice - with the light off, a
+     * doorway is dark and the only warning is a pulsing sprite - so 3 seconds was
+     * really "3 seconds minus however long you were looking elsewhere".
+     *
+     * Calibrated on evidence rather than taste: 14.0 made the nights unloseable for an
+     * idle player (20/20 wins, zero jumpscares, where 3.0 had produced 5-6/20), and
+     * 6.0 and 8.0 measure identically to 14.0 - the idle baseline is a CLIFF, not a
+     * curve, because the arrivals land close enough to 6AM that the night simply ends
+     * first. So the idle test cannot tune this, and the honest instrument is the one
+     * that reported it: a player at the desk. 8.0 is 2.7x the old window and leaves
+     * the reaction time the game is made of.
+     */
+    public static final double GRACE_SECONDS = 8.0;
     // ---- Clock ----
     public static final double HOUR_SECONDS = 45.0;
     public static final int NIGHT_HOURS = 6;
@@ -115,7 +134,14 @@ public class Game {
         roxanne.doorSide = 1;
 
         chica = new Animatronic("Chica", 1, new int[]{1, 7, 8, 9, OFFICE},
-                lv[2], 3.02, this);
+        // 5.02, not 3.02. moveInterval is the SECONDS BETWEEN MOVE CHANCES, so a
+        // smaller number moves more often - and at 3.02 Chica was the fastest thing in
+        // the building while her own bio called her "slower" and her role (the blackout
+        // attacker, FNAF 1's Freddy) is the one that hangs back. Measured over 200
+        // games: 1951 arrivals to the door against Monty's 976 and Roxanne's 727, i.e.
+        // she was over twice as active as anyone. The other three cluster at 4.97,
+        // 4.98 and 5.01, so 3.02 reads as a mistyped digit rather than a decision.
+                lv[2], 5.02, this);
         chica.doorSide = 1;
 
         // Foxy role: waits in Pirate Cove, stages advance on rolls,
@@ -248,7 +274,7 @@ public class Game {
                 } else if (a.doorSide > 0 && rightDoorClosed) {
                     a.officeEntryResolved = true;
                     a.retreat();
-                } else if (a.officeTimer > 3.0) {
+                } else if (a.officeTimer > GRACE_SECONDS) {
                     // door was open the whole grace window — kill
                     jumpscare(a);
                 }
