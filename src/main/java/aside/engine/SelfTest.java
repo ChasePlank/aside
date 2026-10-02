@@ -20,6 +20,7 @@ import java.util.Set;
  * be driven from here — a story engine you can only test by clicking
  * through a window is a story engine you won't test.
  */
+import aside.games.fruitjump.engine.Bat;
 import aside.games.fruitjump.engine.GameLoop;
 import aside.games.fruitjump.engine.LevelGen;
 import aside.games.fruitjump.engine.LevelMap;
@@ -567,6 +568,7 @@ public class SelfTest {
 
         System.out.println("\n--- the weapons ---");
         weaponsDoWhatTheySay();
+        batsChaseWhatIsNear();
 
         System.out.println("\n--- the audio cues ---");
         audioCuesArePresent();
@@ -876,6 +878,48 @@ public class SelfTest {
         check("weapons: the bomb is still armed one second in", bomb.active);
         for (double t = 0; t < 0.5; t += dt) bw.update(dt);
         check("weapons: the bomb has gone off by one and a half seconds", !bomb.active);
+    }
+
+    /**
+     * A bat chases what is near it and ignores what is far.
+     *
+     * <p>The second gap the mutation sweep found: `Bat.AGGRO_RANGE = 260 -> 0` came back NOT CAUGHT, so the
+     * gate had nothing about the bats either. The signal is how close a bat ever gets: one that starts 100px
+     * away closes to about 47px, and one that starts 900px away stays at about 900. Measured at both settings,
+     * so the two numbers are the two behaviours rather than two guesses.
+     *
+     * <p>Absolute distances again, not the constant - see rule 32. A range of 0 leaves the near bat at 99px;
+     * a range of 10,000 brings the far one in. Both fail this.
+     */
+    static void batsChaseWhatIsNear() {
+        for (long seed : new long[]{7L, 11L, 42L}) {
+            double near = closestApproach(100, seed);
+            double far = closestApproach(900, seed);
+            check("bats: a bat 100px away closes in (seed " + seed + ", got within " + (int) near + "px)",
+                    near < 70);
+            // The far signal is small and it is worth saying so rather than picking a number that looks
+            // decisive: at an aggro range of 260 the far bat stays 895-900px away across these seeds, and at
+            // 10,000 it comes to 850-851. The threshold sits between the two measured populations, so a
+            // failure here says which side it fell on.
+            check("bats: a bat 900px away stays out of range (seed " + seed + ", stayed " + (int) far + "px)",
+                    far > 870);
+        }
+    }
+
+    /** How close a bat starting `distance` from the player ever gets, over six seconds. */
+    static double closestApproach(double distance, long seed) {
+        World w = new World();
+        Physics.Body p = new Physics.Body(200, 100, 24, 44);
+        w.addBody(p);
+        w.playerBody = p;
+        Bat bat = new Bat(200 + distance, 100, seed);
+        w.addBat(bat);
+        double closest = Double.MAX_VALUE;
+        for (double t = 0; t < 6.0; t += GameLoop.DT) {
+            w.update(GameLoop.DT);
+            closest = Math.min(closest, Math.hypot(bat.body.x - p.x, bat.body.y - p.y));
+        }
+        return closest;
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
