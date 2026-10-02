@@ -151,6 +151,21 @@ RNG.prototype.nextInt = function (bound) {
 };
 RNG.prototype.nextBoolean = function () { return this.next(1) !== 0; };
 
+// The art, as data URIs in the content. Loaded once, and the drawing waits
+// for them rather than drawing a half-built frame.
+const IMG = {};
+let artReady = false;
+{
+  const keys = Object.keys(C.assets);
+  let left = keys.length;
+  for (const k of keys) {
+    const im = new Image();
+    im.onload = im.onerror = () => { if (--left === 0) artReady = true; };
+    im.src = C.assets[k];
+    IMG[k] = im;
+  }
+}
+
 const HOUR_SECONDS = C.hourSeconds, NIGHT_HOURS = C.nightHours;
 const MUSIC_BOX_MAX = C.musicBoxMax, MUSIC_BOX_WIND = C.musicBoxWind;
 const PUPPET_GRACE = C.puppetGrace;
@@ -396,9 +411,20 @@ const GRID = (() => {
 function drawOffice(g) {
   cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
   const lit = { VENT_L: g.ventLLightOn, HALL: g.hallLightOn, VENT_R: g.ventRLightOn };
+  // The office, in whichever light is on. There is one view per light state
+  // and no view with two lights on, which is the game's own rule about your
+  // hands stated as four photographs.
+  const which = g.hallLightOn ? "office.hall"
+              : g.ventLLightOn ? "office.ventL"
+              : g.ventRLightOn ? "office.ventR" : "office";
+  const om = IMG[which];
+  if (om && om.complete && om.naturalWidth) cx.drawImage(om, 0, 0, W, H);
   for (const k of Object.keys(OPEN)) {
     const b = OPEN[k];
-    cx.fillStyle = "#070910"; cx.fillRect(b[0], b[1], b[2], b[3]);
+    // Translucent, so the office photograph reads through the openings. The
+    // first version filled them solid and the room disappeared behind three
+    // black rectangles.
+    cx.fillStyle = "rgba(2,3,10,0.45)"; cx.fillRect(b[0], b[1], b[2], b[3]);
     cx.strokeStyle = lit[k] ? "#6A5A3A" : "#1E2030";
     cx.lineWidth = lit[k] ? 3 : 2;
     cx.strokeRect(b[0], b[1], b[2], b[3]);
@@ -415,11 +441,15 @@ function drawOffice(g) {
       for (const a of g.visitors()) {
         if (a.opening !== k || !a.atOpening() || a.resolved) continue;
         const x = b[0] + b[2] / 2, y = b[1] + b[3] / 2;
-        cx.fillStyle = "rgba(233,69,96,0.85)";
-        cx.beginPath(); cx.ellipse(x, y, 34, 54, 0, 0, Math.PI * 2); cx.fill();
-        cx.fillStyle = "#FFD700";
-        cx.beginPath(); cx.arc(x - 12, y - 24, 5, 0, Math.PI * 2); cx.fill();
-        cx.beginPath(); cx.arc(x + 12, y - 24, 5, 0, Math.PI * 2); cx.fill();
+        const u = IMG["unit:" + a.key];
+        if (u && u.complete && u.naturalWidth) {
+          const h = b[3] * 0.86;
+          const w = h * (u.naturalWidth / u.naturalHeight);
+          cx.drawImage(u, x - w / 2, y - h / 2, w, h);
+        } else {
+          cx.fillStyle = "rgba(233,69,96,0.85)";
+          cx.beginPath(); cx.ellipse(x, y, 34, 54, 0, 0, Math.PI * 2); cx.fill();
+        }
         const left = Math.max(0, 1 - a.officeTimer / g.openingGrace());
         cx.fillStyle = "#141620"; cx.fillRect(b[0] + 16, b[1] + b[3] - 18, b[2] - 32, 6);
         cx.fillStyle = left < 0.35 ? "#E94560" : "#5A6A8A";
@@ -431,8 +461,15 @@ function drawOffice(g) {
     // Foxy in the hall is a stage, not a path.
     if (k === "HALL" && g.witheredFoxy.stages >= 3) {
       const x = b[0] + b[2] / 2, y = b[1] + b[3] / 2;
-      cx.fillStyle = "rgba(233,69,96,0.85)";
-      cx.beginPath(); cx.ellipse(x, y, 34, 54, 0, 0, Math.PI * 2); cx.fill();
+      const fu = IMG["unit:witheredfoxy"];
+      if (fu && fu.complete && fu.naturalWidth) {
+        const h = b[3] * 0.86;
+        const w = h * (fu.naturalWidth / fu.naturalHeight);
+        cx.drawImage(fu, x - w / 2, y - h / 2, w, h);
+      } else {
+        cx.fillStyle = "rgba(233,69,96,0.85)";
+        cx.beginPath(); cx.ellipse(x, y, 34, 54, 0, 0, Math.PI * 2); cx.fill();
+      }
       const left = Math.max(0, g.witheredFoxy.hallWindow / FOXY_HALL_WINDOW);
       cx.fillStyle = "#141620"; cx.fillRect(b[0] + 16, b[1] + b[3] - 18, b[2] - 32, 6);
       cx.fillStyle = left < 0.35 ? "#E94560" : "#5A6A8A";
@@ -441,13 +478,15 @@ function drawOffice(g) {
       cx.fillText("Withered Foxy", x, b[1] + b[3] + 20);
     }
   }
-  // The mask, when it is up: the office through two eyeholes.
+  // The mask, when it is up. It is a photograph of the mask, drawn over the
+  // office -- which is what wearing it is.
   if (g.maskOn) {
-    cx.fillStyle = "rgba(2,3,10,0.55)";
-    cx.fillRect(0, 0, W, H);
-    cx.fillStyle = "#02030A";
-    cx.beginPath(); cx.ellipse(W * 0.36, H * 0.42, 62, 84, 0, 0, Math.PI * 2); cx.fill();
-    cx.beginPath(); cx.ellipse(W * 0.64, H * 0.42, 62, 84, 0, 0, Math.PI * 2); cx.fill();
+    const mk = IMG.mask;
+    if (mk && mk.complete && mk.naturalWidth) {
+      cx.drawImage(mk, 0, 0, W, H);
+    } else {
+      cx.fillStyle = "rgba(2,3,10,0.55)"; cx.fillRect(0, 0, W, H);
+    }
   }
 }
 
@@ -456,7 +495,21 @@ function drawMonitor(g) {
   for (let c = 1; c <= CAM_COUNT; c++) {
     const b = GRID[c];
     const here = c === g.currentCam;
-    cx.fillStyle = "#070910"; cx.fillRect(b[0], b[1], b[2], b[3]);
+    // The room itself, in the tile. It is a heavy downscale -- the phone
+    // shows eleven cameras at once and the desktop shows one -- but it is
+    // the room, and the alternative was a dark rectangle.
+    const rm = IMG["room" + c];
+    if (rm && rm.complete && rm.naturalWidth) {
+      const sc = Math.max(b[2] / rm.naturalWidth, b[3] / rm.naturalHeight);
+      const w = rm.naturalWidth * sc, h = rm.naturalHeight * sc;
+      cx.save();
+      cx.beginPath(); cx.rect(b[0], b[1], b[2], b[3]); cx.clip();
+      cx.drawImage(rm, b[0] + (b[2] - w) / 2, b[1] + (b[3] - h) / 2, w, h);
+      cx.restore();
+      cx.fillStyle = "rgba(2,3,10,0.30)"; cx.fillRect(b[0], b[1], b[2], b[3]);
+    } else {
+      cx.fillStyle = "#070910"; cx.fillRect(b[0], b[1], b[2], b[3]);
+    }
     cx.strokeStyle = here ? "#E94560" : "#1E2030";
     cx.lineWidth = here ? 3 : 2;
     cx.strokeRect(b[0], b[1], b[2], b[3]);
@@ -481,6 +534,19 @@ function drawMonitor(g) {
       cx.ellipse(b[0] + 30 + n * 34, b[1] + b[3] / 2 + 10, 14, 22, 0, 0, Math.PI * 2);
       cx.fill();
     }
+  }
+}
+
+/** The face, filling the screen. The one frame the art is for. */
+function drawScare(g) {
+  const who = g.jumpscareBy;
+  const key = who ? who.key : "toyfreddy";
+  const im = IMG["scare:" + key] || IMG["scare:toyfreddy"];
+  cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  if (im && im.complete && im.naturalWidth) {
+    const s = Math.max(W / im.naturalWidth, H / im.naturalHeight) * 1.08;
+    const w = im.naturalWidth * s, h = im.naturalHeight * s;
+    cx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
   }
 }
 
@@ -520,7 +586,9 @@ function cues() {
 
 function paint() {
   const st = g.status;
-  if (g.cameraUp) drawMonitor(g); else drawOffice(g);
+  if (st === "JUMPSCARED") drawScare(g);
+  else if (g.cameraUp) drawMonitor(g);
+  else drawOffice(g);
 
   document.getElementById("night").textContent = "NIGHT " + g.night;
   document.getElementById("clock").textContent = g.clock();

@@ -640,11 +640,39 @@ public class SelfTest {
         drain.append("]");
         check("the page carries the drain table", page.contains(drain));
 
+        // The art. FNAF 2 has the most of it of the eight: four office views,
+        // eleven cameras, eight units, the mask and six jumpscares. The phone
+        // carries its own WebP copies, built by tools/fnaf2-phone-art.py and
+        // inlined as data URIs, because the build has to be one file.
+        for (String n : new String[]{"office", "office.hall", "office.ventL", "office.ventR"}) {
+            check("the page carries the " + n + " view",
+                    page.contains("\"" + n + "\":\"data:image/webp;base64,"));
+        }
+        for (int c = 1; c <= Game.CAM_COUNT; c++) {
+            check("the page carries camera " + c,
+                    page.contains("\"room" + c + "\":\"data:image/webp;base64,"));
+        }
+        check("the page carries the mask",
+                page.contains("\"mask\":\"data:image/webp;base64,"));
+        for (String k : new String[]{"toyfreddy", "toybonnie", "toychica", "mangle",
+                "witheredbonnie", "witheredfoxy", "balloonboy", "puppet"}) {
+            check("the page carries the frame for " + k,
+                    page.contains("\"unit:" + k + "\":\"data:image/webp;base64,"));
+        }
+        // Six of the eight have a jumpscare in the source and two do not, so
+        // the page falls back -- which is what the desktop does too.
+        for (String k : new String[]{"toyfreddy", "toychica", "mangle",
+                "witheredfoxy", "balloonboy", "puppet"}) {
+            check("the page carries the scare for " + k,
+                    page.contains("\"scare:" + k + "\":\"data:image/webp;base64,"));
+        }
+
         // And the cast, with the paths that are the whole of their movement.
         Game g = new Game(1, 1);
         for (Animatronic a : new Animatronic[]{g.toyFreddy, g.toyBonnie, g.toyChica,
                 g.mangle, g.witheredBonnie, g.balloonBoy, g.witheredFoxy, g.puppet}) {
-            StringBuilder want = new StringBuilder("name:\"" + a.name + "\", path: [");
+            StringBuilder want = new StringBuilder("name:\"" + a.name + "\", key:\""
+                    + aside.games.fnaf2.WebPizzeria.keyOf(a.name) + "\", path: [");
             for (int j = 0; j < a.path.length; j++) {
                 if (j > 0) want.append(", ");
                 want.append(a.path[j]);

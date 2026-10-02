@@ -6,6 +6,7 @@ import aside.games.fnaf2.engine.Game;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
 /**
  * Build {@code web/fnaf2.html} from the page template and the engine.
@@ -45,7 +46,7 @@ public final class WebPizzeria {
     }
 
     /** Everything the page needs that the engine owns. */
-    static String content() {
+    static String content() throws Exception {
         Game g = new Game(1, 1);
         StringBuilder sb = new StringBuilder();
         sb.append("const C = {\n");
@@ -61,6 +62,7 @@ public final class WebPizzeria {
             Animatronic a = all[i];
             if (i > 0) sb.append(",");
             sb.append("\n    {name:").append(str(a.name))
+              .append(", key:").append(str(keyOf(a.name)))
               .append(", path: [");
             for (int j = 0; j < a.path.length; j++) {
                 if (j > 0) sb.append(", ");
@@ -108,7 +110,8 @@ public final class WebPizzeria {
         sb.append("  camCount: ").append(Game.CAM_COUNT).append(",\n");
         sb.append("  coveCam: ").append(Game.COVE_CAM).append(",\n");
         sb.append("  musicBoxCam: ").append(Game.MUSIC_BOX_CAM).append(",\n");
-        sb.append("  help: ").append(str(HELP)).append("\n");
+        sb.append("  help: ").append(str(HELP)).append(",\n");
+        sb.append("  assets: ").append(assets()).append("\n");
         sb.append("};\n");
         return sb.toString();
     }
@@ -145,6 +148,75 @@ public final class WebPizzeria {
             + "the Puppet comes and nothing stops it. There is one flashlight "
             + "and three openings, so looking at one is choosing not to look at "
             + "the other two.";
+
+    /**
+     * The art's filename for a unit, which is not always its name.
+     *
+     * <p>The engine calls one of them "The Puppet" and the file is
+     * {@code puppet.png}; another is "Balloon Boy" and the file is
+     * {@code balloonboy.png}. Deriving a key from the name would look right
+     * for six of the eight and be wrong for the other two, so it is written
+     * down.
+     */
+    public static String keyOf(String name) {
+        return switch (name) {
+            case "Toy Freddy" -> "toyfreddy";
+            case "Toy Bonnie" -> "toybonnie";
+            case "Toy Chica" -> "toychica";
+            case "Mangle" -> "mangle";
+            case "Withered Bonnie" -> "witheredbonnie";
+            case "Withered Foxy" -> "witheredfoxy";
+            case "Balloon Boy" -> "balloonboy";
+            case "The Puppet" -> "puppet";
+            default -> name.toLowerCase().replace(" ", "");
+        };
+    }
+
+    /** Where the phone's own copies of the art live. */
+    static final Path ART = Path.of("art", "phone", "fnaf2");
+
+    /**
+     * The art, as data URIs.
+     *
+     * <p>Inlined rather than linked, because the build has to be one file.
+     * The copies are downscaled by {@code tools/fnaf2-phone-art.py} and
+     * committed, so this method is reproducible from Java alone.
+     */
+    static String assets() throws Exception {
+        StringBuilder b = new StringBuilder("{\n");
+        boolean first = true;
+        for (String n : new String[]{"office", "office.hall", "office.ventL", "office.ventR"}) {
+            if (!first) b.append(",\n");
+            first = false;
+            b.append("  \"").append(n).append("\":").append(uri(n + ".webp", "image/webp"));
+        }
+        for (int r = 1; r <= Game.CAM_COUNT; r++) {
+            b.append(",\n  \"room").append(r).append("\":")
+             .append(uri("room" + r + ".webp", "image/webp"));
+        }
+        for (String k : new String[]{"toyfreddy", "toybonnie", "toychica", "mangle",
+                "witheredbonnie", "witheredfoxy", "balloonboy", "puppet"}) {
+            b.append(",\n  \"unit:").append(k).append("\":")
+             .append(uri("unit_" + k + ".webp", "image/webp"));
+        }
+        b.append(",\n  \"mask\":").append(uri("mask.webp", "image/webp"));
+        for (String k : new String[]{"toyfreddy", "toychica", "mangle",
+                "witheredfoxy", "balloonboy", "puppet"}) {
+            b.append(",\n  \"scare:").append(k).append("\":")
+             .append(uri("scare_" + k + ".webp", "image/webp"));
+        }
+        return b.append("\n}").toString();
+    }
+
+    static String uri(String name, String mime) throws Exception {
+        Path f = ART.resolve(name);
+        if (!Files.exists(f)) {
+            throw new IllegalStateException("no " + f + " -- build it with: "
+                    + "python3 tools/fnaf2-phone-art.py");
+        }
+        return "\"data:" + mime + ";base64,"
+                + Base64.getEncoder().encodeToString(Files.readAllBytes(f)) + "\"";
+    }
 
     static String str(String s) {
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
