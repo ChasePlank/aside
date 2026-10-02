@@ -85,12 +85,28 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
  * The builds are base64 in the shelf, because they are whole HTML documents
  * with their own script tags in them, and there is exactly one sequence that
  * can end a script block early. Base64 has no angle brackets in it at all.
+ *
+ * And they are gzipped first, because a build is HTML, CSS and JavaScript and
+ * that compresses about four to one. The shelf carries twenty of them, so
+ * without this it is 3.7 MB of text to download before the player has chosen
+ * anything. The generator does the deflating; this does the other half.
  */
-function decode(b64) {
+function bytes(b64) {
   const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new TextDecoder('utf-8').decode(bytes);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function inflate(b64) {
+  const raw = bytes(b64);
+  if (typeof DecompressionStream !== 'function') {
+    // A browser from before 2023. There is no fallback that is not a second
+    // copy of every build, so say so rather than showing an empty frame.
+    throw new Error('this browser cannot open the games -- it has no DecompressionStream');
+  }
+  const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return await new Response(stream).text();
 }
 
 function drawList() {
@@ -124,14 +140,24 @@ function drawMissing() {
     + 'JavaFX does not run in a phone browser.</p>';
 }
 
-function open(i) {
+async function open(i) {
   const g = SHELF[i];
   now.textContent = g.title;
   frame.title = g.title;
   // srcdoc, not a blob and not a link: a srcdoc document inherits this page's
   // origin, so a game that wants to remember something -- residue keeps its
   // room in the browser -- is allowed to, and one that does not is unaffected.
-  frame.srcdoc = decode(g.html);
+  let html;
+  try {
+    html = await inflate(g.html);
+  } catch (e) {
+    frame.srcdoc = '<body style="background:#05060A;color:#D8D8E4;font:15px sans-serif;'
+      + 'padding:24px">' + esc(e.message) + '</body>';
+    shelfEl.style.display = 'none';
+    stage.classList.add('on');
+    return;
+  }
+  frame.srcdoc = html;
   shelfEl.style.display = 'none';
   stage.classList.add('on');
   document.title = g.title + ' \u2014 aside';

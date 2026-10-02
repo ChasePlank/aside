@@ -396,6 +396,24 @@ public class SelfTest {
                                 + " is current -- regenerate it with aside.game.PhoneShelf",
                         generated.equals(Files.readString(shelfFile)));
 
+                // The builds are gzipped before they are base64'd, and the
+                // page does the other half with DecompressionStream. Both
+                // halves have to be there or the shelf is a list of games
+                // that do not open, so both are checked: the template has to
+                // inflate, and what it is handed has to actually be gzip.
+                check("the shelf's page inflates what it is given",
+                        generated.contains("DecompressionStream") && generated.contains("inflate("));
+                int at = generated.indexOf("\"html\":\"");
+                check("the shelf embeds a build at all", at > 0);
+                if (at > 0) {
+                    int from = at + "\"html\":\"".length();
+                    int to = generated.indexOf('"', from);
+                    byte[] raw = java.util.Base64.getDecoder()
+                            .decode(generated.substring(from, to));
+                    check("the shelf's builds are gzipped",
+                            raw.length > 2 && (raw[0] & 0xff) == 0x1f && (raw[1] & 0xff) == 0x8b);
+                }
+
                 List<PhoneShelf.Entry> entries = PhoneShelf.entries();
                 check("the shelf has something on it", !entries.isEmpty());
                 Set<String> listed = new HashSet<>();
