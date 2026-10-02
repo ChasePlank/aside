@@ -46,6 +46,24 @@
 # The engine suite itself has no double constants to break; its subject is the
 # script format and the shelf, and mutating those is a different job.
 #
+# THE VERB GAMES HAVE NO CONSTANTS AT ALL -- zero across all ten -- so there is
+# nothing to break that way. What they have is TABLES, and that is what to
+# mutate: the seeded room, the seeded log, the order list. Tested 2026-10-02:
+#
+#   residue    the seeded room's chair decay 2 -> 9    caught (6 checks fail)
+#   drift      a line's number 1 -> 3                  caught (3 of 584)
+#   bearings   a clock's name "A" -> "Z"               caught (2 of 791)
+#   ledger     a night's name "Night one" -> "Night 1" caught (1 of 820)
+#   handoff    an order's wording changed              caught (1 of 1180)
+#
+# residue is the one that did NOT report cleanly the first time: four checks
+# read r.traceOf(thing).age directly, so losing the thing made the suite die
+# with a NullPointerException instead of failing a check -- and a suite that
+# dies takes every check after it with it. Two null-safe helpers fixed it, and
+# the same mutation now fails six checks and finishes. Worth trying on the
+# other five (testimony, outside, redaction, lesson, tell), whose tables are
+# built in loops rather than written out as literals.
+#
 # EXAMPLES
 #
 #   tools/mutate.sh aside.games.fnaf5.engine.SelfTest \
