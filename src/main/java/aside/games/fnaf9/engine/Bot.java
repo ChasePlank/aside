@@ -361,8 +361,95 @@ public final class Bot {
      * <p>So the rule for a tenth game is sharper than "ask what the player can
      * do about it": <b>ask what the player can do about it, in how many
      * gradations, and whether the thing they are doing it to has enough states
-     * to be wrong in.</b> See [[reference/fnaf10.md]] in memory for all five
+     * to be wrong in.</b> See [[reference/fnaf10.md]] in memory for all eight
      * builds and their measurements.
+     *
+     * <p><b>And the eighth attempt found the thing that makes a timing lever
+     * work, which is worth having here because it is the first positive result
+     * out of eight.</b> Every earlier design was playable by a fixed cadence,
+     * because the lever's effect was an <i>integral over time</i> -- a door
+     * that stops a walker, a dimmer that wears one down -- and a cadence gets
+     * an average right. The eighth made the lever <b>sampled</b>: the walker
+     * steps on its own clock and reads the brightness <i>at the instant of the
+     * step</i>, advancing {@code (1 - brightness)} of a step and nothing else.
+     * Nothing accumulates between steps, so a second of full light between two
+     * of them is worth exactly nothing.
+     *
+     * <p>Measured: <b>the rhythm dies.</b> RHYTHM -- full and nothing on a
+     * cadence -- reads 1% over the week against the competent policy's 80%,
+     * where in every previous design the habit beat or matched the competent
+     * player. That is the first time a cadence has lost, and it says the
+     * sampling is the load-bearing part.
+     *
+     * <p><b>It is still not a game, and the reason is specific.</b> The
+     * competent strategy -- spend light only on the steps -- is <i>strictly
+     * dominant</i>, because light spent that way costs almost nothing: the
+     * filament is on for about a fifth of the night, so it never runs out, and
+     * every other policy reads 0%. The window width is a real dial (margins of
+     * 0.05, 0.20, 0.60 and 1.20 seconds read 77%, 80%, 60% and 62% over the
+     * week) but the <i>strategies</i> are 0 or 80, which is a cliff rather than
+     * a ladder. <b>So the next attempt needs a cost that a perfect step-timer
+     * cannot avoid</b> -- the sampling is solved, the economy is not.
+     *
+     * <p><b>The ninth attempt tried to supply that cost by giving the dimmer
+     * inertia, and it is half a result.</b> The brightness now moves toward
+     * the setting at a fixed rate rather than jumping to it, so the light
+     * cannot be flicked on for the instant of a step: a rise takes
+     * {@code 1 / TRAVEL} seconds, a fall takes the same, and the filament
+     * burns for all of it. That is a real cost -- the competent policy's week
+     * falls from 80% to 60% at a quarter-second rise and to 23% at a
+     * six-tenths-second one -- and the stride sweep shows a window where the
+     * policies finally <i>separate</i> (at a stride of 0.25: competent 60%,
+     * LOCK 19%, RHYTHM 4%).
+     *
+     * <p><b>But it is not a ladder, because the player still has nothing to
+     * ration.</b> Every step is worth the same, so blocking every step the
+     * filament allows is still strictly the best play, and the only question
+     * is whether the budget lasts. Making the walker <i>impatient</i> -- its
+     * next step growing with how long it was held -- was tried and makes the
+     * game harder without creating a choice: the competent policy falls and
+     * every other policy falls to zero, which is a cliff with a lower top.
+     * <b>What a tenth game needs is not a cost but a reason for some steps to
+     * matter more than others.</b>
+     *
+     * <p><b>And one latent bug worth recording, because it only bites when the
+     * lever is not instant.</b> The order guard was
+     * {@code if (same setting && !acted) return false;} -- which is inert while
+     * the brightness jumps to the setting, and fatal the moment it does not: a
+     * policy that re-orders the same setting every frame resets {@code acted}
+     * every frame, the dimmer is never allowed to move, and <b>every policy
+     * reads 0%</b>. It cost a sweep to find. Any future design with a lever
+     * that takes time to move needs the guard to be
+     * {@code if (same setting) return false;}
+     *
+     * <p><b>The tenth attempt tried to supply the missing "reason for some
+     * steps to matter more than others" by making the light not carry, and it
+     * produced the best ladder of the ten without producing a game.</b> The
+     * light's effect on a step now scales with how close the walker is --
+     * {@code reach(d) = 1 - FALLOFF * d / MAX} -- so a block at the far end of
+     * the hall buys almost nothing and a block in the doorway stops it dead.
+     * The intent was that waiting would become the play: spend nothing while it
+     * is far, spend everything when it is close.
+     *
+     * <p>Measured at a stride of 0.20 and no falloff, the policies finally
+     * <i>spread</i> the way a ladder should: <b>EARLY 76%, WAIT 50%, LOCK 45%,
+     * RHYTHM 18%, IDLE 0%</b> -- five distinct rungs, where nine earlier
+     * designs had two. <b>But EARLY is the policy that never waits</b>, and it
+     * is on top. The falloff <i>penalizes</i> waiting rather than rewarding it,
+     * because blocking early is cheap: the light is only up briefly, so the
+     * filament survives it, and a walker that is never allowed to approach is a
+     * walker that never has to be stopped. Tightening the filament does not
+     * separate them either (HOLD_MAX 6.0 through 1.4 leaves EARLY and WAIT
+     * within three points of each other).
+     *
+     * <p><b>So the next thing to try is not a falloff but a cost that depends
+     * on the walker's distance</b> -- an early block has to cost more than a
+     * late one, not merely buy less. That is a state-dependent cost, and FNAF
+     * 9's own eighth lever is the warning: a state-dependent cost on its own
+     * came back a cliff. Ten attempts now, and the ladder is closer than it has
+     * ever been; the thing that is still missing is the same thing, stated
+     * once more: <b>a reason for the early steps to be the wrong ones to
+     * spend on.</b>
      *
      * <p><b>And SENSE is on the ladder because the office's own description
      * of itself does not survive being played.</b> {@link Feed}'s javadoc says

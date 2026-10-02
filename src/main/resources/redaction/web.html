@@ -88,7 +88,15 @@
 <div class="wrap"><div id="app"></div><div class="spacer"></div></div>
 <div id="bar"><div class="inner"></div></div>
 <script>
-const C = /*__CONTENT__*/;
+const C = /*__CONTENT__*/
+/*__AUDIO__*/
+
+// Every tap is a click. The desktop distinguishes a move from a select --
+// choice_move and choice_select -- and on a phone the distinction is not worth
+// the bookkeeping: what the player needs to hear is that the tap landed,
+// because this page is a canvas and nothing else moves.
+document.addEventListener("pointerdown", () => voice("click"));
+;
 
 // ------------------------------------------------------------------ the model
 // Sixteen lines, and one decision per line. The board reads the withheld ones

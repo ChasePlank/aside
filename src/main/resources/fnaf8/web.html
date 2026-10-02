@@ -84,6 +84,40 @@
 <script>
 /*__CONTENT__*/
 
+/*__AUDIO__*/
+
+/**
+ * FNAF8's cue names, on the shared palette.
+ *
+ * And this one is the counter-example that proves the palette is
+ * about information rather than about sound. FNAF 8 has *no directional
+ * channel at all*, deliberately: both halls emit the same footfall, because
+ * the lamp is the only way to know where either of them is, and a cue that
+ * said which hall it came from would hand the player that knowledge for free.
+ * The suite keeps it that way, so the port must not invent a distinction the
+ * desktop refuses to make.
+ */
+function sfx(cue) {
+  switch (cue) {
+    case "chime_6am": voice("chime"); break;
+    case "f8_back": voice("footstep"); break;
+    case "f8_door": voice("knock"); break;
+    case "f8_gives_up": voice("footstep"); break;
+    case "f8_met": voice("scream"); break;
+    case "f8_off": voice("click"); break;
+    case "f8_push": voice("step"); break;
+    case "f8_set": voice("click"); break;
+    case "f8_step": voice("footstep"); break;
+    case "f8_swivel": voice("click"); break;
+    default: break;
+  }
+}
+
+/** Play everything the engine raised this frame. */
+function sfxAll() {
+  for (const c of g.drain()) sfx(c);
+}
+
 // --------------------------------------------------------------- the night
 //
 // A faithful port of aside.games.fnaf8.engine.Meeting. Two units walk up two
@@ -111,6 +145,21 @@ function mix(z) {
   z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & ((1n << 64n) - 1n);
   z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & ((1n << 64n) - 1n);
   return z ^ (z >> 31n);
+}
+
+// The art, as data URIs in the content. Loaded once, and the drawing waits
+// for them rather than drawing a half-built frame.
+const IMG = {};
+let artReady = false;
+{
+  const keys = Object.keys(C.assets);
+  let left = keys.length;
+  for (const k of keys) {
+    const im = new Image();
+    im.onload = im.onerror = () => { if (--left === 0) artReady = true; };
+    im.src = C.assets[k];
+    IMG[k] = im;
+  }
 }
 
 const HOUR_SECONDS = 25.0, NIGHT_HOURS = 6;
@@ -252,6 +301,9 @@ const W = cv.width, H = cv.height;
 
 function drawOffice(g) {
   cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  // The office itself. It is a dark room and the two halls are drawn over it.
+  const rm = IMG.room;
+  if (rm && rm.complete && rm.naturalWidth) cx.drawImage(rm, 0, 0, W, H);
   const hall = { LEFT: [30, 70, 210, 290], RIGHT: [W - 240, 70, 210, 290] };
 
   for (const s of ["LEFT", "RIGHT"]) {
@@ -278,19 +330,34 @@ function drawOffice(g) {
       const x = r[0] + r[2] / 2 + (s === "LEFT" ? -1 : 1) * (r[2] * 0.30 * (1 - t));
       const y = r[1] + r[3] * (0.30 + 0.45 * t);
       const sc = 0.55 + 0.45 * t;
-      cx.fillStyle = "rgba(233,69,96,0.85)";
-      cx.beginPath(); cx.ellipse(x, y, 24 * sc, 48 * sc, 0, 0, Math.PI * 2); cx.fill();
-      cx.fillStyle = "#FFD700";
-      cx.beginPath(); cx.arc(x - 8 * sc, y - 26 * sc, 4 * sc, 0, Math.PI * 2); cx.fill();
-      cx.beginPath(); cx.arc(x + 8 * sc, y - 26 * sc, 4 * sc, 0, Math.PI * 2); cx.fill();
+      const u = IMG["unit:" + g.unit(s).key];
+      if (u && u.complete && u.naturalWidth) {
+        const h = 120 * sc;
+        const w = h * (u.naturalWidth / u.naturalHeight);
+        cx.drawImage(u, x - w / 2, y - h / 2, w, h);
+      } else {
+        cx.fillStyle = "rgba(233,69,96,0.85)";
+        cx.beginPath(); cx.ellipse(x, y, 24 * sc, 48 * sc, 0, 0, Math.PI * 2); cx.fill();
+      }
     }
 
-    // Something in the doorway: two eyes in the dark, and how long it will wait.
+    // Something in the doorway: the thing itself, in the dark, and how long
+    // it will wait. The lamp does not reach the doorway, so this is drawn
+    // without the beam -- which is the whole rule of the game.
     if (g.waiting(s)) {
       const x = r[0] + r[2] / 2, y = r[1] + r[3] * 0.42;
-      cx.fillStyle = "#FFD700";
-      cx.beginPath(); cx.arc(x - 14, y, 6, 0, Math.PI * 2); cx.fill();
-      cx.beginPath(); cx.arc(x + 14, y, 6, 0, Math.PI * 2); cx.fill();
+      const u = IMG["unit:" + g.unit(s).key];
+      if (u && u.complete && u.naturalWidth) {
+        const h = 150;
+        const w = h * (u.naturalWidth / u.naturalHeight);
+        cx.globalAlpha = 0.75;
+        cx.drawImage(u, x - w / 2, y - h / 2 + 30, w, h);
+        cx.globalAlpha = 1;
+      } else {
+        cx.fillStyle = "#FFD700";
+        cx.beginPath(); cx.arc(x - 14, y, 6, 0, Math.PI * 2); cx.fill();
+        cx.beginPath(); cx.arc(x + 14, y, 6, 0, Math.PI * 2); cx.fill();
+      }
       const left = g.patienceLeft(s);
       cx.fillStyle = "#141620"; cx.fillRect(r[0] + 20, r[1] + r[3] - 18, r[2] - 40, 6);
       cx.fillStyle = left < 0.3 ? "#E94560" : "#5A6A8A";
@@ -309,6 +376,19 @@ function drawOffice(g) {
   }
   cx.strokeStyle = "#12141E"; cx.beginPath();
   cx.moveTo(0, H - 40); cx.lineTo(W, H - 40); cx.stroke();
+}
+
+/** The two of them, filling the screen. The one frame the art is for. */
+function drawScare(g) {
+  const side = g.metSide || "LEFT";
+  const u = g.unit(side);
+  const im = IMG["scare:" + u.key] || IMG["scare:freddy"];
+  cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  if (im && im.complete && im.naturalWidth) {
+    const s = Math.max(W / im.naturalWidth, H / im.naturalHeight) * 1.08;
+    const w = im.naturalWidth * s, h = im.naturalHeight * s;
+    cx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
+  }
 }
 
 // --------------------------------------------------------------- the page
@@ -330,12 +410,12 @@ function start(night) {
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  if (g) { g.update(dt); paint(); }
+  if (g) { g.update(dt); sfxAll(); paint(); }
   raf = requestAnimationFrame(loop);
 }
 
 function paint() {
-  drawOffice(g);
+  if (g.status === "MET") drawScare(g); else drawOffice(g);
   document.getElementById("night").textContent = "NIGHT " + g.night;
   document.getElementById("clock").textContent = g.clock();
   const a = g.apart();

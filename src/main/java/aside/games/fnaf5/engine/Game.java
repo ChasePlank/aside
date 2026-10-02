@@ -366,7 +366,7 @@ public class Game {
      * player can walk is a threat the player can learn, and FNAF 5 is the
      * first game in the franchise where that is true.
      */
-    static int aiLevel(int night) {
+    public static int aiLevel(int night) {
         int[] table = {4, 7, 11, 15, 20};
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
     }
@@ -589,7 +589,7 @@ public class Game {
      * clearing the room of all three (see {@link #shock}), it is also what
      * stops a player from spending one on Ballora and expecting it to work.
      */
-    static int shockAllowance(int night) {
+    public static int shockAllowance(int night) {
         int[] table = {5, 5, 4, 4, 3};
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
     }
@@ -743,15 +743,38 @@ public class Game {
      * 93/32/0/0/0 for HOLD, and PANIC falls with it, which is the tell
      * that it is the geometry and not the policy. The walls stay out.
      *
-     * <p><b>OPEN, and deliberately not fixed (2026-10-01):</b> what the
-     * missing refusal costs is that movement direction barely matters. The
-     * player is faster than everything in the building, so the only threat
-     * that cares where you are is Funtime Freddy -- and he is the one that
-     * never kills anybody. The sweep says so plainly: HOLD, FLEE and PANIC
-     * finish the week within seven points of each other, and the
-     * competent policy is not the best one. The rule and the difficulty
-     * table have to move together, and that is a redesign rather than a
-     * tuning job; see the note in {@link Bot}.
+     * <p><b>CLOSED, and measured (2026-10-02).</b> This paragraph used to say
+     * that movement direction barely mattered, and that the missing refusal
+     * was the reason: the player is faster than everything in the building,
+     * so the only threat that cares where you are is Funtime Freddy, and he
+     * is the one that never kills anybody. That was true of the game the
+     * paragraph was written about -- the one where walking answered all three
+     * threats -- and it stopped being true when the 2026-10-01 pass made the
+     * stop mandatory and gave the pursuer a price for stillness. What was
+     * missing was not a rule, it was a <i>measurement</i>: the claim sat in
+     * this comment while the suite contradicted it in prose and neither of
+     * them tested it.
+     *
+     * <p>So it is tested now. {@code Bot.Policy.TOWARD} is the competent
+     * policy with one thing changed -- when it moves, it walks toward the
+     * nearest thing it can perceive instead of away, with the shock, the feed
+     * and the stop all identical -- and the gap between the two columns is
+     * the value of the direction alone. Measured over 200 seeds a night:
+     * <b>PRO 62% against TOWARD 33%</b>, and the check that keeps it that way
+     * is in {@code SelfTest}. Direction is worth twenty-nine points of week,
+     * which is most of what the redesign bought.
+     *
+     * <p><b>And the walls stay out.</b> The obvious way to make direction
+     * matter is to make the things in the building solid, and it does not
+     * work: with every threat a wall the guard takes every policy to 0% from
+     * night 3 on. A second attempt on 2026-10-02 made <i>only the pursuer</i>
+     * solid, on the theory that a line plus one wall is not a line plus
+     * three -- and it fails differently rather than better. PRO falls from
+     * 62% to 26%, the week's ramp collapses to 53/37/23/14/3, and Funtime
+     * Foxy becomes the killer of the night (80 to 108 deaths a night against
+     * Ballora's 14 to 66) because the player is now pinned in a room with the
+     * feed as their only way out. The refusal costs more than it buys, so
+     * there is no refusal. See the note in {@link Bot}.
      *
      * <p>The instrument that found this was itself broken when the note
      * above was first written. HOLD and REACT died to Funtime Freddy on

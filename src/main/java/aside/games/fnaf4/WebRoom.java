@@ -5,6 +5,7 @@ import aside.games.fnaf4.engine.Game;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
 /**
  * Build {@code web/fnaf4.html} from the page template and the engine.
@@ -37,11 +38,12 @@ public final class WebRoom {
     public static String html() throws Exception {
         String tpl = new String(WebRoom.class.getResourceAsStream("/fnaf4/web.html")
                 .readAllBytes(), StandardCharsets.UTF_8);
-        return tpl.replace("/*__CONTENT__*/", content());
+        return tpl.replace("/*__CONTENT__*/", content())
+                .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
     }
 
     /** Everything the page needs that the engine owns. */
-    static String content() {
+    static String content() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("const C = {\n");
         sb.append("  baseInterval: ").append(table(0)).append(",\n");
@@ -73,7 +75,8 @@ public final class WebRoom {
             sb.append(str(note(n)));
         }
         sb.append("],\n");
-        sb.append("  help: ").append(str(HELP)).append("\n");
+        sb.append("  help: ").append(str(HELP)).append(",\n");
+        sb.append("  assets: ").append(assets()).append("\n");
         sb.append("};\n");
         return sb.toString();
     }
@@ -134,6 +137,52 @@ public final class WebRoom {
             + "when it is standing there. The light reaches one move out as "
             + "well as standing-here -- and every flash is noise, and noise is "
             + "what brings Fredbear, who does not walk and has to be found.";
+
+    /** Where the phone's own copies of the art live. */
+    static final Path ART = Path.of("art", "phone", "fnaf4");
+
+    /**
+     * The art, as data URIs.
+     *
+     * <p>Inlined rather than linked, because the build has to be one file.
+     * The copies are downscaled by {@code tools/fnaf4-phone-art.py} and
+     * committed, so this method is reproducible from Java alone.
+     *
+     * <p>Each station has three frames and the difference between them is the
+     * game: dark is a station you have not lit, lit is the answer to the
+     * question you were asking, and here is the thing standing in it. The
+     * keys are the engine's own station names, because the page looks a
+     * station up by name.
+     */
+    static String assets() throws Exception {
+        StringBuilder b = new StringBuilder("{\n");
+        String[] stations = {"BED", "LEFT", "RIGHT", "CLOSET"};
+        boolean first = true;
+        for (String st : stations) {
+            for (String state : new String[]{"dark", "lit", "here"}) {
+                if (!first) b.append(",\n");
+                first = false;
+                b.append("  \"").append(st).append(":").append(state).append("\":")
+                 .append(uri(st.toLowerCase() + "_" + state + ".webp", "image/webp"));
+            }
+        }
+        b.append(",\n  \"fredbear\":").append(uri("fredbear.webp", "image/webp"));
+        for (String key : new String[]{"bonnie", "chica", "foxy", "fredbear", "freddy"}) {
+            b.append(",\n  \"scare:").append(key).append("\":")
+             .append(uri("scare_" + key + ".webp", "image/webp"));
+        }
+        return b.append("\n}").toString();
+    }
+
+    static String uri(String name, String mime) throws Exception {
+        Path f = ART.resolve(name);
+        if (!Files.exists(f)) {
+            throw new IllegalStateException("no " + f + " -- build it with: "
+                    + "python3 tools/fnaf4-phone-art.py");
+        }
+        return "\"data:" + mime + ";base64,"
+                + Base64.getEncoder().encodeToString(Files.readAllBytes(f)) + "\"";
+    }
 
     static String str(String s) {
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";

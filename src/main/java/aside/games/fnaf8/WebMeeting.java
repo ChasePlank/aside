@@ -7,6 +7,7 @@ import aside.games.fnaf8.engine.Unit;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
 /**
  * Build {@code web/fnaf8.html} from the page template and the engine.
@@ -40,11 +41,12 @@ public final class WebMeeting {
     public static String html() throws Exception {
         String tpl = new String(WebMeeting.class.getResourceAsStream("/fnaf8/web.html")
                 .readAllBytes(), StandardCharsets.UTF_8);
-        return tpl.replace("/*__CONTENT__*/", content());
+        return tpl.replace("/*__CONTENT__*/", content())
+                .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
     }
 
     /** Everything the page needs that the engine owns. */
-    static String content() {
+    static String content() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("const C = {\n");
         sb.append("  pairs: [");
@@ -67,7 +69,8 @@ public final class WebMeeting {
         sb.append("  swivel: ").append(num(Meeting.SWIVEL)).append(",\n");
         sb.append("  dimRush: ").append(num(Meeting.DIM_RUSH)).append(",\n");
         sb.append("  brightRush: ").append(num(Meeting.BRIGHT_RUSH)).append(",\n");
-        sb.append("  help: ").append(str(HELP)).append("\n");
+        sb.append("  help: ").append(str(HELP)).append(",\n");
+        sb.append("  assets: ").append(assets()).append("\n");
         sb.append("};\n");
         return sb.toString();
     }
@@ -102,6 +105,43 @@ public final class WebMeeting {
             + "in your door can only be got rid of by turning its partner "
             + "around -- and the hall you are not looking at is the hall that "
             + "is moving.";
+
+    /** Where the phone's own copies of the art live. */
+    static final Path ART = Path.of("art", "phone", "fnaf8");
+
+    /**
+     * The art, as data URIs.
+     *
+     * <p>Inlined rather than linked, because the build has to be one file.
+     * The copies are downscaled by {@code tools/fnaf8-phone-art.py} and
+     * committed, so this method is reproducible from Java alone.
+     *
+     * <p>The unit keys are the engine's own, so the page looks a unit up by
+     * the key the engine gives it. This game has two of them a night and they
+     * arrive from opposite sides, so getting the key wrong would put the
+     * wrong thing in the wrong hall.
+     */
+    static String assets() throws Exception {
+        StringBuilder b = new StringBuilder("{\n");
+        b.append("  \"room\":").append(uri("room.webp", "image/webp"));
+        for (Unit u : Unit.all()) {
+            b.append(",\n  \"unit:").append(u.key()).append("\":")
+             .append(uri("unit_" + u.key() + ".webp", "image/webp"));
+            b.append(",\n  \"scare:").append(u.key()).append("\":")
+             .append(uri("scare_" + u.key() + ".webp", "image/webp"));
+        }
+        return b.append("\n}").toString();
+    }
+
+    static String uri(String name, String mime) throws Exception {
+        Path f = ART.resolve(name);
+        if (!Files.exists(f)) {
+            throw new IllegalStateException("no " + f + " -- build it with: "
+                    + "python3 tools/fnaf8-phone-art.py");
+        }
+        return "\"data:" + mime + ";base64,"
+                + Base64.getEncoder().encodeToString(Files.readAllBytes(f)) + "\"";
+    }
 
     static String str(String s) {
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";

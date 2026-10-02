@@ -408,6 +408,15 @@ public final class SelfTest {
         ok(generated.equals(checkedIn),
                 "web/residue.html is current -- regenerate it with aside.games.residue.WebResidue");
 
+        // The sound. These games use it for feedback rather than for a
+        // mechanic -- the desktop plays choice_move and choice_select -- but a
+        // tap that makes no sound on a page that is otherwise a still canvas
+        // reads as a tap that did not land.
+        ok(generated.contains("function voice("),
+                "the phone build carries the shared synthesiser");
+        ok(generated.contains("pointerdown"),
+                "the phone build answers a tap with a click");
+
         // And it has to carry the writing, not just be the right size.
         for (Thing t : Thing.values()) {
             ok(generated.contains("\"" + t.id + "\""), "the phone build carries the " + t.id);

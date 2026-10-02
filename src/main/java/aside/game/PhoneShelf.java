@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.zip.GZIPOutputStream;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -83,7 +84,10 @@ public final class PhoneShelf {
             case "drift" -> "Scored, and dealt fresh every copy. Two records, one sitting.";
             case "lesson" -> "Keeps the handover in this browser. Three nights, and one shift.";
             case "tell" -> "Keeps the house in this browser. Five nights, and one sitting.";
+            case "fnaf2" -> "Real-time, like the desktop. Three openings, no doors.";
+            case "fnaf3" -> "Real-time, like the desktop. The only verb you have is a noise.";
             case "fnaf4" -> "Real-time, like the desktop. Four sides to the room, one body.";
+            case "fnaf5" -> "Real-time, like the desktop. The camera cannot see the room you are in.";
             case "fnaf6" -> "Real-time, like the desktop. Five nights, and one sitting.";
             case "fnaf7" -> "Real-time, like the desktop. It comes to the side you are not looking at.";
             case "fnaf8" -> "Real-time, like the desktop. They are not coming for you.";
@@ -204,22 +208,42 @@ public final class PhoneShelf {
             if (!Files.exists(f)) {
                 throw new IllegalStateException("the shelf lists " + e.file() + " and it is not there");
             }
-            String base64 = Base64.getEncoder().encodeToString(Files.readAllBytes(f));
+            byte[] raw = Files.readAllBytes(f);
+            String base64 = Base64.getEncoder().encodeToString(gzip(raw));
             b.append("  {\"title\":").append(str(e.title()))
              .append(",\"blurb\":").append(str(e.blurb()))
              .append(",\"note\":").append(str(e.note()))
              .append(",\"file\":").append(str(e.file()))
-             .append(",\"kb\":").append(Files.size(f) / 1024)
+             // The size the player is actually getting, which is the
+             // uncompressed one -- the shelf's own weight is the compressed
+             // one and that is a different number.
+             .append(",\"kb\":").append(raw.length / 1024)
              // Base64 on purpose. The builds are whole HTML documents with
              // their own <script> tags in them, so embedding them as text
              // would need the one sequence that can end a script block to be
              // escaped everywhere it appears. Base64 has no < in it at all.
+             //
+             // And gzipped before it is base64'd, because a build is HTML,
+             // CSS and JavaScript and that compresses about four to one. The
+             // shelf carries twenty of them; without this it is 3.7 MB of
+             // text to download before the player has chosen anything, and
+             // with it, about a quarter of that. See inflate() in the
+             // template -- the browser does the other half.
              .append(",\"html\":").append(str(base64))
              .append('}');
             if (i < entries.size() - 1) b.append(',');
             b.append('\n');
         }
         return b.append("]\n").toString();
+    }
+
+    /** A build, gzipped. The browser inflates it; see the template. */
+    static byte[] gzip(byte[] raw) throws Exception {
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream(raw.length / 3 + 64);
+        try (GZIPOutputStream gz = new GZIPOutputStream(out)) {
+            gz.write(raw);
+        }
+        return out.toByteArray();
     }
 
     /** JSON string escaping. Base64 never needs it; the titles and blurbs might. */

@@ -2,6 +2,9 @@ package aside.games.fnaf2.engine;
 
 import aside.games.fnaf2.MouseMap;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /**
  * Headless self-test for FNAF 2.
  *
@@ -547,7 +550,162 @@ public class SelfTest {
                     !new Game(1, 7L).someoneAtTheOffice());
         }
 
+        phone();
+
         System.out.printf("%n%d checks, %d failed%n", checks, failed);
         if (failed > 0) System.exit(1);
     }
+
+    /**
+     * The phone build.
+     *
+     * <p>Two different things, and they fail for different reasons.
+     *
+     * <p><b>Is it current?</b> A generated file that has gone stale is worse
+     * than no file: it is a second copy of the game quietly disagreeing with
+     * the first. So the page is regenerated and compared rather than
+     * spot-checked -- the same check every other ported game carries.
+     *
+     * <p><b>Is it the same game?</b> A staleness check proves the file matches
+     * its generator and says nothing about whether the generator is right. The
+     * failure that would otherwise be silent is a rule that lives in the page
+     * as a literal and has stopped matching the engine -- so every number the
+     * night is made of is asserted to be the engine's own value, and the cast
+     * and their paths are asserted to be the engine's own cast.
+     *
+     * <p>What is <i>not</i> checked here is the RNG or the update loop. The
+     * page reproduces {@code java.util.Random} in BigInt -- including
+     * {@code nextInt}, which is a rejection sampler rather than a modulo --
+     * and that was verified by driving both engines under the same scripted
+     * policy: night one on seed 1001 produces identical traces every five
+     * seconds (the music box, all seven of the cast's rooms, Foxy's stage,
+     * whether the lights are gone and whether the Puppet is coming) and both
+     * end JUMPSCARED at the same moment. It is not checkable from Java without
+     * a JavaScript engine, and the alternative (a page that deals its own
+     * nights) would make the two builds different games with the same rules.
+     */
+    static void phone() {
+        System.out.println();
+        System.out.println("== the phone build ==");
+
+        Path out = Path.of("web", "fnaf2.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here -- run from the repository root)");
+            return;
+        }
+        String page;
+        try {
+            page = Files.readString(out);
+        } catch (Exception e) {
+            check("web/fnaf2.html can be read", false);
+            return;
+        }
+        try {
+            check("web/fnaf2.html is current -- regenerate it with aside.games.fnaf2.WebPizzeria",
+                    aside.games.fnaf2.WebPizzeria.html().equals(page));
+        } catch (Exception e) {
+            check("web/fnaf2.html is current -- regenerate it with aside.games.fnaf2.WebPizzeria",
+                    false);
+        }
+
+        // The rules, as numbers. A port whose box drains at 1.9 rather than
+        // 1.818 plays differently and looks identical.
+        check("the page carries the box's capacity",
+                page.contains("musicBoxMax: " + aside.games.fnaf2.WebPizzeria.num(Game.MUSIC_BOX_MAX)));
+        check("the page carries how fast the box drains",
+                page.contains("musicBoxDrain: " + aside.games.fnaf2.WebPizzeria.num(Game.MUSIC_BOX_DRAIN)));
+        check("the page carries how fast the box winds",
+                page.contains("musicBoxWind: " + aside.games.fnaf2.WebPizzeria.num(Game.MUSIC_BOX_WIND)));
+        check("the page carries how long the Puppet takes",
+                page.contains("puppetGrace: " + aside.games.fnaf2.WebPizzeria.num(Game.PUPPET_GRACE)));
+        check("the page carries Foxy's hall window",
+                page.contains("foxyHallWindow: " + aside.games.fnaf2.WebPizzeria.num(Game.FOXY_HALL_WINDOW)));
+        check("the page carries how much light repels Foxy",
+                page.contains("foxyRepelTime: " + aside.games.fnaf2.WebPizzeria.num(Game.FOXY_REPEL_TIME)));
+        check("the page carries the opening grace",
+                page.contains("openingGraceMax: " + aside.games.fnaf2.WebPizzeria.num(Game.OPENING_GRACE_MAX))
+                        && page.contains("openingGraceMin: "
+                                + aside.games.fnaf2.WebPizzeria.num(Game.OPENING_GRACE_MIN)));
+        check("the page carries which camera the music box is on",
+                page.contains("musicBoxCam: " + Game.MUSIC_BOX_CAM));
+        check("the page carries which camera freezes Foxy",
+                page.contains("coveCam: " + Game.COVE_CAM));
+
+        // The drain table, which is the honest difficulty lever.
+        StringBuilder drain = new StringBuilder("drainMult: [");
+        for (int i = 0; i < Game.DRAIN_MULT.length; i++) {
+            if (i > 0) drain.append(", ");
+            drain.append(aside.games.fnaf2.WebPizzeria.num(Game.DRAIN_MULT[i]));
+        }
+        drain.append("]");
+        check("the page carries the drain table", page.contains(drain));
+
+        // The art. FNAF 2 has the most of it of the eight: four office views,
+        // eleven cameras, eight units, the mask and six jumpscares. The phone
+        // carries its own WebP copies, built by tools/fnaf2-phone-art.py and
+        // inlined as data URIs, because the build has to be one file.
+        for (String n : new String[]{"office", "office.hall", "office.ventL", "office.ventR"}) {
+            check("the page carries the " + n + " view",
+                    page.contains("\"" + n + "\":\"data:image/webp;base64,"));
+        }
+        for (int c = 1; c <= Game.CAM_COUNT; c++) {
+            check("the page carries camera " + c,
+                    page.contains("\"room" + c + "\":\"data:image/webp;base64,"));
+        }
+        check("the page carries the mask",
+                page.contains("\"mask\":\"data:image/webp;base64,"));
+        for (String k : new String[]{"toyfreddy", "toybonnie", "toychica", "mangle",
+                "witheredbonnie", "witheredfoxy", "balloonboy", "puppet"}) {
+            check("the page carries the frame for " + k,
+                    page.contains("\"unit:" + k + "\":\"data:image/webp;base64,"));
+        }
+        // Six of the eight have a jumpscare in the source and two do not, so
+        // the page falls back -- which is what the desktop does too.
+        for (String k : new String[]{"toyfreddy", "toychica", "mangle",
+                "witheredfoxy", "balloonboy", "puppet"}) {
+            check("the page carries the scare for " + k,
+                    page.contains("\"scare:" + k + "\":\"data:image/webp;base64,"));
+        }
+
+        // And the cast, with the paths that are the whole of their movement.
+        Game g = new Game(1, 1);
+        for (Animatronic a : new Animatronic[]{g.toyFreddy, g.toyBonnie, g.toyChica,
+                g.mangle, g.witheredBonnie, g.balloonBoy, g.witheredFoxy, g.puppet}) {
+            StringBuilder want = new StringBuilder("name:\"" + a.name + "\", key:\""
+                    + aside.games.fnaf2.WebPizzeria.keyOf(a.name) + "\", path: [");
+            for (int j = 0; j < a.path.length; j++) {
+                if (j > 0) want.append(", ");
+                want.append(a.path[j]);
+            }
+            want.append("], opening:\"").append(a.opening.name())
+                .append("\", answer:\"").append(a.answer.name())
+                .append("\", lethal:").append(a.lethal);
+            check("the page carries " + a.name + "'s path, opening and answer",
+                    page.contains(want));
+        }
+    
+        // The sound. This game's arrival cue is not decoration: the engine carries Chase's own
+        // playtest note -- "I checked lights, went to wind the music box, and got
+        // jumpscared. If the timer between entering and killing is 5 seconds, then they
+        // arent visible." The grace is what makes an arrival survivable; the cue is what
+        // makes it fair, and a silent port is an unfair one.
+        check("the page carries the shared synthesiser",
+                page.contains("function voice(") && page.contains("function sfx("));
+        check("the page has a voice for the at_door cue",
+                page.contains("case \"at_door\""));
+        check("the page has a voice for the camera_down cue",
+                page.contains("case \"camera_down\""));
+        check("the page has a voice for the chime_6am cue",
+                page.contains("case \"chime_6am\""));
+        check("the page has a voice for the door_close cue",
+                page.contains("case \"door_close\""));
+        check("the page has a voice for the light_click cue",
+                page.contains("case \"light_click\""));
+        check("the page has a voice for the music_box cue",
+                page.contains("case \"music_box\""));
+        check("the page has a voice for the power_down cue",
+                page.contains("case \"power_down\""));
+        check("the page has a voice for the static cue",
+                page.contains("case \"static\""));
+}
 }

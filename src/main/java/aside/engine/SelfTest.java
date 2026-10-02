@@ -396,6 +396,24 @@ public class SelfTest {
                                 + " is current -- regenerate it with aside.game.PhoneShelf",
                         generated.equals(Files.readString(shelfFile)));
 
+                // The builds are gzipped before they are base64'd, and the
+                // page does the other half with DecompressionStream. Both
+                // halves have to be there or the shelf is a list of games
+                // that do not open, so both are checked: the template has to
+                // inflate, and what it is handed has to actually be gzip.
+                check("the shelf's page inflates what it is given",
+                        generated.contains("DecompressionStream") && generated.contains("inflate("));
+                int at = generated.indexOf("\"html\":\"");
+                check("the shelf embeds a build at all", at > 0);
+                if (at > 0) {
+                    int from = at + "\"html\":\"".length();
+                    int to = generated.indexOf('"', from);
+                    byte[] raw = java.util.Base64.getDecoder()
+                            .decode(generated.substring(from, to));
+                    check("the shelf's builds are gzipped",
+                            raw.length > 2 && (raw[0] & 0xff) == 0x1f && (raw[1] & 0xff) == 0x8b);
+                }
+
                 List<PhoneShelf.Entry> entries = PhoneShelf.entries();
                 check("the shelf has something on it", !entries.isEmpty());
                 Set<String> listed = new HashSet<>();
@@ -537,6 +555,9 @@ public class SelfTest {
         System.out.println("\n--- the phone build ---");
         phoneBuild();
 
+        System.out.println("\n--- Vn.text() is never null ---");
+        textNeverNull();
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
     }
@@ -562,6 +583,16 @@ public class SelfTest {
                 generated.contains("data:image/") && generated.contains("\"assets\":{\"bg:"));
         check("web/" + name + ".html says which staging it could not draw",
                 generated.contains("\"missing\":["));
+
+        // The sound. The stories are the two builds whose desktop versions
+        // carry music rather than cues, so this is not a mechanic -- but the
+        // page is a still frame with a script under it, and a tap that makes
+        // no sound reads as a tap that did not land. Same one line as the ten
+        // verb games, spliced in from the shared palette.
+        check("web/" + name + ".html carries the shared synthesiser",
+                generated.contains("function voice(") && generated.contains("function ac("));
+        check("web/" + name + ".html answers a tap with a click",
+                generated.contains("pointerdown"));
 
         // The word boundaries in condOK are why this is checked at all. The
         // template is a Java text block, where \b is the backspace character,
@@ -773,6 +804,43 @@ public class SelfTest {
             }
         }
         return null;
+    }
+
+    /**
+     * Every beat of every story, and the accessor a renderer reads it with.
+     *
+     * <p>A STAGE beat -- a {@code bg} or a {@code show} -- carries no prose, so
+     * {@code Vn.text()} used to return null on it, and the presenter crashed on
+     * {@code t.equals(shownText)}. Roxanne found it by capturing a choice
+     * screen; the sprite capture had never landed on a stageless beat, so the
+     * presenter had been looked at before without this being visible. Her fix
+     * never reached main, and this is the check that keeps it fixed: walk each
+     * story from the start, taking the first option at every choice, and assert
+     * the accessor is non-null at every step.
+     */
+    static void textNeverNull() throws Exception {
+        for (String name : new String[]{"night-shift", "overtime"}) {
+            Path p = Path.of("stories", name + ".aside");
+            if (!Files.exists(p)) p = Path.of("..", "stories", name + ".aside");
+            if (!Files.exists(p)) {
+                System.out.println("       (no " + p + " from here)");
+                continue;
+            }
+            Script sc = Script.load(p);
+            Vn walk = new Vn(sc);
+            boolean ok = true;
+            int guard = 0;
+            while (walk.mode != Vn.Mode.ENDED && guard++ < 20000) {
+                if (walk.text() == null) ok = false;
+                if (walk.mode == Vn.Mode.CHOOSING) {
+                    if (walk.availableChoices().isEmpty()) break;
+                    walk.choose(0);
+                } else {
+                    walk.step();
+                }
+            }
+            check(name + ": Vn.text() is never null, on any beat", ok);
+        }
     }
 
     static boolean hasChoiceEffect(Script s, String sceneId) {

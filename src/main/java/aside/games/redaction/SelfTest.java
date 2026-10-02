@@ -324,6 +324,15 @@ public final class SelfTest {
         ok(Files.readString(checked).equals(generated),
                 "and is current -- regenerate it with aside.games.redaction.WebRedaction");
 
+        // The sound. These games use it for feedback rather than for a
+        // mechanic -- the desktop plays choice_move and choice_select -- but a
+        // tap that makes no sound on a page that is otherwise a still canvas
+        // reads as a tap that did not land.
+        ok(generated.contains("function voice("),
+                "the phone build carries the shared synthesiser");
+        ok(generated.contains("pointerdown"),
+                "the phone build answers a tap with a click");
+
         // A generated file that has gone stale is worse than no file, and a
         // build missing a sentence is stale in the way that matters most.
         carries(generated, Redaction.PERSON_NAMED, "the finding about a named complainant");

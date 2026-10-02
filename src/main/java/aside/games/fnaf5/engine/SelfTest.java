@@ -2,6 +2,9 @@ package aside.games.fnaf5.engine;
 
 import aside.games.fnaf5.MouseMap;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /**
  * The FNAF 5 checks, runnable with no display.
  *
@@ -67,6 +70,7 @@ public final class SelfTest {
         clock();
         mouse();
         cues();
+        phone();
         survival();
         System.out.println();
         System.out.println(checks + " checks, " + failed + " failed");
@@ -518,6 +522,168 @@ public final class SelfTest {
 
     // ---------------------------------------------------------- the difficulty
 
+    /**
+     * The phone build.
+     *
+     * <p>Two different things, and they fail for different reasons.
+     *
+     * <p><b>Is it current?</b> A generated file that has gone stale is worse
+     * than no file: it is a second copy of the game quietly disagreeing with
+     * the first. So the page is regenerated and compared rather than
+     * spot-checked -- the same check every other ported game carries.
+     *
+     * <p><b>Is it the same game?</b> A staleness check proves the file matches
+     * its generator and says nothing about whether the generator is right. The
+     * failure that would otherwise be silent is a rule that lives in the page
+     * as a literal and has stopped matching the engine -- so every number the
+     * night is made of is asserted to be the engine's own value, and the three
+     * rules that make the three threats different problems are asserted to be
+     * the engine's own rules.
+     *
+     * <p>What is <i>not</i> checked here is the RNG or the update loop. The
+     * page reproduces {@code java.util.Random} in BigInt -- including
+     * {@code nextInt}, which is a rejection sampler rather than a modulo, and
+     * the die in this game is a d20 against the night's AI level -- and that
+     * was verified by driving both engines under the same scripted policy:
+     * night one on seed 1001 produces identical traces every five seconds (the
+     * room you are in, all three threats' rooms, and the shocks left) and both
+     * end JUMPSCARED to the same killer at the same moment. It is not
+     * checkable from Java without a JavaScript engine, and the alternative (a
+     * page that deals its own nights) would make the two builds different
+     * games with the same rules.
+     */
+    static void phone() {
+        section("the phone build");
+
+        Path out = Path.of("web", "fnaf5.html");
+        if (!Files.exists(out)) {
+            System.out.println("       (no " + out + " from here -- run from the repository root)");
+            return;
+        }
+        String page;
+        try {
+            page = Files.readString(out);
+        } catch (Exception e) {
+            check("web/fnaf5.html can be read", false);
+            return;
+        }
+        try {
+            check("web/fnaf5.html is current -- regenerate it with aside.games.fnaf5.WebRental",
+                    aside.games.fnaf5.WebRental.html().equals(page));
+        } catch (Exception e) {
+            check("web/fnaf5.html is current -- regenerate it with aside.games.fnaf5.WebRental",
+                    false);
+        }
+
+        // The rules, as numbers. A port whose feed pace is 1.8 rather than 2.0
+        // plays differently and looks identical.
+        check("the page carries the move",
+                page.contains("moveTime: " + aside.games.fnaf5.WebRental.num(Game.MOVE_TIME)));
+        check("the page carries the shock",
+                page.contains("shockTime: " + aside.games.fnaf5.WebRental.num(Game.SHOCK_TIME)));
+        check("the page carries how long the building remembers a sound",
+                page.contains("soundMemory: " + aside.games.fnaf5.WebRental.num(Game.SOUND_MEMORY)));
+        check("the page carries Ballora's patience",
+                page.contains("balloraPatience: " + aside.games.fnaf5.WebRental.num(Game.BALLORA_PATIENCE)));
+        check("the page carries Ballora's clock",
+                page.contains("balloraGrace: " + aside.games.fnaf5.WebRental.num(Game.BALLORA_GRACE)));
+        check("the page carries how long silence buys",
+                page.contains("balloraCooldown: " + aside.games.fnaf5.WebRental.num(Game.BALLORA_COOLDOWN)));
+        check("the page carries the feed pace",
+                page.contains("feedPace: " + aside.games.fnaf5.WebRental.num(Game.FEED_PACE)));
+        check("the page carries the stillness window",
+                page.contains("stillWindow: " + aside.games.fnaf5.WebRental.num(Game.STILL_WINDOW)));
+        check("the page carries the stillness pace",
+                page.contains("stillPace: " + aside.games.fnaf5.WebRental.num(Game.STILL_PACE)));
+        check("the page carries the interval jitter",
+                page.contains("intervalJitter: " + aside.games.fnaf5.WebRental.num(Game.INTERVAL_JITTER)));
+
+        // The tables, which are the whole of the difficulty ramp.
+        for (String t : new String[]{"baseInterval", "freddyPace", "grace", "shockAllowance", "aiLevel"}) {
+            StringBuilder want = new StringBuilder(t + ": [");
+            for (int n = 1; n <= 5; n++) {
+                Game g = new Game(n, 1);
+                if (n > 1) want.append(", ");
+                want.append(switch (t) {
+                    case "baseInterval" -> aside.games.fnaf5.WebRental.num(g.baseInterval());
+                    case "freddyPace" -> aside.games.fnaf5.WebRental.num(g.freddyPace());
+                    case "grace" -> aside.games.fnaf5.WebRental.num(g.grace());
+                    case "shockAllowance" -> String.valueOf(Game.shockAllowance(n));
+                    default -> String.valueOf(Game.aiLevel(n));
+                });
+            }
+            want.append("]");
+            check("the page carries the " + t + " table", page.contains(want));
+        }
+
+        // Every room has a label, keyed by the name the engine uses. The
+        // page looks a room up by name, so an array here would index by a
+        // string and every label would come back undefined -- which is what
+        // happened, and which no check on the numbers could have caught.
+        boolean tags = true;
+        for (int i = 0; i < Room.COUNT; i++) {
+            tags &= page.contains(Room.ALL[i].name() + ": \"" + Room.ALL[i].tag + "\"");
+        }
+        check("the page labels every room by the name the engine uses", tags);
+
+        // The art. The desktop draws five room photographs and three "it is
+        // in the room with you" frames; the phone carries its own downscaled
+        // copies, built by tools/fnaf5-phone-art.py and inlined as data URIs,
+        // because the build has to be one file. Every room has to have one,
+        // keyed by the name the engine uses -- the page looks a room up by
+        // name, and an array here would index by a string and put the player
+        // in the wrong photograph while looking perfectly fine.
+        for (int i = 0; i < Room.COUNT; i++) {
+            check("the page carries the art for " + Room.ALL[i].name(),
+                    page.contains("\"room:" + Room.ALL[i].name() + "\":\"data:image/webp;base64,"));
+        }
+        for (String key : new String[]{"ballora", "foxy", "freddy"}) {
+            check("the page carries the frame for " + key + " in the room with you",
+                    page.contains("\"here:" + key + "\":\"data:image/webp;base64,"));
+            check("the page carries the scare frame for " + key,
+                    page.contains("\"scare:" + key + "\":\"data:image/webp;base64,"));
+        }
+
+        // And the three rules, which are the whole difference between the
+        // three threats.
+        Game g = new Game(1, 1);
+        for (Threat t : g.threats) {
+            check("the page carries " + t.name + " following " + t.rule,
+                    page.contains("name:\"" + t.name + "\", key:\"" + t.key
+                            + "\", rule:\"" + t.rule.name() + "\", home:\""
+                            + t.home.name() + "\", pace:"
+                            + aside.games.fnaf5.WebRental.num(t.pace)));
+        }
+    
+        // The sound. Ballora is blind and follows sound, so the cue is not atmosphere here -- it is
+        // the only channel that says something is next door, and the engine records what
+        // happened when it was missing: "the bot walked straight into the room she had
+        // just left, on every seed, because the only channel that says 'something is next
+        // door' was never fired."
+        check("the page carries the shared synthesiser",
+                page.contains("function voice(") && page.contains("function sfx("));
+        check("the page has a voice for the camera_down cue",
+                page.contains("case \"camera_down\""));
+        check("the page has a voice for the camera_up cue",
+                page.contains("case \"camera_up\""));
+        check("the page has a voice for the chime_6am cue",
+                page.contains("case \"chime_6am\""));
+        check("the page has a voice for the footstep cue",
+                page.contains("case \"footstep\""));
+        check("the page has a voice for the scare_sprint cue",
+                page.contains("case \"scare_sprint\""));
+        check("the page has a voice for the shock cue",
+                page.contains("case \"shock\""));
+        check("the page has a voice for the static cue",
+                page.contains("case \"static\""));
+        check("the page has a voice for the here_* cues",
+                page.contains("startsWith(\"here_\")"));
+        check("the page has a voice for the step_* cues",
+                page.contains("startsWith(\"step_\")"));
+        check("the page has a voice for the lost_* cues",
+                page.contains("startsWith(\"lost_\")"));
+}
+
     static void survival() {
         section("the week");
 
@@ -650,6 +816,24 @@ public final class SelfTest {
         System.out.printf("    the policy that plays all three counters: PRO %.0f%%"
                         + " (n1 %.0f%%, n5 %.0f%%)%n",
                 mean(pro) * 100, pro[0] * 100, pro[4] * 100);
+
+        // AND THE DIRECTION OF A STEP, which is the last piece of the open
+        // finding and the one that was never measured. The note in Game#step
+        // claimed for a year that movement direction barely matters, because
+        // the player is faster than everything in the building -- and the
+        // suite contradicted it in prose without ever testing it. TOWARD is
+        // PRO with one thing changed: when it moves, it walks toward the
+        // nearest thing it can perceive instead of away. Everything else --
+        // the shock, the feed, the stop -- is identical, so the gap between
+        // the two columns is the value of the direction alone.
+        double[] toward = new double[5];
+        for (int n = 1; n <= 5; n++) toward[n - 1] = Bot.survival(n, runs, Bot.Policy.TOWARD);
+        double towardMean = mean(toward);
+        System.out.printf("    walking toward what you can perceive: TOWARD %.0f%%"
+                        + " (n1 %.0f%%, n5 %.0f%%)%n",
+                towardMean * 100, toward[0] * 100, toward[4] * 100);
+        check("walking away from what you can perceive beats walking toward it",
+                proMean - towardMean > 0.15);
 
         // The building has to be able to surprise you. Before the die was
         // added to Threat.update, every seed produced the same night: the

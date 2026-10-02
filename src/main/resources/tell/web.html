@@ -90,7 +90,15 @@
 <body>
 <div class="wrap" id="app"></div>
 <script>
-const C = /*__CONTENT__*/;
+const C = /*__CONTENT__*/
+/*__AUDIO__*/
+
+// Every tap is a click. The desktop distinguishes a move from a select --
+// choice_move and choice_select -- and on a phone the distinction is not worth
+// the bookkeeping: what the player needs to hear is that the tap landed,
+// because this page is a canvas and nothing else moves.
+document.addEventListener("pointerdown", () => voice("click"));
+;
 
 //__MODEL_BEGIN__
 // The house, ported. Counter-based, not a stream: every number is a pure

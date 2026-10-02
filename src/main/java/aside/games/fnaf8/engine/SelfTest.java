@@ -593,6 +593,21 @@ public final class SelfTest {
             check("the page carries the " + t + " table", page.contains(t + ": " + want));
         }
 
+        // The art. The desktop draws an office, ten units at 700 px tall with
+        // alpha and ten scares; the phone carries its own WebP copies, built
+        // by tools/fnaf8-phone-art.py and inlined as data URIs, because the
+        // build has to be one file. This game has two of them a night and they
+        // arrive from opposite sides, so getting a key wrong would put the
+        // wrong thing in the wrong hall.
+        check("the page carries the office",
+                page.contains("\"room\":\"data:image/webp;base64,"));
+        for (Unit u : Unit.all()) {
+            check("the page carries the frame for " + u.name(),
+                    page.contains("\"unit:" + u.key() + "\":\"data:image/webp;base64,"));
+            check("the page carries the scare for " + u.name(),
+                    page.contains("\"scare:" + u.key() + "\":\"data:image/webp;base64,"));
+        }
+
         // And the cast, which is the one thing the player reads before the
         // night starts.
         for (int n = 1; n <= 5; n++) {
@@ -602,7 +617,35 @@ public final class SelfTest {
                     page.contains(p.left().name()) && page.contains(p.right().name())
                             && page.contains(p.note()));
         }
-    }
+    
+        // The sound. And this one is the counter-example that proves the palette is about
+        // information rather than about sound. FNAF 8 has *no directional channel at all*,
+        // deliberately: both halls emit the same footfall, because the lamp is the only
+        // way to know where either of them is. The port must not invent a distinction the
+        // desktop refuses to make.
+        check("the page carries the shared synthesiser",
+                page.contains("function voice(") && page.contains("function sfx("));
+        check("the page has a voice for the chime_6am cue",
+                page.contains("case \"chime_6am\""));
+        check("the page has a voice for the f8_back cue",
+                page.contains("case \"f8_back\""));
+        check("the page has a voice for the f8_door cue",
+                page.contains("case \"f8_door\""));
+        check("the page has a voice for the f8_gives_up cue",
+                page.contains("case \"f8_gives_up\""));
+        check("the page has a voice for the f8_met cue",
+                page.contains("case \"f8_met\""));
+        check("the page has a voice for the f8_off cue",
+                page.contains("case \"f8_off\""));
+        check("the page has a voice for the f8_push cue",
+                page.contains("case \"f8_push\""));
+        check("the page has a voice for the f8_set cue",
+                page.contains("case \"f8_set\""));
+        check("the page has a voice for the f8_step cue",
+                page.contains("case \"f8_step\""));
+        check("the page has a voice for the f8_swivel cue",
+                page.contains("case \"f8_swivel\""));
+}
 
     static void survival() {
         section("the week, 500 seeds a night");

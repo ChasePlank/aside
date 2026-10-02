@@ -56,7 +56,7 @@ public class Game {
      * the night with your hands on a panel -- and a panel is time you are
      * not holding the lure.
      */
-    static final double[] DRAIN_MULT = {1.0, 1.3, 1.55, 1.75, 2.1};
+    public static final double[] DRAIN_MULT = {1.0, 1.3, 1.55, 1.75, 2.1};
 
     // ---- Audio lure ----
     /** How long a lure keeps playing. */
@@ -75,10 +75,10 @@ public class Game {
     // ---- Phantoms ----
     public static final double PHANTOM_LIFE = 3.0;
     /** Per second, with the air on. */
-    static final double PHANTOM_RATE_CALM = 0.008;
+    public static final double PHANTOM_RATE_CALM = 0.008;
     /** Per second, with the air off. */
-    static final double PHANTOM_RATE_FAILING = 0.12;
-    static final int PHANTOM_MAX = 2;
+    public static final double PHANTOM_RATE_FAILING = 0.12;
+    public static final int PHANTOM_MAX = 2;
 
     public int night;
 
@@ -125,13 +125,13 @@ public class Game {
     /** The systems a phantom can take. Not the air: the air is what
      *  causes them, and a hallucination that switches off the thing
      *  making it is a loop rather than a cost. */
-    static final System[] PHANTOM_TAKES = { System.CAMERAS, System.AUDIO };
+    public static final System[] PHANTOM_TAKES = { System.CAMERAS, System.AUDIO };
 
-    static final String[] PHANTOM_NAMES = {
+    public static final String[] PHANTOM_NAMES = {
         "Phantom Freddy", "Phantom Chica", "Phantom Foxy",
         "Phantom Mangle", "Phantom Puppet", "Phantom Balloon Boy",
     };
-    static final Phantom.Slot[] PHANTOM_SLOTS = {
+    public static final Phantom.Slot[] PHANTOM_SLOTS = {
         Phantom.Slot.WINDOW, Phantom.Slot.DESK, Phantom.Slot.VENT,
         Phantom.Slot.CORNER, Phantom.Slot.WINDOW, Phantom.Slot.DESK,
     };
@@ -152,7 +152,7 @@ public class Game {
      * "each one harder than the last" is a promise about the franchise,
      * not a mood.
      */
-    static int aiLevel(int night) {
+    public static int aiLevel(int night) {
         int[] table = {4, 8, 12, 16, 20};
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
     }

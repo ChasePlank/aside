@@ -6,6 +6,7 @@ import aside.games.fnaf7.engine.Unit;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
 /**
  * Build {@code web/fnaf7.html} from the page template and the engine.
@@ -39,11 +40,12 @@ public final class WebShift {
     public static String html() throws Exception {
         String tpl = new String(WebShift.class.getResourceAsStream("/fnaf7/web.html")
                 .readAllBytes(), StandardCharsets.UTF_8);
-        return tpl.replace("/*__CONTENT__*/", content());
+        return tpl.replace("/*__CONTENT__*/", content())
+                .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
     }
 
     /** Everything the page needs that the engine owns. */
-    static String content() {
+    static String content() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("const C = {\n");
         sb.append("  units: [");
@@ -70,7 +72,8 @@ public final class WebShift {
         sb.append("  barMove: ").append(num(Shift.BAR_MOVE)).append(",\n");
         sb.append("  strike: ").append(num(Shift.STRIKE)).append(",\n");
         sb.append("  sure: ").append(num(Shift.SURE)).append(",\n");
-        sb.append("  help: ").append(str(HELP)).append("\n");
+        sb.append("  help: ").append(str(HELP)).append(",\n");
+        sb.append("  assets: ").append(assets()).append("\n");
         sb.append("};\n");
         return sb.toString();
     }
@@ -97,6 +100,42 @@ public final class WebShift {
             + "while the light is on. The light has to warm up before it shows "
             + "you anything, and the filament only lasts so long. The readout "
             + "says where it thinks you are -- so it comes to the other side.";
+
+    /** Where the phone's own copies of the art live. */
+    static final Path ART = Path.of("art", "phone", "fnaf7");
+
+    /**
+     * The art, as data URIs.
+     *
+     * <p>Inlined rather than linked, because the build has to be one file.
+     * The copies are downscaled by {@code tools/fnaf7-phone-art.py} and
+     * committed, so this method is reproducible from Java alone.
+     *
+     * <p>The unit keys are the engine's own, so the page looks a unit up by
+     * the key the engine gives it rather than by the night number -- a night
+     * that showed the wrong one would look perfectly fine doing it.
+     */
+    static String assets() throws Exception {
+        StringBuilder b = new StringBuilder("{\n");
+        b.append("  \"room\":").append(uri("room.webp", "image/webp"));
+        for (Unit u : Unit.all()) {
+            b.append(",\n  \"unit:").append(u.key()).append("\":")
+             .append(uri("unit_" + u.key() + ".webp", "image/webp"));
+            b.append(",\n  \"scare:").append(u.key()).append("\":")
+             .append(uri("scare_" + u.key() + ".webp", "image/webp"));
+        }
+        return b.append("\n}").toString();
+    }
+
+    static String uri(String name, String mime) throws Exception {
+        Path f = ART.resolve(name);
+        if (!Files.exists(f)) {
+            throw new IllegalStateException("no " + f + " -- build it with: "
+                    + "python3 tools/fnaf7-phone-art.py");
+        }
+        return "\"data:" + mime + ";base64,"
+                + Base64.getEncoder().encodeToString(Files.readAllBytes(f)) + "\"";
+    }
 
     static String str(String s) {
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";

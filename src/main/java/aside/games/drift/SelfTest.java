@@ -206,6 +206,15 @@ public final class SelfTest {
             String generated = WebDrift.html();
             ok(generated.equals(Files.readString(web)),
                     "web/drift.html is current -- regenerate it with aside.games.drift.WebDrift");
+
+        // The sound. These games use it for feedback rather than for a
+        // mechanic -- the desktop plays choice_move and choice_select -- but a
+        // tap that makes no sound on a page that is otherwise a still canvas
+        // reads as a tap that did not land.
+        ok(generated.contains("function voice("),
+                "the phone build carries the shared synthesiser");
+        ok(generated.contains("pointerdown"),
+                "the phone build answers a tap with a click");
             // The phone is told the corpus and the voice, and nothing else. It
             // deals its own copy, so it must not be handed the answer key --
             // and the key is exactly the `facts` strings, which have no reason
