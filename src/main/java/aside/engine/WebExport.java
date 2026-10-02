@@ -301,7 +301,8 @@ public class WebExport {
         json.append("}}");
 
         return HTML_TEMPLATE.replace("__TITLE__", title.replace("<", "&lt;"))
-                            .replace("__STORY__", json.toString());
+                            .replace("__STORY__", json.toString())
+                            .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
     }
 
     /** File stems in a directory, for the extensions a web build may hold. */
@@ -483,6 +484,14 @@ public class WebExport {
 <div id="choices"></div>
 <div id="hint">tap anywhere to continue</div>
 <script>
+/*__AUDIO__*/
+
+// A tap makes a click. The stories are the two builds whose desktop versions
+// carry music rather than cues, so this is not a mechanic -- but the page is a
+// still frame with a script under it, and a tap that makes no sound reads as a
+// tap that did not land. The same one line the ten verb games carry.
+document.body.addEventListener('pointerdown', () => voice('click'));
+
 const STORY = __STORY__;
 const ASSETS = STORY.assets || {};
 let here = STORY.start, step = 0, lines = [], lastSpeaker = null;

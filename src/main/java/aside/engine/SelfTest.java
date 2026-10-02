@@ -584,6 +584,16 @@ public class SelfTest {
         check("web/" + name + ".html says which staging it could not draw",
                 generated.contains("\"missing\":["));
 
+        // The sound. The stories are the two builds whose desktop versions
+        // carry music rather than cues, so this is not a mechanic -- but the
+        // page is a still frame with a script under it, and a tap that makes
+        // no sound reads as a tap that did not land. Same one line as the ten
+        // verb games, spliced in from the shared palette.
+        check("web/" + name + ".html carries the shared synthesiser",
+                generated.contains("function voice(") && generated.contains("function ac("));
+        check("web/" + name + ".html answers a tap with a click",
+                generated.contains("pointerdown"));
+
         // The word boundaries in condOK are why this is checked at all. The
         // template is a Java text block, where \b is the backspace character,
         // so the page shipped a regex that matched nothing -- "and" survived
