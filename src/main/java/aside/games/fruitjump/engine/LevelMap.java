@@ -40,6 +40,9 @@ public class LevelMap {
     public final List<double[]> bats = new ArrayList<>();      // {x, y}
     public final List<Pickup> pickups = new ArrayList<>();
     public final List<Door> doors = new ArrayList<>();
+    /** Water cells as {row, col, dir}: dir 0 still, 1 right, 2 left, 3 down, 4 up. Water is not solid and
+     *  never enters collision - WaterSystem applies it as forces. Ported from the Fruit-Jump release. */
+    final List<int[]> waterCells = new ArrayList<>();
 
     LevelMap(List<String> rows) {
         this.rows = rows;
@@ -55,6 +58,11 @@ public class LevelMap {
                 double x = c * TILE, y = r * TILE;
 
                 switch (ch) {
+                    case '~': waterCells.add(new int[]{r, c, 0}); break;
+                    case '>': waterCells.add(new int[]{r, c, 1}); break;
+                    case '<': waterCells.add(new int[]{r, c, 2}); break;
+                    case 'V': waterCells.add(new int[]{r, c, 3}); break;
+                    case 'A': waterCells.add(new int[]{r, c, 4}); break;
                     case '#':
                         solidTiles.add(new Physics.AABB(x, y, x + TILE, y + TILE));
                         break;
@@ -163,6 +171,11 @@ public class LevelMap {
         for (Slope s : slopes) world.slopes.add(s);
         for (Physics.AABB sp : spikes) world.spikes.add(sp);
         for (Physics.AABB c : cracked) world.cracked.add(c);
+
+        // Water: not solid and never in collision - WaterSystem applies it as forces. Set after the geometry so a
+        // level with no water pays nothing, since the system is a no-op with no field.
+        Water w = buildWater();
+        if (!w.isEmpty()) world.setWater(w);
         for (Pickup p : pickups) world.addPickup(p);
         for (int i = 0; i < bats.size(); i++) {
             double[] b = bats.get(i);
@@ -172,6 +185,30 @@ public class LevelMap {
             world.doors.add(d);
             world.tiles.add(d.aabb());
         }
+    }
+
+    public static final double CURRENT_SPEED = 85.0;
+    public static final double CURRENT_UP_SPEED = 70.0;
+
+    public Water buildWater() {
+        Water w = new Water(width, height);
+        for (int[] wc : waterCells) w.set(wc[0], wc[1]);
+        if (w.isEmpty()) return w;
+        w.buildRects();
+        for (int[] wc : waterCells) {
+            int dir = wc[2];
+            if (dir == 0) continue;
+            double x0 = wc[1] * (double) TILE, y0 = wc[0] * (double) TILE;
+            double vx = 0, vy = 0;
+            switch (dir) {
+                case 1: vx = CURRENT_SPEED; break;
+                case 2: vx = -CURRENT_SPEED; break;
+                case 3: vy = CURRENT_SPEED; break;
+                case 4: vy = -CURRENT_UP_SPEED; break;
+            }
+            w.addCurrent(x0, y0, x0 + TILE, y0 + TILE, vx, vy);
+        }
+        return w;
     }
 
     /** The character at a cell, or ' ' if out of bounds. */
