@@ -561,6 +561,9 @@ public class SelfTest {
         System.out.println("\n--- Vn.text() is never null ---");
         textNeverNull();
 
+        System.out.println("\n--- the audio cues ---");
+        audioCuesArePresent();
+
         System.out.println("\n--- the platformer's water ---");
         waterIsAPool();
 
@@ -756,6 +759,44 @@ public class SelfTest {
         check("tutorial: the bot finishes every level that needs only jumping (" + botFinished + "/"
                 + botChecked + " checked; skipped as bomb-only: " + skipped.toString().trim() + ")",
                 botChecked > 0 && botFinished == botChecked);
+    }
+
+    /**
+     * Every cue the scripts ask for by name has a file.
+     *
+     * <p><b>This is the half of AudioTest that can live in the gate.</b> AudioTest plays every cue, which is the
+     * stronger check - a file that exists is not a file JavaFX can decode - but playing needs a sound device,
+     * so it is a separate {@code main} with a display and it is not part of anything. That left a red gate
+     * nobody ran: seven cues the stories ask for by name were missing, and had been for days, and nothing said
+     * so until someone happened to run the audio test by hand.
+     *
+     * <p>Loading needs no device, only the files, so this asks the question that matters most often: is there a
+     * file. The seven were found on two unmerged branches and are on main now; this is what stops the eighth.
+     */
+    static void audioCuesArePresent() {
+        try {
+            aside.ui.Audio.load(".");
+            int cues = aside.ui.Audio.A.cueCount();
+            // ASK FOR EVERY CUE BY NAME. Loading alone only records what is there, so `missing` stays empty
+            // however much is absent - the first version of this check passed with a cue file deleted, which
+            // is exactly the failure mode it was written to catch. Audio is left DISABLED so nothing tries to
+            // play: the question here is whether a file exists, and that needs no sound device.
+            // Audio stays ENABLED, and that is not an oversight: `Audio.sfx()` begins with `if (!enabled)
+            // return`, so disabling it skips the lookup as well as the playback and the check passes with
+            // every file deleted - which it did, on the first attempt at this. The cost is that asking for a
+            // cue that exists creates a player for it; the question here is only whether the file is there,
+            // and this is the switch the class gives us to ask it.
+            for (String cue : aside.ui.Audio.MUSIC_CUES) aside.ui.Audio.A.music(cue);
+            for (String cue : aside.ui.Audio.SFX_CUES) aside.ui.Audio.A.sfx(cue);
+            aside.ui.Audio.A.stopMusic();
+            java.util.Set<String> missing = aside.ui.Audio.A.missing;
+            check("audio: every cue the scripts ask for has a file (" + cues + " cues, "
+                    + missing.size() + " missing)" + (missing.isEmpty() ? "" : "  -- " + missing),
+                    cues > 0);
+            check("audio: nothing is missing", missing.isEmpty());
+        } catch (Throwable t) {
+            check("audio: the cue folder could be read (" + t + ")", false);
+        }
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
