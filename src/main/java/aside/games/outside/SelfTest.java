@@ -207,6 +207,15 @@ public final class SelfTest {
         ok(generated.equals(Files.readString(out)),
                 "web/outside.html is current -- regenerate it with aside.games.outside.WebOutside");
 
+        // The sound. These games use it for feedback rather than for a
+        // mechanic -- the desktop plays choice_move and choice_select -- but a
+        // tap that makes no sound on a page that is otherwise a still canvas
+        // reads as a tap that did not land.
+        ok(generated.contains("function voice("),
+                "the phone build carries the shared synthesiser");
+        ok(generated.contains("pointerdown"),
+                "the phone build answers a tap with a click");
+
         // And it has to carry the writing, not just be the right size. The
         // prose goes through the same JSON writer the build uses, because a
         // line containing a quotation mark is escaped in the file and would

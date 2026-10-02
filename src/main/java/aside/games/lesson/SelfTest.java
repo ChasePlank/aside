@@ -287,6 +287,15 @@ public final class SelfTest {
         } else {
             ok(WebLesson.html().equals(Files.readString(out)),
                     "web/lesson.html is current -- regenerate it with aside.games.lesson.WebLesson");
+
+        // The sound. These games use it for feedback rather than for a
+        // mechanic -- the desktop plays choice_move and choice_select -- but a
+        // tap that makes no sound on a page that is otherwise a still canvas
+        // reads as a tap that did not land.
+        ok(WebLesson.html().contains("function voice("),
+                "the phone build carries the shared synthesiser");
+        ok(WebLesson.html().contains("pointerdown"),
+                "the phone build answers a tap with a click");
         }
 
         System.out.println("\n=== " + (checks - failed) + " passed, " + failed + " failed ===");

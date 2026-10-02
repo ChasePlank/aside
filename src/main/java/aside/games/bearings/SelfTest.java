@@ -86,6 +86,15 @@ public final class SelfTest {
         ok(generated.equals(Files.readString(out)),
                 "web/bearings.html is current -- regenerate it with aside.games.bearings.WebBearings");
 
+        // The sound. These games use it for feedback rather than for a
+        // mechanic -- the desktop plays choice_move and choice_select -- but a
+        // tap that makes no sound on a page that is otherwise a still canvas
+        // reads as a tap that did not land.
+        ok(generated.contains("function voice("),
+                "the phone build carries the shared synthesiser");
+        ok(generated.contains("pointerdown"),
+                "the phone build answers a tap with a click");
+
         for (String line : fixedLines()) {
             ok(generated.contains(WebBearings.str(line)), "the phone build carries: " + line);
         }

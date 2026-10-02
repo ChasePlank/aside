@@ -219,6 +219,15 @@ public final class SelfTest {
         } else {
             ok(WebTell.html().equals(Files.readString(out)),
                     "web/tell.html is current -- regenerate it with aside.games.tell.WebTell");
+
+        // The sound. These games use it for feedback rather than for a
+        // mechanic -- the desktop plays choice_move and choice_select -- but a
+        // tap that makes no sound on a page that is otherwise a still canvas
+        // reads as a tap that did not land.
+        ok(WebTell.html().contains("function voice("),
+                "the phone build carries the shared synthesiser");
+        ok(WebTell.html().contains("pointerdown"),
+                "the phone build answers a tap with a click");
         }
 
         System.out.println("\n" + (failed == 0 ? "all " + checks + " checks passed"
