@@ -138,7 +138,7 @@ rule.
 ## Tests
 
 ```bash
-java --module-path $FX --add-modules $MODS -cp out aside.engine.SelfTest              # 280 checks
+java --module-path $FX --add-modules $MODS -cp out aside.engine.SelfTest              # 284 checks
 java --module-path $FX --add-modules $MODS -cp out aside.games.fnaf.engine.SelfTest  # the FNAF module
 java --module-path $FX --add-modules $MODS -cp out aside.audio.AudioTest             # needs a display
 java -cp out aside.games.fruitjump.engine.WaterProbe   # every pool is the shape it was built to be

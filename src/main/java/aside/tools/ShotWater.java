@@ -61,19 +61,20 @@ public class ShotWater extends Application {
         stage.setScene(scene);
         stage.show();
 
-        // Hold RIGHT. The spawn is flat ground at column 2 and the pool starts at column 15, so the walk in
-        // needs no jump: the climber reaches the lip, walks in, and swims to the far wall.
+        // Hold RIGHT and let the climber walk into the pool.
         //
-        // The tick counts are measured, not guessed. The first run walked 165 frames and stopped 85px short of
-        // the pool - the frame counts below are what actually puts the climber at the lip, in the water, and
-        // under it. A capture tool whose subject is off-screen still writes a png and still prints PASS.
+        // EVERY PHASE IS DRIVEN BY THE CLIMBER'S OWN STATE, NOT BY A FRAME COUNT. The first version used
+        // measured tick numbers - 125 to the lip, 400 into the pool, 180 to dive - and they were correct
+        // until the generator changed, at which point the level reshuffled, the pool moved, and the tool
+        // happily wrote a png of a climber standing on dry ground and called it "submerged". A capture tool
+        // whose subject is off-screen still writes a file and still prints PASS. Reading the body back out
+        // costs a reflection call and cannot go stale.
         screen.handleKey(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.RIGHT, false, false, false, false));
 
         double dt = 1.0 / 60;
-        int atLip = 125, inPool = 400, dive = 180;
         int splashTick = -1, lastSplashes = 0, splashShootAt = -1;
-        boolean jumped = false;
-        for (int i = 0; i < inPool; i++) {
+        boolean jumped = false, shotPool = false, shotLip = false;
+        for (int i = 0; i < 900; i++) {
             // Jump just before the lip. Walking in produces no splash at all - the
             // surface is level with the walk, so the crossing happens on the first
             // frame of the fall, with vy about 20, and the system requires
@@ -84,13 +85,35 @@ public class ShotWater extends Application {
             // Triggered on the climber's own x, not on a frame count: the first attempt
             // jumped at frame 115 and the climber was still 190px short of the pool, so
             // it landed on the ground and the splash never happened.
-            if (!jumped && playerX(screen) > 420) {
+            //
+            // Tapped every 30 frames rather than triggered on a coordinate. The first version jumped
+            // when the climber passed x=420, which was the pool's lip in one particular level layout -
+            // and stopped being that the moment the generator changed. A periodic tap cannot miss: one
+            // of the jumps lands in the water with speed, which is what the splash needs and what a
+            // missed jump looks like.
+            if (!shotPool && i % 30 == 0) {
                 jumped = true;
                 screen.handleKey(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.SPACE, false, false, false, false));
                 screen.handleKeyReleased(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.SPACE, false, false, false, false));
             }
             screen.tick(dt);
-            if (i + 1 == atLip) shoot(scene, dir + "/water-lip.png", "at the lip");
+            // The lip: the frame the climber stops being on the ground and has not yet reached water.
+            // A jump is the only way in that splashes, and the jump is triggered on x, below.
+            if (!shotLip && jumped && !inWater(screen)) {
+                shotLip = true;
+                shoot(scene, dir + "/water-lip.png", "airborne, on the way into the pool");
+            }
+            // In the pool: the first frame the water has the body at all.
+            if (!shotPool && inWater(screen)) {
+                shotPool = true;
+                shoot(scene, dir + "/water-pool.png", "in the pool");
+            }
+            // Keep going after the pool is reached, until a crossing has actually been
+            // recorded or the budget runs out. Breaking at the first frame in water meant the
+            // periodic taps all happened on land, so the entry was a walk-in (vy ~20, under the
+            // 120 threshold) and the splash frame was never produced - the tool reported
+            // events=0 rather than pretending otherwise, which is the only reason it was visible.
+            if (shotPool && lastSplashes > 0) break;
             // The splash is the shortest-lived thing in the system (droplets last
             // 0.25-0.6s), so catching it by picking a frame by hand would be luck.
             // The water system counts crossings; watch the counter and shoot on the
@@ -112,13 +135,18 @@ public class ShotWater extends Application {
         }
         System.out.println("  splash registered on frame " + splashTick
                 + " (" + (splashTick / 60.0) + "s in), events=" + lastSplashes);
-        shoot(scene, dir + "/water-pool.png", "in the pool");
+        System.out.println("  reached water: " + shotPool + ", reached the lip shot: " + shotLip);
 
-        // Dive. This is the half of the water system that only the controls can
-        // reach: setVerticalInput is what turns a held DOWN into a stroke, and the
-        // air bar only appears once it is actually draining.
+        // Dive. This is the half of the water system that only the controls can reach:
+        // setVerticalInput is what turns a held DOWN into a stroke, and the air bar only
+        // appears once it is actually draining. Ticked until the body is genuinely under,
+        // not for a fixed count.
         screen.handleKey(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DOWN, false, false, false, false));
-        for (int i = 0; i < dive; i++) screen.tick(dt);
+        boolean under = false;
+        for (int i = 0; i < 400 && !under; i++) {
+            screen.tick(dt);
+            if (submersion(screen) >= 0.9) under = true;
+        }
         shoot(scene, dir + "/water-dive.png", "submerged");
         report(screen, "after the dive");
 
@@ -144,6 +172,24 @@ public class ShotWater extends Application {
     }
 
     /** Where the climber is and whether the water still has them. Reflection, so the names cannot go stale. */
+    /** Is the water holding the body at all? */
+    private static boolean inWater(GameplayScreen screen) {
+        try {
+            var f = GameplayScreen.class.getDeclaredField("player");
+            f.setAccessible(true);
+            return aside.games.fruitjump.engine.Physics.Body.class.getField("inWater").getBoolean(f.get(screen));
+        } catch (Exception ex) { return false; }
+    }
+
+    /** How much of the body is under the surface, 0..1. */
+    private static double submersion(GameplayScreen screen) {
+        try {
+            var f = GameplayScreen.class.getDeclaredField("player");
+            f.setAccessible(true);
+            return aside.games.fruitjump.engine.Physics.Body.class.getField("submersion").getDouble(f.get(screen));
+        } catch (Exception ex) { return 0; }
+    }
+
     /** How many surface crossings the water system has reported. */
     private static double playerX(GameplayScreen screen) {
         try {

@@ -564,6 +564,8 @@ public class SelfTest {
         System.out.println("\n--- the platformer's water ---");
         waterIsAPool();
 
+        waterGapsAreJumpable();
+
         // The release's own water suite, ported. It is 30 checks on behaviour the shape check
         // cannot see - buoyancy equilibrium, the breath meter, the breach hop, drag at two frame
         // rates, and a bot swimming a 25-tile river and climbing out. It lived only on a branch
@@ -571,6 +573,17 @@ public class SelfTest {
         int waterFailures = aside.games.fruitjump.engine.WaterSuite.runAll();
         check("water: the release's water suite passes on this engine (" + waterFailures + " failures)",
                 waterFailures == 0);
+
+        // The rest of the platformer's engine suites, ported from the release branch where they
+        // lived alone. Every one of these is a suite that could only be run by hand, on the other
+        // repository, against a copy of this engine - which is to say it was not being run.
+        int enemyFailures = aside.games.fruitjump.engine.WaterEnemyTest.runAll();
+        check("water: an enemy that walks off a lip ends up floating, not sunk ("
+                + enemyFailures + " failures)", enemyFailures == 0);
+
+        int doorFailures = aside.games.fruitjump.engine.DoorStressTest.runAll();
+        check("doors: 100 generated levels are all completable by the validator bot ("
+                + doorFailures + " unfinished)", doorFailures == 0);
 
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
@@ -631,6 +644,54 @@ public class SelfTest {
         check("water: some level has a pool at all (" + pools + " pools in " + levels + " levels)", pools > 0);
         check("water: every pool is 2 rows with a floor under it, none on spikes"
                 + (bad == 0 ? "" : "  -- " + bad + " bad, first: " + firstFault), bad == 0);
+    }
+
+    /**
+     * No gap the generator makes is wider than the player can jump.
+     *
+     * <p><b>This is the check that would have caught a wall.</b> The generator capped gap width at
+     * five cells from level 11 up, and five cells is 160px against a jump of about 137px - so every
+     * level from 11 on could contain a gap that cannot be crossed. The release found it and capped
+     * it at four; the fix never came back, so aside kept generating walls. What proved it was
+     * measuring both copies at the same level and seed range: aside produced 13 five-cell gaps per
+     * 100 levels at level 22, the release none.
+     *
+     * <p>The jump reach is not a guess - it is in the generator's own header comment, measured from
+     * the engine: jump v0 420, gravity 1200, so apex ~73px, and at 200px/s with ~0.7s of air the
+     * distance is ~137px. Four cells is 128px, which clears it. Five is 160px, which does not.
+     *
+     * <p>The bot validator does NOT catch this: it falls in the gap, lands on the spikes two cells
+     * down, and climbs out, so the level still completes. "Completable" and "playable" are different
+     * properties, and only the second one is about walls.
+     */
+    static void waterGapsAreJumpable() {
+        final int W = 60, H = 20, JUMPABLE_CELLS = 4;
+        int widest = 0, tooWide = 0;
+        String where = "";
+        for (long seed = 2001; seed <= 2100; seed++) {
+            LevelMap m = new LevelGen(W, H, seed, 22).generate();
+            boolean[] gapCol = new boolean[m.widthCells()];
+            for (int r = 0; r < m.heightCells(); r++)
+                for (int c = 0; c < m.widthCells(); c++) {
+                    char ch = m.cell(r, c);
+                    if (ch == '^' || ch == '~') gapCol[c] = true;
+                }
+            for (int c = 0; c < m.widthCells(); c++) {
+                if (!gapCol[c]) continue;
+                int start = c;
+                while (c < m.widthCells() && gapCol[c]) c++;
+                int len = c - start;
+                if (len > widest) widest = len;
+                if (len > JUMPABLE_CELLS) {
+                    tooWide++;
+                    if (where.isEmpty()) where = "seed " + seed + " column " + start;
+                }
+            }
+        }
+        check("gaps: the widest gap over 100 level-22 seeds is " + widest + " cells, jumpable is "
+                + JUMPABLE_CELLS, widest > 0 && widest <= JUMPABLE_CELLS);
+        check("gaps: no generated gap is wider than the jump"
+                + (tooWide == 0 ? "" : "  -- " + tooWide + " too wide, first: " + where), tooWide == 0);
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */

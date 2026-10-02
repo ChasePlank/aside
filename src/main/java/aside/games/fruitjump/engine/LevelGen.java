@@ -70,8 +70,18 @@ public class LevelGen {
         this.pathFloor = new int[width];
         java.util.Arrays.fill(this.pathFloor, -1);
 
-        // Difficulty scaling: gaps grow by 1 every 5 levels (max 5)
-        this.maxGapCells = Math.min(5, BASE_MAX_GAP_CELLS + (levelNum - 1) / 5);
+        // Difficulty scaling: gaps grow by 1 every 5 levels.
+        //
+        // CAPPED AT 4. It reached 5 from level 11 on, and a 5-cell gap is 160px
+        // against a ~137px jump - an impossible gap, on every level from 11 up,
+        // which is not difficulty, it is a wall. The release found this and fixed
+        // it there; the fix never came back, so aside kept generating walls while
+        // the release's own GroundFillTest asserted the property that forbids them
+        // ("no walk gap exceeds the jump"). Measured on the way in: aside produced
+        // 13 five-cell gaps per 100 levels at level 22; the release produced none.
+        // Difficulty comes from the platform climbs instead, which are hard and
+        // always passable.
+        this.maxGapCells = Math.min(4, BASE_MAX_GAP_CELLS + (levelNum - 1) / 5);
         // Steps stay at 2 (harder to tune without breaking path)
         this.maxStepCells = BASE_MAX_STEP_CELLS;
     }
