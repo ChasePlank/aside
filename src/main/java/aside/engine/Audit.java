@@ -99,5 +99,21 @@ public class Audit {
         for (String x : sfx) System.out.println("      " + x);
         System.out.println("  poses:       " + poses.size());
         for (String p : poses) System.out.println("      " + p);
+
+        // Which of those poses have no image yet. The list above is a shopping list and legitimate to be unmet,
+        // so this is reported rather than counted as an issue - but it is reported, because a missing sprite
+        // fails silently in the presenter where a missing cue was checked for and this was not. Same pattern as
+        // the audio cues, ported late.
+        java.io.File spriteDir = new java.io.File("art/sprites");
+        if (spriteDir.isDirectory()) {
+            java.util.List<String> unmade = new java.util.ArrayList<>();
+            for (String pose : poses) {
+                String[] parts = pose.split(" \\(");
+                String file = parts[0] + "-" + parts[1].replace(")", "") + ".png";
+                if (!new java.io.File(spriteDir, file).isFile()) unmade.add(pose + " -> " + file);
+            }
+            System.out.println("  poses with no image yet: " + unmade.size());
+            for (String u : unmade) System.out.println("      " + u);
+        }
     }
 }
