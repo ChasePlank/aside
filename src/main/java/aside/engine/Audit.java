@@ -71,7 +71,10 @@ public class Audit {
             // counting it here as well would make the exit status contradict the verdict, which is the same
             // mistake in a second place - a budget hit reported as a problem.
             if (!clean && !inconclusive) failures++;
-            if (inconclusive && clean) inconclusiveRuns++;
+            // `inconclusive` alone, not `inconclusive && clean`: an inconclusive run HAS unreachable scenes by
+            // definition, so requiring clean meant the counter could never fire - a condition that excludes the
+            // case it exists for.
+            if (inconclusive) inconclusiveRuns++;
             System.out.println();
         }
         if (inconclusiveRuns > 0) {
