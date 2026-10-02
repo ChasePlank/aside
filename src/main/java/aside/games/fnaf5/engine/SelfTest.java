@@ -635,13 +635,13 @@ public final class SelfTest {
         // in the wrong photograph while looking perfectly fine.
         for (int i = 0; i < Room.COUNT; i++) {
             check("the page carries the art for " + Room.ALL[i].name(),
-                    page.contains("\"room:" + Room.ALL[i].name() + "\":\"data:image/jpeg;base64,"));
+                    page.contains("\"room:" + Room.ALL[i].name() + "\":\"data:image/webp;base64,"));
         }
         for (String key : new String[]{"ballora", "foxy", "freddy"}) {
             check("the page carries the frame for " + key + " in the room with you",
-                    page.contains("\"here:" + key + "\":\"data:image/jpeg;base64,"));
+                    page.contains("\"here:" + key + "\":\"data:image/webp;base64,"));
             check("the page carries the scare frame for " + key,
-                    page.contains("\"scare:" + key + "\":\"data:image/jpeg;base64,"));
+                    page.contains("\"scare:" + key + "\":\"data:image/webp;base64,"));
         }
 
         // And the three rules, which are the whole difference between the

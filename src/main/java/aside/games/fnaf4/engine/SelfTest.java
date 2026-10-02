@@ -432,14 +432,14 @@ public final class SelfTest {
         for (String st : new String[]{"BED", "LEFT", "RIGHT", "CLOSET"}) {
             for (String state : new String[]{"dark", "lit", "here"}) {
                 check("the page carries the " + state + " frame for " + st,
-                        page.contains("\"" + st + ":" + state + "\":\"data:image/jpeg;base64,"));
+                        page.contains("\"" + st + ":" + state + "\":\"data:image/webp;base64,"));
             }
         }
         check("the page carries Fredbear",
                 page.contains("\"fredbear\":\"data:image/webp;base64,"));
         for (String key : new String[]{"bonnie", "chica", "foxy", "fredbear", "freddy"}) {
             check("the page carries the scare frame for " + key,
-                    page.contains("\"scare:" + key + "\":\"data:image/jpeg;base64,"));
+                    page.contains("\"scare:" + key + "\":\"data:image/webp;base64,"));
         }
 
         // And the four threats, which are the four stations.

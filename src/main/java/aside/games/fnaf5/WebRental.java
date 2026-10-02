@@ -194,13 +194,13 @@ public final class WebRental {
             if (!first) b.append(",\n");
             first = false;
             b.append("  \"room:").append(Room.ALL[i].name()).append("\":")
-             .append(uri("room" + i + ".jpg", "image/jpeg"));
+             .append(uri("room" + i + ".webp", "image/webp"));
         }
         for (String key : new String[]{"ballora", "foxy", "freddy"}) {
             b.append(",\n  \"here:").append(key).append("\":")
-             .append(uri("here_" + key + ".jpg", "image/jpeg"));
+             .append(uri("here_" + key + ".webp", "image/webp"));
             b.append(",\n  \"scare:").append(key).append("\":")
-             .append(uri("scare_" + key + ".jpg", "image/jpeg"));
+             .append(uri("scare_" + key + ".webp", "image/webp"));
         }
         return b.append("\n}").toString();
     }

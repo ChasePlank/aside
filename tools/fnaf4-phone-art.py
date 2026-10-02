@@ -16,11 +16,18 @@ makes the Java generator reproducible from Java alone.
 
 WHAT IT WRITES, under art/phone/fnaf4/:
 
-  <station>_dark.jpg    960x540   the station with nothing in it and no light
-  <station>_lit.jpg     960x540   the same, with the flashlight on it
-  <station>_here.jpg    960x540   something standing in it
+  <station>_dark.webp   960x540   the station with nothing in it and no light
+  <station>_lit.webp    960x540   the same, with the flashlight on it
+  <station>_here.webp   960x540   something standing in it
   fredbear.webp         520 tall  Fredbear, RGBA -- he is composited, not framed
-  scare_<key>.jpg       960x540   its face, filling the screen
+  scare_<key>.webp      960x540   its face, filling the screen
+
+WHY WEBP AND NOT JPEG. Measured on this art at the same nominal quality, WebP
+is 64% smaller -- 960 KB of JPEG against 346 KB of WebP for the eighteen
+frames here. The shelf inlines every build it carries, so the art is the
+shelf's weight, and this is what makes the rest of the art affordable rather
+than a decision about megabytes. WebP has been in every browser since 2020,
+and tools/vn-art.py already writes it for the visual novel's sprites.
 
 THE THREE STATES ARE THE GAME. FNAF 4's whole mechanic is that the light
 reaches one move out and that a station you have not lit is a station you are
@@ -54,10 +61,10 @@ def jobs():
     out = []
     for s in STATIONS:
         for st in STATES:
-            out.append((s + "_" + st + ".jpg", s + "_" + st + ".jpg"))
+            out.append((s + "_" + st + ".jpg", s + "_" + st + ".webp"))
     out.append(("fredbear.png", "fredbear.webp"))
     for k in SCARES:
-        out.append(("scare_" + k + ".jpg", "scare_" + k + ".jpg"))
+        out.append(("scare_" + k + ".jpg", "scare_" + k + ".webp"))
     return out
 
 
@@ -73,7 +80,7 @@ def convert(src_name, dst_name):
     im = im.convert("RGB")
     if im.size != (W, H):
         im = im.resize((W, H), Image.LANCZOS)
-    return im, "JPEG", {"quality": QUALITY, "optimize": True, "progressive": True}
+    return im, "WEBP", {"quality": QUALITY, "method": 6}
 
 
 def build(check):

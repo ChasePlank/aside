@@ -163,13 +163,13 @@ public final class WebRoom {
                 if (!first) b.append(",\n");
                 first = false;
                 b.append("  \"").append(st).append(":").append(state).append("\":")
-                 .append(uri(st.toLowerCase() + "_" + state + ".jpg", "image/jpeg"));
+                 .append(uri(st.toLowerCase() + "_" + state + ".webp", "image/webp"));
             }
         }
         b.append(",\n  \"fredbear\":").append(uri("fredbear.webp", "image/webp"));
         for (String key : new String[]{"bonnie", "chica", "foxy", "fredbear", "freddy"}) {
             b.append(",\n  \"scare:").append(key).append("\":")
-             .append(uri("scare_" + key + ".jpg", "image/jpeg"));
+             .append(uri("scare_" + key + ".webp", "image/webp"));
         }
         return b.append("\n}").toString();
     }

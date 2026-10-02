@@ -18,9 +18,17 @@ not move.
 
 WHAT IT WRITES, under art/phone/fnaf5/:
 
-  room0.jpg .. room4.jpg   960x540   the five rooms, in Room.Where order
-  here_<key>.jpg           960x540   the thing standing in the room with you
-  scare_<key>.jpg          960x540   its face, filling the screen
+  room0.webp .. room4.webp 960x540   the five rooms, in Room.Where order
+  here_<key>.webp          960x540   the thing standing in the room with you
+  scare_<key>.webp         960x540   its face, filling the screen
+
+WHY WEBP AND NOT JPEG. Measured on this art at the same nominal quality,
+WebP is about half the size -- 352 KB of JPEG against 172 KB of WebP for the
+eleven frames here, and 64% off on FNAF 4's eighteen. The shelf inlines every
+build it carries, so the art is the shelf's weight, and halving it is what
+makes the rest of the art affordable rather than a decision about megabytes.
+WebP has been in every browser since 2020, and tools/vn-art.py already writes
+it for the visual novel's sprites.
 
 THE ORDER IS THE ENGINE'S. room0 is PARTS/SERVICE and room4 is the FUNTIME
 AUDITORIUM, which is Room.Where's declaration order and the order the desktop
@@ -39,18 +47,18 @@ OUT = os.path.join("art", "phone", "fnaf5")
 W, H = 960, 540
 QUALITY = 78
 
-ROOMS = ["room0.jpg", "room1.jpg", "room2.jpg", "room3.jpg", "room4.jpg"]
+ROOMS = ["room0", "room1", "room2", "room3", "room4"]
 KEYS = ["ballora", "foxy", "freddy"]
 
 
 def jobs():
     out = []
     for name in ROOMS:
-        out.append((name, name))
+        out.append((name + ".jpg", name + ".webp"))
     for key in KEYS:
-        out.append(("here_" + key + ".jpg", "here_" + key + ".jpg"))
+        out.append(("here_" + key + ".jpg", "here_" + key + ".webp"))
     for key in KEYS:
-        out.append(("scare_" + key + ".jpg", "scare_" + key + ".jpg"))
+        out.append(("scare_" + key + ".jpg", "scare_" + key + ".webp"))
     return out
 
 
@@ -67,7 +75,7 @@ def build(check):
         if im.size != (W, H):
             im = im.resize((W, H), Image.LANCZOS)
         tmp = dst + ".tmp"
-        im.save(tmp, "JPEG", quality=QUALITY, optimize=True, progressive=True)
+        im.save(tmp, "WEBP", quality=QUALITY, method=6)
         new = open(tmp, "rb").read()
         os.remove(tmp)
         old = open(dst, "rb").read() if os.path.exists(dst) else None
