@@ -587,6 +587,12 @@ public class SelfTest {
 
         tutorialLevelsArePlayable();
 
+        // The release's pocket test, ported. It is the only check that exercises bomb -> cracked
+        // FLOOR -> fall through with real physics, and until now aside had no floor pocket at all.
+        int pocketFailures = aside.games.fruitjump.engine.CrackedPocketTest.runAll();
+        check("pocket: a bomb opens the cracked floor and the player drops in ("
+                + pocketFailures + " failures)", pocketFailures == 0);
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
     }

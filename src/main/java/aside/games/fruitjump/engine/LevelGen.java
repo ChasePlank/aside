@@ -412,6 +412,66 @@ public class LevelGen {
             }
         }
 
+        // --- Cracked floor + hidden pocket (bombable, off the bot's path) ---
+        //
+        // Ported from the release, where it was written on Sept 27 and never came back. Two adjacent
+        // floor tiles become CRACKED with a pocket beneath them holding a snack: intact you walk over
+        // it, bombed you drop in, take it and jump back out.
+        //
+        // This is a DIFFERENT chamber from buildVault's, not a replacement for it. The vault is a door
+        // in a cliff FACE; this is a trapdoor in the FLOOR. Both are bombable rooms with something
+        // inside, and the vault's own comment explains why it did not use a floor hole: "the player
+        // body is 48px wide and a floor hole is one cell (32px) wide, so the body is always carried
+        // across the lips and can never fall in." That reasoning is right about a ONE-cell hole and
+        // does not apply here - this is two cells, 64px, and the body fits through it.
+        //
+        // TWO cells wide, not one. One cell is spanned by the lips and can never be entered.
+        //
+        // WHY THE SEAT IS ONE CELL: the bombed hole is the second cell of air. A pocket H cells tall
+        // has its floor one row below that, so climbing straight out is H+1 cells; the body is 44px
+        // and a cell is 32px, so H must be at least 2 to fit inside at all - which makes the climb
+        // 3 cells = 96px against a 73px jump. There is no H that works: the door has to be the hole.
+        // Hence one cell of seat plus the open hole above it (64px of air, the body fits with its head
+        // poking up) and a floor two rows down, which is a 2-cell climb = 64px, inside the jump with
+        // the same margin the walk's own step limit assumes.
+        //
+        // Placed after the enemy and bat passes because both look for wide flat stretches of path,
+        // and a bombable floor is not a stretch to stand on. It writes its own floor: the terrain
+        // mass above filled below the walk, but a pocket carved into that fill would otherwise have
+        // the snack as its lowest block, and anything below the lowest block is treated as ground.
+        if (rng.nextDouble() < 0.5) {
+            int from = 6, to = width - 10;
+            for (int tries = 0; tries < 10; tries++) {
+                int c = from + rng.nextInt(Math.max(1, to - from));
+                int fr = pathFloor[c];
+                if (fr < 0 || fr > height - 4) continue;
+                if (g[fr][c] != '#' || g[fr][c + 1] != '#') continue;
+                // Nothing standing on either tile: a door, a key or a sign would be buried by the
+                // carve, and the vault's own columns are the same cliff face.
+                if (g[fr - 1][c] != ' ' || g[fr - 1][c + 1] != ' ') continue;
+                if (nearVault(c) || nearVault(c + 1)) continue;
+                boolean flat = true;
+                for (int cc = c - 1; cc <= c + 2; cc++) {
+                    if (cc < 0 || cc >= width || pathFloor[cc] != fr) { flat = false; break; }
+                }
+                if (!flat) continue;
+                boolean clear = true;
+                for (int cc = c; cc <= c + 1 && clear; cc++) {
+                    for (int rr = fr + 1; rr <= fr + 2; rr++) {
+                        if (g[rr][cc] != ' ' && g[rr][cc] != '#') { clear = false; break; }
+                    }
+                }
+                if (!clear) continue;
+                g[fr][c] = 'C';          // cracked floor: the pocket's ceiling
+                g[fr][c + 1] = 'C';      // AND its doorway
+                g[fr + 1][c] = ' ';      // one cell of seat (the hole is the other)
+                g[fr + 1][c + 1] = 'h';  // the snack in the seat
+                g[fr + 2][c] = '#';      // pocket floor, written explicitly
+                g[fr + 2][c + 1] = '#';
+                break;
+            }
+        }
+
         // Border walls
         for (int r = 0; r < height; r++) {
             g[r][0] = (g[r][0] == ' ') ? '#' : g[r][0];

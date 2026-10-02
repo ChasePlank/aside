@@ -154,9 +154,27 @@ public class LevelMap {
     /** Parse from a text block (lines split on \n). Public so hand-authored
      *  levels (the tutorial) can build a map without a generator. */
     public static LevelMap parse(String text) {
+        // Ported from the release, where this was fixed on Sept 27 and never came back.
+        //
+        // The old version dropped empty lines (`if (!line.isEmpty())`), so a blank row anywhere in a
+        // level shifted everything below it up by one. It also left a trailing '\r' on every row from
+        // a CRLF file, which becomes a cell character and makes the row one wider than it is, and it
+        // did not pad short rows.
+        //
+        // None of that is live today - Tutorial.map pads every row with spaces, so its rows are never
+        // empty - but `parse` is public and documented as the way to hand-author a level, and a
+        // hand-authored level is exactly where a blank row or a CRLF shows up. Fixing it costs
+        // nothing and removes a trap from the one entry point a person is meant to use.
+        String[] raw = text.split("\n", -1);
+        for (int i = 0; i < raw.length; i++) {
+            if (raw[i].endsWith("\r")) raw[i] = raw[i].substring(0, raw[i].length() - 1);
+        }
+        int width = 0;
+        for (String line : raw) width = Math.max(width, line.length());
         List<String> rows = new ArrayList<>();
-        for (String line : text.split("\n")) {
-            if (!line.isEmpty()) rows.add(line);
+        for (String line : raw) {
+            if (line.length() < width) line = line + " ".repeat(width - line.length());
+            rows.add(line);
         }
         return new LevelMap(rows);
     }
