@@ -323,7 +323,19 @@ package aside.games.fnaf5.engine;
  */
 public final class Bot {
 
-    public enum Policy { IDLE, REACT, HOLD, FLEE, PANIC, PRO }
+    /**
+     * The rungs of the ladder, and the last one is a control rather than a
+     * player.
+     *
+     * <p>{@code TOWARD} is PRO with one thing changed: when it decides to
+     * move, it walks <i>toward</i> the nearest thing it can perceive instead
+     * of away. Everything else -- the shock, the feed, the stop -- is
+     * identical. It exists because the game's own note claimed for a year
+     * that <i>movement direction barely matters</i>, and a claim like that
+     * has to be measured rather than believed: see the check in
+     * {@code SelfTest}, and the note on {@link Game#step}.
+     */
+    public enum Policy { IDLE, REACT, HOLD, FLEE, PANIC, PRO, TOWARD }
 
     /** How often the bot is allowed to change its mind, in seconds. */
     public static final double REACTION = 0.20;
@@ -398,7 +410,8 @@ public final class Bot {
             case REACT -> react(g, b);
             case HOLD -> hold(g, b);
             case FLEE -> flee(g, b);
-            case PRO -> pro(g, b);
+            case PRO -> pro(g, b, true);
+            case TOWARD -> pro(g, b, false);
             default -> { }
         }
     }
@@ -573,7 +586,15 @@ public final class Bot {
      * Three of its own rules had to change with the game, and all three
      * were bugs rather than tuning. See the notes at the stop below.
      */
-    static void pro(Game g, Brain b) {
+    static void pro(Game g, Brain b) { pro(g, b, true); }
+
+    /**
+     * The competent loop, with the direction of its steps as a parameter.
+     *
+     * @param away true to walk away from what it can perceive (the real
+     *             policy), false to walk toward it (the control)
+     */
+    static void pro(Game g, Brain b, boolean away) {
         boolean pursuit = false, attention = false, sound = false;
         for (Threat t : g.threats) {
             if (!t.inYourRoom(g)) continue;
@@ -620,10 +641,11 @@ public final class Bot {
         // Keep away from anything we can perceive.
         Room.Where danger = nearestPerceived(g);
         if (danger != null && Room.distance(danger, g.where) <= 2) {
-            int away = Integer.compare(Room.index(g.where), Room.index(danger));
-            if (away == 0) away = b.dir;
-            if (tryStep(g, b, away)) return;
-            if (tryStep(g, b, -away)) return;
+            int dir = Integer.compare(Room.index(g.where), Room.index(danger));
+            if (dir == 0) dir = b.dir;
+            if (!away) dir = -dir;
+            if (tryStep(g, b, dir)) return;
+            if (tryStep(g, b, -dir)) return;
         }
 
         // The feed is Foxy's fuel: leave it down unless we need it.

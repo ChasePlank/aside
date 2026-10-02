@@ -799,6 +799,24 @@ public final class SelfTest {
                         + " (n1 %.0f%%, n5 %.0f%%)%n",
                 mean(pro) * 100, pro[0] * 100, pro[4] * 100);
 
+        // AND THE DIRECTION OF A STEP, which is the last piece of the open
+        // finding and the one that was never measured. The note in Game#step
+        // claimed for a year that movement direction barely matters, because
+        // the player is faster than everything in the building -- and the
+        // suite contradicted it in prose without ever testing it. TOWARD is
+        // PRO with one thing changed: when it moves, it walks toward the
+        // nearest thing it can perceive instead of away. Everything else --
+        // the shock, the feed, the stop -- is identical, so the gap between
+        // the two columns is the value of the direction alone.
+        double[] toward = new double[5];
+        for (int n = 1; n <= 5; n++) toward[n - 1] = Bot.survival(n, runs, Bot.Policy.TOWARD);
+        double towardMean = mean(toward);
+        System.out.printf("    walking toward what you can perceive: TOWARD %.0f%%"
+                        + " (n1 %.0f%%, n5 %.0f%%)%n",
+                towardMean * 100, toward[0] * 100, toward[4] * 100);
+        check("walking away from what you can perceive beats walking toward it",
+                proMean - towardMean > 0.15);
+
         // The building has to be able to surprise you. Before the die was
         // added to Threat.update, every seed produced the same night: the
         // sweep returned 0% or 100% and nothing in between, because there
