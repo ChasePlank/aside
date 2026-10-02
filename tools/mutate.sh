@@ -20,6 +20,32 @@
 # and a mutation that does not apply is reported as ANCHOR MISSING rather than
 # counted as a survivor.
 #
+# WHAT TO MUTATE, AND WHAT NOT TO. Mutate the GAME's constants, not the bot's.
+# Each FNAF game keeps its night in engine/Game.java (or Shift.java, or
+# Meeting.java) and its policies in engine/Bot.java, and a bot constant is part
+# of the measuring instrument rather than the thing being measured -- changing
+# SEEN_HOLD or GREED changes what the policies do, not what the night is, so a
+# suite that notices is noticing something else. The tool cannot tell the two
+# apart, so it reports ANCHOR MISSING when a constant is not in the file you
+# named, which is the signal to check which side of the instrument it is on.
+#
+# RESULTS SO FAR, 2026-10-02. Every FNAF suite has now been mutation-tested and
+# every engine constant tried is caught:
+#
+#   FNAF 2   PUPPET_GRACE, FOXY_HALL_WINDOW, OPENING_GRACE_MAX,
+#            MUSIC_BOX_DRAIN, MUSIC_BOX_WIND                  5 of 5 caught
+#   FNAF 3   REBOOT_TIME, LURE_DURATION, LURE_COOLDOWN,
+#            VENT_DRAIN, MOVE_MAX                             5 of 5 caught
+#   FNAF 4   HOP_TIME, FLASH_TIME, LIT_TIME, BREATH_EVERY,
+#            NOISE_PER_FLASH                                  5 of 5 caught
+#   FNAF 5   ten of thirteen (see its SelfTest comment)        10 of 10 caught
+#   FNAF 7   LIGHT_MAX, LIGHT_COOL, LIGHT_WARM, LIGHT_RESET    4 of 4 caught
+#   FNAF 8   SWIVEL, DIM_RUSH, BRIGHT_RUSH, JITTER             4 of 4 caught
+#   FNAF 9   six of seven (see its SelfTest comment)            6 of 6 caught
+#
+# The engine suite itself has no double constants to break; its subject is the
+# script format and the shelf, and mutating those is a different job.
+#
 # EXAMPLES
 #
 #   tools/mutate.sh aside.games.fnaf5.engine.SelfTest \
