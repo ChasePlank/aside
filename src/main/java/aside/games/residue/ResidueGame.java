@@ -25,7 +25,7 @@ public class ResidueGame implements Game {
     @Override public String title() { return "Residue"; }
 
     @Override public String blurb() {
-        return "A room that ages while you are gone. Leave one thing.";
+        return "Leave one thing behind and come back to it older. The room holds three; a fourth pushes the oldest out.";
     }
 
     @Override

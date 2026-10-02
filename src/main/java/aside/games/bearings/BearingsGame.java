@@ -24,7 +24,7 @@ public class BearingsGame implements Game {
     @Override public String title() { return "Bearings"; }
 
     @Override public String blurb() {
-        return "Two clocks that agree are still just two clocks.";
+        return "Two chronometers, sixteen days, one island -- and the only way to check them is to spend a day on the sky.";
     }
 
     @Override

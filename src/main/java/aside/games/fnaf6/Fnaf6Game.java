@@ -43,8 +43,7 @@ public class Fnaf6Game implements Game {
     @Override public String title() { return "Five Nights at Freddy's 6"; }
 
     @Override public String blurb() {
-        return "One chair, one lamp, one shock, and the lamp is what it is "
-                + "waiting for.";
+        return "Five nights with one lamp and one shock. The lamp is the only way to see the chair, and the lamp is what wakes it.";
     }
 
     @Override

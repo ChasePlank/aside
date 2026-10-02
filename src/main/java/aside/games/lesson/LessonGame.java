@@ -23,8 +23,7 @@ public class LessonGame implements Game {
     @Override public String title() { return "Lesson"; }
 
     @Override public String blurb() {
-        return "Three nights to show somebody how the boiler runs. "
-                + "A state only ever teaches its own corner.";
+        return "Three nights to teach somebody a boiler before they take a shift alone. A state only teaches its own corner.";
     }
 
     @Override

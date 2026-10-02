@@ -23,7 +23,7 @@ public class TestimonyGame implements Game {
     @Override public String title() { return "Testimony"; }
 
     @Override public String blurb() {
-        return "You saw it once. Every answer you give becomes what you remember.";
+        return "See an evening once, then answer for it. Every answer becomes your memory, right or wrong.";
     }
 
     @Override

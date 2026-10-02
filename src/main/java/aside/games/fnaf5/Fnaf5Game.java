@@ -38,8 +38,7 @@ public class Fnaf5Game implements Game {
     @Override public String title() { return "Five Nights at Freddy's 5"; }
 
     @Override public String blurb() {
-        return "Five rooms, one monitor, and the camera cannot see the room "
-                + "you are standing in.";
+        return "Five nights in a building you cannot see yourself in. The monitor only ever shows you a room you are not standing in.";
     }
 
     @Override

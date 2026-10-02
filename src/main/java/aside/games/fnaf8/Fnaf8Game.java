@@ -45,8 +45,7 @@ public class Fnaf8Game implements Game {
     @Override public String title() { return "Five Nights at Freddy's 8"; }
 
     @Override public String blurb() {
-        return "Two doorways, one lamp -- and they are not coming for you, "
-                + "they are coming for each other.";
+        return "Five nights between two things that want each other. Keep them apart; you are standing where they would meet.";
     }
 
     @Override

@@ -24,7 +24,7 @@ public class HandoffGame implements Game {
     @Override public String title() { return "Handoff"; }
 
     @Override public String blurb() {
-        return "Five nights under somebody else's orders, then you write the next one's.";
+        return "Keep five watches under someone else's orders, then write the orders for whoever comes next.";
     }
 
     @Override

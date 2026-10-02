@@ -22,8 +22,7 @@ public class RedactionGame implements Game {
     @Override public String title() { return "Redaction"; }
 
     @Override public String blurb() {
-        return Redaction.cap(Redaction.word(Redaction.LINES)) + " lines go to the board, "
-                + "and every black bar is a place they will look.";
+        return "Black out lines before the board reads the file. Every bar is a place they will look, and they count them.";
     }
 
     @Override

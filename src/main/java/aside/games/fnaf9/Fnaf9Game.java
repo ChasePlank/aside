@@ -44,8 +44,7 @@ public class Fnaf9Game implements Game {
     @Override public String title() { return "Five Nights at Freddy's 9"; }
 
     @Override public String blurb() {
-        return "Two halls, one door and one monitor -- and the picture is as "
-                + "old as the time you have spent watching it.";
+        return "Five nights with two halls, one door, and a monitor showing you the past. The longer you watch, the older the picture.";
     }
 
     @Override

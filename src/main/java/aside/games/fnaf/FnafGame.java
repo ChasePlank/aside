@@ -21,7 +21,7 @@ public class FnafGame implements Game {
     @Override public String title() { return "Five Nights at Freddy's - Glamrock"; }
 
     @Override public String blurb() {
-        return "Survive five nights. Doors, lights, cameras, power.";
+        return "Five nights in the office. Shut the doors, watch the halls, and do not run the power out before 6 AM.";
     }
 
     @Override

@@ -23,7 +23,7 @@ public class LedgerGame implements Game {
     @Override public String title() { return "Ledger"; }
 
     @Override public String blurb() {
-        return "Six nights. Five lines. You cannot keep it all.";
+        return "Six nights at a hotel desk and five lines to keep them in. Nobody tells you what the inspector will ask.";
     }
 
     @Override
