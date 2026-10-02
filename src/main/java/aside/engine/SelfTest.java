@@ -23,6 +23,7 @@ import java.util.Set;
 import aside.games.fruitjump.engine.Bat;
 import aside.games.fruitjump.engine.Combat;
 import aside.games.fruitjump.engine.GameLoop;
+import aside.games.fruitjump.engine.Hookshot;
 import aside.games.fruitjump.engine.LevelGen;
 import aside.games.fruitjump.engine.LevelMap;
 import aside.games.fruitjump.engine.Physics;
@@ -574,6 +575,9 @@ public class SelfTest {
         System.out.println("\n--- damage timing ---");
         damageIsMetered();
 
+        System.out.println("\n--- the hookshot ---");
+        theHookshotReaches();
+
         System.out.println("\n--- the audio cues ---");
         audioCuesArePresent();
         audioLogIsBounded();
@@ -975,6 +979,53 @@ public class SelfTest {
     /** Advance a combat clock by `seconds`, in engine steps. */
     static void step(Combat c, double seconds) {
         for (double t = 0; t < seconds; t += GameLoop.DT) c.update(GameLoop.DT);
+    }
+
+    /**
+     * The hookshot reaches a wall inside its range, misses one outside it, and travels at its stated speed.
+     *
+     * <p>The last gap the mutation sweep found - `Hookshot.MAX_RANGE = 400 -> 5` and `HOOK_SPEED = 1200 -> 1`
+     * both came back NOT CAUGHT. It is the one weapon with no check, and it is the one that carries the player.
+     *
+     * <p>A hand-written level with a single wall at column 40, and the same wall fired at from 180px and from
+     * 1080px. Absolute distances, and the speed measured in real units: a hook that crawls at 1px/s fails.
+     */
+    static void theHookshotReaches() {
+
+        Hookshot near = hookAt(1100);
+        check("hookshot: a wall 180px away is caught", near.isPulling());
+
+        Hookshot far = hookAt(200);
+        check("hookshot: a wall 1080px away is not", !far.isPulling());
+
+        // NO SPEED CHECK, and the reason is a finding rather than an omission: `Hookshot.HOOK_SPEED = 1200`
+        // is DECLARED AND NEVER READ. The hook is an instant raycast - `fire` sets the tip straight onto the
+        // anchor - and the return uses RETRACT_SPEED. So `HOOK_SPEED -> 1` cannot be caught by anything, and
+        // that is not a hole in the check; it is a constant nothing uses. Recorded for Kinger: delete it or
+        // wire it. (Found by writing the check that failed, not by reading.)
+    }
+
+    /** A player at `px` in a 60-column level with one wall at column 40, and a hookshot fired at it. */
+    static Hookshot hookAt(double px) {
+        World w = worldWithWall();
+        Physics.Body p = new Physics.Body(px, 96, 24, 44);
+        w.addBody(p);
+        Hookshot h = new Hookshot(p);
+        h.fire(1, 0, w);
+        return h;
+    }
+
+    static World worldWithWall() {
+        String[] rows = new String[5];
+        rows[0] = " ".repeat(60);
+        rows[1] = " ".repeat(60);
+        rows[2] = " ".repeat(40) + "#" + " ".repeat(19);
+        rows[3] = " ".repeat(40) + "#" + " ".repeat(19);
+        rows[4] = "#".repeat(60);
+        LevelMap map = LevelMap.parse(String.join("\n", rows));
+        World w = new World();
+        map.buildWorld(w);
+        return w;
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
