@@ -593,6 +593,8 @@ public class SelfTest {
         check("pocket: a bomb opens the cracked floor and the player drops in ("
                 + pocketFailures + " failures)", pocketFailures == 0);
 
+        readmeHasNoCheckCount();
+
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
         if (fail > 0) System.exit(1);
     }
@@ -1035,6 +1037,38 @@ public class SelfTest {
             }
             check(name + ": Vn.text() is never null, on any beat", ok);
         }
+    }
+
+    /**
+     * The README does not carry a copy of this suite's check count.
+     *
+     * <p><b>It carried one, and it went stale three times in two days.</b> A
+     * hand-maintained copy of a generated number is a copy that is wrong more
+     * often than it is right, and the failure is silent: a README that says 287
+     * when the suite says 288 looks exactly like a README that is correct. So
+     * the number is not written down, and this check is what keeps it from
+     * being written down again -- the suite prints its own count, and a doc
+     * that repeats it is a doc that will drift.
+     */
+    static void readmeHasNoCheckCount() throws Exception {
+        Path p = Path.of("README.md");
+        if (!Files.exists(p)) p = Path.of("..", "README.md");
+        if (!Files.exists(p)) {
+            System.out.println("       (no README.md from here)");
+            return;
+        }
+        String text = Files.readString(p);
+        java.util.regex.Matcher m =
+                java.util.regex.Pattern.compile("#\\s*\\d+\\s+checks").matcher(text);
+        // find() ONCE. The first version called it twice -- once to build the
+        // message and once for the assertion -- and a Matcher is stateful, so
+        // the second call resumed from the end of the first match and returned
+        // false. The check passed with the count sitting in the file, which is
+        // the exact failure it exists to catch.
+        boolean found = m.find();
+        check("the README does not repeat this suite's check count"
+                        + (found ? " (found \"" + m.group() + "\")" : ""),
+                !found);
     }
 
     static boolean hasChoiceEffect(Script s, String sceneId) {
