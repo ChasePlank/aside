@@ -616,6 +616,16 @@ public final class SelfTest {
             check("the page carries the " + t + " table", page.contains(want));
         }
 
+        // Every room has a label, keyed by the name the engine uses. The
+        // page looks a room up by name, so an array here would index by a
+        // string and every label would come back undefined -- which is what
+        // happened, and which no check on the numbers could have caught.
+        boolean tags = true;
+        for (int i = 0; i < Room.COUNT; i++) {
+            tags &= page.contains(Room.ALL[i].name() + ": \"" + Room.ALL[i].tag + "\"");
+        }
+        check("the page labels every room by the name the engine uses", tags);
+
         // And the three rules, which are the whole difference between the
         // three threats.
         Game g = new Game(1, 1);

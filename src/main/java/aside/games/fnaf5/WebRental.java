@@ -66,13 +66,17 @@ public final class WebRental {
         }
         sb.append("\n  ],\n");
 
-        // The rooms, in the order the building has them.
-        sb.append("  roomTag: [");
+        // The rooms, keyed by name -- the page looks a room up by the name
+        // the engine uses, so an array here would be indexed by a string and
+        // every label would come back undefined. (It did, and the screenshot
+        // is what caught it: the suite was checking the numbers and not the
+        // labels, which is the shape of gap a check cannot see.)
+        sb.append("  roomTag: {");
         for (int i = 0; i < Room.COUNT; i++) {
             if (i > 0) sb.append(", ");
-            sb.append(str(Room.ALL[i].tag));
+            sb.append(Room.ALL[i].name()).append(": ").append(str(Room.ALL[i].tag));
         }
-        sb.append("],\n");
+        sb.append("},\n");
 
         sb.append("  baseInterval: [");
         for (int n = 1; n <= 5; n++) {
