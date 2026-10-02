@@ -361,8 +361,35 @@ public final class Bot {
      * <p>So the rule for a tenth game is sharper than "ask what the player can
      * do about it": <b>ask what the player can do about it, in how many
      * gradations, and whether the thing they are doing it to has enough states
-     * to be wrong in.</b> See [[reference/fnaf10.md]] in memory for all five
+     * to be wrong in.</b> See [[reference/fnaf10.md]] in memory for all eight
      * builds and their measurements.
+     *
+     * <p><b>And the eighth attempt found the thing that makes a timing lever
+     * work, which is worth having here because it is the first positive result
+     * out of eight.</b> Every earlier design was playable by a fixed cadence,
+     * because the lever's effect was an <i>integral over time</i> -- a door
+     * that stops a walker, a dimmer that wears one down -- and a cadence gets
+     * an average right. The eighth made the lever <b>sampled</b>: the walker
+     * steps on its own clock and reads the brightness <i>at the instant of the
+     * step</i>, advancing {@code (1 - brightness)} of a step and nothing else.
+     * Nothing accumulates between steps, so a second of full light between two
+     * of them is worth exactly nothing.
+     *
+     * <p>Measured: <b>the rhythm dies.</b> RHYTHM -- full and nothing on a
+     * cadence -- reads 1% over the week against the competent policy's 80%,
+     * where in every previous design the habit beat or matched the competent
+     * player. That is the first time a cadence has lost, and it says the
+     * sampling is the load-bearing part.
+     *
+     * <p><b>It is still not a game, and the reason is specific.</b> The
+     * competent strategy -- spend light only on the steps -- is <i>strictly
+     * dominant</i>, because light spent that way costs almost nothing: the
+     * filament is on for about a fifth of the night, so it never runs out, and
+     * every other policy reads 0%. The window width is a real dial (margins of
+     * 0.05, 0.20, 0.60 and 1.20 seconds read 77%, 80%, 60% and 62% over the
+     * week) but the <i>strategies</i> are 0 or 80, which is a cliff rather than
+     * a ladder. <b>So the next attempt needs a cost that a perfect step-timer
+     * cannot avoid</b> -- the sampling is solved, the economy is not.
      *
      * <p><b>And SENSE is on the ladder because the office's own description
      * of itself does not survive being played.</b> {@link Feed}'s javadoc says
