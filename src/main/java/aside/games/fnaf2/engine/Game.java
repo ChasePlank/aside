@@ -50,7 +50,7 @@ public class Game {
      * more of the night with the camera up, which is time not spent
      * watching an opening.
      */
-    static final double[] DRAIN_MULT = {1.0, 1.2, 1.4, 1.6, 1.8, 2.0};
+    public static final double[] DRAIN_MULT = {1.0, 1.2, 1.4, 1.6, 1.8, 2.0};
     /** Once it empties the Puppet is coming and nothing stops it. */
     public static final double PUPPET_GRACE = 6.0;
 
@@ -175,7 +175,7 @@ public class Game {
      * of them and you cannot shut any of them out -- so the ramp is
      * gentler at the start and steeper at the end.
      */
-    static int aiLevel(int night) {
+    public static int aiLevel(int night) {
         int[] table = {2, 6, 10, 14, 17, 20};
         return table[Math.min(Math.max(night - 1, 0), table.length - 1)];
     }
