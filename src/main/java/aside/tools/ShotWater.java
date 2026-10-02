@@ -83,7 +83,44 @@ public class ShotWater extends Application {
         screen.handleKey(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DOWN, false, false, false, false));
         for (int i = 0; i < dive; i++) screen.tick(dt);
         shoot(scene, dir + "/water-dive.png", "submerged");
+        report(screen, "after the dive");
+
+        // Can the climber get out? The flood pass says a pool is "escapable by
+        // construction: the surface sits at the path level and the pool is 64px deep,
+        // so the breach hop clears the lip". That is a claim about the whole stack -
+        // the stroke, the buoyancy, the breach impulse, the lip height - and nothing
+        // had ever tested it end to end. A pool you cannot leave is a soft-lock, and
+        // it would look exactly like a pool.
+        //
+        // Tapping, not holding: the breach impulse fires on a key press and the
+        // stroke is the hold, so this is what a player actually does to climb out.
+        screen.handleKeyReleased(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.DOWN, false, false, false, false));
+        for (int i = 0; i < 420; i++) {
+            if (i % 24 == 0) screen.handleKey(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.UP, false, false, false, false));
+            if (i % 24 == 12) screen.handleKeyReleased(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.UP, false, false, false, false));
+            screen.tick(dt);
+        }
+        shoot(scene, dir + "/water-out.png", "out of the pool");
+        report(screen, "after tapping UP");
+
         javafx.application.Platform.exit();
+    }
+
+    /** Where the climber is and whether the water still has them. Reflection, so the names cannot go stale. */
+    private static void report(GameplayScreen screen, String when) {
+        try {
+            var f = GameplayScreen.class.getDeclaredField("player");
+            f.setAccessible(true);
+            Object p = f.get(screen);
+            var body = aside.games.fruitjump.engine.Physics.Body.class;
+            double x = body.getField("x").getDouble(p), y = body.getField("y").getDouble(p);
+            boolean inWater = body.getField("inWater").getBoolean(p);
+            double sub = body.getField("submersion").getDouble(p);
+            System.out.println("  player " + when + ": x=" + (int) x + " y=" + (int) y
+                    + " inWater=" + inWater + " submersion=" + String.format("%.2f", sub));
+        } catch (Exception ex) {
+            System.out.println("  player " + when + ": could not read (" + ex + ")");
+        }
     }
 
     private static void shoot(Scene scene, String path, String what) {
