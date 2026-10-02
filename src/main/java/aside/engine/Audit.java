@@ -46,7 +46,7 @@ public class Audit {
                     + "   choice options " + options);
 
             System.out.println("\n--- art the script asks for ---");
-            printArtList(s);
+            printArtList(s, p);
 
             System.out.println("\n--- traversal ---");
             Bot.Report r = new Bot().run(s);
@@ -66,7 +66,11 @@ public class Audit {
         if (failures > 0) System.exit(1);
     }
 
-    static void printArtList(Script s) {
+    static void printArtList(Script s, java.nio.file.Path storyPath) {
+        // The story id is only known here, which is why the existence checks below live in this method: the art
+        // lists are aggregated across stories but a story's own art lives under art/stories/<id>/, and without
+        // the id neither check can see it. Per-story art arrived after both checks were first written.
+        String storyId = storyPath == null ? "" : storyPath.getFileName().toString().replace(".aside", "");
         Set<String> backgrounds = new LinkedHashSet<>();
         Set<String> music = new LinkedHashSet<>();
         Set<String> sfx = new LinkedHashSet<>();
@@ -104,16 +108,34 @@ public class Audit {
         // so this is reported rather than counted as an issue - but it is reported, because a missing sprite
         // fails silently in the presenter where a missing cue was checked for and this was not. Same pattern as
         // the audio cues, ported late.
-        java.io.File spriteDir = new java.io.File("art/sprites");
-        if (spriteDir.isDirectory()) {
+        if (new java.io.File("art/sprites").isDirectory()) {
             java.util.List<String> unmade = new java.util.ArrayList<>();
             for (String pose : poses) {
                 String[] parts = pose.split(" \\(");
                 String file = parts[0] + "-" + parts[1].replace(")", "") + ".png";
-                if (!new java.io.File(spriteDir, file).isFile()) unmade.add(pose + " -> " + file);
+                if (!existsIn("art/sprites", "art/stories/" + storyId + "/sprites", file)) unmade.add(pose + " -> " + file);
             }
             System.out.println("  poses with no image yet: " + unmade.size());
             for (String u : unmade) System.out.println("      " + u);
         }
+
+        // Backgrounds, the third check of the same shape and the one that was owed. A missing background draws
+        // nothing where the scene should be, which fails as silently in the presenter as a missing sprite does.
+        java.util.List<String> noBg = new java.util.ArrayList<>();
+        for (String b : backgrounds) {
+            if (!existsIn("art/backgrounds", "art/stories/" + storyId + "/backgrounds", b + ".png", b + ".jpg")) noBg.add(b);
+        }
+        System.out.println("  backgrounds with no image yet: " + noBg.size());
+        for (String u : noBg) System.out.println("      " + u);
+    }
+
+    /** True if any of the given file names exists in any of the given directories. */
+    static boolean existsIn(String dirA, String dirB, String... names) {
+        for (String dir : new String[]{dirA, dirB}) {
+            for (String n : names) {
+                if (new java.io.File(dir, n).isFile()) return true;
+            }
+        }
+        return false;
     }
 }
