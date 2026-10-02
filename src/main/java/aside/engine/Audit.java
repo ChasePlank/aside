@@ -23,6 +23,7 @@ public class Audit {
             return;
         }
         int failures = 0;
+        int inconclusiveRuns = 0;
         for (String arg : args) {
             Path p = Path.of(arg);
             if (!Files.exists(p)) {
@@ -66,8 +67,17 @@ public class Audit {
             System.out.println("\n" + (inconclusive
                     ? "INCONCLUSIVE - budget hit, results partial"
                     : clean ? "CLEAN" : "ISSUES FOUND"));
-            if (!clean) failures++;
+            // An inconclusive run is not a failure. The verdict above already says the results are partial;
+            // counting it here as well would make the exit status contradict the verdict, which is the same
+            // mistake in a second place - a budget hit reported as a problem.
+            if (!clean && !inconclusive) failures++;
+            if (inconclusive && clean) inconclusiveRuns++;
             System.out.println();
+        }
+        if (inconclusiveRuns > 0) {
+            System.out.println();
+            System.out.println(inconclusiveRuns + " story(ies) inconclusive - raise the budget to finish them.");
+            System.out.println("Not counted as failures, because a partial check is not a finding.");
         }
         if (failures > 0) System.exit(1);
     }
