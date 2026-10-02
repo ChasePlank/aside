@@ -55,6 +55,8 @@ public class GameplayScreen extends UiScreen {
     // The climber's current look (hair length grid + hair/pack palette).
     private final Sprites.Look look;
     /** Floating tutorial words, or null on a generated level. */
+    private final AudioSystem audio;
+    private final Sound sound;
     private final java.util.List<Tutorial.Sign> signs;
     /** True while playing the tutorial: hand-built levels, no autosave, ends at 8. */
     private final boolean tutorial;
@@ -135,7 +137,11 @@ public class GameplayScreen extends UiScreen {
         world = new World();
         map.buildWorld(world);
         combat = new Combat();
-        world.setAudio(new AudioSystem());  // headless: logs only
+        // The engine posts cue names; Sound plays them. Kept here rather than inside World because the
+        // engine must stay JavaFX-free - it runs headless in the gate and on machines with no sound device.
+        audio = new AudioSystem();
+        world.setAudio(audio);
+        sound = Sound.load(ui.root());
         inventory = new PlayerInventory();
 
         // Player
@@ -284,6 +290,7 @@ public class GameplayScreen extends UiScreen {
 
         // Engine step
         world.update(dt);
+        sound.drain(audio);
         combat.update(dt);
 
         // Drowning: air ran out a beat ago. The ticks arrive pre-metered (~1/s) and

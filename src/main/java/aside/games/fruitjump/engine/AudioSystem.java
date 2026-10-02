@@ -96,7 +96,31 @@ public class AudioSystem {
     static final double LAND_COOLDOWN_TIME = 0.1;  // 100ms between land sounds
     
     /** Post a sound effect event. */
+    /**
+     * Cue names posted since the last drain, for a backend to play.
+     *
+     * <p>The event log is prose - "SFX jump vol=1.00" - which is right for a person reading a headless run and
+     * wrong for a machine. A backend wants the NAME. Bounded the same way the log is: a backend that stops
+     * being called must not grow a queue forever.
+     */
+    public final java.util.ArrayDeque<String> pending = new java.util.ArrayDeque<>();
+
+    /** Take everything posted since the last call. The caller plays it; this class still knows nothing about
+     *  JavaFX, which is the whole point of the split. */
+    public java.util.List<String> drainPending() {
+        java.util.List<String> out = new java.util.ArrayList<>(pending);
+        pending.clear();
+        return out;
+    }
+
+    private void post(String cue) {
+        if (cue == null) return;
+        pending.add(cue);
+        while (pending.size() > LOG_LIMIT) pending.removeFirst();
+    }
+
     public void playSfx(Sfx sfx) {
+        post(sfx.name);
         if (muted) return;
         if (sfx == Sfx.LAND && landCooldown > 0) return;
         if (sfx == Sfx.LAND) landCooldown = LAND_COOLDOWN_TIME;
