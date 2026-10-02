@@ -526,6 +526,23 @@ public final class SelfTest {
                     page.contains("case \"" + cue + "\""));
         }
 
+        // The art. The desktop draws an office, ten camera rooms, Springtrap
+        // and six phantoms; the phone carries its own WebP copies, built by
+        // tools/fnaf3-phone-art.py and inlined as data URIs, because the build
+        // has to be one file. The room keys are the engine's own room numbers,
+        // so a page that looks a camera up by number cannot show the wrong one.
+        check("the page carries the office", page.contains("\"office\":\"data:image/webp;base64,"));
+        for (int r = 1; r <= House.ROOMS; r++) {
+            check("the page carries camera " + r,
+                    page.contains("\"room" + r + "\":\"data:image/webp;base64,"));
+        }
+        check("the page carries Springtrap",
+                page.contains("\"springtrap\":\"data:image/webp;base64,"));
+        for (String key : new String[]{"freddy", "chica", "foxy", "mangle", "puppet", "bb"}) {
+            check("the page carries the phantom " + key,
+                    page.contains("\"phantom:" + key + "\":\"data:image/webp;base64,"));
+        }
+
         // And the phantoms, which are the cost of a failed system.
         for (String name : Game.PHANTOM_NAMES) {
             check("the page carries " + name, page.contains(name));

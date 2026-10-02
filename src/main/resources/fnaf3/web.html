@@ -126,6 +126,21 @@ RNG.prototype.nextInt = function (bound) {
 };
 RNG.prototype.nextBoolean = function () { return this.next(1) !== 0; };
 
+// The art, as data URIs in the content. Loaded once, and the drawing waits
+// for them rather than drawing a half-built frame.
+const IMG = {};
+let artReady = false;
+{
+  const keys = Object.keys(C.assets);
+  let left = keys.length;
+  for (const k of keys) {
+    const im = new Image();
+    im.onload = im.onerror = () => { if (--left === 0) artReady = true; };
+    im.src = C.assets[k];
+    IMG[k] = im;
+  }
+}
+
 const HOUR_SECONDS = C.hourSeconds, NIGHT_HOURS = C.nightHours;
 const REBOOT_TIME = C.rebootTime, VENT_MAX = C.ventMax, VENT_DRAIN = C.ventDrain;
 const LURE_DURATION = C.lureDuration, LURE_COOLDOWN = C.lureCooldown;
@@ -410,59 +425,121 @@ const GRID = (() => {
   return out;
 })();
 
+/** The office, with its window and its vent, and whatever is in it. */
 function drawOffice(g) {
   cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  const STAGE = 276;
+  const im = IMG.office;
+  if (im && im.complete && im.naturalWidth) {
+    cx.drawImage(im, 0, 0, W, STAGE);
+  } else {
+    cx.fillStyle = "#0A0C14"; cx.fillRect(0, 0, W, STAGE);
+  }
+
+  // The four places he can be, drawn over the photograph. They are boxes
+  // rather than bare positions because the office is a photograph and a
+  // player has to know which part of it is the window.
   for (const k of Object.keys(SLOT)) {
     const b = SLOT[k];
-    cx.fillStyle = "#070910"; cx.fillRect(b[0], b[1], b[2], b[3]);
-    cx.strokeStyle = "#1E2030"; cx.lineWidth = 2; cx.strokeRect(b[0], b[1], b[2], b[3]);
-    cx.fillStyle = "#556070"; cx.font = "13px Arial"; cx.textAlign = "center";
-    cx.fillText(k, b[0] + b[2] / 2, b[1] - 10);
+    cx.strokeStyle = "#1E2030"; cx.lineWidth = 1;
+    cx.strokeRect(b[0], b[1], b[2], b[3]);
+    cx.fillStyle = "#556070"; cx.font = "11px Arial"; cx.textAlign = "center";
+    cx.fillText(k, b[0] + b[2] / 2, b[1] - 4);
   }
+
   // He is in the office: at the window or at the vent, and nowhere else.
   if (g.springtrap.atOffice) {
     const b = SLOT[g.springtrap.atWindow ? "WINDOW" : "VENT"];
     const x = b[0] + b[2] / 2, y = b[1] + b[3] / 2;
-    cx.fillStyle = "rgba(233,69,96,0.85)";
-    cx.beginPath(); cx.ellipse(x, y, 30, 46, 0, 0, Math.PI * 2); cx.fill();
-    cx.fillStyle = "#FFD700";
-    cx.beginPath(); cx.arc(x - 10, y - 20, 5, 0, Math.PI * 2); cx.fill();
-    cx.beginPath(); cx.arc(x + 10, y - 20, 5, 0, Math.PI * 2); cx.fill();
+    const sp = IMG.springtrap;
+    if (sp && sp.complete && sp.naturalWidth) {
+      const h = b[3] * 1.15;
+      const w = h * (sp.naturalWidth / sp.naturalHeight);
+      cx.drawImage(sp, x - w / 2, y - h / 2, w, h);
+    } else {
+      cx.fillStyle = "rgba(233,69,96,0.85)";
+      cx.beginPath(); cx.ellipse(x, y, 30, 46, 0, 0, Math.PI * 2); cx.fill();
+    }
     const left = Math.max(0, 1 - g.springtrap.officeTimer / g.officeGrace());
-    cx.fillStyle = "#141620"; cx.fillRect(b[0] + 14, b[1] + b[3] - 16, b[2] - 28, 6);
+    cx.fillStyle = "#141620"; cx.fillRect(b[0] + 8, b[1] + b[3] - 12, b[2] - 16, 6);
     cx.fillStyle = left < 0.35 ? "#E94560" : "#5A6A8A";
-    cx.fillRect(b[0] + 14, b[1] + b[3] - 16, (b[2] - 28) * left, 6);
+    cx.fillRect(b[0] + 8, b[1] + b[3] - 12, (b[2] - 16) * left, 6);
   }
+
   // Phantoms, in their slots. They cannot hurt you and they take something.
   for (const p of g.phantoms) {
     const b = SLOT[p.slot];
-    cx.fillStyle = "rgba(120,140,190,0.35)";
-    cx.beginPath();
-    cx.ellipse(b[0] + b[2] / 2, b[1] + b[3] / 2, 26, 40, 0, 0, Math.PI * 2);
-    cx.fill();
+    const key = "phantom:" + p.name.replace("Phantom ", "").replace(" ", "").toLowerCase();
+    const ph = IMG[key] || IMG["phantom:freddy"];
+    if (ph && ph.complete && ph.naturalWidth) {
+      const h = b[3] * 1.05;
+      const w = h * (ph.naturalWidth / ph.naturalHeight);
+      cx.globalAlpha = 0.55;
+      cx.drawImage(ph, b[0] + b[2] / 2 - w / 2, b[1] + b[3] / 2 - h / 2, w, h);
+      cx.globalAlpha = 1;
+    } else {
+      cx.fillStyle = "rgba(120,140,190,0.35)";
+      cx.beginPath();
+      cx.ellipse(b[0] + b[2] / 2, b[1] + b[3] / 2, 26, 40, 0, 0, Math.PI * 2);
+      cx.fill();
+    }
   }
 }
 
+/** The camera you are on, and the strip you pick the next one from. */
 function drawMonitor(g) {
   cx.fillStyle = "#02030A"; cx.fillRect(0, 0, W, H);
+  const STAGE = 300;
+
+  const im = IMG["room" + g.currentCam];
+  if (im && im.complete && im.naturalWidth) {
+    // Cover the stage rather than fitting it: the room photographs are a
+    // different shape from the stage and a letterboxed one reads as a
+    // smaller room.
+    const s = Math.max(W / im.naturalWidth, STAGE / im.naturalHeight);
+    const w = im.naturalWidth * s, h = im.naturalHeight * s;
+    cx.drawImage(im, (W - w) / 2, (STAGE - h) / 2, w, h);
+  } else {
+    cx.fillStyle = "#0A0C14"; cx.fillRect(0, 0, W, STAGE);
+  }
+
+  const here = g.springtrap.room === g.currentCam && !g.springtrap.atOffice;
+  if (here) {
+    const sp = IMG.springtrap;
+    if (sp && sp.complete && sp.naturalWidth) {
+      const h = STAGE * 0.72;
+      const w = h * (sp.naturalWidth / sp.naturalHeight);
+      cx.drawImage(sp, W / 2 - w / 2, STAGE - h, w, h);
+    }
+    cx.fillStyle = "rgba(233,69,96,0.20)"; cx.fillRect(0, 0, W, STAGE);
+    cx.fillStyle = "#E94560"; cx.font = "15px Arial"; cx.textAlign = "center";
+    cx.fillText("HE IS HERE", W / 2, STAGE - 12);
+  }
+  if (g.lureRoom === g.currentCam) {
+    cx.fillStyle = "#FFD700"; cx.font = "14px Arial"; cx.textAlign = "center";
+    cx.fillText("THE LURE IS PLAYING", W / 2, 22);
+  }
+  cx.fillStyle = "rgba(2,3,10,0.45)"; cx.fillRect(0, 0, W, 20);
+  cx.fillStyle = "#FFD700"; cx.font = "12px Arial"; cx.textAlign = "left";
+  cx.fillText("CAM " + g.currentCam + "  " + C.roomName[g.currentCam], 8, 15);
+
+  // The strip: ten cameras, and which one you are on.
+  const y = STAGE + 16;
+  const bw = (W - 20) / 10;
   for (let r = 1; r <= ROOMS; r++) {
-    const b = GRID[r];
-    const here = g.springtrap.room === r && !g.springtrap.atOffice;
+    const x = 10 + (r - 1) * bw;
+    const on = r === g.currentCam;
     const lure = g.lureRoom === r;
-    cx.fillStyle = "#070910"; cx.fillRect(b[0], b[1], b[2], b[3]);
-    cx.strokeStyle = lure ? "#FFD700" : (here ? "#E94560" : (r === g.currentCam ? "#6A5A3A" : "#1E2030"));
-    cx.lineWidth = (lure || here) ? 3 : 2;
-    cx.strokeRect(b[0], b[1], b[2], b[3]);
-    cx.fillStyle = "#556070"; cx.font = "12px Arial"; cx.textAlign = "center";
-    cx.fillText(r + " " + C.roomName[r], b[0] + b[2] / 2, b[1] + 20);
-    if (here) {
-      cx.fillStyle = "rgba(233,69,96,0.85)";
-      cx.beginPath(); cx.ellipse(b[0] + b[2] / 2, b[1] + b[3] / 2 + 12, 22, 32, 0, 0, Math.PI * 2); cx.fill();
-    }
-    if (lure) {
-      cx.fillStyle = "#FFD700"; cx.font = "12px Arial";
-      cx.fillText("SOUND", b[0] + b[2] / 2, b[1] + b[3] - 14);
-    }
+    cx.fillStyle = on ? "#2A0E16" : "#0A0C14";
+    cx.fillRect(x + 1, y, bw - 2, 54);
+    cx.strokeStyle = lure ? "#FFD700" : (on ? "#E94560" : "#1E2030");
+    cx.lineWidth = (lure || on) ? 2 : 1;
+    cx.strokeRect(x + 1, y, bw - 2, 54);
+    cx.fillStyle = on ? "#E94560" : "#556070";
+    cx.font = "10px Arial"; cx.textAlign = "center";
+    cx.fillText(String(r), x + bw / 2, y + 20);
+    const tag = C.roomName[r];
+    cx.fillText(tag.length > 8 ? tag.slice(0, 7) + "\u2026" : tag, x + bw / 2, y + 38);
   }
 }
 

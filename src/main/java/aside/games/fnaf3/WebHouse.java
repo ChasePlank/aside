@@ -6,6 +6,7 @@ import aside.games.fnaf3.engine.House;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
 /**
  * Build {@code web/fnaf3.html} from the page template and the engine.
@@ -45,7 +46,7 @@ public final class WebHouse {
     }
 
     /** Everything the page needs that the engine owns. */
-    static String content() {
+    static String content() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("const C = {\n");
 
@@ -125,7 +126,8 @@ public final class WebHouse {
         sb.append("  phantomRateCalm: ").append(num(Game.PHANTOM_RATE_CALM)).append(",\n");
         sb.append("  phantomRateFailing: ").append(num(Game.PHANTOM_RATE_FAILING)).append(",\n");
         sb.append("  phantomMax: ").append(Game.PHANTOM_MAX).append(",\n");
-        sb.append("  help: ").append(str(HELP)).append("\n");
+        sb.append("  help: ").append(str(HELP)).append(",\n");
+        sb.append("  assets: ").append(assets()).append("\n");
         sb.append("};\n");
         return sb.toString();
     }
@@ -172,6 +174,45 @@ public final class WebHouse {
             + "removing him. The ventilation drains and has to be rebooted, "
             + "and a reboot takes both hands. And the phantoms cannot hurt "
             + "you: they take a system on the way out, chosen for you.";
+
+    /** Where the phone's own copies of the art live. */
+    static final Path ART = Path.of("art", "phone", "fnaf3");
+
+    /**
+     * The art, as data URIs.
+     *
+     * <p>Inlined rather than linked, because the build has to be one file.
+     * The copies are downscaled by {@code tools/fnaf3-phone-art.py} and
+     * committed, so this method is reproducible from Java alone.
+     *
+     * <p>The room keys are the engine's own room numbers -- room1 is the
+     * Entrance and room10 is the Vent, which is House.NAME's order -- so a
+     * page that looks a camera up by number cannot show the wrong one.
+     */
+    static String assets() throws Exception {
+        StringBuilder b = new StringBuilder("{\n");
+        b.append("  \"office\":").append(uri("office.webp", "image/webp"));
+        for (int r = 1; r <= House.ROOMS; r++) {
+            b.append(",\n  \"room").append(r).append("\":")
+             .append(uri("room" + r + ".webp", "image/webp"));
+        }
+        b.append(",\n  \"springtrap\":").append(uri("springtrap.webp", "image/webp"));
+        for (String key : new String[]{"freddy", "chica", "foxy", "mangle", "puppet", "bb"}) {
+            b.append(",\n  \"phantom:").append(key).append("\":")
+             .append(uri("phantom" + key + ".webp", "image/webp"));
+        }
+        return b.append("\n}").toString();
+    }
+
+    static String uri(String name, String mime) throws Exception {
+        Path f = ART.resolve(name);
+        if (!Files.exists(f)) {
+            throw new IllegalStateException("no " + f + " -- build it with: "
+                    + "python3 tools/fnaf3-phone-art.py");
+        }
+        return "\"data:" + mime + ";base64,"
+                + Base64.getEncoder().encodeToString(Files.readAllBytes(f)) + "\"";
+    }
 
     static String str(String s) {
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
