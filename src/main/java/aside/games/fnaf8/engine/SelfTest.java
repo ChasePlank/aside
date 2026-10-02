@@ -593,6 +593,21 @@ public final class SelfTest {
             check("the page carries the " + t + " table", page.contains(t + ": " + want));
         }
 
+        // The art. The desktop draws an office, ten units at 700 px tall with
+        // alpha and ten scares; the phone carries its own WebP copies, built
+        // by tools/fnaf8-phone-art.py and inlined as data URIs, because the
+        // build has to be one file. This game has two of them a night and they
+        // arrive from opposite sides, so getting a key wrong would put the
+        // wrong thing in the wrong hall.
+        check("the page carries the office",
+                page.contains("\"room\":\"data:image/webp;base64,"));
+        for (Unit u : Unit.all()) {
+            check("the page carries the frame for " + u.name(),
+                    page.contains("\"unit:" + u.key() + "\":\"data:image/webp;base64,"));
+            check("the page carries the scare for " + u.name(),
+                    page.contains("\"scare:" + u.key() + "\":\"data:image/webp;base64,"));
+        }
+
         // And the cast, which is the one thing the player reads before the
         // night starts.
         for (int n = 1; n <= 5; n++) {
