@@ -77,3 +77,36 @@ if [ -n "$left" ]; then
   echo "$left" | sed 's/^/  /'
   echo "  (the UI and engine classes they need either have release equivalents or must be stubbed)"
 fi
+
+# --- what this script does NOT carry ---------------------------------------
+#
+# Both of these were found the hard way on 2026-10-02, in one update, and the second one cost the public
+# build a soft-lock. They are printed every run rather than written in a comment, because a comment is read
+# after the failure.
+echo
+echo "--- NOT CARRIED BY THIS SCRIPT ---"
+
+# 1. The screens. Seven files import aside.(ui|game).* and are skipped above. That is by design, but it has
+#    a consequence the skip line does not state: an engine feature whose OTHER half is a screen arrives
+#    half-built, and half-built can be worse than absent. The water arrived with a field, no renderer, no
+#    vertical input and a grounded-only jump - so a player who walked into a pool floated at the surface and
+#    could never leave. The bats arrived flying and stunning the player, invisible. The splash arrived as
+#    particles nothing drew. Three features, one cause.
+echo "  1. SCREENS: the $wiring wiring files above are skipped, so an engine feature whose other half is a"
+echo "     screen arrives half-built. Check the release's GameplayScreen for anything the engine now"
+echo "     PRODUCES that nothing there DRAWS or DRIVES. On 2026-10-02 that was water (a soft-lock), bats"
+echo "     (an invisible stun) and the splash particles - and none of them showed up in any test the"
+echo "     release had."
+
+# 2. Assets. Only *.java is copied, so anything the engine loads from disk stays behind.
+AUDIO_SRC="$SRC_REPO/audio"
+if [ -d "$AUDIO_SRC" ]; then
+  n=$(find "$AUDIO_SRC" -type f 2>/dev/null | wc -l | tr -d ' ')
+  in_release=$(find "$DEST_REPO" -name '*.wav' -o -name '*.mp3' 2>/dev/null | wc -l | tr -d ' ')
+  echo "  2. ASSETS: $n files under aside/audio/ are not copied. The release currently holds $in_release"
+  echo "     sound files, so it is silent - which is pre-existing, but it means a cue added here will not"
+  echo "     be heard there."
+fi
+
+echo
+echo "Both are the same shape: this script carries CODE, and a feature is not only code."
