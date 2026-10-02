@@ -22,10 +22,10 @@
      the only thing that changes the light. Nothing else in here is drawn. */
   #glow{
     position:fixed; inset:0; pointer-events:none; opacity:0;
-    background:radial-gradient(60% 42% at 72% 26%, rgba(242,193,78,.20), rgba(242,193,78,0) 70%);
+    background:radial-gradient(60% 42% at 83% 47%, rgba(242,193,78,.20), rgba(242,193,78,0) 70%);
     transition:opacity .6s;
   }
-  .wrap{position:relative; max-width:620px; margin:0 auto; padding:22px 18px 128px}
+  .wrap{position:relative; z-index:2; max-width:620px; margin:0 auto; padding:22px 18px 128px}
   header{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
   h1{font-size:26px; font-weight:normal; color:var(--gold); margin:0; letter-spacing:.01em}
   .visit{font:12px/1.4 Consolas,Menlo,monospace; color:var(--faint)}
@@ -56,7 +56,7 @@
   .gesture{font-size:17px; color:var(--dim)}
   .gesture.sel{color:var(--ink)}
   .note{font:13px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin:14px 0 0}
-  .bar{position:fixed; left:0; right:0; bottom:0; background:#07070Bee;
+  .bar{position:fixed; z-index:2; left:0; right:0; bottom:0; background:#07070Bee;
        border-top:1px solid var(--edge); padding:10px 18px calc(10px + env(safe-area-inset-bottom))}
   .bar .inner{max-width:620px; margin:0 auto; display:flex; gap:9px}
   button{flex:1; font:16px/1.2 Georgia,serif; padding:15px 10px; border-radius:10px;
@@ -67,9 +67,13 @@
   button:disabled{opacity:.35}
   .warn{font:13px/1.6 Arial,Helvetica,sans-serif; color:#C4553F; margin:16px 0 0}
   .fine{font:12px/1.6 Arial,Helvetica,sans-serif; color:var(--faint); margin:22px 0 0}
+/* The room itself, inlined by the generator. Empty when there is no art,
+   in which case the page is the flat background it always was. */
+/*__ART__*/
 </style>
 </head>
 <body>
+<div id="room"></div>
 <div id="glow"></div>
 <div class="wrap" id="app"></div>
 <div class="bar" id="bar"></div>

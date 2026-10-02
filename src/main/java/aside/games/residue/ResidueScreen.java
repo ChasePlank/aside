@@ -4,12 +4,14 @@ import aside.ui.Audio;
 import aside.ui.LibraryScreen;
 import aside.ui.UiManager;
 import aside.ui.UiScreen;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,35 @@ public class ResidueScreen extends UiScreen {
     static final Font F_TINY = Font.font("Arial", 12);
 
     static final double MARGIN = 132;
+
+    /**
+     * The room itself, painted once and drawn behind everything.
+     *
+     * It is deliberately almost black -- the text is the game and the art
+     * is the temperature of the room, not a thing to look at. If it ever
+     * competes with the words, it is wrong.
+     *
+     * Missing art is not an error: the screen falls back to the flat
+     * background it used before, so the game still runs from a bare jar.
+     */
+    static Image ROOM_ART;
+    static boolean ART_TRIED;
+
+    static Image roomArt() {
+        if (!ART_TRIED) {
+            ART_TRIED = true;
+            try (InputStream in = ResidueScreen.class.getClassLoader()
+                    .getResourceAsStream("residue/room.png")) {
+                if (in != null) {
+                    Image img = new Image(in);
+                    if (!img.isError()) ROOM_ART = img;
+                }
+            } catch (Exception e) {
+                System.err.println("residue: no room art (" + e + ")");
+            }
+        }
+        return ROOM_ART;
+    }
 
     enum Phase { ARRIVAL, PICK_THING, PICK_GESTURE, DEPARTURE }
 
@@ -155,6 +186,17 @@ public class ResidueScreen extends UiScreen {
         gc.setFill(Color.web("#07070B"));
         gc.fillRect(0, 0, W, H);
 
+        Image art = roomArt();
+        if (art != null) {
+            gc.drawImage(art, 0, 0, W, H);
+            // A light scrim, not a heavy one. The room is already dark; this
+            // only guarantees the words keep their contrast on a bright
+            // monitor, where a lit lampshade can otherwise swallow the small
+            // grey annotations.
+            gc.setFill(Color.rgb(7, 7, 11, 0.22));
+            gc.fillRect(0, 0, W, H);
+        }
+
         drawLampLight();
 
         gc.setFill(Color.web("#F2C14E"));
@@ -187,7 +229,9 @@ public class ResidueScreen extends UiScreen {
             default -> 0.0;
         };
         if (strength <= 0) return;
-        double cx = W * 0.72, cy = H * 0.30;
+        // The painted lamp stands at about (0.83W, 0.47H); the glow has to
+        // sit on it or the room reads as lit by nothing.
+        double cx = W * 0.83, cy = H * 0.47;
         for (int i = 9; i >= 1; i--) {
             double r = 90 * i;
             gc.setFill(Color.rgb(242, 193, 78, strength / i));
