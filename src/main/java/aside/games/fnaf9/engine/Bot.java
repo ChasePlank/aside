@@ -391,6 +391,37 @@ public final class Bot {
      * a ladder. <b>So the next attempt needs a cost that a perfect step-timer
      * cannot avoid</b> -- the sampling is solved, the economy is not.
      *
+     * <p><b>The ninth attempt tried to supply that cost by giving the dimmer
+     * inertia, and it is half a result.</b> The brightness now moves toward
+     * the setting at a fixed rate rather than jumping to it, so the light
+     * cannot be flicked on for the instant of a step: a rise takes
+     * {@code 1 / TRAVEL} seconds, a fall takes the same, and the filament
+     * burns for all of it. That is a real cost -- the competent policy's week
+     * falls from 80% to 60% at a quarter-second rise and to 23% at a
+     * six-tenths-second one -- and the stride sweep shows a window where the
+     * policies finally <i>separate</i> (at a stride of 0.25: competent 60%,
+     * LOCK 19%, RHYTHM 4%).
+     *
+     * <p><b>But it is not a ladder, because the player still has nothing to
+     * ration.</b> Every step is worth the same, so blocking every step the
+     * filament allows is still strictly the best play, and the only question
+     * is whether the budget lasts. Making the walker <i>impatient</i> -- its
+     * next step growing with how long it was held -- was tried and makes the
+     * game harder without creating a choice: the competent policy falls and
+     * every other policy falls to zero, which is a cliff with a lower top.
+     * <b>What a tenth game needs is not a cost but a reason for some steps to
+     * matter more than others.</b>
+     *
+     * <p><b>And one latent bug worth recording, because it only bites when the
+     * lever is not instant.</b> The order guard was
+     * {@code if (same setting && !acted) return false;} -- which is inert while
+     * the brightness jumps to the setting, and fatal the moment it does not: a
+     * policy that re-orders the same setting every frame resets {@code acted}
+     * every frame, the dimmer is never allowed to move, and <b>every policy
+     * reads 0%</b>. It cost a sweep to find. Any future design with a lever
+     * that takes time to move needs the guard to be
+     * {@code if (same setting) return false;}
+     *
      * <p><b>And SENSE is on the ladder because the office's own description
      * of itself does not survive being played.</b> {@link Feed}'s javadoc says
      * the sensor "is the only way to know the doorway has emptied, which is
