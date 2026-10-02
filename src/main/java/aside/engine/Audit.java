@@ -58,8 +58,14 @@ public class Audit {
                     && r.unreachableBeats.isEmpty()
                     && r.neverOfferedChoices().isEmpty()
                     && r.varsReadOnly.isEmpty()
-                    && !r.budgetHit;
-            System.out.println("\n" + (clean ? "CLEAN" : "ISSUES FOUND"));
+;
+            // A budget hit is not a finding. The traversal not finishing means the results are PARTIAL, which is
+            // different from them being wrong - and calling an honest "I could not check everything" ISSUES FOUND
+            // teaches the reader to distrust the verdict. Three states, not two.
+            boolean inconclusive = r.budgetHit;
+            System.out.println("\n" + (inconclusive
+                    ? "INCONCLUSIVE - budget hit, results partial"
+                    : clean ? "CLEAN" : "ISSUES FOUND"));
             if (!clean) failures++;
             System.out.println();
         }
