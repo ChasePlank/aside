@@ -193,11 +193,11 @@ public class GameScreen extends UiScreen {
         gc.fillOval(bx, by, 40, 40);
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Arial", 9));
-        gc.fillText("DOOR", bx + 4, by + 62);
+        gc.fillText("LIGHT", bx + 3, by + 62);
 
         gc.setFill(lit ? Color.web("#FFD700") : Color.web("#5A502A"));
         gc.fillOval(bx, by + 90, 40, 40);
-        gc.fillText("LIGHT", bx + 3, by + 152);
+        gc.fillText("DOOR", bx + 4, by + 152);
 
         // Door warning: pixel sprite pulses when someone is at this door
         Animatronic atDoor = animatronicAt(side);
@@ -542,7 +542,10 @@ public class GameScreen extends UiScreen {
 
             // Slow push-in over the first ~0.35s, then hold
             double t = Math.min(1.0, (System.nanoTime() % 4_000_000_000L) / 4e9);
-            double zoom = 1.0;
+            // and then unused, with zoom pinned to 1.0. Driving it from System.nanoTime()
+            // would make it PULSE on a 4s cycle rather than play once, so it wants a
+            // scare-start timestamp rather than a guess - until then, a constant.
+            double zoom = 1.10;
             double shakeX = (Math.random() - 0.5) * 34;
             double shakeY = (Math.random() - 0.5) * 26;
 
