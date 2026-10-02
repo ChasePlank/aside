@@ -563,6 +563,7 @@ public class SelfTest {
 
         System.out.println("\n--- the audio cues ---");
         audioCuesArePresent();
+        audioLogIsBounded();
 
         System.out.println("\n--- the platformer's water ---");
         waterIsAPool();
@@ -797,6 +798,24 @@ public class SelfTest {
         } catch (Throwable t) {
             check("audio: the cue folder could be read (" + t + ")", false);
         }
+    }
+
+    /**
+     * The audio event log does not grow forever.
+     *
+     * <p>Nothing outside {@code AudioSystem} reads or clears {@code eventLog} - it exists so a headless run can
+     * say what it would have played. Unbounded, that is a leak: every jump, landing, pickup and hit appends a
+     * string nothing will ever look at. In the release the system is built per level and levels run for
+     * minutes, so it is thousands of entries per level by the end of a session.
+     */
+    static void audioLogIsBounded() {
+        var sys = new aside.games.fruitjump.engine.AudioSystem();
+        int events = 5000;
+        // toggleMute is public and logs; playSfx takes a package-private enum, so this is the one event this
+        // side of the package can fire. The bound is on the log, not on the event.
+        for (int i = 0; i < events; i++) sys.toggleMute();
+        check("audio: the event log is bounded (" + sys.eventLog.size() + " kept of " + events + " events)",
+                sys.eventLog.size() <= aside.games.fruitjump.engine.AudioSystem.LOG_LIMIT);
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
