@@ -806,6 +806,12 @@ public class SelfTest {
             // and this is the switch the class gives us to ask it.
             for (String cue : aside.ui.Audio.MUSIC_CUES) aside.ui.Audio.A.music(cue);
             for (String cue : aside.ui.Audio.SFX_CUES) aside.ui.Audio.A.sfx(cue);
+            // The PLATFORMER's cues too. Its twelve names are not in the lists above - those are the visual
+            // novel's and FNAF's - and for a long time all twelve had no file at all while this check reported
+            // "nothing is missing". Asked for by name, off the enum, so a cue added there is covered here.
+            for (String cue : aside.games.fruitjump.engine.AudioSystem.sfxNames()) {
+                aside.ui.Audio.A.sfx(cue);
+            }
             aside.ui.Audio.A.stopMusic();
             java.util.Set<String> missing = aside.ui.Audio.A.missing;
             check("audio: every cue the scripts ask for has a file (" + cues + " cues, "

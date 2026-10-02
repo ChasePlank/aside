@@ -33,6 +33,20 @@ public class AudioSystem {
         final String name;
         Sfx(String name) { this.name = name; }
     }
+
+    /**
+     * Every cue name this system can post.
+     *
+     * <p>For a check that every one of them has a file. The gate asks for cues by NAME, so it needs the list,
+     * and deriving it from the enum means a cue added here cannot be added without the check seeing it. The
+     * alternative - a second list in the test - is a list that goes stale the first time someone adds a sound.
+     */
+    public static String[] sfxNames() {
+        Sfx[] values = Sfx.values();
+        String[] out = new String[values.length];
+        for (int i = 0; i < values.length; i++) out[i] = values[i].name;
+        return out;
+    }
     
     // --- Music states ---
     enum Music {

@@ -98,14 +98,22 @@ echo "     PRODUCES that nothing there DRAWS or DRIVES. On 2026-10-02 that was w
 echo "     (an invisible stun) and the splash particles - and none of them showed up in any test the"
 echo "     release had."
 
-# 2. Assets. Only *.java is copied, so anything the engine loads from disk stays behind.
+# 2. Assets. Only *.java is copied, so anything the engine loads from disk stays behind - EXCEPT the audio
+#    folder, which is copied below because the platformer now has cues of its own and a release without them is
+#    silent. (The report still says how many files the release holds, so a gap is visible rather than assumed.)
 AUDIO_SRC="$SRC_REPO/audio"
 if [ -d "$AUDIO_SRC" ]; then
   n=$(find "$AUDIO_SRC" -type f 2>/dev/null | wc -l | tr -d ' ')
-  in_release=$(find "$DEST_REPO" -name '*.wav' -o -name '*.mp3' 2>/dev/null | wc -l | tr -d ' ')
-  echo "  2. ASSETS: $n files under aside/audio/ are not copied. The release currently holds $in_release"
-  echo "     sound files, so it is silent - which is pre-existing, but it means a cue added here will not"
-  echo "     be heard there."
+  if [ "$CHECK" = 1 ]; then
+    echo "  2. ASSETS: would copy $n file(s) from aside/audio/ into the release."
+  else
+    mkdir -p "$DEST_REPO/audio"
+    cp -f "$AUDIO_SRC"/* "$DEST_REPO/audio/" 2>/dev/null || true
+    in_release=$(find "$DEST_REPO/audio" -type f 2>/dev/null | wc -l | tr -d ' ')
+    echo "  2. ASSETS: copied $n file(s) from aside/audio/; the release now holds $in_release."
+    echo "     The platformer's twelve cues are among them - it had an audio event system and no files at all"
+    echo "     until 2026-10-02, which is why the release was silent rather than merely quiet."
+  fi
 fi
 
 echo
