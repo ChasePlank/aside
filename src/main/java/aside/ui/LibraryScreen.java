@@ -211,8 +211,11 @@ public class LibraryScreen extends UiScreen {
         }
         gc.setFill(Color.web("#6E6E86"));
         gc.setFont(F_TINY);
+        // "of 24" counts the Quit row as well as the games, because rows() is games.size() + 1 and Quit is a row
+        // you can land on. That is correct and it reads as "24 games" - I read it that way myself, and went
+        // looking for a game the checker had missed. The word costs nothing and removes the misreading.
         String where = rows > shown
-                ? "    " + (start + 1) + "-" + (start + shown) + " of " + rows
+                ? "    " + (start + 1) + "-" + (start + shown) + " of " + rows + " rows"
                 : "";
         gc.fillText("up/down or hover select    ENTER or click start" + where, 72, H - 28);
     }
