@@ -51,6 +51,9 @@ public class ShotWater extends Application {
         aside.ui.Assets.load(".");
         int level = Integer.getInteger("level", 15);   // 15 is one of the four levels that generates water
         String dir = System.getProperty("shotdir", "/root/downloads");
+        // ShotFruitJump had the same bug and it is worth the same line here: without this every write fails with
+        // "Can't create an ImageOutputStream" and the tool reports a failure for a run that worked perfectly.
+        new java.io.File(dir).mkdirs();
 
         UiManager ui = new UiManager(".");
         GameplayScreen screen = new GameplayScreen(ui, level);
