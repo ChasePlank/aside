@@ -26,10 +26,15 @@ FX="${FX:-/root/javafx-sdk-27/lib}"
 A=$(mktemp -d)
 trap 'rm -rf "$A"' EXIT
 
+# The run's output is KEPT, because it carries the verdict the gate needs: every
+# game opened and drew something. That verdict used to come from a second
+# CheckGames run in run-suites.sh, and a second run of this is several minutes
+# for an answer this one already has.
+GAMES_LOG="$A/checkgames.log"
 run() {
   tools/run-headless.sh "$JAVA" --module-path "$FX" \
     --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
-    -Dshotdir="$1" -cp "$OUT:src/main/resources" aside.tools.CheckGames >/dev/null 2>&1
+    -Dshotdir="$1" -cp "$OUT:src/main/resources" aside.tools.CheckGames > "$GAMES_LOG" 2>&1
 }
 # ONE run, not two. The second was there to detect non-determinism by running
 # twice, and that was replaced by NAMING the two frames that cannot be compared
@@ -65,6 +70,15 @@ for f in "$A"/*.png; do
   checked=$((checked + 1))
   cmp -s "$f" "docs/frames/$n" || { printf '  %-22s STALE\n' "$n"; stale=1; }
 done
+
+# The games verdict, passed through so the gate does not have to run CheckGames
+# a second time to get it.
+echo
+echo "  $(grep -E '=== [0-9]+ game' "$GAMES_LOG" | tail -1)"
+grep -E 'did not draw' "$GAMES_LOG" | sed 's/^/    /'
+if grep -qE '=== [0-9]+ game' "$GAMES_LOG" && ! grep -q ', 0 did not' "$GAMES_LOG"; then
+  stale=1
+fi
 
 echo
 echo "=== $checked frame(s) compared, $skipped not comparable ==="
