@@ -666,6 +666,14 @@ public class SelfTest {
                             Files.exists(Path.of(e.file())));
                     check("the shelf carries the title " + e.title(), generated.contains(e.title()));
                     check("the shelf carries the line for " + e.title(), generated.contains(e.blurb()));
+                    // Every build on the shelf says what it keeps in the
+                    // browser, because that is the one thing a player cannot
+                    // find out by looking at it. Three games had a blank note
+                    // -- redaction, and the two newer stories -- and nothing
+                    // noticed, because the note's absence is invisible in the
+                    // page: an empty line looks like a line that was not needed.
+                    check("the shelf says what " + e.title() + " keeps",
+                            !e.note().isBlank());
                 }
                 // The failure that would otherwise be silent: a game gets a
                 // phone build and the shelf quietly does not know about it.

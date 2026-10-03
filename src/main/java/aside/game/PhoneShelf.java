@@ -93,6 +93,9 @@ public final class PhoneShelf {
             case "fnaf8" -> "Real-time, like the desktop. They are not coming for you.";
             case "fnaf9" -> "Real-time, like the desktop. The picture is always behind.";
             case "overtime" -> "A visual novel. What you say carries.";
+            case "redaction" -> "Keeps the file in this browser. One sitting, and a board that counts.";
+            case "lamp-room" -> "A visual novel. Keeps the watch in this browser.";
+            case "discrepancy" -> "A visual novel. Keeps the audit in this browser.";
             default -> "";
         };
     }
