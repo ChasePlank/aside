@@ -69,8 +69,23 @@ done
 echo "---"
 echo "new: $copied   differing: $newer   identical: $same   wiring: $wiring"
 
-# Anything still referencing aside.* cannot compile in the release repo. Reported, never shipped quietly.
-left=$(grep -rl "aside\." "$DST" 2>/dev/null | head -5 || true)
+# Anything still referencing aside.* in CODE cannot compile in the release repo. Reported, never shipped
+# quietly.
+#
+# IN CODE, not anywhere. This was `grep -rl "aside\."` and it reported WaterSuite.java and Sound.java as broken
+# for a week - Sound.java does not mention aside at all outside its comments, and WaterSuite's single match is
+# the phrase "aside.engine.SelfTest" in prose. The whole release compiles. A check that reads prose reports
+# prose, and the cost is that a real one would have been lost in the noise.
+left=""
+for f in $(find "$DST" -name '*.java' 2>/dev/null); do
+  if grep -vE '^\s*(//|/\*|\*)' "$f" 2>/dev/null | grep -qE '(^|[^A-Za-z0-9_])aside\.[A-Za-z]'; then
+    left="$left $f"
+  fi
+done
+# Trim, so an empty result is EMPTY rather than a space that passes `[ -n ]` and prints a header with nothing
+# under it. That is the same class of mistake as reading prose: the check said something was there when the only
+# thing there was the shape of its own output.
+left=$(echo $left | tr ' ' '\n' | sed '/^$/d' | head -5 | tr '\n' ' ' | sed 's/ *$//')
 if [ -n "$left" ]; then
   echo
   echo "STILL REFERENCING aside.* - these will not compile in the release repo:"
