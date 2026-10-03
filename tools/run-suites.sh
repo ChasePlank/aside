@@ -122,9 +122,15 @@ done
 # THE CONTACT SHEETS. Two committed images of generated frames - a claim about the current code, and one that
 # goes stale quietly. Verified reproducible before being gated: two independent runs of all 24 desktop frames and
 # all 23 phone frames are byte-identical, because everything in them advances on tick count.
+screens_from_sheets=""
 if [ -x tools/check-sheets.sh ]; then
   sheets_out=$(OUT="$OUT" JAVA="$JAVA" FX="$FX" tools/check-sheets.sh 2>&1); sheets_rc=$?
   echo "  $(echo "$sheets_out" | grep -E '^=== ' | tail -1)"
+  # The sheets check runs CheckGames, and CheckGames is what opens every game
+  # and says whether it drew. Its verdict is carried out of there rather than
+  # paid for twice: a second run is several minutes for an answer this one
+  # already has.
+  screens_from_sheets=$(echo "$sheets_out" | grep -E '=== [0-9]+ game' | tail -1)
   if [ $sheets_rc -ne 0 ]; then
     echo "$sheets_out" | grep -E 'STALE|COULD NOT' | sed 's/^/    /'
     fail=$((fail + 1)); failed_names+=("contact-sheets")
@@ -152,7 +158,14 @@ fi
 # THE SCREENS. Every game has a suite and none of them opens a screen - a game can pass every check it has and
 # still show a blank window on start. This opens all of them and measures what they drew. Needs a display, which
 # this script already guarantees.
-if [ -d "$OUT/aside/tools" ]; then
+if [ -n "$screens_from_sheets" ]; then
+  # Already run, by the sheets check above.
+  echo "  $screens_from_sheets"
+  case "$screens_from_sheets" in
+    *", 0 did not"*) : ;;
+    *) fail=$((fail + 1)); failed_names+=("game-screens") ;;
+  esac
+elif [ -d "$OUT/aside/tools" ]; then
   games_out=$("$JAVA" --module-path "$FX" \
         --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
         -cp "$OUT:src/main/resources" aside.tools.CheckGames 2>&1)
