@@ -55,6 +55,17 @@ public final class SelfTest {
         theSaveFile();
         thePhoneBuild();
         registry();
+        // The escaper, tested directly.
+        //
+        // The content is embedded in a script tag, so nothing in the prose may
+        // be able to end the block early -- and the escaper is the only thing
+        // standing between the two. Nothing tested it: residue's suite was the
+        // only one that mentioned escaping, and its check passed whether or not
+        // the escaper worked.
+        ok(WebRedaction.str("a<b>c&d").equals("\"a\\u003cb\\u003ec\\u0026d\""),
+                "the JSON writer escapes what could end the script block ("
+                        + WebRedaction.str("a<b>c&d") + ")");
+
         System.out.println();
         System.out.println(failed == 0
                 ? "=== " + passed + " passed, 0 failed ==="

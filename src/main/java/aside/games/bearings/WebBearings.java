@@ -213,6 +213,18 @@ public final class WebBearings {
                 case '\n' -> b.append("\\n");
                 case '\r' -> b.append("\\r");
                 case '\t' -> b.append("\\t");
+                // The same set the other generators escape, and the engine's
+                // now does: "<" and ">" because the JSON sits in a document and
+                // a "</script>" in the prose would end the block early, "&"
+                // because it is markup, and U+2028/U+2029 because they are line
+                // terminators in JavaScript. This generator had none of them --
+                // found by writing the check that feeds the escaper a string
+                // containing them, which is the check nothing had.
+                case '<' -> b.append("\\u003c");
+                case '>' -> b.append("\\u003e");
+                case '&' -> b.append("\\u0026");
+                case '\u2028' -> b.append("\\u2028");
+                case '\u2029' -> b.append("\\u2029");
                 default -> {
                     if (c < 0x20) b.append(String.format("\\u%04x", (int) c));
                     else b.append(c);
