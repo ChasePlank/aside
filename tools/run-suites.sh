@@ -122,6 +122,26 @@ for suite in "${SUITES[@]}"; do
   fi
 done
 
+# THE SCREENS. Every game has a suite and none of them opens a screen - a game can pass every check it has and
+# still show a blank window on start. This opens all of them and measures what they drew. Needs a display, which
+# this script already guarantees.
+if [ -d "$OUT/aside/tools" ]; then
+  games_out=$("$JAVA" --module-path "$FX" \
+        --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
+        -cp "$OUT:src/main/resources" aside.tools.CheckGames 2>&1)
+  games_rc=$?
+  games_last=$(echo "$games_out" | grep -E '=== [0-9]+ game' | tail -1)
+  if [ $games_rc -ne 0 ]; then
+    echo "  ${games_last:-games: check failed}"
+    echo "$games_out" | grep -E 'FAIL' | sed 's/^/    /'
+    fail=$((fail + 1)); failed_names+=("game-screens")
+  else
+    echo "  ${games_last:-games ok}"
+  fi
+else
+  echo "  game screens NOT CHECKED - no build in $OUT"
+fi
+
 # THE WEB BUILDS. Twenty-one phone builds in web/, which the Java suites cannot see and which nothing opened
 # until 2026-10-03 - a build can be perfectly current and still render nothing. Separate tool, separate
 # dependency (puppeteer), so it is called here rather than folded in, and it is skipped with a warning if its
