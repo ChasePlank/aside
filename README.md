@@ -144,7 +144,8 @@ rule.
 ## Tests
 
 ```bash
-tools/run-suites.sh                                    # every game suite, one total
+tools/run-suites.sh                                    # every game suite, plus the web builds, one total
+npm install && node tools/check-web.mjs                # just the phone builds, in a real browser
 java --module-path $FX --add-modules $MODS -cp out aside.engine.SelfTest              # prints its own count
 java --module-path $FX --add-modules $MODS -cp out aside.audio.AudioTest             # needs a display
 java -cp out aside.games.fruitjump.engine.WaterProbe   # every pool is the shape it was built to be
@@ -159,7 +160,14 @@ takes one suite as an argument. They also report in four different shapes (`791/
 `=== 584 checks, 0 failed`, `=== 626 passed, 0 failed`, `all 112 checks passed`), so no two could be compared and
 no total could be printed. The runner reads all four.
 
-`aside.engine.SelfTest` is the engine and story gate: it covers the engine, the auditor and the shelf. **It prints its own check
+`aside.engine.SelfTest` is the engine and story gate: it covers the engine, the auditor and the shelf.
+
+**The phone builds are checked by loading them.** `web/` holds 21 of them, and until 2026-10-03 the gate checked
+only that each is *current* - regenerating it produces the same bytes - and **nothing ever opened one.** A file
+can be perfectly up to date and still render nothing: that day a story title containing the literal text
+`</script>` closed the export's script block early, and freshness would not have caught it. `tools/check-web.mjs`
+loads each build in headless Chrome and fails on any page error. `run-suites.sh` calls it when its dependency is
+installed and says so when it is not, rather than counting it as a pass. **It prints its own check
 count, and the README deliberately does not repeat it** -- the number was
 written down here and went stale three times in two days, which is what a
 hand-maintained copy of a generated number does. `aside.audio.AudioTest`

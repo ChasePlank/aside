@@ -1,0 +1,11 @@
+{
+  "name": "aside-tools",
+  "private": true,
+  "description": "Dev tooling for the aside repository. Only needed for tools/check-web.mjs.",
+  "scripts": {
+    "check-web": "node tools/check-web.mjs"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.12.0"
+  }
+}

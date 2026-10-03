@@ -86,12 +86,21 @@ for suite in "${SUITES[@]}"; do
         --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
         -cp "$OUT:src/main/resources" "$suite" 2>&1)
   rc=$?
-  # The SUMMARY line, not the last line with a digit in it. Matching any line with a number picked up
-  # "Exception in thread \"Thread-24\" ... Could not create player!" as AudioTest's result, because a thread name
-  # has digits in it - so the runner reported a media failure as that suite's outcome.
-  last=$(echo "$out" | grep -viE '^WARNING|^[[:space:]]+at ' \
-        | grep -E 'passed|failed|CHECK|checks' | tail -1)
-  [ -z "$last" ] && last=$(echo "$out" | grep -viE '^WARNING|^[[:space:]]+at ' | tail -1)
+  # The SUMMARY line, and it took three passes to get right - each one a version of the defect this runner
+  # exists to catch, a check reporting something that is not true:
+  #
+  #   1. "the last line with a digit in it" picked up `Exception in thread "Thread-24" ... Could not create
+  #      player!` for AudioTest, because a thread name has digits. A media failure reported as a suite's result.
+  #   2. Filtering to lines matching passed|failed|CHECK|checks fixed that and broke the total, because
+  #      AudioTest's real summary is "=== all cues present and playable ===" - no match - so the fallback took
+  #      the last line again. The total then swung between ~9,600 and ~22,250 on identical work, depending on
+  #      whether an asynchronous media exception happened to land after the summary.
+  #   3. What is here: drop exception and stack lines FIRST, then prefer a summary-shaped line, then fall back
+  #      to the last line standing. AudioTest's exception is on its own thread and arrives when it likes; a
+  #      number that changes between identical runs is worse than no number.
+  clean=$(echo "$out" | grep -viE '^WARNING|^[[:space:]]+at |Exception in thread|MediaException|^Caused by')
+  last=$(echo "$clean" | grep -E 'passed|failed|CHECK|checks|present|OK|PASS' | tail -1)
+  [ -z "$last" ] && last=$(echo "$clean" | tail -1)
   # The FIRST number anywhere in the line, not only at the start. Anchored to the start it missed
   # "=== 308 passed, 0 failed ===" and "all 112 checks passed", so the total quietly excluded the engine gate
   # and the audio test - a total that is wrong in the direction of looking fine.
@@ -113,6 +122,26 @@ for suite in "${SUITES[@]}"; do
   fi
 done
 
+# THE WEB BUILDS. Twenty-one phone builds in web/, which the Java suites cannot see and which nothing opened
+# until 2026-10-03 - a build can be perfectly current and still render nothing. Separate tool, separate
+# dependency (puppeteer), so it is called here rather than folded in, and it is skipped with a warning if its
+# dependency is not installed rather than counted as a pass.
+web_note=""
+if command -v node >/dev/null 2>&1 && [ -d node_modules/puppeteer ]; then
+  web_out=$(node tools/check-web.mjs 2>&1)
+  web_rc=$?
+  web_last=$(echo "$web_out" | grep -E '=== [0-9]+ web' | tail -1)
+  if [ $web_rc -ne 0 ]; then
+    echo "  ${web_last:-web builds: check failed}"
+    echo "$web_out" | grep -E 'FAIL|did not boot' | sed 's/^/    /'
+    fail=$((fail + 1)); failed_names+=("web-builds")
+  else
+    echo "  ${web_last:-web builds ok}"
+  fi
+else
+  web_note="  web builds NOT CHECKED - run 'npm install' for tools/check-web.mjs"
+fi
+
 # WHAT THIS IS NOT RUNNING. Every class with a main is either in the list above or matched by the pattern
 # below, and anything else is printed - so a checker added tomorrow is visible rather than silently absent. This
 # is the half that makes curating the list safe.
@@ -133,6 +162,7 @@ if [ ${#unclassified[@]} -gt 0 ]; then
   echo "NOT RUN HERE (${#unclassified[@]} class(es) with a main that are neither a gate nor a known tool):"
   for u in "${unclassified[@]}"; do echo "  $u"; done
 fi
+[ -n "$web_note" ] && echo "$web_note"
 echo "=== $pass suite(s) passed, $fail failed, ~$total_checks checks ==="
 if [ $fail -gt 0 ]; then
   echo "failed: ${failed_names[*]}"
