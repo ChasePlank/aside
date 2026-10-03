@@ -167,6 +167,7 @@ two are named now, with their reasons.
 ## Tests
 
 ```bash
+tools/release-status.sh                                # does any repo need a new release?
 tools/run-suites.sh                                    # every game suite, plus the web builds, one total
 npm install && node tools/check-web.mjs                # just the phone builds, in a real browser
 java --module-path $FX --add-modules $MODS -cp out aside.engine.SelfTest              # prints its own count
@@ -182,6 +183,13 @@ script, doc or habit named more than one at a time — `grep -rl SelfTest tools/
 takes one suite as an argument. They also report in four different shapes (`791/791 checks passed`,
 `=== 584 checks, 0 failed`, `=== 626 passed, 0 failed`, `all 112 checks passed`), so no two could be compared and
 no total could be printed. The runner reads all four.
+
+**`tools/release-status.sh` asks whether a player would notice.** Not "is main ahead" - that is a different
+question with a different answer. Fruit-Jump and wake were each dozens of commits ahead of their releases on
+2026-10-03 and needed nothing, because every one of those commits was documentation or tooling and the source a
+player downloads had not moved. Each repository declares what a player actually gets (`web/aside.html`,
+`src/main/java` and the jar, `index.html`) and this compares **that** range. `TAG=` overrides the release, which
+is how the "something changed" path is tested without waiting for something to change.
 
 `aside.engine.SelfTest` is the engine and story gate: it covers the engine, the auditor and the shelf.
 
