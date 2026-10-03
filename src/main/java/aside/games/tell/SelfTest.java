@@ -46,7 +46,31 @@ public final class SelfTest {
         System.out.println("=== tell self-test ===\n");
 
         System.out.println("--- the house ---");
-        for (int night = 0; night < Tell.NIGHTS; night++) {
+
+        // The eight tables are parallel and NIGHTS is derived from one of them,
+        // so the other seven can still drift. They used to be eight literals
+        // beside a ninth, with nothing making them agree -- raising NIGHTS from
+        // 5 to 6 made nextNight() index past the end of every one of them and
+        // the game died with an ArrayIndexOutOfBoundsException. NIGHTS is the
+        // table's length now; this is what keeps the table itself honest.
+        int[][] tables = { Tell.SIZE, Tell.REACH, Tell.BASE, Tell.MISS,
+                           Tell.HIT, Tell.LIT, Tell.LAMPS, Tell.LIMIT };
+        String[] names = { "SIZE", "REACH", "BASE", "MISS", "HIT", "LIT", "LAMPS", "LIMIT" };
+        boolean tablesAgree = true;
+        for (int i = 0; i < tables.length; i++) {
+            eq(tables[i].length, Tell.NIGHTS, names[i] + " has a row per night");
+            if (tables[i].length != Tell.NIGHTS) tablesAgree = false;
+        }
+
+        // And the per-night checks are SKIPPED rather than run when the tables
+        // disagree, because the game itself indexes past the end of a short one
+        // and dies -- which would take every check after it with it. A suite
+        // that reports the fault and carries on is worth more than one that
+        // reports it and stops.
+        if (!tablesAgree) {
+            System.out.println("       (tables disagree -- the per-night checks are skipped)");
+        }
+        for (int night = 0; tablesAgree && night < Tell.NIGHTS; night++) {
             Tell t = Tell.of(12345L);
             for (int k = 0; k < night; k++) t.nextNight();
             eq(t.size, Tell.SIZE[night], "night " + (night + 1) + " has the size the table says");
@@ -90,7 +114,7 @@ public final class SelfTest {
         // reach is -- and the guess is the best way to the door. That single
         // guess is what leaves the other way forward free, which is the move
         // the whole game is played with.
-        for (int night = 0; night < Tell.NIGHTS; night++) {
+        for (int night = 0; tablesAgree && night < Tell.NIGHTS; night++) {
             Tell t2 = Tell.of(999L);
             for (int k = 0; k < night; k++) t2.nextNight();
             eq(t2.expected().size(), 1, "night " + (night + 1) + ": a fresh room gets one guess");
@@ -160,7 +184,7 @@ public final class SelfTest {
         for (int p = 0; p < Trace.NAMES.length; p++) {
             for (long seed = 0; seed < seeds; seed++) {
                 Tell h = Tell.of(seed);
-                for (int night = 0; night < Tell.NIGHTS; night++) {
+                for (int night = 0; tablesAgree && night < Tell.NIGHTS; night++) {
                     Trace.play(h, p, seed * 31 + night);
                     if (h.won) wins[p]++;
                     if (night + 1 < Tell.NIGHTS) h.nextNight();

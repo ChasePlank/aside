@@ -50,7 +50,6 @@ public final class Tell {
     public static final String WHERE = "the house";
     public static final String WHERE_REPORT = "the far door";
 
-    public static final int NIGHTS = 5;
     /** At 100 it does not have to look. */
     public static final int READ_MAX = 100;
     public static final int DIRS = 4;
@@ -78,6 +77,19 @@ public final class Tell {
     static final int[] LIT   = { 8, 8, 9, 9, 10 };
     static final int[] LAMPS = { 3, 4, 5, 6, 7 };
     static final int[] LIMIT = { 16, 18, 22, 26, 34 };
+
+    /**
+     * How many nights there are.
+     *
+     * <p><b>Derived from the table rather than written down beside it, and
+     * declared after it for that reason.</b> It used to be a literal 5 next to
+     * eight parallel arrays that were each length 5, and nothing made them
+     * agree: raising it to 6 -- a one-character edit that looks harmless -- made
+     * {@code nextNight()} index past the end of every one of them and the game
+     * died with an ArrayIndexOutOfBoundsException. Found by mutating it. Now
+     * the number is the table's length and cannot disagree with it.
+     */
+    public static final int NIGHTS = SIZE.length;
 
     // ------------------------------------------------------------- the deal
 
