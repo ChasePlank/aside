@@ -908,7 +908,8 @@ public class SelfTest {
         int levels = 40, pools = 0, bad = 0;
         String firstFault = "";
         for (int level = 1; level <= levels; level++) {
-            LevelMap m = new LevelGen(W, H, 1000L + level, level).generate();
+            LevelGen gen = new LevelGen(W, H, 1000L + level, level);
+            LevelMap m = gen.generate();
             for (int c = 0; c < m.widthCells(); c++) {
                 int r = 0;
                 while (r < m.heightCells()) {
@@ -916,6 +917,14 @@ public class SelfTest {
                     int start = r;
                     while (r < m.heightCells() && m.cell(r, c) == '~') r++;
                     pools++;
+                    // A FLOODED WALK IS ONE ROW, ankle-deep, sitting on the walk's own floor - not a pool. This
+                    // is the second copy of this check (the other is WaterProbe, and the docstring above says
+                    // "moved into the gate" when what happened is that it was COPIED), so the fix has to be made
+                    // in both places. A pool in a GAP is still two rows: there the water is the penalty for a
+                    // missed jump, and here it is the ground.
+                    if (r - start == 1 && c < gen.lastPathFloor.length
+                            && gen.lastPathFloor[c] == start + 1
+                            && m.cell(start + 1, c) == '#') continue;
                     if (r - start != 2) {
                         bad++;
                         if (firstFault.isEmpty())
@@ -965,12 +974,19 @@ public class SelfTest {
         int widest = 0, tooWide = 0;
         String where = "";
         for (long seed = 2001; seed <= 2100; seed++) {
-            LevelMap m = new LevelGen(W, H, seed, 22).generate();
+            LevelGen gen = new LevelGen(W, H, seed, 22);
+            LevelMap m = gen.generate();
             boolean[] gapCol = new boolean[m.widthCells()];
             for (int r = 0; r < m.heightCells(); r++)
                 for (int c = 0; c < m.widthCells(); c++) {
                     char ch = m.cell(r, c);
-                    if (ch == '^' || ch == '~') gapCol[c] = true;
+                    if (ch == '^') gapCol[c] = true;
+                    // A FLOODED GAP is a gap; a FLOODED WALK is not. Both are water at the walk's level with a
+                    // solid floor under them, so the grid cannot tell them apart - this counted '~' as a gap and
+                    // was right while water only ever lived in a gap. Once a level could be flooded end to end,
+                    // the whole crossing read as one 28-cell gap. The walk's own floor data is what distinguishes
+                    // them, and only the generator has it.
+                    else if (ch == '~' && c < gen.lastPathFloor.length && gen.lastPathFloor[c] < 0) gapCol[c] = true;
                 }
             for (int c = 0; c < m.widthCells(); c++) {
                 if (!gapCol[c]) continue;
