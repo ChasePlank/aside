@@ -38,6 +38,24 @@ public class SelfTest {
     static double round1(double d) { return Math.round(d * 10) / 10.0; }
 
 
+    /**
+     * A variable's value as a number, or NaN when it is not one.
+     *
+     * <p><b>This exists because the suite used to CRASH here instead of
+     * failing.</b> {@code Expr.asNumber} returns a boxed {@code Double} and
+     * returns null for a variable that was never set, and five checks compared
+     * it to a literal -- so a mutation that stopped a variable being set did
+     * not fail those checks, it killed the run with a NullPointerException on
+     * the unboxing. Found by mutating the parser's goto pattern: the suite
+     * reported a stack trace instead of a count, and every check after it was
+     * lost. NaN is used rather than 0.0 so a missing value cannot accidentally
+     * equal anything.
+     */
+    static double num(Object o) {
+        Double d = Expr.asNumber(o);
+        return d == null ? Double.NaN : d;
+    }
+
     static void check(String name, boolean ok) {
         if (ok) { pass++; System.out.println("  ok   " + name); }
         else    { fail++; System.out.println("  FAIL " + name); }
@@ -212,11 +230,11 @@ public class SelfTest {
         check("unknown var is falsy", !Expr.test("nope", v));
 
         Expr.apply("aff +1", v);
-        check("effect +1", Expr.asNumber(v.get("aff")) == 4.0);
+        check("effect +1", num(v.get("aff")) == 4.0);
         Expr.apply("aff -2", v);
-        check("effect -2", Expr.asNumber(v.get("aff")) == 2.0);
+        check("effect -2", num(v.get("aff")) == 2.0);
         Expr.apply("aff = 9", v);
-        check("effect assign", Expr.asNumber(v.get("aff")) == 9.0);
+        check("effect assign", num(v.get("aff")) == 9.0);
         Expr.apply("flag = true", v);
         check("effect boolean", Boolean.TRUE.equals(v.get("flag")));
 
@@ -229,7 +247,7 @@ public class SelfTest {
         List<Choice> c0 = vn.availableChoices();
         check("three options at the first choice", c0.size() == 3);
         vn.choose(1);                     // "You say nothing."
-        check("quiet branch raised affinity", Expr.asNumber(vn.vars.get("aff_monty")) == 1.0);
+        check("quiet branch raised affinity", num(vn.vars.get("aff_monty")) == 1.0);
         runUntilBlocked(vn);
         if (vn.mode == Vn.Mode.CHOOSING) {
             List<Choice> c1 = vn.availableChoices();
@@ -246,7 +264,7 @@ public class SelfTest {
         }
         check("warm path ends", vn.mode == Vn.Mode.ENDED);
         check("nights_survived incremented",
-                Expr.asNumber(vn.vars.get("nights_survived")) == 1.0);
+                num(vn.vars.get("nights_survived")) == 1.0);
         check("history recorded lines", vn.history.size() > 5);
 
         System.out.println("\n--- save / load round trip ---");
