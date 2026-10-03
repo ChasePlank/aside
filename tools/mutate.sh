@@ -140,9 +140,19 @@ open(p, "w").write(s.replace(f, t, 1))
     continue
   fi
   OUT=$(java -cp "classes:$CP" "$SUITE" 2>&1 | tail -1)
+  # Two verdict formats in this repository: the engine and FNAF suites end with
+  # "N passed, M failed", and the verb suites end with "N/M checks passed". The
+  # first version of this test only knew the first, so every verb suite read as
+  # "caught" whether or not anything failed -- a mutation that changed nothing
+  # looked like a mutation the suite noticed.
+  # A failure is tested for FIRST: the verb suites print "409/410 checks passed
+  # -- 1 FAILED", which contains both phrases, so a case that looks for
+  # "checks passed" before "FAILED" reports a caught mutation as not caught.
   case "$OUT" in
-    *"0 failed"*) printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT" ;;
-    *)            printf '%-44s caught       %s\n' "$FROM" "$OUT" ;;
+    *"FAILED"*|*"FAIL "*)         printf '%-44s caught       %s\n' "$FROM" "$OUT" ;;
+    *"0 failed"*)                 printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT" ;;
+    *"checks passed"*)            printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT" ;;
+    *)                            printf '%-44s UNKNOWN      %s\n' "$FROM" "$OUT" ;;
   esac
 done
 

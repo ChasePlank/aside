@@ -481,8 +481,16 @@ public final class SelfTest {
         // be able to end the block early.
         ok(!generated.contains("</script>") || generated.indexOf("</script>") > generated.lastIndexOf("const C ="),
                 "nothing in the prose can end the script block early");
-        ok(generated.contains("\\u003c") || !generated.contains("const C = {\"<"),
-                "and the JSON writer escapes what could");
+        // The escaper, tested directly rather than through the content.
+        //
+        // This used to be `generated.contains("\\u003c") || !generated.contains(
+        // "const C = {\"<")` -- which passes when the content has no "<" at all,
+        // and the content has none, so it could only ever say yes. Mutating the
+        // escaper to stop escaping "<" broke nothing. A check that cannot fail
+        // is worse than no check, because it reads as verified.
+        ok(WebResidue.str("a<b>c&d").equals("\"a\\u003cb\\u003ec\\u0026d\""),
+                "the JSON writer escapes what could end the script block ("
+                        + WebResidue.str("a<b>c&d") + ")");
 
         System.out.println("       phone build: " + (generated.length() / 1024) + " KB, current");
     }
