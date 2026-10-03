@@ -1,8 +1,5 @@
 package aside.games.fnaf.engine;
 
-import aside.ui.Audio;
-import aside.ui.UiManager;
-import aside.ui.UiScreen;
 
 /**
  * Headless self-test: run the bot across nights and seeds, report win rates
