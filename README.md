@@ -99,6 +99,12 @@ There are three families:
   can see any of it — it drives the screen directly, counts water-coloured pixels
   and reads the climber back out by reflection, because a capture tool whose
   subject is off-screen still writes a png and still prints PASS.
+  It also has **sound now**, which it never had: twelve cues generated from source by
+  `tools/fruitjump-audio.py` and played by `Sound`. Until October 2026 every one of the twelve cue names had no
+  file at all — the game had a way to ask for sound since it was written and nothing to play, and `AudioTest`
+  never noticed because it only checks the visual novel's and FNAF's cue lists.
+  And the climber has a face's worth of identity in its hair and pack: `CharacterConfig` is chosen in the
+  customiser and read back by the gameplay screen.
 
 ### The phone shelf
 
@@ -188,4 +194,6 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`games/fnaf/`** — the FNAF Glamrock game as an engine module. A standalone copy lives in its own
   repository; the two are kept behaviourally identical, verified by their self-tests reporting the same
   numbers rather than by diffing text.
-- **`audio/`** — the cues the scripts ask for.
+- **`audio/`** — the cues the scripts ask for: the visual novel's, FNAF's, and the platformer's twelve. Most are
+  *generated* rather than committed by hand — see `tools/fnaf*-audio.py` and `tools/fruitjump-audio.py` — so the
+  reasoning behind a sound is in the file that makes it.
