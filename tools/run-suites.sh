@@ -39,13 +39,24 @@ if ! command -v "$JAVA" >/dev/null 2>&1; then
   exit 2
 fi
 
-# Named, because they are not under games/ and discovery cannot find them. Both are gates in their own right:
-# the engine suite covers the engine, the auditor and the shelf, and AudioTest exits non-zero when a cue is
-# missing. Leaving them out would have made this runner a runner of nineteen of the twenty-one things that
-# check this repository - which is the same shape of gap as not having it.
-SUITES=("aside.engine.SelfTest" "aside.audio.AudioTest")
+# THE GATES. Curated, because the name does not decide: `DoorStressTest` reports a distribution and never
+# fails, and `SpriteProbe` is an asset tool that says "not a folder: art/raw" and exits 0. A pattern cannot tell
+# those from `WaterProbe`, which exits non-zero when a pool is the wrong shape.
+#
+# The list is safe to curate because the runner WATCHES FOR CLASSES IT IS NOT RUNNING, below: every class with a
+# main in this repository is either run here or named as a tool, and anything else is printed. A list that can go
+# stale silently would be a problem; a list that reports what it is missing is just a list.
+SUITES=(
+  aside.engine.SelfTest                          # the engine, the auditor, the shelf
+  aside.audio.AudioTest                          # every cue has a file, and plays
+  aside.games.fruitjump.engine.WaterProbe        # every pool is the shape it was built to be
+  aside.games.fruitjump.engine.WaterSuite
+  aside.games.fruitjump.engine.WaterEnemyTest
+  aside.games.fruitjump.engine.CrackedPocketTest
+  aside.games.fruitjump.engine.DoorStressTest    # a report, not a gate - it never fails, and is listed here
+)                                                # so that its silence is deliberate rather than an oversight
 
-# Discover: every file called SelfTest.java under a game, and its package.
+# Everything else, discovered: every SelfTest.java under games/ and its package.
 while IFS= read -r f; do
   pkg=$(sed -n 's/^package \(.*\);/\1/p' "$f" | head -1)
   [ -n "$pkg" ] && SUITES+=("$pkg.SelfTest")
@@ -102,7 +113,26 @@ for suite in "${SUITES[@]}"; do
   fi
 done
 
+# WHAT THIS IS NOT RUNNING. Every class with a main is either in the list above or matched by the pattern
+# below, and anything else is printed - so a checker added tomorrow is visible rather than silently absent. This
+# is the half that makes curating the list safe.
+unclassified=()
+while IFS= read -r f; do
+  case "$f" in */tools/*) continue;; esac
+  base=$(basename "$f" .java)
+  case "$base" in Web*|*Trace|Synth|Audit|WebExport|FnafForensics|PhoneShelf|Launcher|Main|Sound|Lineup|SpriteProcess|SpriteProbe) continue;; esac
+  pkg=$(sed -n 's/^package \(.*\);/\1/p' "$f" | head -1)
+  fqn="$pkg.$base"
+  found=0
+  for s in "${SUITES[@]}"; do [ "$s" = "$fqn" ] && found=1 && break; done
+  [ $found -eq 0 ] && unclassified+=("$fqn")
+done < <(grep -rl "public static void main" src/main/java --include='*.java' | sort)
+
 echo
+if [ ${#unclassified[@]} -gt 0 ]; then
+  echo "NOT RUN HERE (${#unclassified[@]} class(es) with a main that are neither a gate nor a known tool):"
+  for u in "${unclassified[@]}"; do echo "  $u"; done
+fi
 echo "=== $pass suite(s) passed, $fail failed, ~$total_checks checks ==="
 if [ $fail -gt 0 ]; then
   echo "failed: ${failed_names[*]}"
