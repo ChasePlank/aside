@@ -33,7 +33,8 @@ public final class SelfTest {
         if (args.length > 0 && args[0].equals("--survival")) {
             survival();
             System.out.println();
-            System.out.println(checks + " checks, " + failed + " failed");
+    
+        System.out.println(checks + " checks, " + failed + " failed");
             if (failed > 0) System.exit(1);
             return;
         }
@@ -46,6 +47,14 @@ public final class SelfTest {
         phone();
         survival();
         System.out.println();
+        System.out.println("\n--- the cues ---");
+        // Every cue this game asks for has a file. Four of the FNAF games
+        // had no such check, so a deleted cue would have been silent: the
+        // game falls back to nothing and nothing says so.
+        for (String cue : new String[]{"room_tone", "choice_select", "at_door", "footstep"}) {
+            check("audio/" + cue + " has a file", hasCue(cue));
+        }
+
         System.out.println(checks + " checks, " + failed + " failed");
         if (failed > 0) System.exit(1);
     }
@@ -549,4 +558,13 @@ public final class SelfTest {
     }
 
     private SelfTest() {}
+    /** Does `audio/<name>.<ext>` exist for any extension the loader reads? */
+    static boolean hasCue(String name) {
+        java.io.File dir = new java.io.File("audio");
+        for (String ext : new String[]{".wav", ".mp3", ".aiff", ".aif", ".m4a", ".aac"}) {
+            if (new java.io.File(dir, name + ext).isFile()) return true;
+        }
+        return false;
+    }
+
 }
