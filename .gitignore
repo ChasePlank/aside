@@ -7,3 +7,4 @@ classes/
 *.log
 hs_err_pid*.log
 replay_pid*.log
+saves/
