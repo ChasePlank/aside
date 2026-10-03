@@ -39,8 +39,13 @@ if ! command -v "$JAVA" >/dev/null 2>&1; then
   exit 2
 fi
 
+# Named, because they are not under games/ and discovery cannot find them. Both are gates in their own right:
+# the engine suite covers the engine, the auditor and the shelf, and AudioTest exits non-zero when a cue is
+# missing. Leaving them out would have made this runner a runner of nineteen of the twenty-one things that
+# check this repository - which is the same shape of gap as not having it.
+SUITES=("aside.engine.SelfTest" "aside.audio.AudioTest")
+
 # Discover: every file called SelfTest.java under a game, and its package.
-SUITES=()
 while IFS= read -r f; do
   pkg=$(sed -n 's/^package \(.*\);/\1/p' "$f" | head -1)
   [ -n "$pkg" ] && SUITES+=("$pkg.SelfTest")
@@ -51,7 +56,10 @@ if [ ${#SUITES[@]} -eq 0 ]; then
   exit 2
 fi
 
-# A live display, because the FNAF suites open one.
+# A live display, because the FNAF suites and AudioTest open one. NOTE that AudioTest also wants a SOUND DEVICE
+# to fully verify that every cue plays; on a machine without one it reports the cue list, prints a media
+# exception from its own thread after the summary, and exits 0. Its cue-presence half is the part that works
+# everywhere, and that half is a gate - it exits non-zero when a file is missing.
 DISPLAY_NUM="${DISPLAY_NUM:-:99}"
 if ! xdpyinfo -display "$DISPLAY_NUM" >/dev/null 2>&1; then
   Xvfb "$DISPLAY_NUM" -screen 0 "${SCREEN:-1400x900x24}" >/tmp/xvfb.log 2>&1 &
@@ -67,8 +75,16 @@ for suite in "${SUITES[@]}"; do
         --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
         -cp "$OUT:src/main/resources" "$suite" 2>&1)
   rc=$?
-  last=$(echo "$out" | grep -viE '^WARNING|^[[:space:]]+at ' | grep -E '[0-9]|passed|failed|CHECK' | tail -1)
-  n=$(echo "$last" | grep -oE '^[0-9]+' | head -1)
+  # The SUMMARY line, not the last line with a digit in it. Matching any line with a number picked up
+  # "Exception in thread \"Thread-24\" ... Could not create player!" as AudioTest's result, because a thread name
+  # has digits in it - so the runner reported a media failure as that suite's outcome.
+  last=$(echo "$out" | grep -viE '^WARNING|^[[:space:]]+at ' \
+        | grep -E 'passed|failed|CHECK|checks' | tail -1)
+  [ -z "$last" ] && last=$(echo "$out" | grep -viE '^WARNING|^[[:space:]]+at ' | tail -1)
+  # The FIRST number anywhere in the line, not only at the start. Anchored to the start it missed
+  # "=== 308 passed, 0 failed ===" and "all 112 checks passed", so the total quietly excluded the engine gate
+  # and the audio test - a total that is wrong in the direction of looking fine.
+  n=$(echo "$last" | grep -oE '[0-9]+' | head -1)
   [ -n "$n" ] && total_checks=$((total_checks + n))
   # Failed if the exit code says so, or the text does. The two do not always agree.
   #
