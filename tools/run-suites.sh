@@ -122,6 +122,18 @@ for suite in "${SUITES[@]}"; do
   fi
 done
 
+# THE CONTACT SHEETS. Two committed images of generated frames - a claim about the current code, and one that
+# goes stale quietly. Verified reproducible before being gated: two independent runs of all 24 desktop frames and
+# all 23 phone frames are byte-identical, because everything in them advances on tick count.
+if [ -x tools/check-sheets.sh ]; then
+  sheets_out=$(OUT="$OUT" JAVA="$JAVA" FX="$FX" tools/check-sheets.sh 2>&1); sheets_rc=$?
+  echo "  $(echo "$sheets_out" | grep -E '^=== ' | tail -1)"
+  if [ $sheets_rc -ne 0 ]; then
+    echo "$sheets_out" | grep -E 'STALE|COULD NOT' | sed 's/^/    /'
+    fail=$((fail + 1)); failed_names+=("contact-sheets")
+  fi
+fi
+
 # THE FNAF MATCH. This repository and ChasePlank/fnaf are meant to be the same game, and the README says they
 # are aligned "by their self-tests reporting the same numbers rather than by diffing text" - which is the right
 # criterion for behaviour and not something anyone can run in a second. This is the cheap exact first pass. It
