@@ -151,8 +151,9 @@ written down here and went stale three times in two days, which is what a
 hand-maintained copy of a generated number does. `aside.audio.AudioTest`
 exits non-zero if any cue is missing, so it works as a gate rather than a
 report — but it opens a window, so it wants a display.
-The FNAF self-test prints win rates *and* asserts the invariants that were once bugs — every animatronic
-moves at least once a night, and a doorway kill waits at least two seconds.
+The FNAF self-tests print win rates *and* assert the shape that has to hold — a reasonable player wins,
+the last night costs them something, a blackout at 5 AM is survivable. The FNAF 1 suite was a report with
+no assertions at all until 2026-10-03, which this line claimed otherwise about; it is a gate now.
 
 `WaterProbe` exits non-zero if any pool is the wrong shape: it asserts every water run is two rows with a
 solid floor under it and no spike directly beneath, not just that the total cell count looks reasonable. The
