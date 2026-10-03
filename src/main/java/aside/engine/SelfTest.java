@@ -1293,6 +1293,35 @@ public class SelfTest {
         // page is a still frame with a script under it, and a tap that makes
         // no sound reads as a tap that did not land. Same one line as the ten
         // verb games, spliced in from the shared palette.
+        // A title with markup in it is escaped, not injected.
+        //
+        // Removing the escaping from WebExport broke nothing and the suite
+        // still passed 321 of 321, because no story's title contains a "<".
+        // A title is data, and a build that puts it in the page unescaped is a
+        // build that can be broken by its own title.
+        {
+            String html = WebExport.convert("title: a <b>bold</b> title\nstart: only\n\n"
+                    + "== only ==\nA line.\n");
+            // Only "<" is escaped, which is what stops a title opening a tag.
+            // The first version of this check expected ">" escaped too and
+            // failed -- the escaping is narrower than I assumed, and the
+            // assertion now says what the code does rather than what I
+            // expected it to.
+            check("a title with markup cannot open a tag in the export",
+                    html.contains("a &lt;b>bold&lt;/b> title")
+                            && !html.contains("<b>bold</b>"));
+            // And the JSON the page carries cannot close the script block it
+            // is embedded in. A title containing "</script>" used to do
+            // exactly that -- the rest of the page became markup -- because
+            // the escaper handled quotes, backslashes and control characters
+            // and not "<".
+            String breakout = WebExport.convert(
+                    "title: x</script><script>alert(1)</script>\nstart: only\n\n"
+                    + "== only ==\nA line.\n");
+            check("a title cannot close the export's script block",
+                    !breakout.contains("</script><script>alert(1)"));
+        }
+
         check("web/" + name + ".html carries the shared synthesiser",
                 generated.contains("function voice(") && generated.contains("function ac("));
         check("web/" + name + ".html answers a tap with a click",

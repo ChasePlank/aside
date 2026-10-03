@@ -406,6 +406,14 @@ public class WebExport {
                 case '\n' -> sb.append("\\n");
                 case '\r' -> { }
                 case '\t' -> sb.append("\\t");
+                // "<" is escaped as \u003c, which is valid JSON and cannot
+                // terminate the script block the JSON is embedded in. Without
+                // it a story whose title or dialogue contains "</script>"
+                // closes the tag early and the rest of the page is markup --
+                // found by asking whether a title could break out, after a
+                // mutation test showed the title's HTML escaping was the only
+                // escaping anyone had checked.
+                case '<' -> sb.append("\\u003c");
                 default -> {
                     if (c < 0x20) sb.append(String.format("\\u%04x", (int) c));
                     else sb.append(c);
