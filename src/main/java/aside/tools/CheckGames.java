@@ -110,7 +110,32 @@ public class CheckGames extends Application {
         wait.play();
     }
 
+    /** One image with every game on it, so the whole library can be looked at at once. */
+    private void writeContactSheet() throws Exception {
+        int cols = 5, cell = 320, label = 22;
+        int rows = (games.size() + cols - 1) / cols;
+        var sheet = new java.awt.image.BufferedImage(cols * cell, rows * (cell + label),
+                java.awt.image.BufferedImage.TYPE_INT_RGB);
+        var g = sheet.createGraphics();
+        g.setColor(java.awt.Color.BLACK);
+        g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+        g.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 14));
+        for (int n = 0; n < games.size(); n++) {
+            var img = javax.imageio.ImageIO.read(new File(OUT, games.get(n).id() + ".png"));
+            if (img == null) continue;
+            int x = (n % cols) * cell, y = (n / cols) * (cell + label);
+            g.drawImage(img.getScaledInstance(cell, cell, java.awt.Image.SCALE_SMOOTH), x, y, null);
+            g.setColor(java.awt.Color.LIGHT_GRAY);
+            g.drawString(games.get(n).id() + "   " + games.get(n).title(), x + 6, y + cell + 16);
+        }
+        g.dispose();
+        javax.imageio.ImageIO.write(sheet, "png", new File(OUT, "contact-sheet.png"));
+        System.out.println("contact sheet: " + OUT + "/contact-sheet.png  ("
+                + sheet.getWidth() + "x" + sheet.getHeight() + ", " + games.size() + " games)");
+    }
+
     private void finish() {
+        try { writeContactSheet(); } catch (Exception e) { System.out.println("contact sheet failed: " + e); }
         System.out.println();
         System.out.printf("=== %d game(s) opened and drew something, %d did not ===%n", pass, failed.size());
         if (!failed.isEmpty()) System.out.println("did not draw: " + String.join(" ", failed));
