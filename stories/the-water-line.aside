@@ -1,0 +1,208 @@
+# A short story for the Aside engine.
+# Fourth register. Night Shift is a demo, Overtime is horror and performance, The Lamp Room is warm and about
+# tending, The Discrepancy is quiet and wry. This one is elegiac and practical: an archivist in a city that is
+# flooding, moving the collection up a floor every few years, deciding what gets carried and what gets left.
+#
+# The whole story is a sorting problem with a person attached to it. Nothing supernatural happens. Six scenes,
+# three endings, one sitting.
+
+title: The Water Line
+author: Roxanne
+start: basement
+
+== basement ==
+bg archive_basement
+music sea_swell
+The line is chalk, and it is higher than it was in March.
+
+You drew it yourself, the first year, at knee height because knee height seemed like a lot. It is at your chest
+now. The room is twenty metres of shelving and eleven of it is above the line.
+
+The rule is simple and everyone knows it: what is above the line goes up, what is below it stays, and the water
+is not sentimental.
+
+* Start at the far end. Work backwards, the way you always do. -> far_end
+* Start at the near end, where the reading room ledgers are. -> near_end
+* Stand still a moment and look at the line. -> look
+
+== look ==
+It is only chalk. You know that. You drew it with a piece of chalk you took from the reading room and never
+returned, and it has been redrawn by you every spring for nineteen years, and the shelf it was first drawn
+against was moved up a floor in 2009.
+
+You are the only person left who has seen every version of it.
+
+* Start at the far end. -> far_end
+* Start at the near end. -> near_end
+
+== far_end ==
+The far end is the municipal record: rate books, deeds, the planning minutes. Heavy, dull, irreplaceable in the
+way that a foundation is irreplaceable.
+
+The first three shelves are below the line. You take the rate books down and stack them on the trolley, and it
+takes an hour, and your back says something about it that you do not repeat.
+
+There is a box at the back that is not municipal. It has no call number. It has your handwriting on it.
+
+* Open it. -> box
+* Leave it. It is not on the list, and the list is how you have kept this place dry for nineteen years. -> leave_box
+
+== near_end ==
+The near end is the reading room ledgers: who came in, what they asked for, what they found. Nineteen years of
+other people's curiosity in nineteen volumes.
+
+They are all below the line.
+
+Nobody has asked for a reading room ledger in eleven years. The last entry in the last volume is a woman asking
+for a map of the harbour and writing, at the bottom, *thank you, this is the one my father used*.
+
+* Take the ledgers. They are the only record of anyone having wanted anything. -> ledgers
+* Leave them and go to the far end, where the records are. -> far_end
+
+== box ==
+The box is light. Inside is a card index, handwritten, one card per person who has ever used the reading room,
+with a line under each name: what they were looking for.
+
+Your own card is in it. The line under your name says: *the water line. How far it has come.*
+
+You do not remember writing that. You do remember the first year, and the chalk, and thinking that knee height
+seemed like a lot.
+
+* Put the box on the trolley. -> box_up
+* Put it back and take the rate books. -> far_end
+
+== box_up ==
+~ saved_personal true
+The box goes on top of the rate books, which is the wrong order by every rule you have, and the right one by the
+only rule that is going to matter tonight.
+
+You take it up the stairs and set it on the new shelf and go back down for the next load.
+
+-> flood
+
+== leave_box ==
+You put the box back where it was. It is not on the list. The list is how you have kept this place dry.
+
+You take the rate books up instead, and the box stays below the line, and you tell yourself the water will not
+come that far this year.
+
+-> flood
+
+== ledgers ==
+~ saved_personal true
+You take the ledgers. All nineteen, which is two trips, and on the second trip the water is already at the bottom
+step and the chalk line is behind you.
+
+-> flood
+
+== flood ==
+sfx static
+The pump in the sub-basement fails at 4:10, which you know because the light changes when it does.
+
+The water comes up the room the way water does: without hurry, and without any interest in what it is covering.
+
+* Go back down. There is time for one more shelf. -> one_more
+* Stay at the top of the stairs and let it finish. -> watch
+
+== one_more ==
+The water is at your knees on the bottom flight and it is cold in a way that makes the decision for you about
+how far you are willing to go.
+
+There is one shelf within reach. It is the planning minutes: dull, heavy, and the thing a city actually needs
+when it wants to prove that a street was a street.
+
+* Take the planning minutes. -> ending_official
+* Take the box with your handwriting on it, if it is still there. -> ending_personal
+* Take nothing. Go up. -> ending_nothing
+
+== watch ==
+You sit on the top step with your feet on the third one down, which stays dry, and you watch the line go under.
+
+It takes eleven minutes. You have never actually watched it happen before. It is the first year you have not
+been carrying something.
+
+* Go back down. There is time for one more shelf. -> one_more
+* Let it be finished. -> ending_nothing
+
+== ending_official ==
+~ ending official
+You carry the planning minutes up four flights, one volume at a time, and you are still carrying them when the
+water reaches the ceiling of the room they came from.
+
+The city will ask for those volumes in forty years and they will be here, dry, and the person who asks will not
+know your name and will not need to.
+
+You sleep in the reading room because the stairs are wet. In the morning the chalk line is under nine metres of
+water and you draw a new one, higher, on a wall that is still dry.
+
+-> ending
+
+== ending_personal ==
+~ ending personal
+The box is still on its shelf when you get there, floating, lid down, and you go in up to your shoulders to get
+it and the cards inside are ruined.
+
+You take it up anyway. You spread the cards out on the reading room table and they dry badly and the ink runs,
+and the one line you wanted is the one that goes first.
+
+But you have the box, and the handwriting on it is still your handwriting, and that turns out to be the part you
+were actually carrying.
+
+-> ending
+
+== ending_nothing ==
+~ ending nothing
+You go up. You do not take anything.
+
+At the top of the stairs you sit down and let the building do what it has been going to do since the first
+spring, and you think about the fact that a line is not a wall and never was, and that you have spent nineteen
+years being very good at the part of the job that could be done with chalk.
+
+In the morning you will be the only person who knows what was on the shelves, and that is a kind of archive too.
+
+-> ending
+
+== ending ==
+The water stops at the second floor, which nobody expected, and stays there.
+
+In the spring you go back down with a new piece of chalk. The room is a room again: eleven metres of silt, and
+shelving standing in it like a burned forest, and light coming down through the reading room windows in a way it
+never did when there were books in front of them.
+
+You draw the line where the water stopped, because that is where it stopped, and you write the date beside it,
+because that is what you do.
+
+* Bring the box back down with you. -> ending_box [if saved_personal]
+* Read the date out loud, to nobody. -> ending_date
+* Admit that you are the archive. -> ending_self [if ending == "nothing"]
+* Start bringing things back down. -> END
+
+== ending_box ==
+The box dried badly and the cards are stuck together in one block, and the line you wanted is the line that went
+first.
+
+You put it on the shelf it came off. It is above the new line now, which is the only thing you were ever
+actually asked to do.
+
+* Read the date out loud, to nobody. -> ending_date
+* Start bringing things back down. -> END
+
+== ending_date ==
+"Fourth of April."
+
+It sounds like nothing. It sounds like a date. Nineteen years of this and the whole job has been: notice where
+the water is, and say so, and do it again next year.
+
+* Start bringing things back down. -> END
+
+== ending_self ==
+You took nothing, and you are the only copy.
+
+Every rate book, every planning minute, every card in that box: the water has them now, and what it does not
+have is the nineteen years of knowing where they were. That is not a comfort and it is not a substitute. It is
+just what is true.
+
+You draw the line and you write the date and you go up, and next spring you come down again, and you are the
+archive, and you had better last.
+
+-> END

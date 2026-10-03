@@ -81,6 +81,7 @@ public final class Games {
         g.add(new LessonGame());
         g.add(new TellGame());
         g.add(new aside.games.lamproom.LampRoomGame());
+        g.add(new aside.games.waterline.WaterLineGame());
         g.add(new aside.games.discrepancy.DiscrepancyGame());
         return g;
     }
