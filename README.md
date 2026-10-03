@@ -248,6 +248,12 @@ be called complete while the picks line cannot. That distinction is the whole re
   pass — the engine package, file by file, with the package line and this side's `aside.ui` imports
   normalised away — and says so rather than reporting a pass when the standalone is not there. Clone it
   beside this checkout (`git clone https://github.com/ChasePlank/fnaf ../fnaf`) and the gate runs it too.
+
+  **The half neither of those covers is the screens**, which cannot be diffed because one runs on this engine's
+  `UiManager` and the other on its own `Screen`/`ScreenManager`. So they are **looked at**: both copies were run
+  side by side on 2026-10-03 and their menus render the same thing — same title, same cast line, same night list
+  with the same locks, same progress line. That is a person looking rather than a check, and it is the only
+  instrument for that half.
 - **`audio/`** — the cues the scripts ask for: the visual novel's, FNAF's, and the platformer's twelve. Most are
   *generated* rather than committed by hand — see `tools/fnaf*-audio.py` and `tools/fruitjump-audio.py` — so the
   reasoning behind a sound is in the file that makes it.
