@@ -122,6 +122,24 @@ for suite in "${SUITES[@]}"; do
   fi
 done
 
+# THE FNAF MATCH. This repository and ChasePlank/fnaf are meant to be the same game, and the README says they
+# are aligned "by their self-tests reporting the same numbers rather than by diffing text" - which is the right
+# criterion for behaviour and not something anyone can run in a second. This is the cheap exact first pass. It
+# exits 2 when the standalone is not checked out beside this one, which is not a failure and is not counted as
+# one: a comparison that did not happen is not a comparison that succeeded.
+if [ -x tools/check-fnaf-match.sh ]; then
+  match_out=$(tools/check-fnaf-match.sh 2>&1); match_rc=$?
+  if [ $match_rc -eq 0 ]; then
+    echo "  $(echo "$match_out" | grep -E '=== [0-9]+ engine' | tail -1)"
+  elif [ $match_rc -eq 2 ]; then
+    echo "  fnaf match NOT CHECKED - no standalone checkout beside this one"
+  else
+    echo "  $(echo "$match_out" | grep -E '=== [0-9]+ engine' | tail -1)"
+    echo "$match_out" | grep -E 'DIFFERS|ONLY HERE' | sed 's/^/    /'
+    fail=$((fail + 1)); failed_names+=("fnaf-match")
+  fi
+fi
+
 # THE SCREENS. Every game has a suite and none of them opens a screen - a game can pass every check it has and
 # still show a blank window on start. This opens all of them and measures what they drew. Needs a display, which
 # this script already guarantees.
