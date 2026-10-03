@@ -192,6 +192,27 @@ else
   web_note="  web builds NOT CHECKED - run 'npm install' for tools/check-web.mjs"
 fi
 
+# THE PORT TRACES. Each of these drives the phone build and the desktop engine under the same scripted policy
+# and compares the whole state, second by second - the only thing that can catch a ported model being wrong on
+# both sides at once. They were written one at a time in September and October, run once by hand, and then NOT
+# WIRED INTO ANYTHING: the audio splice landed inside the block they parse, every one of them broke, and nothing
+# said so for two days. A tool that verified a port once is a tool that verified a port once.
+if command -v node >/dev/null 2>&1; then
+  for t in tell-trace drift-trace lesson-trace drift-play lesson-play; do
+    [ -f "tools/$t.mjs" ] || continue
+    t_out=$(node "tools/$t.mjs" 2>&1)
+    t_rc=$?
+    t_last=$(echo "$t_out" | tail -1)
+    if [ $t_rc -ne 0 ]; then
+      echo "  $t FAILED"
+      echo "$t_out" | head -3 | sed 's/^/    /'
+      fail=$((fail + 1)); failed_names+=("$t")
+    else
+      echo "  $t ok     $t_last"
+    fi
+  done
+fi
+
 # WHAT THIS IS NOT RUNNING. Every class with a main is either in the list above or matched by the pattern
 # below, and anything else is printed - so a checker added tomorrow is visible rather than silently absent. This
 # is the half that makes curating the list safe.
