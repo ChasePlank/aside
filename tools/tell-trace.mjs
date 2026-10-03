@@ -22,6 +22,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
+import { javaBin, classesDir } from './java.mjs';
 
 const file = process.argv[2] || 'web/tell.html';
 const seeds = Number(process.argv[3] || 200);
@@ -98,7 +99,7 @@ function playSafe() {
 }
 
 // --- the desktop's answer, straight from the model.
-const java = execFileSync('java', ['-cp', 'classes', 'aside.games.tell.Trace', 'dump', String(seeds)],
+const java = execFileSync(javaBin(), ['-cp', classesDir(), 'aside.games.tell.Trace', 'dump', String(seeds)],
   { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
 
 const want = new Map();

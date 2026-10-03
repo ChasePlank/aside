@@ -14,6 +14,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
+import { javaBin, classesDir } from './java.mjs';
 
 const file = process.argv[2] || 'web/drift.html';
 const seeds = Number(process.argv[3] || 200);
@@ -42,7 +43,7 @@ vm.runInContext(modelMatch[1] + '\nthis.deal = deal;', ctx);
 const deal = ctx.deal;
 
 // The desktop's answer, straight from the model.
-const java = execFileSync('java', ['-cp', 'classes', 'aside.games.drift.Trace', String(seeds)],
+const java = execFileSync(javaBin(), ['-cp', classesDir(), 'aside.games.drift.Trace', String(seeds)],
   { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
 
 const want = new Map();
