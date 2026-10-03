@@ -1,1 +1,9 @@
+# Tooling and build output. None of this belongs in the repository: it is either reproducible from source or
+# machine-specific. The JVM crash logs are the interesting entry - a JavaFX media crash in this sandbox writes
+# hs_err_pid*.log next to whatever was running, and it was being left untracked and unnoticed.
 node_modules/
+out/
+classes/
+*.log
+hs_err_pid*.log
+replay_pid*.log
