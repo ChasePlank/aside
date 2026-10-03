@@ -145,15 +145,26 @@ open(p, "w").write(s.replace(f, t, 1))
   # first version of this test only knew the first, so every verb suite read as
   # "caught" whether or not anything failed -- a mutation that changed nothing
   # looked like a mutation the suite noticed.
-  # A failure is tested for FIRST: the verb suites print "409/410 checks passed
-  # -- 1 FAILED", which contains both phrases, so a case that looks for
-  # "checks passed" before "FAILED" reports a caught mutation as not caught.
-  case "$OUT" in
-    *"FAILED"*|*"FAIL "*)         printf '%-44s caught       %s\n' "$FROM" "$OUT" ;;
-    *"0 failed"*)                 printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT" ;;
-    *"checks passed"*)            printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT" ;;
-    *)                            printf '%-44s UNKNOWN      %s\n' "$FROM" "$OUT" ;;
-  esac
+  # A NON-ZERO failure count is what decides, and it is matched with a regex
+  # rather than a glob because the suites report in four shapes and three of
+  # them contain the word "failed" whether or not anything failed:
+  #
+  #   791/791 checks passed            === 584 checks, 0 failed ===
+  #   === 626 passed, 0 failed ===     all 112 checks passed
+  #   122 checks, 1 failed             (the FNAF suites, lowercase)
+  #   409/410 checks passed -- 1 FAILED
+  #
+  # The first version looked for "0 failed" and read every verb suite as
+  # "caught"; the second put "checks passed" before "FAILED" and read a caught
+  # mutation as not caught; the third did not know "1 failed" at all and said
+  # UNKNOWN. Three shapes of the same mistake in one file.
+  if printf '%s' "$OUT" | grep -qE '(^|[^0-9])[1-9][0-9]* (failed|FAILED)'; then
+    printf '%-44s caught       %s\n' "$FROM" "$OUT"
+  elif printf '%s' "$OUT" | grep -qE '0 (failed|FAILED)|checks passed|ALL PASS|PASS'; then
+    printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT"
+  else
+    printf '%-44s UNKNOWN      %s\n' "$FROM" "$OUT"
+  fi
 done
 
 cp "$BAK" "$FILE"
