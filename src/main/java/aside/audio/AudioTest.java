@@ -17,7 +17,14 @@ import java.util.List;
  * check that matters, because JavaFX refuses several formats (OGG,
  * FLAC) and refuses them at play time rather than load time.
  *
- * Usage: java aside.audio.AudioTest [root]
+ * <p><b>And it EXITS NON-ZERO, which it did not until 2026-10-03.</b> It
+ * collected its errors, printed them, and called {@code Platform.exit()} --
+ * so a run with a missing cue and a run with everything present both ended
+ * with status 0, and the README's claim that it "works as a gate rather than a
+ * report" was not true of it. A report that prints FAIL and exits clean is the
+ * same defect as a suite with no assertions: it reads as verified.
+ *
+ * <p>Usage: java aside.audio.AudioTest [root]
  */
 public class AudioTest extends Application {
     @Override
@@ -56,7 +63,15 @@ public class AudioTest extends Application {
         System.out.println();
         System.out.println("missing cues (no file present): " + Audio.A.missing);
         System.out.println("errors: " + (errors.isEmpty() ? "none" : errors));
+
+        // A missing cue is a failure too, not just a note: the scripts ask for
+        // it by name and nothing else checks that the file is there.
+        int bad = errors.size() + Audio.A.missing.size();
+        System.out.println(bad == 0
+                ? "\n=== all cues present and playable ==="
+                : "\n=== " + bad + " cue(s) missing or unplayable ===");
         Platform.exit();
+        if (bad > 0) System.exit(1);
     }
 
     public static void main(String[] args) { launch(args); }
