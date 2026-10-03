@@ -393,6 +393,33 @@ public class SelfTest {
         check("choices were offered during traversal",
                 r.choiceSitesOffered.size() >= 5);
 
+        // A choice whose condition can never hold is never offered, and that
+        // finding had no check at all -- mutating neverOfferedChoices() to
+        // return the empty set broke nothing and the suite still passed 316 of
+        // 316. The night-shift fixture has no such choice, so a probe is the
+        // only way to cover it: one option gated on a variable nothing writes.
+        {
+            Path tmp = Files.createTempFile("aside-neveroffered", ".aside");
+            Files.writeString(tmp, """
+                    title: never-offered probe
+                    start: only
+
+                    == only ==
+                    You are here.
+                    * Take it. -> only [if nothing_sets_this == 1]
+                    * Leave it. -> done
+
+                    == done ==
+                    You leave.
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            Bot.Report pr = new Bot().run(probe);
+            check("traversal caught the never-offered choice ("
+                            + pr.neverOfferedChoices().size() + " found)",
+                    !pr.neverOfferedChoices().isEmpty());
+        }
+
         System.out.println("\n--- partial traversal is still an honest report ---");
         // The budget counts states, but the memory cost per state is what
         // actually runs out, so the traversal is allowed to fail. What it
