@@ -420,6 +420,43 @@ public class SelfTest {
                     !pr.neverOfferedChoices().isEmpty());
         }
 
+        // Three more findings that nothing exercised, and one of them was
+        // hidden by the shape of its own check.
+        //
+        // deadEnds, varsNeverRead and missingTargets all had no probe: removing
+        // the line that populates each broke nothing and the suite still passed
+        // 317 of 317. missingTargets is the interesting one -- the suite DOES
+        // check it, with `r.missingTargets.isEmpty()`, and an empty-list check
+        // passes trivially when the list is never populated. A negative check
+        // cannot fail unless something produces the thing it is negative about.
+        {
+            Path tmp = Files.createTempFile("aside-findings", ".aside");
+            Files.writeString(tmp, """
+                    title: findings probe
+                    start: only
+
+                    == only ==
+                    ~ written_never_read 1
+                    You are here.
+                    -> nowhere_at_all
+
+                    == stranded ==
+                    Nobody jumps from here and nobody jumps to it.
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            Bot.Report pr = new Bot().run(probe);
+            check("traversal caught the missing target ("
+                            + pr.missingTargets.size() + " found)",
+                    !pr.missingTargets.isEmpty());
+            check("traversal caught the written-but-never-read variable ("
+                            + pr.varsNeverRead + ")",
+                    pr.varsNeverRead.contains("written_never_read"));
+            check("traversal caught the dead end ("
+                            + pr.deadEnds.size() + " found)",
+                    !pr.deadEnds.isEmpty());
+        }
+
         System.out.println("\n--- partial traversal is still an honest report ---");
         // The budget counts states, but the memory cost per state is what
         // actually runs out, so the traversal is allowed to fail. What it
