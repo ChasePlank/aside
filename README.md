@@ -144,14 +144,22 @@ rule.
 ## Tests
 
 ```bash
+tools/run-suites.sh                                    # every game suite, one total
 java --module-path $FX --add-modules $MODS -cp out aside.engine.SelfTest              # prints its own count
-java --module-path $FX --add-modules $MODS -cp out aside.games.fnaf.engine.SelfTest  # the FNAF module
 java --module-path $FX --add-modules $MODS -cp out aside.audio.AudioTest             # needs a display
 java -cp out aside.games.fruitjump.engine.WaterProbe   # every pool is the shape it was built to be
 ```
 
-`aside.engine.SelfTest` is the gate: it covers the engine, the auditor, the
-shelf, and every game's own suite is run separately. **It prints its own check
+`tools/run-suites.sh` runs **every game suite and prints one total** — nineteen of them, ~7,850 checks. It
+discovers them by looking for `SelfTest.java` under `games/`, so a new game is covered the day it is added.
+
+**It exists because until 2026-10-03 nothing ran them.** Every game had a suite, all nineteen were green, and no
+script, doc or habit named more than one at a time — `grep -rl SelfTest tools/` found only `mutate.sh`, which
+takes one suite as an argument. They also report in four different shapes (`791/791 checks passed`,
+`=== 584 checks, 0 failed`, `=== 626 passed, 0 failed`, `all 112 checks passed`), so no two could be compared and
+no total could be printed. The runner reads all four.
+
+`aside.engine.SelfTest` is the engine and story gate: it covers the engine, the auditor and the shelf. **It prints its own check
 count, and the README deliberately does not repeat it** -- the number was
 written down here and went stale three times in two days, which is what a
 hand-maintained copy of a generated number does. `aside.audio.AudioTest`
