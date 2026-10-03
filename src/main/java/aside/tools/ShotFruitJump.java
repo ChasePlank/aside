@@ -30,6 +30,10 @@ public class ShotFruitJump extends Application {
     @Override public void start(Stage stage) throws Exception {
         aside.ui.Assets.load(".");
         String dir = System.getProperty("shotdir", "/root/downloads");
+        // The first run of this failed every write with "Can't create an ImageOutputStream" because the directory
+        // did not exist. The tool reported each failure, which is why it took one run to find rather than a
+        // silent set of empty pngs.
+        new java.io.File(dir).mkdirs();
 
         UiManager ui = new UiManager(".");
         MainMenu menu = new MainMenu(ui);
@@ -63,8 +67,44 @@ public class ShotFruitJump extends Application {
         for (int i = 0; i < 4; i++) ui.tick(dt);
         System.out.println("  top screen now: " + topName(ui));
         shoot(scene, dir + "/fj-climber.png", "the climber / customise screen");
+        key(ui, KeyCode.ESCAPE);
+        for (int i = 0; i < 4; i++) ui.tick(dt);
+
+        // AND THE THREE THE DOCSTRING ABOVE SAYS HAVE ALREADY BEEN LOOKED AT.
+        //
+        // It claims "the levels, the game-over card, the rooms mode, the water, the tutorial" have all been
+        // captured. Those files are gone - the sandbox reboots and /root/downloads with it - so the claim is
+        // unverifiable, and a claim in a docstring is not evidence. The three that can be reached from the menu
+        // are captured here, in the same run, so the next person has the pictures rather than the sentence.
+        for (String[] target : new String[][]{
+                {"Rooms Mode", "fj-rooms.png", "the rooms mode"},
+                {"Tutorial", "fj-tutorial.png", "tutorial level 1"},
+                {"New Game", "fj-level.png", "a generated level"}}) {
+            open(ui, target[0]);
+            for (int i = 0; i < 30; i++) ui.tick(dt);       // let it settle and draw a few frames
+            System.out.println("  " + target[0] + " -> " + topName(ui));
+            shoot(scene, dir + "/" + target[1], target[2]);
+            key(ui, KeyCode.ESCAPE);
+            for (int i = 0; i < 4; i++) ui.tick(dt);
+        }
 
         javafx.application.Platform.exit();
+    }
+
+    /**
+     * Put a fresh menu on top and walk it to a label, then press ENTER.
+     *
+     * <p>Not by backing out of whatever is open. ESC inside a game opens the PAUSE screen rather than leaving, so
+     * "press ESC until the menu is on top" lands on a pause menu and then walks THAT - which is how the first
+     * version reported "no menu on the stack for Tutorial" and then "Tutorial -> PauseScreen". This tool is for
+     * capturing views, not for testing the back-path, so it starts from a menu rather than negotiating one.
+     */
+    private static void open(UiManager ui, String label) {
+        ui.replace(new MainMenu(ui));
+        MainMenu menu = (MainMenu) ui.peek();
+        int presses = 0;
+        while (presses < 12 && !label.equals(selected(menu))) { key(ui, KeyCode.DOWN); presses++; }
+        key(ui, KeyCode.ENTER);
     }
 
     /** The menu's own item list and selection, by reflection, so the names cannot go stale. */
