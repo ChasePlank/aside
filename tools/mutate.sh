@@ -46,6 +46,24 @@
 # The engine suite itself has no double constants to break; its subject is the
 # script format and the shelf, and mutating those is a different job.
 #
+# THE PHONE BUILD GENERATORS, tested 2026-10-03. Every one of them emits the
+# game's constants into the page as JSON, and every emitted key is covered --
+# renaming one fails a check in that game's suite:
+#
+#   fnaf2   hourSeconds -> hourSecondz, musicBoxMax -> musicBoxMaxx
+#   fnaf3   rebootTime, hourSeconds
+#   fnaf4   grace
+#   fnaf5   moveTime
+#   fnaf7   hourSeconds
+#   fnaf8   patience
+#
+# And their ESCAPERS were the other half of that work: six of the FNAF
+# generators and bearings escaped only the backslash and the quote, so a "<" in
+# the content could have ended the script block the JSON sits in. All of them
+# escape "<", ">", "&", U+2028 and U+2029 now, and the verb suites each feed
+# their own escaper a string to prove it -- because a check on the generated
+# file cannot see an escaper that is never exercised.
+#
 # THE VERB GAMES HAVE NO CONSTANTS AT ALL -- zero across all ten -- so there is
 # nothing to break that way. What they have is TABLES, and that is what to
 # mutate: the seeded room, the seeded log, the order list. Tested 2026-10-02:
