@@ -803,6 +803,43 @@ public class SelfTest {
         // The rule is a rule rather than a table on purpose. A table is a second place to forget.
         for (String name : storyNames()) storyExport(name, gameIdFor(name));
 
+        System.out.println("\n--- the stories, audited ---");
+        // Every story, audited, and the findings asserted rather than printed.
+        //
+        // The auditor existed and nothing ran it on the stories: the suite
+        // traverses night-shift, which is a fixture with deliberately planted
+        // faults, and the four real stories were never audited at all. They are
+        // clean today -- measured before this check was written -- and a story
+        // that grew an unreachable scene tomorrow would have said nothing.
+        //
+        // The RELIABLE findings are asserted on every story. The path findings
+        // (unreachable scenes, never-offered picks) are only asserted when the
+        // traversal finished, because an unfinished search cannot prove a scene
+        // is unreachable -- Overtime hits the budget, and the auditor says so.
+        for (String name : storyNames()) {
+            // night-shift is the FIXTURE, not a story: it has an unreachable
+            // scene, a variable typo, beats after a jump and a fork whose
+            // choices do nothing, all planted so the checks above can assert
+            // the auditor catches them. Auditing it here would assert the
+            // opposite of what it is for.
+            if (name.equals("night-shift")) continue;
+            Path storyFile = Path.of("stories", name + ".aside");
+            if (!Files.exists(storyFile)) continue;
+            Script sc = Script.load(storyFile);
+            Bot.Report rep = new Bot().run(sc);
+            check(name + ": no missing targets", rep.missingTargets.isEmpty());
+            check(name + ": no dead ends", rep.deadEnds.isEmpty());
+            check(name + ": no variable read but never written", rep.varsReadOnly.isEmpty());
+            check(name + ": no variable written but never read", rep.varsNeverRead.isEmpty());
+            if (!rep.budgetHit) {
+                check(name + ": every scene is reachable", rep.unreachableScenes().isEmpty());
+                check(name + ": every choice is offered", rep.neverOfferedChoices().isEmpty());
+                check(name + ": no beats authored after a jump", rep.unreachableBeats.isEmpty());
+            } else {
+                System.out.println("       (" + name + ": traversal hit the budget, so the path findings are not asserted)");
+            }
+        }
+
         System.out.println("\n--- the games' art ---");
         // Every image file a game ships is non-empty and has an extension the
         // loader reads. This does NOT check that the game asks for the right

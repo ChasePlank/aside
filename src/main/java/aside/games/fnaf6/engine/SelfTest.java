@@ -55,6 +55,17 @@ public final class SelfTest {
         mouse();
         survival();
         System.out.println();
+        System.out.println("\n--- the phone's sweep ---");
+        // tools/fnaf6-sweep.mjs runs the same policies over the same seeds
+        // through the PHONE's engine, and its own header says "SelfTest runs
+        // both and compares the strings". It did not: the tool existed, ran
+        // when someone typed its name, and nothing called it. A transliterated
+        // engine is a second copy of the rules, and a second copy drifts
+        // silently -- both builds keep working, they just stop being the same
+        // game. This is the comparison, and it skips rather than fails when
+        // there is no node to run it with.
+        sweepAgainstThePhone();
+
         System.out.println("\n--- the cues ---");
         // Every cue this game asks for has a file. Four of the FNAF games
         // had no such check, so a deleted cue would have been silent: the
@@ -559,6 +570,53 @@ public final class SelfTest {
             if (new java.io.File(dir, name + ext).isFile()) return true;
         }
         return false;
+    }
+
+    /**
+     * The phone's sweep, against the desktop's numbers.
+     *
+     * <p>Skips when there is no node, or no page, or the tool is not there --
+     * a comparison that could not run is not a comparison that failed.
+     */
+    static void sweepAgainstThePhone() {
+        java.io.File tool = new java.io.File("tools/fnaf6-sweep.mjs");
+        if (!tool.isFile() || !new java.io.File("web/fnaf6.html").isFile()) {
+            System.out.println("       (no tools/fnaf6-sweep.mjs or web/fnaf6.html from here)");
+            return;
+        }
+        String out;
+        try {
+            ProcessBuilder pb = new ProcessBuilder("node", "tools/fnaf6-sweep.mjs");
+            pb.redirectErrorStream(true);
+            Process proc = pb.start();
+            out = new String(proc.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            if (!proc.waitFor(300, java.util.concurrent.TimeUnit.SECONDS)) {
+                proc.destroyForcibly();
+                System.out.println("       (the sweep did not finish in 300s)");
+                return;
+            }
+        } catch (Exception e) {
+            System.out.println("       (no node to run the sweep with: " + e.getMessage() + ")");
+            return;
+        }
+
+        // `IDLE: 49% 53% 54% 51% 49%` -- the phone's table, one line a policy.
+        for (String line : out.split("\n")) {
+            int colon = line.indexOf(':');
+            if (colon < 0) continue;
+            String name = line.substring(0, colon).trim();
+            Bot.Policy policy;
+            try { policy = Bot.Policy.valueOf(name); }
+            catch (IllegalArgumentException e) { continue; }
+            String[] parts = line.substring(colon + 1).trim().split("\\s+");
+            if (parts.length < 5) continue;
+            for (int n = 1; n <= 5; n++) {
+                int phone = Integer.parseInt(parts[n - 1].replace("%", ""));
+                int here = (int) Math.round(Bot.survival(policy, n, 200) * 100);
+                check("the phone's " + name + " on night " + n + " agrees (" + phone + "% vs " + here + "%)",
+                        Math.abs(phone - here) <= 1);
+            }
+        }
     }
 
 }
