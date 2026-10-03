@@ -1496,6 +1496,33 @@ public class SelfTest {
             check("art/web/ was built from the art that is here now"
                     + (stale.isEmpty() ? "" : " -- stale: " + stale), stale.isEmpty());
             check("art/web/MANIFEST covers the art it was built from", checked > 0);
+
+            // AND THE OTHER DIRECTION, which the manifest cannot see: it lists
+            // what WAS built, so a source with no built copy is invisible. That
+            // is how `keeper-neutral.png` sat in art/sprites/ unbuilt -- the
+            // lamp room asked for it, the export said "no art for", and the
+            // staleness check passed because nothing in the manifest had
+            // changed. A source that should have a web copy and does not is the
+            // same failure as a stale one, from the other end.
+            List<String> unbuilt = new ArrayList<>();
+            for (String dir : new String[]{"sprites", "backgrounds"}) {
+                Path srcDir = Path.of("art", dir);
+                if (!Files.isDirectory(srcDir)) continue;
+                try (var list = Files.list(srcDir)) {
+                    for (Path f : list.toList()) {
+                        String name = f.getFileName().toString();
+                        String stem = name.replaceAll("\\.[^.]+$", "");
+                        // Sprites are WebP (alpha) and backgrounds are JPEG
+                        // (opaque, and smaller for a photograph) -- the same
+                        // split tools/vn-art.py makes, so either counts.
+                        Path webp = Path.of("art", "web", dir, stem + ".webp");
+                        Path jpg = Path.of("art", "web", dir, stem + ".jpg");
+                        if (!Files.exists(webp) && !Files.exists(jpg)) unbuilt.add(dir + "/" + name);
+                    }
+                }
+            }
+            check("every source sprite and background has a web copy"
+                    + (unbuilt.isEmpty() ? "" : " -- unbuilt: " + unbuilt), unbuilt.isEmpty());
         } catch (Exception e) {
             check("art/web/MANIFEST can be read (" + e.getMessage() + ")", false);
         }
