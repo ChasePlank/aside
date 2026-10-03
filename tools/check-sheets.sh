@@ -23,16 +23,20 @@ FX="${FX:-/root/javafx-sdk-27/lib}"
 
 [ -d docs/frames ] || { echo "no docs/frames to compare against" >&2; exit 2; }
 
-A=$(mktemp -d); B=$(mktemp -d)
-trap 'rm -rf "$A" "$B"' EXIT
+A=$(mktemp -d)
+trap 'rm -rf "$A"' EXIT
 
 run() {
   tools/run-headless.sh "$JAVA" --module-path "$FX" \
     --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
     -Dshotdir="$1" -cp "$OUT:src/main/resources" aside.tools.CheckGames >/dev/null 2>&1
 }
+# ONE run, not two. The second was there to detect non-determinism by running
+# twice, and that was replaced by NAMING the two frames that cannot be compared
+# -- so the second run's output was never read. It cost about five minutes of a
+# gate that already takes ten to fifteen, and CheckGames opens all twenty-three
+# games each time. Found by asking what the gate spends its time on.
 run "$A"
-run "$B"
 
 # TWO GAMES CANNOT BE COMPARED, and they are named rather than detected.
 #
