@@ -21,7 +21,7 @@
 //      the healthy one, and it catches a script that throws at runtime as well as one that will not parse.
 //
 // Rendered output is a symptom. The error channel is the diagnosis.
-import { readdirSync } from 'node:fs';
+import { readdirSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -42,6 +42,12 @@ if (files.length === 0) {
   process.exit(2);
 }
 
+// Frames are kept for the same reason CheckGames keeps them: when this fails the next question is "what did it
+// look like", and a run that threw the pictures away makes that a second job. They are also the only way to
+// LOOK at the phone builds - these are what the public plays, and nothing had ever rendered one at phone size.
+const shots = process.env.SHOTDIR || '/root/downloads/webshots';
+mkdirSync(shots, { recursive: true });
+
 const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
 let pass = 0;
 const failed = [];
@@ -57,6 +63,13 @@ for (const f of files) {
   } catch (e) {
     errors.push('did not load: ' + String(e.message).split('\n')[0]);
   }
+  try {
+    // Phone-shaped, which is the point: the layout is responsive and a desktop-sized frame would show a version
+    // of the page nobody sees.
+    await page.setViewport({ width: 390, height: 700 });
+    await new Promise(r => setTimeout(r, 400));
+    await page.screenshot({ path: `${shots}/${f.replace('.html', '')}.png` });
+  } catch { /* a screenshot that fails must not turn a booted build into a failure */ }
   await page.close();
 
   if (errors.length) {

@@ -176,6 +176,10 @@ test the games' *logic* — so a game can pass every check it has and still show
 a png per game as well as a verdict, because when it does fail the next question is always "what did it look
 like".
 
+**The phone builds have their own sheet.** `docs/contact-sheet-phone.png` is the same idea for `web/`: every
+phone build, rendered at phone size, one frame each. `tools/check-web.mjs` writes the frames and
+`tools/contact-sheet-web.mjs` puts them together.
+
 **The phone builds are checked by loading them.** `web/` holds 21 of them, and until 2026-10-03 the gate checked
 only that each is *current* - regenerating it produces the same bytes - and **nothing ever opened one.** A file
 can be perfectly up to date and still render nothing: that day a story title containing the literal text
