@@ -77,12 +77,18 @@ public class CheckGames extends Application {
                 var img = scene.snapshot(null);
                 int w = (int) img.getWidth(), h = (int) img.getHeight();
                 var bi = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-                var pr = img.getPixelReader();
+                // BULK, not per pixel. This was a double loop over 1280x720 with
+                // a getArgb and a setRGB each -- 921,600 of each per game, and
+                // 24 games, which was most of what made this tool take nine
+                // minutes. One getPixels into an int[] and one setRGB of the
+                // whole array is the same pixels by a shorter road.
+                int[] px = new int[w * h];
+                img.getPixelReader().getPixels(0, 0, w, h,
+                        javafx.scene.image.PixelFormat.getIntArgbInstance(), px, 0, w);
+                bi.setRGB(0, 0, w, h, px, 0, w);
                 int lit = 0;
                 java.util.HashSet<Integer> colours = new java.util.HashSet<>();
-                for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
-                    int argb = pr.getArgb(x, y);
-                    bi.setRGB(x, y, argb);
+                for (int argb : px) {
                     if ((argb & 0x00FFFFFF) != 0) lit++;
                     colours.add(argb);
                 }
