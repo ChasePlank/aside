@@ -1,8 +1,5 @@
 package aside.games.fnaf.engine;
 
-import aside.ui.Audio;
-import aside.ui.UiManager;
-import aside.ui.UiScreen;
 
 import java.util.*;
 
@@ -22,7 +19,7 @@ import java.util.*;
  *    viewing his room stalls his movement)
  *  - Power: starts 100%. Passive drain + per-tool drain. 0% = blackout.
  *
- * Blackout: doors open, lights dead, cameras dead. Monty (the Freddy
+ * Blackout: doors open, lights dead, cameras dead. Chica (the Freddy
  * role) plays his music box; when it stops, he attacks after a random
  * delay. Survive to 6 AM.
  *

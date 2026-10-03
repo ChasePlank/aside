@@ -1,8 +1,5 @@
 package aside.games.fnaf.engine;
 
-import aside.ui.Audio;
-import aside.ui.UiManager;
-import aside.ui.UiScreen;
 
 import java.util.Random;
 
