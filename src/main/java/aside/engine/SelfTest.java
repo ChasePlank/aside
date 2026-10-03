@@ -808,6 +808,30 @@ public class SelfTest {
         storyExport("the-lamp-room", "lamp-room");
         storyExport("the-discrepancy", "discrepancy");
 
+        System.out.println("\n--- the games' art ---");
+        // Every image file a game ships is non-empty and has an extension the
+        // loader reads. This does NOT check that the game asks for the right
+        // names -- that needs the game's own stem list, and an extraction of it
+        // was unreliable enough that a check built on it would have been worse
+        // than none. What it does catch is a truncated file, a zero-byte one,
+        // or a name with an extension nothing reads, all of which the game
+        // would draw as nothing.
+        for (Game g : Games.all()) {
+            Path dir = Path.of("src", "main", "resources", g.id(), "images");
+            if (!Files.isDirectory(dir)) continue;
+            int n = 0, unreadable = 0;
+            try (var list = Files.list(dir)) {
+                for (Path f : list.toList()) {
+                    n++;
+                    String name = f.getFileName().toString().toLowerCase();
+                    boolean okExt = name.endsWith(".png") || name.endsWith(".jpg")
+                            || name.endsWith(".jpeg");
+                    if (!okExt || Files.size(f) == 0) unreadable++;
+                }
+            }
+            check(g.title() + ": all " + n + " image(s) are readable files", unreadable == 0);
+        }
+
         System.out.println("\n--- the phone build ---");
         phoneBuild();
 
