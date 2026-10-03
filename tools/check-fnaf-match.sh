@@ -27,7 +27,16 @@ set -u
 
 cd "$(dirname "$0")/.." || exit 2
 HERE="$(pwd)"
-THEIRS="${1:-$(cd .. && pwd)/fnaf}"
+# Find the standalone. It is called `fnaf` in a checkout of the two side by side and `fnaf2` in the one this was
+# written in, and a script that says "not checked" while the thing is sitting right there is worse than one that
+# looks in three places. FNAF_STANDALONE overrides everything.
+THEIRS="${1:-${FNAF_STANDALONE:-}}"
+if [ -z "$THEIRS" ]; then
+  for cand in "../fnaf" "../fnaf2" "../ChasePlank/fnaf" "../ChasePlank/fnaf2"; do
+    if [ -d "$cand/src/main/java/fnaf/engine" ]; then THEIRS=$(cd "$cand" && pwd); break; fi
+  done
+fi
+[ -z "$THEIRS" ] && THEIRS="$(cd .. && pwd)/fnaf"
 
 if [ ! -d "$THEIRS/src/main/java/fnaf/engine" ]; then
   echo "no standalone checkout at $THEIRS" >&2
