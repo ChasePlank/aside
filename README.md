@@ -86,12 +86,15 @@ what an old one does, the old one is retired to `retired-games/` rather than
 the library growing a second copy of an idea it already has. The FNAF
 franchise is the one exception, because it was asked for by name.
 
-There are three families:
+There are four families:
 
 - **Ten verb games** — residue, ledger, testimony, handoff, outside, bearings,
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
+- **Five stories** — `overtime`, `the-lamp-room`, `the-discrepancy`, `the-water-line`, and `night-shift` (a
+  test fixture). Four of them are stories you can play; each has its own register and its own art, and each is
+  audited rather than asserted. See "What is in here" below.
 - **Fruit Jump** — the platformer, and the oldest thing here. It has water: pools
   form in the gaps in the walk, a body swims in them, holds its breath, and gets
   out by a breach hop at the surface. **UP or W** jumps on land and strokes
@@ -246,6 +249,15 @@ CLEAN SO FAR (traversal partial: 131/131 scenes, budget hit)
 
 The traversal was budget-limited, but the scene count is complete — which is why the unreachable list can still
 be called complete while the picks line cannot. That distinction is the whole reason the verdict says which.
+- **`stories/the-lamp-room.aside`** — a keeper, a lamp that goes out, and the difference between doing a job
+  correctly and doing it well. 14 scenes, 81 beats, 13 choice options, **3 ending scenes**, CLEAN.
+- **`stories/the-discrepancy.aside`** — a night auditor finds room 000 in a day that balances. 21 scenes, 90
+  beats, 17 choice options, CLEAN. **Three narrative endings that converge on one ending scene** — which is why
+  the auditor counts one: it counts *terminal scenes*, not the ways of reaching them. Worth knowing when reading
+  any of these numbers.
+- **`stories/the-water-line.aside`** — an archivist in a city that is flooding, moving the collection up a floor
+  every few years and deciding what gets carried. 18 scenes, 103 beats, 25 choice options, CLEAN. Three narrative
+  endings again, and the one that costs the most is the one where you take nothing.
 - **`stories/night-shift.aside`** — **a test fixture, not a story.** It contains deliberately planted
   problems (an unreachable scene, a variable typo, beats after a jump, and a fork whose choices do
   nothing) so the self-test can assert the auditor catches them. It is written to be read as well as

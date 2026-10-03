@@ -795,18 +795,13 @@ public class SelfTest {
         webArtIsCurrent();
 
         System.out.println("\n--- the story exports ---");
-        // The two .aside stories have had a web export since WebExport existed,
-        // and nothing has ever checked that the exports are current. Same rule
-        // as the games: regenerate and compare. A story edited in stories/ and
-        // not re-exported is a phone build of a story that no longer exists.
-        storyExport("night-shift");
-        storyExport("overtime");
-        // The two newer stories keep their art under art/stories/<id>/, which
-        // the export did not look in until now -- so they exported with "no art
-        // for" every background and nothing had noticed, because neither has a
-        // phone build.
-        storyExport("the-lamp-room", "lamp-room");
-        storyExport("the-discrepancy", "discrepancy");
+        // EVERY story, discovered rather than listed. This was four hand-written calls, and adding a fifth story
+        // meant remembering to add a fifth line - which is how the fifth story arrived with an export nothing
+        // checked. The list comes from stories/ now, and the game id is derived by the same rule the shelf uses:
+        // `the-lamp-room.aside` is the `lamp-room` game, `the-water-line.aside` is `water-line`.
+        //
+        // The rule is a rule rather than a table on purpose. A table is a second place to forget.
+        for (String name : storyNames()) storyExport(name, gameIdFor(name));
 
         System.out.println("\n--- the games' art ---");
         // Every image file a game ships is non-empty and has an extension the
@@ -1305,17 +1300,40 @@ public class SelfTest {
     }
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
+    /** Every story in stories/, by file stem. Discovered, so a new one cannot be missed. */
+    static java.util.List<String> storyNames() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (Path dir : new Path[]{Path.of("stories"), Path.of("..", "stories")}) {
+            if (!Files.isDirectory(dir)) continue;
+            try (var stream = Files.list(dir)) {
+                stream.filter(f -> f.getFileName().toString().endsWith(".aside"))
+                      .map(f -> f.getFileName().toString().replaceFirst("\\.aside$", ""))
+                      .sorted()
+                      .forEach(out::add);
+            } catch (Exception ignored) { }
+            if (!out.isEmpty()) break;
+        }
+        return out;
+    }
+
+    /** The game id for a story file: the shelf looks for web/&lt;game-id&gt;.html, and `the-lamp-room` is `lamp-room`. */
+    static String gameIdFor(String storyName) {
+        return storyName.replaceFirst("^the-", "");
+    }
+
     static void storyExport(String name) throws Exception {
-        storyExport(name, name);
+        storyExport(name, gameIdFor(name));
     }
 
     /**
      * A story's export, where the story's file stem and its game id differ.
      *
-     * <p>The shelf looks for {@code web/<game-id>.html}, and two of the stories
-     * are named differently from their ids -- {@code the-lamp-room.aside} is
-     * the {@code lamp-room} game. Naming the build after the story instead of
-     * the game put it somewhere the shelf does not look.
+     * <p>The shelf looks for {@code web/<game-id>.html}, and three of the stories
+     * are named differently from their ids -- {@code the-lamp-room.aside} is the
+     * {@code lamp-room} game. Naming the build after the story instead of the
+     * game put it somewhere the shelf does not look, which is exactly what
+     * happened to the fifth story: {@code the-water-line.html} against a game id
+     * of {@code water-line}.
      */
     static void storyExport(String name, String id) throws Exception {
         Path story = Path.of("stories", name + ".aside");
@@ -1603,7 +1621,10 @@ public class SelfTest {
      * the accessor is non-null at every step.
      */
     static void textNeverNull() throws Exception {
-        for (String name : new String[]{"night-shift", "overtime"}) {
+        // EVERY story, discovered. This was `{"night-shift", "overtime"}` and it stayed that way while three more
+        // stories were written - so the check that keeps a real crash fixed was walking two fifths of the
+        // stories. The other three are the ones that never had the bug, which is exactly why nobody noticed.
+        for (String name : storyNames()) {
             Path p = Path.of("stories", name + ".aside");
             if (!Files.exists(p)) p = Path.of("..", "stories", name + ".aside");
             if (!Files.exists(p)) {
