@@ -69,7 +69,9 @@ public class WebExport {
             System.out.println("usage: WebExport <story.aside> <out.html>");
             return;
         }
-        String html = convert(Files.readString(Path.of(args[0])));
+        Path story = Path.of(args[0]);
+        String stem = story.getFileName().toString().replaceAll("\\.aside$", "");
+        String html = convert(Files.readString(story), ART, storyArt(stem));
         Files.writeString(Path.of(args[1]), html);
         System.out.println("wrote " + args[1] + "  (" + html.length() / 1024 + " KB)");
         for (String m : missingIn(html)) System.out.println("  no art for: " + m);
@@ -89,10 +91,31 @@ public class WebExport {
     }
 
     static String convert(String script) {
-        return convert(script, ART);
+        return convert(script, ART, null);
+    }
+
+    /**
+     * A story's own art directory, or null.
+     *
+     * <p><b>The desktop has known about these since the per-story art landed
+     * and the export never did.</b> {@code Assets} reads
+     * {@code art/stories/<id>/backgrounds} and {@code .../sprites}, and
+     * {@code Audit} checks both roots -- so a story whose art lives under its
+     * own id renders on the desktop and exports with "no art for" every
+     * background. The two newer stories are exactly that case, and neither has
+     * a phone build, so nothing had noticed.
+     */
+    static Path storyArt(String storyId) {
+        if (storyId == null || storyId.isBlank()) return null;
+        Path p = Path.of("art", "stories", storyId);
+        return Files.isDirectory(p) ? p : null;
     }
 
     static String convert(String script, Path artRoot) {
+        return convert(script, artRoot, null);
+    }
+
+    static String convert(String script, Path artRoot, Path storyRoot) {
         String title = "Untitled";
         String author = "";
         String start = null;
@@ -223,6 +246,9 @@ public class WebExport {
         }
 
         // ---- resolve the staging against the art that exists -----------------
+        // Two roots, the story's own first. A story that has its own art uses
+        // it; one that does not falls back to the shared library, which is what
+        // every story did before the per-story directories existed.
         Set<String> bgFiles = stems(artRoot.resolve("backgrounds"), ".jpg", ".png");
         Set<String> spFiles = stems(artRoot.resolve("sprites"), ".webp", ".png");
         Map<String, String> assets = new LinkedHashMap<>();
@@ -230,9 +256,20 @@ public class WebExport {
 
         Path bgDir = artRoot.resolve("backgrounds");
         Path spDir = artRoot.resolve("sprites");
+        if (storyRoot != null) {
+            bgFiles.addAll(stems(storyRoot.resolve("backgrounds"), ".jpg", ".png"));
+            spFiles.addAll(stems(storyRoot.resolve("sprites"), ".webp", ".png"));
+        }
 
         for (String name : wantBg) {
-            Path file = bgFiles.contains(name) ? fileFor(bgDir, name, ".jpg", ".png") : null;
+            Path file = null;
+            if (storyRoot != null && Files.exists(storyRoot.resolve("backgrounds").resolve(name + ".png"))) {
+                file = storyRoot.resolve("backgrounds").resolve(name + ".png");
+            } else if (storyRoot != null && Files.exists(storyRoot.resolve("backgrounds").resolve(name + ".jpg"))) {
+                file = storyRoot.resolve("backgrounds").resolve(name + ".jpg");
+            } else if (bgFiles.contains(name)) {
+                file = fileFor(bgDir, name, ".jpg", ".png");
+            }
             if (file != null) assets.put("bg:" + name, dataUri(file));
             else missing.add("bg " + name);
         }
@@ -246,7 +283,15 @@ public class WebExport {
             if (key == null) { missing.add("show " + want); continue; }
             poseFor.put(want, key);
             if (!key.equals(want)) missing.add("show " + want + " (drawn as " + key + ")");
-            assets.put("sp:" + key, dataUri(fileFor(spDir, key, ".webp", ".png")));
+            Path spFile = null;
+            if (storyRoot != null && Files.exists(storyRoot.resolve("sprites").resolve(key + ".webp"))) {
+                spFile = storyRoot.resolve("sprites").resolve(key + ".webp");
+            } else if (storyRoot != null && Files.exists(storyRoot.resolve("sprites").resolve(key + ".png"))) {
+                spFile = storyRoot.resolve("sprites").resolve(key + ".png");
+            } else {
+                spFile = fileFor(spDir, key, ".webp", ".png");
+            }
+            assets.put("sp:" + key, dataUri(spFile));
         }
 
         // Rewrite every show item to carry the key it resolved to, so the page
