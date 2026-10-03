@@ -231,7 +231,10 @@ be called complete while the picks line cannot. That distinction is the whole re
   parsed, but the bugs are the point.
 - **`games/fnaf/`** — the FNAF Glamrock game as an engine module. A standalone copy lives in its own
   repository; the two are kept behaviourally identical, verified by their self-tests reporting the same
-  numbers rather than by diffing text.
+  numbers rather than by diffing text. `tools/check-fnaf-match.sh` does the cheap half of that as a first
+  pass — the engine package, file by file, with the package line and this side's `aside.ui` imports
+  normalised away — and says so rather than reporting a pass when the standalone is not there. Clone it
+  beside this checkout (`git clone https://github.com/ChasePlank/fnaf ../fnaf`) and the gate runs it too.
 - **`audio/`** — the cues the scripts ask for: the visual novel's, FNAF's, and the platformer's twelve. Most are
   *generated* rather than committed by hand — see `tools/fnaf*-audio.py` and `tools/fruitjump-audio.py` — so the
   reasoning behind a sound is in the file that makes it.
