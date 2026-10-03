@@ -457,6 +457,33 @@ public class SelfTest {
                     !pr.deadEnds.isEmpty());
         }
 
+        // And the read-only-variable finding is populated at TWO places -- a
+        // choice's condition and an if-jump's condition -- so the night-shift
+        // fixture covers only the first. Removing the if-jump site broke
+        // nothing and the suite still passed 320 of 320: a typo in a choice
+        // was caught and the same typo in an `if` was not.
+        {
+            Path tmp = Files.createTempFile("aside-readonly-if", ".aside");
+            Files.writeString(tmp, """
+                    title: read-only if probe
+                    start: only
+
+                    == only ==
+                    You are here.
+                    if never_written_anywhere == 1 -> done
+                    -> done
+
+                    == done ==
+                    You leave.
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            Bot.Report pr = new Bot().run(probe);
+            check("traversal caught a typo in an if-jump's condition ("
+                            + pr.varsReadOnly + ")",
+                    pr.varsReadOnly.contains("never_written_anywhere"));
+        }
+
         System.out.println("\n--- partial traversal is still an honest report ---");
         // The budget counts states, but the memory cost per state is what
         // actually runs out, so the traversal is allowed to fail. What it
