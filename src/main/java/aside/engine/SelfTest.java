@@ -51,9 +51,30 @@ public class SelfTest {
      * lost. NaN is used rather than 0.0 so a missing value cannot accidentally
      * equal anything.
      */
+    /**
+     * A scene's beats, or an empty list when the scene is not there.
+     *
+     * <p><b>This exists because the suite CRASHED here rather than failing.</b>
+     * Mutating the scene-header pattern makes {@code Script.scene("start")}
+     * return null, and the checks below it read {@code .beats} straight off the
+     * result -- so the first check failed correctly and the second killed the
+     * run, taking every later check with it. An empty list fails the same
+     * checks without stopping the suite.
+     */
+    static List<Beat> beatsOf(Script s, String scene) {
+        Scene sc = s.scene(scene);
+        return sc == null ? List.of() : sc.beats;
+    }
+
     static double num(Object o) {
         Double d = Expr.asNumber(o);
         return d == null ? Double.NaN : d;
+    }
+
+    /** The verdict line and the exit code, in one place so an early return can use it. */
+    static void summary() {
+        System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
+        if (fail > 0) System.exit(1);
     }
 
     static void check(String name, boolean ok) {
@@ -191,29 +212,75 @@ public class SelfTest {
         System.out.println("beats:  " + beats + "   choice options: " + choices + "\n");
 
         System.out.println("--- parser ---");
+
+        // set and if -> are supported by the parser and used by Overtime
+        // nineteen times, but the suite parses night-shift, which uses neither
+        // -- so mutating either pattern broke nothing at all and the suite
+        // still passed 309 of 309. A probe is the only way to cover a syntax
+        // feature no fixture happens to use.
+        {
+            Path tmp = Files.createTempFile("aside-setif", ".aside");
+            Files.writeString(tmp, """
+                    title: set and if probe
+                    start: only
+
+                    == only ==
+                    ~ flag true
+                    set counter = 3
+                    if counter == 3 -> yes
+                    -> no
+
+                    == yes ==
+                    It went the right way.
+
+                    == no ==
+                    It went the wrong way.
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            // Guarded, because if the scene-header pattern is the thing that
+            // is broken then this probe has no scenes at all and building a Vn
+            // from it would kill the run -- which is exactly what happened the
+            // first time this probe was written.
+            if (probe.scene("only") == null) {
+                check("the set/if probe parses (no scene)", false);
+            } else {
+                Vn walk = new Vn(probe);
+                int guard = 0;
+                while (walk.mode != Vn.Mode.ENDED && guard++ < 200) {
+                    if (walk.mode == Vn.Mode.CHOOSING) break;
+                    walk.step();
+                }
+                check("set writes a variable (counter = " + num(walk.vars.get("counter")) + ")",
+                        num(walk.vars.get("counter")) == 3.0);
+                check("a conditional jump is taken when it holds",
+                        walk.visited.contains("yes") && !walk.visited.contains("no"));
+            }
+        }
         check("start scene exists", s.scene(s.startScene) != null);
         check("dialogue parsed with speaker",
-                s.scene("start").beats.stream().anyMatch(b -> "monty".equals(b.speaker)));
+                beatsOf(s, "start").stream().anyMatch(b -> "monty".equals(b.speaker)));
         check("narration parsed with null speaker",
-                s.scene("start").beats.stream().anyMatch(b ->
+                beatsOf(s, "start").stream().anyMatch(b ->
                         b.kind == Beat.Kind.TEXT && b.speaker == null));
         check("prose with a colon stays narration",
-                s.scene("cove").beats.stream().anyMatch(b ->
+                beatsOf(s, "cove").stream().anyMatch(b ->
                         b.kind == Beat.Kind.TEXT && b.speaker == null
                                 && b.text.contains("being very still")));
         check("staging parsed (bg)",
-                s.scene("start").beats.stream().anyMatch(b ->
+                beatsOf(s, "start").stream().anyMatch(b ->
                         b.kind == Beat.Kind.STAGE && "bg".equals(b.directive)));
         check("`at` position captured",
-                s.scene("start").beats.stream().anyMatch(b ->
+                beatsOf(s, "start").stream().anyMatch(b ->
                         "left".equals(b.arg3)));
         check("choice condition captured",
                 lastChoiceCondition(s) != null);
         check("leading `~` becomes its own effect beat",
-                s.scene("defiant").beats.get(0).kind == Beat.Kind.EFFECT
-                        && s.scene("defiant").beats.get(0).effects.size() == 1);
+                !beatsOf(s, "defiant").isEmpty()
+                        && beatsOf(s, "defiant").get(0).kind == Beat.Kind.EFFECT
+                        && beatsOf(s, "defiant").get(0).effects.size() == 1);
         check("trailing `~` attaches to the beat above it",
-                s.scene("ending_warm").beats.stream().anyMatch(b ->
+                beatsOf(s, "ending_warm").stream().anyMatch(b ->
                         b.kind == Beat.Kind.TEXT && !b.effects.isEmpty()));
         check("`~` under a choice attaches to that choice",
                 hasChoiceEffect(s, "start"));
@@ -239,6 +306,15 @@ public class SelfTest {
         check("effect boolean", Boolean.TRUE.equals(v.get("flag")));
 
         System.out.println("\n--- playthrough: the warm path ---");
+        // Guarded on the parse having produced a start scene, because when the
+        // scene-header pattern is the thing that is broken there is nothing to
+        // play and new Vn(s) throws -- which took the rest of the suite with it.
+        if (s.scene(s.startScene) == null) {
+            check("the playthrough can start (no start scene)", false);
+            System.out.println("       (no start scene -- the playthrough is skipped)");
+            summary();
+            return;
+        }
         Vn vn = new Vn(s);
         check("opens on a line", vn.mode == Vn.Mode.SHOWING);
         // walk: quiet -> cove -> "I can hear you" -> offer -> ending_warm
