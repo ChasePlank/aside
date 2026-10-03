@@ -793,6 +793,12 @@ public class SelfTest {
         // not re-exported is a phone build of a story that no longer exists.
         storyExport("night-shift");
         storyExport("overtime");
+        // The two newer stories keep their art under art/stories/<id>/, which
+        // the export did not look in until now -- so they exported with "no art
+        // for" every background and nothing had noticed, because neither has a
+        // phone build.
+        storyExport("the-lamp-room", "lamp-room");
+        storyExport("the-discrepancy", "discrepancy");
 
         System.out.println("\n--- the phone build ---");
         phoneBuild();
@@ -1268,13 +1274,26 @@ public class SelfTest {
 
     /** Regenerate one story's web export and compare it to the checked-in one. */
     static void storyExport(String name) throws Exception {
+        storyExport(name, name);
+    }
+
+    /**
+     * A story's export, where the story's file stem and its game id differ.
+     *
+     * <p>The shelf looks for {@code web/<game-id>.html}, and two of the stories
+     * are named differently from their ids -- {@code the-lamp-room.aside} is
+     * the {@code lamp-room} game. Naming the build after the story instead of
+     * the game put it somewhere the shelf does not look.
+     */
+    static void storyExport(String name, String id) throws Exception {
         Path story = Path.of("stories", name + ".aside");
-        Path out = Path.of("web", name + ".html");
+        Path out = Path.of("web", id + ".html");
         if (!Files.exists(story) || !Files.exists(out)) {
             System.out.println("       (no " + story + " or " + out + " from here)");
             return;
         }
-        String generated = WebExport.convert(Files.readString(story));
+        String generated = WebExport.convert(Files.readString(story), WebExport.ART,
+                WebExport.storyArt(name));
         check("web/" + name + ".html is current -- regenerate it with aside.engine.WebExport",
                 generated.equals(Files.readString(out)));
 
