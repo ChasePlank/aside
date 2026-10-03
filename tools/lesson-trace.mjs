@@ -26,9 +26,19 @@ const file = process.argv[2] || 'web/lesson.html';
 const seeds = Number(process.argv[3] || 200);
 const html = fs.readFileSync(file, 'utf8');
 
-const contentMatch = html.match(/const C = ([\s\S]*?);\n\n\/\/__MODEL_BEGIN__/);
-if (!contentMatch) { console.error('no content in ' + file); process.exit(1); }
-const C = JSON.parse(contentMatch[1]);
+// The content block is `const C = {...}` and NOTHING follows it on the
+// same line: the audio synthesiser is spliced between it and the model
+// marker, so a regex that expected `};` there stopped matching when the
+// tap click landed. Braces are counted instead.
+const start = html.indexOf('const C = ');
+if (start < 0) { console.error('no content in ' + file); process.exit(1); }
+let depth = 0, end = -1;
+for (let i = html.indexOf('{', start); i < html.length; i++) {
+  if (html[i] === '{') depth++;
+  else if (html[i] === '}') { depth--; if (depth === 0) { end = i + 1; break; } }
+}
+if (end < 0) { console.error('unbalanced content in ' + file); process.exit(1); }
+const C = JSON.parse(html.slice(html.indexOf('{', start), end));
 
 const modelMatch = html.match(/\/\/__MODEL_BEGIN__([\s\S]*?)\/\/__MODEL_END__/);
 if (!modelMatch) { console.error('no model block in ' + file); process.exit(1); }
