@@ -406,6 +406,23 @@ public class WebExport {
                 case '\n' -> sb.append("\\n");
                 case '\r' -> { }
                 case '\t' -> sb.append("\\t");
+                // "<" is escaped as \u003c, which is valid JSON and cannot
+                // terminate the script block the JSON is embedded in. Without
+                // it a story whose title or dialogue contains "</script>"
+                // closes the tag early and the rest of the page is markup --
+                // found by asking whether a title could break out, after a
+                // mutation test showed the title's HTML escaping was the only
+                // escaping anyone had checked.
+                case '<' -> sb.append("\\u003c");
+                // And the rest of the set the game generators already escape,
+                // so the engine's escaper is not the weaker of the two: ">" and
+                // "&" because the JSON sits in a document, and U+2028/U+2029
+                // because they are line terminators in JavaScript and break a
+                // string literal that contains one.
+                case '>' -> sb.append("\\u003e");
+                case '&' -> sb.append("\\u0026");
+                case '\u2028' -> sb.append("\\u2028");
+                case '\u2029' -> sb.append("\\u2029");
                 default -> {
                     if (c < 0x20) sb.append(String.format("\\u%04x", (int) c));
                     else sb.append(c);

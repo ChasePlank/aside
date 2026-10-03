@@ -144,7 +144,30 @@ public final class WebMeeting {
     }
 
     static String str(String s) {
-        return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+        // The full set, not just the backslash and the quote. "<" and ">"
+        // because the JSON sits in a document and a "</script>" in the content
+        // would end the block early; "&" because it is markup; and U+2028 and
+        // U+2029 because they are line terminators in JavaScript and break a
+        // string literal that contains one. The other generators escape all
+        // five and this one escaped none of them -- found by writing the check
+        // that feeds the escaper a string, which is the check nothing had.
+        StringBuilder b = new StringBuilder("\"");
+        for (char c : s.toCharArray()) {
+            switch (c) {
+                case '"' -> b.append("\\\"");
+                case '\\' -> b.append("\\\\");
+                case '<' -> b.append("\\u003c");
+                case '>' -> b.append("\\u003e");
+                case '&' -> b.append("\\u0026");
+                case '\u2028' -> b.append("\\u2028");
+                case '\u2029' -> b.append("\\u2029");
+                default -> {
+                    if (c < 0x20) b.append(String.format("\\u%04x", (int) c));
+                    else b.append(c);
+                }
+            }
+        }
+        return b.append('"').toString();
     }
 
     /** A number the page and the engine can agree on exactly. */

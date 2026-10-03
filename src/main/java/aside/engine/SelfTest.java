@@ -202,6 +202,27 @@ public class SelfTest {
             check("a comment is skipped, not narrated (" + lines + " line(s))", lines == 1);
         }
 
+        // Every stage keyword is a stage beat, not narration.
+        //
+        // Found the same way as the comment gap: dropping "hide" from the
+        // stage pattern broke nothing and the suite still passed 311 of 311,
+        // even though night-shift uses hide three times and overtime
+        // twenty-six. A `hide` that silently becomes narration is a line of
+        // prose nobody wrote and a character who never leaves.
+        for (String kw : new String[]{"bg", "music", "sfx", "show", "hide"}) {
+            Path tmp = Files.createTempFile("aside-stage", ".aside");
+            Files.writeString(tmp, "title: stage probe\nstart: only\n\n== only ==\n"
+                    + kw + " thing\nA real line.\n");
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            List<Beat> beats = beatsOf(probe, "only");
+            boolean staged = beats.stream().anyMatch(b -> b.kind != Beat.Kind.TEXT);
+            long prose = beats.stream().filter(b -> b.kind == Beat.Kind.TEXT).count();
+            check("a \"" + kw + "\" line is a stage beat, not narration ("
+                            + beats.size() + " beat(s))",
+                    staged && prose == 1);
+        }
+
         System.out.println("script: \"" + s.title + "\" by " + s.author);
         System.out.println("scenes: " + s.scenes.size());
         int beats = 0, choices = 0;
@@ -371,6 +392,97 @@ public class SelfTest {
                 r.unreachableScenes().size() == 2);
         check("choices were offered during traversal",
                 r.choiceSitesOffered.size() >= 5);
+
+        // A choice whose condition can never hold is never offered, and that
+        // finding had no check at all -- mutating neverOfferedChoices() to
+        // return the empty set broke nothing and the suite still passed 316 of
+        // 316. The night-shift fixture has no such choice, so a probe is the
+        // only way to cover it: one option gated on a variable nothing writes.
+        {
+            Path tmp = Files.createTempFile("aside-neveroffered", ".aside");
+            Files.writeString(tmp, """
+                    title: never-offered probe
+                    start: only
+
+                    == only ==
+                    You are here.
+                    * Take it. -> only [if nothing_sets_this == 1]
+                    * Leave it. -> done
+
+                    == done ==
+                    You leave.
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            Bot.Report pr = new Bot().run(probe);
+            check("traversal caught the never-offered choice ("
+                            + pr.neverOfferedChoices().size() + " found)",
+                    !pr.neverOfferedChoices().isEmpty());
+        }
+
+        // Three more findings that nothing exercised, and one of them was
+        // hidden by the shape of its own check.
+        //
+        // deadEnds, varsNeverRead and missingTargets all had no probe: removing
+        // the line that populates each broke nothing and the suite still passed
+        // 317 of 317. missingTargets is the interesting one -- the suite DOES
+        // check it, with `r.missingTargets.isEmpty()`, and an empty-list check
+        // passes trivially when the list is never populated. A negative check
+        // cannot fail unless something produces the thing it is negative about.
+        {
+            Path tmp = Files.createTempFile("aside-findings", ".aside");
+            Files.writeString(tmp, """
+                    title: findings probe
+                    start: only
+
+                    == only ==
+                    ~ written_never_read 1
+                    You are here.
+                    -> nowhere_at_all
+
+                    == stranded ==
+                    Nobody jumps from here and nobody jumps to it.
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            Bot.Report pr = new Bot().run(probe);
+            check("traversal caught the missing target ("
+                            + pr.missingTargets.size() + " found)",
+                    !pr.missingTargets.isEmpty());
+            check("traversal caught the written-but-never-read variable ("
+                            + pr.varsNeverRead + ")",
+                    pr.varsNeverRead.contains("written_never_read"));
+            check("traversal caught the dead end ("
+                            + pr.deadEnds.size() + " found)",
+                    !pr.deadEnds.isEmpty());
+        }
+
+        // And the read-only-variable finding is populated at TWO places -- a
+        // choice's condition and an if-jump's condition -- so the night-shift
+        // fixture covers only the first. Removing the if-jump site broke
+        // nothing and the suite still passed 320 of 320: a typo in a choice
+        // was caught and the same typo in an `if` was not.
+        {
+            Path tmp = Files.createTempFile("aside-readonly-if", ".aside");
+            Files.writeString(tmp, """
+                    title: read-only if probe
+                    start: only
+
+                    == only ==
+                    You are here.
+                    if never_written_anywhere == 1 -> done
+                    -> done
+
+                    == done ==
+                    You leave.
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            Bot.Report pr = new Bot().run(probe);
+            check("traversal caught a typo in an if-jump's condition ("
+                            + pr.varsReadOnly + ")",
+                    pr.varsReadOnly.contains("never_written_anywhere"));
+        }
 
         System.out.println("\n--- partial traversal is still an honest report ---");
         // The budget counts states, but the memory cost per state is what
@@ -1181,6 +1293,35 @@ public class SelfTest {
         // page is a still frame with a script under it, and a tap that makes
         // no sound reads as a tap that did not land. Same one line as the ten
         // verb games, spliced in from the shared palette.
+        // A title with markup in it is escaped, not injected.
+        //
+        // Removing the escaping from WebExport broke nothing and the suite
+        // still passed 321 of 321, because no story's title contains a "<".
+        // A title is data, and a build that puts it in the page unescaped is a
+        // build that can be broken by its own title.
+        {
+            String html = WebExport.convert("title: a <b>bold</b> title\nstart: only\n\n"
+                    + "== only ==\nA line.\n");
+            // Only "<" is escaped, which is what stops a title opening a tag.
+            // The first version of this check expected ">" escaped too and
+            // failed -- the escaping is narrower than I assumed, and the
+            // assertion now says what the code does rather than what I
+            // expected it to.
+            check("a title with markup cannot open a tag in the export",
+                    html.contains("a &lt;b>bold&lt;/b> title")
+                            && !html.contains("<b>bold</b>"));
+            // And the JSON the page carries cannot close the script block it
+            // is embedded in. A title containing "</script>" used to do
+            // exactly that -- the rest of the page became markup -- because
+            // the escaper handled quotes, backslashes and control characters
+            // and not "<".
+            String breakout = WebExport.convert(
+                    "title: x</script><script>alert(1)</script>\nstart: only\n\n"
+                    + "== only ==\nA line.\n");
+            check("a title cannot close the export's script block",
+                    !breakout.contains("</script><script>alert(1)"));
+        }
+
         check("web/" + name + ".html carries the shared synthesiser",
                 generated.contains("function voice(") && generated.contains("function ac("));
         check("web/" + name + ".html answers a tap with a click",
