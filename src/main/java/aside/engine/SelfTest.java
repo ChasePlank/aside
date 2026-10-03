@@ -202,6 +202,27 @@ public class SelfTest {
             check("a comment is skipped, not narrated (" + lines + " line(s))", lines == 1);
         }
 
+        // Every stage keyword is a stage beat, not narration.
+        //
+        // Found the same way as the comment gap: dropping "hide" from the
+        // stage pattern broke nothing and the suite still passed 311 of 311,
+        // even though night-shift uses hide three times and overtime
+        // twenty-six. A `hide` that silently becomes narration is a line of
+        // prose nobody wrote and a character who never leaves.
+        for (String kw : new String[]{"bg", "music", "sfx", "show", "hide"}) {
+            Path tmp = Files.createTempFile("aside-stage", ".aside");
+            Files.writeString(tmp, "title: stage probe\nstart: only\n\n== only ==\n"
+                    + kw + " thing\nA real line.\n");
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            List<Beat> beats = beatsOf(probe, "only");
+            boolean staged = beats.stream().anyMatch(b -> b.kind != Beat.Kind.TEXT);
+            long prose = beats.stream().filter(b -> b.kind == Beat.Kind.TEXT).count();
+            check("a \"" + kw + "\" line is a stage beat, not narration ("
+                            + beats.size() + " beat(s))",
+                    staged && prose == 1);
+        }
+
         System.out.println("script: \"" + s.title + "\" by " + s.author);
         System.out.println("scenes: " + s.scenes.size());
         int beats = 0, choices = 0;

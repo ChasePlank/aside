@@ -118,7 +118,17 @@ while [ $# -gt 0 ]; do
     fail=1
     continue
   fi
-  sed -i "s|$FROM|$TO|" "$FILE"
+  # Python rather than sed, because sed needs a delimiter and the anchors here
+  # are regexes -- the stage pattern contains "|", which is the delimiter the
+  # first version used, so that mutation could not be expressed at all.
+  FROM="$FROM" TO="$TO" FILE="$FILE" python3 -c '
+import os, sys
+p = os.environ["FILE"]
+s = open(p).read()
+f, t = os.environ["FROM"], os.environ["TO"]
+if f not in s: sys.exit(3)
+open(p, "w").write(s.replace(f, t, 1))
+'
   if ! grep -qF "$TO" "$FILE"; then
     printf '%-44s MUTATION DID NOT APPLY\n' "$FROM"
     fail=1
