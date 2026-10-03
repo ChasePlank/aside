@@ -43,7 +43,7 @@ public class LevelGen {
      * level: this floods the crossing, which is a different level rather than a wetter version of the same one,
      * and it is where the piranhas are meant to matter.
      */
-    static final double FLOODED_LEVELS = 0.14;
+    static final double FLOODED_LEVELS = 0.25;
 
     /**
      * How likely a heal is, by level.
