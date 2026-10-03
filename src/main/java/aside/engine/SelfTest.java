@@ -137,6 +137,32 @@ public class SelfTest {
         }
         Script s = Script.load(story);
 
+        // A comment is skipped, not narrated.
+        //
+        // This is here because a mutation test found the gap: changing the
+        // parser's comment marker from "#" to "//" broke nothing at all, and
+        // the suite still passed 308 of 308. The stories DO use comments --
+        // night-shift has five, overtime twenty-five -- so the branch runs; what
+        // was missing was any check that it does the right thing. A comment that
+        // silently becomes narration is a story that gains lines nobody wrote.
+        {
+            Path tmp = Files.createTempFile("aside-comment", ".aside");
+            Files.writeString(tmp, """
+                    title: comment probe
+                    start: only
+
+                    == only ==
+                    # this line is a comment and must not be narrated
+                    A real line.
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            Scene only = probe.scene("only");
+            long lines = only == null ? -1 : only.beats.stream()
+                    .filter(b -> b.kind == Beat.Kind.TEXT).count();
+            check("a comment is skipped, not narrated (" + lines + " line(s))", lines == 1);
+        }
+
         System.out.println("script: \"" + s.title + "\" by " + s.author);
         System.out.println("scenes: " + s.scenes.size());
         int beats = 0, choices = 0;
