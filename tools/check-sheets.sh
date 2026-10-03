@@ -19,12 +19,8 @@ cd "$(dirname "$0")/.." || exit 2
 OUT="${OUT:-out}"
 FX="${FX:-/root/javafx-sdk-27/lib}"
 
-if [ -z "${JAVA:-}" ]; then
-  if command -v java >/dev/null 2>&1; then JAVA=java
-  else for c in /root/jdk-*/bin/java /usr/lib/jvm/*/bin/java; do [ -x "$c" ] && JAVA="$c" && break; done; fi
-fi
-[ -z "${JAVA:-}" ] && { echo "no java found - set JAVA=/path/to/bin/java" >&2; exit 2; }
-[ -d "$OUT" ] || { echo "no build in $OUT" >&2; exit 2; }
+. "$(dirname "$0")/find-java.sh"
+
 [ -d docs/frames ] || { echo "no docs/frames to compare against" >&2; exit 2; }
 
 A=$(mktemp -d); B=$(mktemp -d)

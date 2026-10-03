@@ -26,16 +26,13 @@ set -u
 
 cd "$(dirname "$0")/.." || exit 2
 OUT="${OUT:-out}"
-FX="${FX:-/root/javafx-sdk-27/lib}"
-JAVA="${JAVA:-java}"
+# The toolchain, from the one place that looks for it. This file used to carry its own default and then tell the
+# user to set JAVA when it was wrong - which it was, on the machine this runs on.
+. "$(dirname "$0")/find-java.sh"
 
 if [ ! -d "$OUT" ]; then
   echo "no build in $OUT - compile first, e.g." >&2
   echo "  javac --module-path \$FX --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing -d out \$(find src/main/java -name '*.java')" >&2
-  exit 2
-fi
-if ! command -v "$JAVA" >/dev/null 2>&1; then
-  echo "no java on PATH - set JAVA, e.g. JAVA=/root/jdk-27+35/bin/java" >&2
   exit 2
 fi
 

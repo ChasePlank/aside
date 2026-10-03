@@ -110,18 +110,20 @@ if [ ! -f "$FILE" ]; then
   exit 2
 fi
 
-FX=${FX:-/usr/share/openjfx/lib}
+# The toolchain, from the one place that looks for it.
+. "$(dirname "$0")/find-java.sh"
 
 # A MISSING COMPILER IS NOT A FAILED MUTATION. The first version ran `javac ... 2>/dev/null` and reported
 # COMPILE FAIL when it returned non-zero - so on a machine where javac is simply not on PATH, every mutation
 # reads as "this change broke the build", which is the opposite of what it means and sends you looking at the
 # mutation. It is the same trap as `grep -c error` scoring zero when the compiler is absent. Checked for, and
 # said plainly, before anything is mutated.
-if ! command -v javac >/dev/null 2>&1; then
-  echo "no javac on PATH - set PATH or JAVA_HOME first (JDK 17+ with JavaFX)" >&2
-  echo "  e.g. PATH=/root/jdk-27+35/bin:\$PATH FX=/root/javafx-sdk-27/lib tools/mutate.sh ..." >&2
+JAVAC="$(dirname "$JAVA")/javac"
+if [ ! -x "$JAVAC" ] && ! command -v javac >/dev/null 2>&1; then
+  echo "no javac beside $JAVA and none on PATH - set JAVA=/path/to/bin/java" >&2
   exit 2
 fi
+[ -x "$JAVAC" ] || JAVAC=javac
 CP=$(ls "$FX"/*.jar 2>/dev/null | tr '\n' ':')
 BAK=$(mktemp)
 cp "$FILE" "$BAK"
@@ -152,7 +154,7 @@ open(p, "w").write(s.replace(f, t, 1))
     fail=1
     continue
   fi
-  if ! javac -nowarn -cp "$CP" -d classes $(find src/main/java -name '*.java') 2>/tmp/mutate-javac.log; then
+  if ! "$JAVAC" -nowarn -cp "$CP" -d classes $(find src/main/java -name '*.java') 2>/tmp/mutate-javac.log; then
     printf '%-44s COMPILE FAIL   %s\n' "$FROM" "$(head -1 /tmp/mutate-javac.log)"
     fail=1
     continue
@@ -186,5 +188,5 @@ open(p, "w").write(s.replace(f, t, 1))
 done
 
 cp "$BAK" "$FILE"
-javac -nowarn -cp "$CP" -d classes $(find src/main/java -name '*.java') 2>/dev/null
+"$JAVAC" -nowarn -cp "$CP" -d classes $(find src/main/java -name '*.java') 2>/dev/null
 exit $fail
