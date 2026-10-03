@@ -259,6 +259,10 @@ public class GameplayScreen extends UiScreen {
         // World owns the stun tick and keeps gravity running, so an
         // airborne climber still falls - they just cannot adjust the arc.
         boolean stunned = player.stunTimer > 0;
+        // A piranha bit this frame. The engine says what happened; the screen decides what it costs, because
+        // Combat (hearts, i-frames, the hurt sound) lives here and not in World.
+        if (world.piranhaBit) combat.hurtPlayer(player, world.piranhaBitFromX);
+
         boolean pulling = !stunned && hookshot.update(dt, world);
         
         // Player input → velocity (skipped while hookshot pulls)
@@ -599,6 +603,30 @@ public class GameplayScreen extends UiScreen {
         }
 
         // Bats: flying pursuers, centred on the body.
+        // Piranhas. Drawn rather than sprited - there is no piranha art yet, and a fish that exists in the
+        // engine and is not drawn is the exact bug this project has fixed three times (bats, particles, splash).
+        // A body, a tail, an eye and a tooth line reads as a fish at this size and is honest about being a stand-in.
+        for (Piranha f : world.piranhas) {
+            double fx = camera.worldToScreenX(f.body.x), fy = camera.worldToScreenY(f.body.y);
+            if (fx < -60 || fx > CANVAS_W + 60) continue;
+            boolean lunging = f.state == Piranha.State.BITE;
+            double w = 26 * S, h = 16 * S;
+            gc.setFill(lunging ? Color.web("#c0392b") : Color.web("#7d3c3c"));
+            gc.fillOval(fx - w / 2, fy - h / 2, w, h);
+            // tail
+            gc.setFill(Color.web("#5a2a2a"));
+            gc.fillPolygon(new double[]{fx - w / 2, fx - w / 2 - 8 * S, fx - w / 2},
+                           new double[]{fy - h / 4, fy, fy + h / 4}, 3);
+            // eye
+            gc.setFill(Color.web("#f5e6c8"));
+            gc.fillOval(fx + w / 6, fy - h / 5, 5 * S, 5 * S);
+            gc.setFill(Color.BLACK);
+            gc.fillOval(fx + w / 6 + 1.5 * S, fy - h / 5 + 1.5 * S, 2 * S, 2 * S);
+            // teeth
+            gc.setFill(Color.WHITE);
+            gc.fillRect(fx + w / 5, fy + h / 8, w / 4, 3 * S);
+        }
+
         for (Bat b : world.bats) {
             double bw = Sprite.BAT[0].length() * S, bh = Sprite.BAT.length * S;
             double sx = camera.worldToScreenX(b.body.x) - bw / 2;

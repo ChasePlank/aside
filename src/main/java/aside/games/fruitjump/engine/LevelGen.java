@@ -25,8 +25,30 @@ public class LevelGen {
     // run speed 200px/s, air time ~0.7s -> jump distance ~140px ~ 4.4 cells
     static final int BASE_MAX_GAP_CELLS = 3;    // conservative: 3-cell gaps
 
-    /** Chance a 2-3 cell gap is flooded. 0 disables flooded gaps. */
-    static final double FLOODED_GAPS = 0.35;
+    /**
+     * Chance an eligible gap is flooded. 0 disables flooded gaps.
+     *
+     * <p>Was 0.35 and only applied to gaps of 2+, which measured at **0.15 pools per level** - one pool every
+     * seven levels, and less than one water cell per level. Kinger's report ("water almost never spawns") was
+     * right and the constant was not the only reason: water can only go where a gap is, and a level has about
+     * one gap, so a third of one gap is a third of one pool. Both levers are pulled now - the rate, and letting
+     * a ONE-cell gap flood too, which is a 32px pool the 24px body fits in.
+     */
+    static final double FLOODED_GAPS = 0.85;
+
+    /**
+     * How likely a heal is, by level.
+     *
+     * <p>Was a flat 0.5 for the floor pocket and unconditional for the vault's heart, so a level 25 heal was as
+     * easy to find as a level 2 one - and a heal late is worth far more, because that is where the difficulty
+     * is. Kinger: "heals chance needs to decrease with levels otherwise its too easy to heal in later levels."
+     *
+     * <p>Floored at 0.12 rather than going to zero: a level with no heal at all is a different design, and the
+     * later levels are where a run is supposed to be survivable but not comfortable.
+     */
+    static double healChance(int levelNum) {
+        return Math.max(0.12, 0.55 - levelNum * 0.015);
+    }
     static final int BASE_MAX_STEP_CELLS = 2;   // conservative: 2-cell climbs
 
     /** Ascent to the exit: climbs of 2 cells, each followed by a landing
@@ -162,13 +184,36 @@ public class LevelGen {
                     //
                     // Escapable by construction: the surface sits at the path level and the pool is 64px deep, so
                     // the breach hop clears the lip. Deeper would be a trap. One-cell gaps are left alone.
-                    if (gap >= 2 && rng.nextDouble() < FLOODED_GAPS
+                    if (gap >= 1 && rng.nextDouble() < FLOODED_GAPS
                             && lastFloorRow + 2 < height) {
                         for (int cc = gapStart; cc < col; cc++) {
                             g[lastFloorRow][cc] = '~';       // surface, level with
                             g[lastFloorRow + 1][cc] = '~';   // the walk
                             g[lastFloorRow + 2][cc] = '#';   // pool floor, so it is
                         }                                    // not bottomless
+
+                        // --- Piranhas, in the pool that was just made ---
+                        //
+                        // Kinger: "spawn in groups". A group is placed together in one pool, because the threat
+                        // is meant to be the pool rather than the fish - one piranha in a pool you cross in a
+                        // second is nothing, and four make the crossing a decision.
+                        //
+                        // Only in pools that are wide enough to hold them (3+ cells), and only from level 3, so
+                        // the first two levels stay about learning to move.
+                        if (gap >= 3 && levelNum >= 3) {
+                            int howMany = 3 + rng.nextInt(3);          // 3..5
+                            for (int k = 0; k < howMany; k++) {
+                                int cc = gapStart + rng.nextInt(gap);
+                                // ONE ROW ABOVE THE SURFACE, not in it.
+                                //
+                                // Writing a fish INTO the pool replaces a water cell with a fish, and the pool
+                                // then measures one row deep instead of two - which the shape assertion caught
+                                // on the first run ("level 15 column 15 is 1 rows, not 2"). A char grid cannot
+                                // hold water and a fish in the same cell, so the fish sits at the waterline and
+                                // the water stays whole. That is also what a piranha looks like from the bank.
+                                g[lastFloorRow - 1][cc] = 'f';
+                            }
+                        }
                     }
                     int len = 2 + rng.nextInt(2);
                     for (int i = 0; i < len && col < walkEnd; i++, col++) {
@@ -439,7 +484,7 @@ public class LevelGen {
         // and a bombable floor is not a stretch to stand on. It writes its own floor: the terrain
         // mass above filled below the walk, but a pocket carved into that fill would otherwise have
         // the snack as its lowest block, and anything below the lowest block is treated as ground.
-        if (rng.nextDouble() < 0.5) {
+        if (rng.nextDouble() < healChance(levelNum)) {
             int from = 6, to = width - 10;
             for (int tries = 0; tries < 10; tries++) {
                 int c = from + rng.nextInt(Math.max(1, to - from));
@@ -552,8 +597,11 @@ public class LevelGen {
         g[L][c + 2] = ' ';
 
         // Heart on the chamber floor, at the far end so the player has
-        // to step all the way in to reach it.
-        g[L][c + 2] = 'h';
+        // to step all the way in to reach it - and only sometimes, on the same
+        // curve as the floor pocket. The chamber itself is still built either
+        // way: a bombable room that is sometimes empty is a room, and one that
+        // is only sometimes THERE is a coin flip the player cannot read.
+        if (rng.nextDouble() < healChance(levelNum)) g[L][c + 2] = 'h';
     }
 
     /**
