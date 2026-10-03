@@ -92,9 +92,37 @@ public class CheckGames extends Application {
                 // backdrop and nothing else scored 921,600 - the whole frame - and passed. A screen that draws
                 // TEXT or a UI has anti-aliasing and many distinct colours; a backdrop has a handful.
                 int distinct = colours.size();
-                if (lit >= FLOOR && distinct >= COLOURS) {
-                    System.out.printf("  %-12s ok     %d lit, %d distinct colours%n", g.id(), lit, distinct);
+
+                // AND THEN PRESS SOMETHING.
+                //
+                // This tool opened every game and pressed nothing, so a game whose key handler throws on the
+                // first DOWN passed - it had drawn its opening screen, which is all that was asked of it. The
+                // frame is hashed before and after; a key that changes nothing is a NOTE, because some screens
+                // legitimately ignore DOWN, but a key that throws is a FAILURE, because that is a player
+                // pressing a button and getting an exception.
+                long before = frameHash(img);
+                String inputError = null;
+                try {
+                    for (javafx.scene.input.KeyCode code : new javafx.scene.input.KeyCode[]{
+                            javafx.scene.input.KeyCode.DOWN, javafx.scene.input.KeyCode.DOWN,
+                            javafx.scene.input.KeyCode.ENTER, javafx.scene.input.KeyCode.SPACE}) {
+                        ui.handleKey(new javafx.scene.input.KeyEvent(javafx.scene.input.KeyEvent.KEY_PRESSED,
+                                "", "", code, false, false, false, false));
+                        for (int t = 0; t < 4; t++) ui.tick(1.0 / 60);
+                    }
+                } catch (Throwable t) {
+                    inputError = String.valueOf(t);
+                }
+                long after = frameHash(scene.snapshot(null));
+                boolean moved = before != after;
+
+                if (lit >= FLOOR && distinct >= COLOURS && inputError == null) {
+                    System.out.printf("  %-12s ok     %d lit, %d distinct colours, keys %s%n",
+                            g.id(), lit, distinct, moved ? "change the screen" : "do nothing (noted, not failed)");
                     pass++;
+                } else if (inputError != null) {
+                    System.out.printf("  %-12s FAIL   pressing a key threw: %s%n", g.id(), inputError);
+                    failed.add(g.id());
                 } else {
                     System.out.printf("  %-12s FAIL   %d lit, %d distinct colours - it drew a backdrop, not a screen%n",
                             g.id(), lit, distinct);
@@ -108,6 +136,19 @@ public class CheckGames extends Application {
             step();
         });
         wait.play();
+    }
+
+    /** A hash of the frame, for asking whether a key press changed anything. */
+    private static long frameHash(javafx.scene.image.Image img) {
+        var pr = img.getPixelReader();
+        long h = 1469598103934665603L;
+        for (int y = 0; y < (int) img.getHeight(); y += 3) {
+            for (int x = 0; x < (int) img.getWidth(); x += 3) {
+                h ^= pr.getArgb(x, y);
+                h *= 1099511628211L;
+            }
+        }
+        return h;
     }
 
     /** One image with every game on it, so the whole library can be looked at at once. */
@@ -137,8 +178,10 @@ public class CheckGames extends Application {
     private void finish() {
         try { writeContactSheet(); } catch (Exception e) { System.out.println("contact sheet failed: " + e); }
         System.out.println();
-        System.out.printf("=== %d game(s) opened and drew something, %d did not ===%n", pass, failed.size());
-        if (!failed.isEmpty()) System.out.println("did not draw: " + String.join(" ", failed));
+        System.out.printf("=== %d game(s) opened, drew a screen and took a key, %d did not ===%n", pass, failed.size());
+        // "did not draw" was wrong the moment input was added: a game whose key handler throws drew its screen
+        // perfectly and still failed. The summary should say what was actually asked of it.
+        if (!failed.isEmpty()) System.out.println("failed: " + String.join(" ", failed));
         System.out.println("frames in " + OUT);
         Platform.exit();
         System.exit(failed.isEmpty() ? 0 : 1);

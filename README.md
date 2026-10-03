@@ -177,8 +177,9 @@ no total could be printed. The runner reads all four.
 
 `aside.engine.SelfTest` is the engine and story gate: it covers the engine, the auditor and the shelf.
 
-**Every game is opened and looked at.** `aside.tools.CheckGames` walks `Games.all()`, opens each one, ticks it,
-snapshots the frame and measures it. Every game here has a suite and **none of them opens a screen** — the suites
+**Every game is opened, drawn, and sent a key.** `aside.tools.CheckGames` walks `Games.all()`, opens each one,
+ticks it, snapshots the frame and measures it, **then presses DOWN, DOWN, ENTER and SPACE** and checks nothing
+throws and that the frame changed. Every game here has a suite and **none of them opens a screen** — the suites
 test the games' *logic* — so a game can pass every check it has and still show a blank window on start. It writes
 a png per game as well as a verdict, because when it does fail the next question is always "what did it look
 like".
