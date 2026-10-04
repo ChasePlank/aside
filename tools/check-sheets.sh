@@ -90,7 +90,10 @@ if [ $stale -eq 1 ]; then
   echo "  WHY THIS KEEPS HAPPENING, and it is not a mystery: the frames are a shared derived artifact and more"
   echo "  than one agent commits here. A frame goes stale whenever a game changes OR whenever a merge brings"
   echo "  someone else's game change in - and the merge is the one that surprises you, because you did not touch"
-  echo "  the game. It has fired four times on 2026-10-04 for that reason alone."
+  echo "  the game. Every merge that carries someone else's game change will do it again."
+  echo
+  echo "  (This line used to say how many times it had fired on a particular day. A count in a message goes"
+  echo "  stale the next day, which is the same fault as a comment that outlives its code - so it is gone.)"
   echo
   echo "  Regenerating is safe and cheap: the frames are a function of the code, so this either changes nothing"
   echo "  or records what the code now draws. The three names above are the ones that cannot be compared at all."
