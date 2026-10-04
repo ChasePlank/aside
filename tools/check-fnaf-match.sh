@@ -20,9 +20,24 @@
 # away. Imports of aside.ui.* are dropped: those exist only on this side, and a file that has them cannot travel.
 # Blank lines are dropped, because they are not content.
 #
-# WHAT IT DOES NOT COMPARE. The screens. They are genuinely different code - one runs on this engine's UiManager,
-# the other on its own Screen/ScreenManager - and a text comparison of them would report the framework as drift
-# every single time, which is how a check becomes noise. The engine is where the game is.
+# WHAT IT DOES NOT COMPARE AS TEXT. The screens. They are genuinely different code - one runs on this engine's
+# UiManager, the other on its own Screen/ScreenManager - and a text comparison of them reports the framework as
+# drift every single time, which is how a check becomes noise.
+#
+# BUT THE SCREENS ARE WHERE THE DRIFT ACTUALLY HAPPENED. On 2026-10-04 the engine matched perfectly while this
+# copy was missing three things the standalone had: the deterministic seed system, the if (!game.cameraUp) guard
+# around the doorways, and the four rewritten bios. All three were in screens, and this check could not see any
+# of them. The docstring above was right that a text diff would be noise, and wrong to conclude the screens need
+# no check at all - "we cannot compare this cheaply" is not "there is nothing to compare".
+#
+# SO THE SCREENS GET MARKERS. A marker is a named thing that must be PRESENT IN BOTH or ABSENT IN BOTH: the
+# seed field, the -Dfnaf.seed override, the cameraUp guard, and the bio wording. That is exact, it produces no
+# noise, and adding one is a line. A string-literal diff was the alternative and it fails: the two copies differ
+# legitimately on "Arial", "#555577", "screen-bg", the save filename and the resource prefix.
+#
+# The list is hand-maintained. A marker that is absent from BOTH copies passes, which is the honest reading -
+# this checks that the two agree, not that a particular feature exists. The engine comparison above is what
+# catches a feature that vanished from both.
 set -u
 
 cd "$(dirname "$0")/.." || exit 2
@@ -71,7 +86,41 @@ for f in "$HERE"/src/main/java/aside/games/fnaf/engine/*.java; do
 done
 
 echo
-echo "=== $pass engine file(s) identical, $differ differing ==="
+
+# THE SCREENS, BY MARKER. Present in both, or absent in both. See the note at the top for why this is markers
+# rather than a text comparison.
+SCREENS_HERE="$HERE/src/main/java/aside/games/fnaf"
+SCREENS_THEIRS="$THEIRS/src/main/java/fnaf"
+marker() {                       # marker <label> <regex> <file>
+  local label="$1" rx="$2" file="$3"
+  local h=0 t=0
+  [ -f "$SCREENS_HERE/$file" ]   && grep -qE "$rx" "$SCREENS_HERE/$file"   && h=1
+  [ -f "$SCREENS_THEIRS/$file" ] && grep -qE "$rx" "$SCREENS_THEIRS/$file" && t=1
+  if [ "$h" = "$t" ]; then
+    printf '  %-34s %s\n' "$label" "$([ "$h" = 1 ] && echo 'both' || echo 'neither')"
+    mpass=$((mpass + 1))
+  else
+    printf '  %-34s %s\n' "$label" "$([ "$h" = 1 ] && echo 'ONLY HERE' || echo 'ONLY THERE')"
+    mdiffer=$((mdiffer + 1)); mdiffering+=("$label")
+  fi
+}
+mpass=0; mdiffer=0; mdiffering=()
+echo "=== screens, by marker ==="
+marker "the seed field"            'public final long seed'            GameScreen.java
+marker "the -Dfnaf.seed override"  'fnaf\.seed'                       GameScreen.java
+marker "the seed in the HUD"       'fillText\("seed '                 GameScreen.java
+marker "the cameraUp doorway guard" 'if \(!game\.cameraUp\)'          GameScreen.java
+marker "bio: left door"            'Left door'                        InfoScreen.java
+marker "bio: right door"           'Right door'                       InfoScreen.java
+marker "bio: the blackout"         'blackout'                         InfoScreen.java
+marker "bio: Kid's Cove"           "Kid's Cove"                     InfoScreen.java
+
+echo
+echo "=== $pass engine file(s) identical, $differ differing; $mpass marker(s) agree, $mdiffer not ==="
+if [ $mdiffer -gt 0 ]; then
+  echo "markers that disagree: ${mdiffering[*]}"
+  differ=$((differ + mdiffer))
+fi
 if [ $differ -gt 0 ]; then
   echo "differing: ${differing[*]}"
   echo
