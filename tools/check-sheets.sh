@@ -83,6 +83,19 @@ if grep -qE '=== [0-9]+ game' "$GAMES_LOG" && ! grep -q ', 0 did not' "$GAMES_LO
   stale=1
 fi
 
+if [ $stale -eq 1 ]; then
+  echo
+  echo "  FIX: tools/regenerate-frames.sh    (then git add docs/ and commit)"
+  echo
+  echo "  WHY THIS KEEPS HAPPENING, and it is not a mystery: the frames are a shared derived artifact and more"
+  echo "  than one agent commits here. A frame goes stale whenever a game changes OR whenever a merge brings"
+  echo "  someone else's game change in - and the merge is the one that surprises you, because you did not touch"
+  echo "  the game. It has fired four times on 2026-10-04 for that reason alone."
+  echo
+  echo "  Regenerating is safe and cheap: the frames are a function of the code, so this either changes nothing"
+  echo "  or records what the code now draws. The three names above are the ones that cannot be compared at all."
+fi
+
 echo
 echo "=== $checked frame(s) compared, $skipped not comparable ==="
 echo "not comparable, by name and for a reason:"
