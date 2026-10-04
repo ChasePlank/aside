@@ -874,6 +874,7 @@ public class SelfTest {
         weaponsDoWhatTheySay();
         batsChaseWhatIsNear();
         piranhasBiteSwimmers();
+        waterAppearsAtTheTunedRate();
 
         System.out.println("\n--- damage timing ---");
         damageIsMetered();
@@ -1285,6 +1286,33 @@ public class SelfTest {
             if (w.piranhaBit) return true;
         }
         return false;
+    }
+
+    /**
+     * Water actually appears, and BOTH ways of making it are alive.
+     *
+     * <p>The shape check only ever looked at water that was there - it walks the grid and measures the runs it
+     * finds - so **zero water passed it**. Turning `FLOODED_GAPS` or `FLOODED_LEVELS` to zero left the whole gate
+     * green: 426 checks and no water anywhere. Which is the thing Kinger first reported ("water almost never
+     * spawns"), so the gate could not have caught the bug that started this work.
+     *
+     * <p>Two floors, because the two constants are caught by different ones. `FLOODED_GAPS = 0` leaves only the
+     * flooded LEVELS, so few levels have any water at all; `FLOODED_LEVELS = 0` leaves only the gap pools, so no
+     * level is flooded. Measured on the game's own seeds: 18 of 40 have water and 5 are flooded.
+     */
+    static void waterAppearsAtTheTunedRate() {
+        int withWater = 0, flooded = 0;
+        for (int level = 1; level <= 40; level++) {
+            LevelMap m = new LevelGen(60, 20, 1000L + level, level).generate();
+            int cells = 0;
+            for (int r = 0; r < m.heightCells(); r++)
+                for (int c = 0; c < m.widthCells(); c++)
+                    if (m.cell(r, c) == '~') cells++;
+            if (cells > 0) withWater++;
+            if (cells >= 20) flooded++;
+        }
+        check("water: most of levels 1-40 have some water (" + withWater + " of 40)", withWater >= 12);
+        check("water: and a few of them are FLOODED (" + flooded + " of 40)", flooded >= 2);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
