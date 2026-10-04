@@ -65,5 +65,11 @@ if [ $need -eq 0 ]; then
   echo "=== no release needs publishing ==="
 else
   echo "=== something needs publishing - a player would get something different ==="
+  echo
+  echo "BEFORE UPLOADING, CHECK THE ARTIFACT ITSELF:"
+  echo "  tools/artifact-changed.sh <owner/repo> <local-artifact>"
+  echo "  This script compares the SOURCE against the tag. That one compares the BYTES you are about to publish"
+  echo "  against the bytes already in the latest release, and refuses when they are identical. On 2026-10-04 a"
+  echo "  release went out byte-identical to the previous one, because nothing did that comparison."
 fi
 exit $need
