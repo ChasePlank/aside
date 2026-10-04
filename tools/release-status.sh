@@ -71,5 +71,11 @@ else
   echo "  This script compares the SOURCE against the tag. That one compares the BYTES you are about to publish"
   echo "  against the bytes already in the latest release, and refuses when they are identical. On 2026-10-04 a"
   echo "  release went out byte-identical to the previous one, because nothing did that comparison."
+  echo
+  echo "AND CHECK THE STYLE CLASSES, WHICH HAVE NO GATE OF THEIR OWN:"
+  echo "  tools/style-classes.sh /path/to/the/repo"
+  echo "  The release repository has no test suite, so a style class the code asks for and the stylesheet does"
+  echo "  not define is invisible there. On 2026-10-04 four labels used \"menu-item\", the stylesheet had no rule"
+  echo "  for it, and two lines of the game-over screen were nearly unreadable."
 fi
 exit $need
