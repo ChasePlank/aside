@@ -36,8 +36,7 @@ public final class WebRoom {
 
     /** The finished page. */
     public static String html() throws Exception {
-        String tpl = new String(WebRoom.class.getResourceAsStream("/fnaf4/web.html")
-                .readAllBytes(), StandardCharsets.UTF_8);
+        String tpl = aside.game.Templates.read("fnaf4/web.html");
         return tpl.replace("/*__CONTENT__*/", content())
                 .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
     }

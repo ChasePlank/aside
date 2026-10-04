@@ -39,8 +39,7 @@ public final class WebHouse {
 
     /** The finished page. */
     public static String html() throws Exception {
-        String tpl = new String(WebHouse.class.getResourceAsStream("/fnaf3/web.html")
-                .readAllBytes(), StandardCharsets.UTF_8);
+        String tpl = aside.game.Templates.read("fnaf3/web.html");
         return tpl.replace("/*__CONTENT__*/", content())
                 .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
     }
