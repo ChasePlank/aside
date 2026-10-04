@@ -45,11 +45,25 @@ public class GameScreen extends UiScreen {
         this(ui, 6, customLevels);
     }
 
+    /**
+     * The seed this run was generated from. Was System.nanoTime() inline, which made every run unreplayable -
+     * and for a game whose difficulty is emergent AI behaviour that is not a small thing: a playtest report
+     * could not be reproduced. Shown small in the HUD and forceable with -Dfnaf.seed=N.
+     *
+     * <p>This was in the standalone edition and NOT here. It travelled Aside -> standalone on 2026-09-28 and
+     * never came back, because the sync carried the engine files and the screens are the files it cannot carry.
+     * Ported home 2026-10-04.
+     */
+    public final long seed;
+
     public GameScreen(UiManager ui, int night, int[] customLevels) {
         super(ui);
         this.night = night;
         this.customLevels = customLevels;
-        this.game = new Game(night, System.nanoTime(), customLevels);  // fresh seed each run
+        String forced = System.getProperty("fnaf.seed");
+        this.seed = forced != null ? Long.parseLong(forced) : System.nanoTime();
+        this.game = new Game(night, seed, customLevels);
+        System.out.println("[fnaf] night " + night + " seed " + seed + (forced != null ? " (forced)" : ""));
     }
 
 
@@ -117,8 +131,12 @@ public class GameScreen extends UiScreen {
         }
 
         // Doorway overlays: light glow, closed slab, buttons
-        drawDoorway(-1);
-        drawDoorway(1);
+        // ONLY WHEN THE CAMERA IS DOWN. Drawing them over the camera view was the standalone edition's bug and
+        // its fix; the guard did not come home with the rest of the playtest batch.
+        if (!game.cameraUp) {
+            drawDoorway(-1);
+            drawDoorway(1);
+        }
 
         // Whoever is standing in a lit doorway
         drawDoorwayOccupants();
@@ -304,6 +322,7 @@ public class GameScreen extends UiScreen {
         // Night (top-right, second line)
         gc.setFont(Font.font("Arial", 20));
         gc.fillText("Night " + game.night, W - 110, 80);
+        gc.fillText("seed " + seed, W - 110, 100);
 
         // Controls hint (bottom-right, changes based on camera state)
         gc.setFont(Font.font("Arial", 13));
