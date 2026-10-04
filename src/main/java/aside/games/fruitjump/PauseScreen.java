@@ -43,7 +43,13 @@ public class PauseScreen extends UiScreen {
 
     @Override
     public void tick(double dt) {
-        gc.setFill(Color.web("#1a1a2e"));
+        // THE SAME HORIZON, HELD. This screen was the last of the flat ones - #1a1a2e with gold text, the same
+        // two menu colours that appear nowhere else in the game. A pause is not a different place, it is the
+        // same place with the game stopped, so it gets the same skyline as the title screen and then a dim over
+        // it: warm DUSK rather than the game-over NIGHT, and THE CLIMBER IS STILL ON THE ROCK, because nothing
+        // has happened to them. They are just waiting.
+        Skyline.paint(gc, W, H, Skyline.Mood.DUSK, true, true);
+        gc.setFill(Color.web("#0d0a09", 0.55));
         gc.fillRect(0, 0, W, H);
 
         gc.setFill(Color.web("#f5a623"));
