@@ -112,6 +112,25 @@ echo "     screen arrives half-built. Check the release's GameplayScreen for any
 echo "     PRODUCES that nothing there DRAWS or DRIVES. On 2026-10-02 that was water (a soft-lock), bats"
 echo "     (an invisible stun) and the splash particles - and none of them showed up in any test the"
 echo "     release had."
+echo
+echo "     MEASURED, so this is a number rather than a thing to remember. What it counts is STRING LITERALS"
+echo "     that differ between the two copies of each screen - the text a player reads and the colours it is"
+echo "     drawn in. It is a QUESTION and not a verdict: some of these are the framework (one copy styles with"
+echo "     JavaFX CSS strings and the other with canvas hex), and a difference may be deliberate. What it"
+echo "     cannot be any more is invisible."
+if [ -n "$DST" ] && [ -d "$DST" ]; then
+  literals() { grep -oE '"([^"\\]|\\.)*"' "$1" 2>/dev/null | sort; }
+  for f in "$SRC"/*.java; do
+    n=$(basename "$f")
+    theirs="$DST/$n"
+    if [ ! -f "$theirs" ]; then printf '       %-22s only in aside\n' "$n"; continue; fi
+    # `|| true` IS LOAD-BEARING. grep -c exits 1 when the count is ZERO, so under `set -e` this line killed
+    # the script on the first screen that MATCHED - the header printed and then nothing, which is how a report
+    # reads as "all clear" when it has not run. Same family as every other silent tool this week.
+    d=$(diff <(literals "$f") <(literals "$theirs") | grep -c '^[<>]' || true)
+    if [ "$d" != "0" ]; then printf '       %-22s %s string literal(s) differ\n' "$n" "$d"; fi
+  done
+fi
 
 # 2. Assets. Only *.java is copied, so anything the engine loads from disk stays behind - EXCEPT the audio
 #    folder, which is copied below because the platformer now has cues of its own and a release without them is
