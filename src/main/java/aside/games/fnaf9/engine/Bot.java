@@ -466,6 +466,30 @@ public final class Bot {
      * <b>A twelfth attempt should not be made without a genuinely new idea, and
      * the honest reading of eleven is that the idea is not close.</b>
      *
+     * <p><b>The twelfth attempt had one -- a variable step size -- and it is a
+     * negative result.</b> The eleventh attempt's note said what was missing:
+     * not a cost, but <i>a reason for some steps to matter more than others</i>.
+     * So each step's carry is drawn from the walker's spread and <b>the next one
+     * is visible before it lands</b>: a big step is worth spending light on and a
+     * small one is not, and the filament is the budget. A policy that blocks only
+     * the big steps (PICK) was added to the ladder to measure it.
+     *
+     * <p>Measured: <b>PICK reads 0% at every setting tried</b>, while the policy
+     * that blocks every step stays on top. Across stride 0.30/0.20/0.12 and
+     * HOLD_MAX 6.0/3.0/1.5/0.8 the competent policy's week runs 40% to 99% and
+     * PICK never rises above 1%. The reason is structural: <b>letting a step
+     * through costs GROUND, and ground is what you lose the game with.</b> A
+     * variable step size changes how much ground a missed step costs; it does not
+     * change the fact that every missed step costs some, so blocking everything
+     * the filament allows is still strictly best. <b>What a tenth game needs is a
+     * resource whose scarcity is the reason to ration -- not a variation in the
+     * thing you are spending against it.</b>
+     *
+     * <p>Twelve attempts now, and the honest reading is that the shape of the
+     * problem is clearer than the solution: the lever is sampled, the dimmer has
+     * inertia, the light does not carry, and neither a distance-dependent cost
+     * nor a variable step size gives the player anything to ration.
+     *
      * <p><b>And SENSE is on the ladder because the office's own description
      * of itself does not survive being played.</b> {@link Feed}'s javadoc says
      * the sensor "is the only way to know the doorway has emptied, which is

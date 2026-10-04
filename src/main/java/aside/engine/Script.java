@@ -217,12 +217,11 @@ public class Script {
                 file.getFileName().toString());
     }
 
-    public static Script loadResource(String path) throws IOException {
-        try (InputStream in = Script.class.getClassLoader().getResourceAsStream(path)) {
-            if (in == null) throw new IOException("missing resource: " + path);
-            return parse(new String(in.readAllBytes(), StandardCharsets.UTF_8), path);
-        }
-    }
+    // A loadResource(String) lived here and was never called. It read a story
+    // from the CLASSPATH, which is the trap the phone build generators were
+    // just pulled out of: `stories/` is the file a person edits, and a copy of
+    // it under classes/ is refreshed only by hand. Nothing used it, so it was
+    // a second way to load a story that would have read the stale one.
 
     public Scene scene(String id) { return scenes.get(id); }
 }
