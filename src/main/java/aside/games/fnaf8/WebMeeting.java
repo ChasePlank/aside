@@ -39,8 +39,7 @@ public final class WebMeeting {
 
     /** The finished page. */
     public static String html() throws Exception {
-        String tpl = new String(WebMeeting.class.getResourceAsStream("/fnaf8/web.html")
-                .readAllBytes(), StandardCharsets.UTF_8);
+        String tpl = aside.game.Templates.read("fnaf8/web.html");
         return tpl.replace("/*__CONTENT__*/", content())
                 .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
     }

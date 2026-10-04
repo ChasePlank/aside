@@ -41,8 +41,7 @@ public final class WebRental {
 
     /** The finished page. */
     public static String html() throws Exception {
-        String tpl = new String(WebRental.class.getResourceAsStream("/fnaf5/web.html")
-                .readAllBytes(), StandardCharsets.UTF_8);
+        String tpl = aside.game.Templates.read("fnaf5/web.html");
         return tpl.replace("/*__CONTENT__*/", content())
                 .replace(aside.game.WebAudio.MARKER, aside.game.WebAudio.js());
     }
