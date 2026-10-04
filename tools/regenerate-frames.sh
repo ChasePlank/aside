@@ -32,7 +32,8 @@ cd "$(dirname "$0")/.." || exit 2
 # were themselves made from that same stale build, found them identical, and reported "nothing to change" - while
 # the gate, rendering from `out`, reported ten frames stale. That is why regenerating the frames was done by hand
 # four times in one day: the tool that exists to do it could not see the difference it was there to fix.
-OUT="${OUT:-out}"
+# OUT IS NOT DEFAULTED HERE: find-java.sh looks for a build directory,
+# because a default that names one is a guess. See the note there.
 # FX IS NOT DEFAULTED HERE, for the same reason JAVA is not: a value set
 # before find-java.sh runs makes its search a no-op, and this one defaulted
 # to a path that does not exist. Let the lookup do its job.

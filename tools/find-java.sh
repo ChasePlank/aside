@@ -51,6 +51,22 @@ if [ -z "${JAVA:-}" ]; then
   return 2 2>/dev/null || exit 2
 fi
 
+# --- the build directory
+#
+# OUT IS FOUND, NOT DEFAULTED, and this is the third variable in the same family.
+# Three tools wrote `OUT="${OUT:-out}"` and the README documents `-d out`, but a
+# build can go anywhere -- the sandbox builds to `classes/`, and every tool run
+# from here had to be told OUT=classes or it looked in a directory that was not
+# there. A default that names a directory is a guess; a lookup is not.
+if [ -z "${OUT:-}" ]; then
+  for c in out classes build target/classes; do
+    [ -d "$c/aside" ] && { OUT="$c"; break; }
+  done
+fi
+if [ -z "${OUT:-}" ]; then
+  OUT=out   # nothing built yet; the caller's build will create it
+fi
+
 # --- JavaFX
 #
 # AND THE SAME FOR FX, which is the same trap one variable over. Both

@@ -25,7 +25,8 @@
 set -u
 
 cd "$(dirname "$0")/.." || exit 2
-OUT="${OUT:-out}"
+# OUT IS NOT DEFAULTED HERE: find-java.sh looks for a build directory,
+# because a default that names one is a guess. See the note there.
 # The toolchain, from the one place that looks for it. This file used to carry its own default and then tell the
 # user to set JAVA when it was wrong - which it was, on the machine this runs on.
 . "$(dirname "$0")/find-java.sh"
