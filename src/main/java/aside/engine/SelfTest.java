@@ -923,6 +923,7 @@ public class SelfTest {
         aGroupOfPiranhasDoesNotMachineGun();
         waterAppearsAtTheTunedRate();
         floodedLevelsKeepWaterInRuns();
+        floodedLevelsDoNotDrownYou();
 
         System.out.println("\n--- damage timing ---");
         damageIsMetered();
@@ -1443,11 +1444,16 @@ public class SelfTest {
     /**
      * A FLOODED LEVEL KEEPS ITS WATER IN RUNS, because a long stretch of it drowns you.
      *
-     * <p>This is the whole point of the causeway shape and nothing was checking it. Zeroing the dry ledges -
-     * `int dry = 0` - leaves every check green, and the result is a flooded level whose water runs the length of
-     * the crossing. Two rows of water submerges the body about 90%, so the air bar runs the whole time; a long
-     * enough run kills the player before the far side. That is not a theory: it is what the first version of
-     * flooded levels did, and what the validator bot caught as four uncompletable levels in a hundred.
+     * <p>Zeroing the dry ledges - `int dry = 0` - leaves every check green and produces a flooded level that is
+     * one long stretch of water instead of runs with ground between them.
+     *
+     * <p><b>I first wrote here that this was the survivability property, then "corrected" it to say the ledges
+     * were only about the encounters. Both were guesses and the second was the worse one.</b> What is actually
+     * known: the generator's own comment credits the ledges with the drowning fix ("a flooded walk of forty
+     * cells drowns the player before they reach the far side") and credits the ONE-ROW DEPTH with a different
+     * problem entirely (the bot wedging against the bank, which is physics and not air). Two changes, two
+     * reasons, and this check was written long after both. So it is recorded as what it is - a shape assertion,
+     * named for the shape - rather than given a cause it cannot support.
      *
      * <p>Measured on the game's own seeds: the longest wet run along the walk is 8 cells. The ceiling is 20,
      * which is far above the design and far below "all of it".
@@ -1479,6 +1485,53 @@ public class SelfTest {
         }
         check("water: a flooded level keeps its water in runs, longest " + worst
                 + " cells (level " + worstLevel + ", " + flooded + " flooded levels)", worst <= 20);
+    }
+
+    /**
+     * A FLOODED LEVEL DOES NOT DROWN YOU. Walking the whole crossing, the air never leaves the top half.
+     *
+     * <p>This is the property the validator bot cannot see: it walks the path and never models the air bar, so
+     * it reported 100 of 100 completable while the first version of flooded levels - two rows of water - was
+     * drowning the player about 90% submerged. The fix was to put the water ONE ROW above the walk.
+     *
+     * <p>Measured on the game's own seeds, holding RIGHT across all five flooded levels: the lowest the air
+     * ever gets is 11.8 of 12.0, and it spends no time at all below 1. The floor of 6 is half the bar, which is
+     * far above the measurement and far below drowning.
+     *
+     * <p><b>What the measurement also says, and it is worth saying plainly: the breath bar is not really used
+     * by this game.</b> Crossing the deepest water a level actually makes - a two-row gap pool - costs 0.08
+     * seconds of the twelve. Doubling the flooded water to two rows still only reaches 11.1. The bar is a
+     * mechanic that exists and is correct and almost never fires, which is a fact about the level design rather
+     * than a fault in the water: no level is deep enough to swim in for long. This check is what would notice
+     * if that changed, and until it does it is guarding a number that does not move.
+     */
+    static void floodedLevelsDoNotDrownYou() {
+        double worst = Double.MAX_VALUE;
+        int worstLevel = 0;
+        for (int level = 1; level <= 40; level++) {
+            aside.games.fruitjump.engine.LevelGen gen =
+                    new aside.games.fruitjump.engine.LevelGen(60, 20, 1000L + level, level);
+            LevelMap m = gen.generate();
+            int cells = 0;
+            for (int r = 0; r < m.heightCells(); r++)
+                for (int c = 0; c < m.widthCells(); c++)
+                    if (m.cell(r, c) == '~') cells++;
+            if (cells < 20) continue;
+            World w = new World();
+            m.buildWorld(w);
+            Physics.Body p = new Physics.Body(m.spawnX, m.spawnY, 24, 44);
+            w.addBody(p);
+            w.playerBody = p;
+            for (double t = 0; t < 40.0; t += GameLoop.DT) {
+                p.vx = 200;                      // hold RIGHT, the way a player crosses
+                w.update(GameLoop.DT);
+                double air = w.water.air(p);
+                if (air < worst) { worst = air; worstLevel = level; }
+                if (p.x > m.exitX - 40) break;
+            }
+        }
+        check(String.format("water: crossing a flooded level never runs you low on air (lowest %.1fs of 12, level %d)",
+                worst, worstLevel), worst >= 6.0);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
