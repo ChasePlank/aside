@@ -125,56 +125,8 @@ public class MainMenu extends UiScreen {
      * and a bright sky would swallow them. The art is on the right and the words are on the left, which is also
      * how the screen was already laid out.
      */
-    void drawSunset() {
-        // Sky: dark blue at the top, warming down to the horizon.
-        int horizon = 468;
-        Color[] sky = {Color.web("#0d1526"), Color.web("#1d3b5c"), Color.web("#7a5a54"), Color.web("#c9723c"),
-                       Color.web("#f5a623")};
-        for (int y = 0; y < horizon; y++) {
-            double t = (double) y / horizon * (sky.length - 1);
-            int i = Math.min((int) t, sky.length - 2);
-            gc.setFill(sky[i].interpolate(sky[i + 1], t - i));
-            gc.fillRect(0, y, W, 1);
-        }
-
-        // The sun, sitting on the ridge.
-        double sunX = 905, sunY = horizon - 26, r = 62;
-        gc.setFill(Color.web("#f5a623", 0.20));
-        gc.fillOval(sunX - r * 1.9, sunY - r * 1.9, r * 3.8, r * 3.8);
-        gc.setFill(Color.web("#f5c46a", 0.35));
-        gc.fillOval(sunX - r * 1.35, sunY - r * 1.35, r * 2.7, r * 2.7);
-        gc.setFill(Color.web("#ffe0a3"));
-        gc.fillOval(sunX - r, sunY - r, r * 2, r * 2);
-
-        // A ridge, and the rock the climber stands on. Silhouettes, so the sky does the work.
-        gc.setFill(Color.web("#2a1c16"));
-        gc.fillPolygon(new double[]{0, 210, 430, 700, 980, 1280, 1280, 0},
-                       new double[]{horizon - 40, horizon - 96, horizon - 30, horizon - 74, horizon - 20,
-                                    horizon - 58, horizon, horizon}, 8);
-
-        // Foreground: the ground band, and one block to stand on.
-        gc.setFill(Color.web("#16100c"));
-        gc.fillRect(0, horizon, W, H - horizon);
-        gc.setFill(Color.web("#0d0a09"));
-        gc.fillRect(0, horizon + 26, W, H - horizon - 26);
-        gc.setFill(Color.web("#2a1c16"));
-        gc.fillRect(930, horizon - 84, 150, 90);
-
-        // The climber, on top of it. The real sprite, built from the same grid the game plays.
-        var img = Sprite.buildScaled(Sprite.PLAYER, Sprite.PAL(), Sprite.PLAYER[0].length() * 4,
-                                     Sprite.PLAYER.length * 4);
-        gc.drawImage(img, 972, horizon - 84 - Sprite.PLAYER.length * 4);
-
-        // And the fade that keeps the words readable over it.
-        for (int x = 0; x < 720; x++) {
-            double a = 0.86 * Math.pow(1.0 - (double) x / 720, 1.6);
-            gc.setFill(Color.web("#0d0a09", a));
-            gc.fillRect(x, 0, 1, H);
-        }
-    }
-
     void draw() {
-        drawSunset();
+        Skyline.paint(gc, W, H, Skyline.Mood.DUSK, true, true);
 
         gc.setFill(Color.web("#f5a623"));
         gc.setFont(F_TITLE);

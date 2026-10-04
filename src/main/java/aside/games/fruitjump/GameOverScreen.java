@@ -38,8 +38,13 @@ public class GameOverScreen extends UiScreen {
 
     @Override
     public void tick(double dt) {
-        gc.setFill(Color.web("#1a1a2e"));
-        gc.fillRect(0, 0, W, H);
+        // THE SAME HORIZON AS THE TITLE SCREEN, later in the day. This screen was a flat #1a1a2e with a red
+        // heading - the same treatment the title screen had, and the same two menu colours that appear nowhere
+        // else in the game. It is also the screen a player sees MOST, because dying is what a platformer does.
+        //
+        // So: the sun is down, the sky has gone cold and grey, and THE ROCK IS EMPTY. The climber is not standing
+        // on it. That is the whole difference between this screen and the title, and it needs no words.
+        Skyline.paint(gc, W, H, Skyline.Mood.NIGHT, false, true);
 
         gc.setFill(Color.web("#e94560"));
         gc.setFont(F_TITLE);
