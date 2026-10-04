@@ -80,15 +80,22 @@ for f in "$TMP"/*.png; do
 done
 echo "  $changed frame(s) updated"
 
-# The sheet itself, which is the frames in one image.
-cp "$TMP/contact-sheet.png" docs/contact-sheet.png
-echo "  docs/contact-sheet.png"
+# The sheet itself, which is the frames in one image -- BUT ONLY WHEN A FRAME
+# MOVED. The sheet contains drift.png and ledger.png, so it is different every
+# time it is generated; copying it unconditionally meant this tool produced a
+# diff on every run, including runs where nothing had changed. Nothing compares
+# the sheet either (check-sheets.sh skips it by name for the same reason), so
+# that diff was pure noise -- a commit every fire that said nothing.
+if [ "$changed" -gt 0 ]; then
+  cp "$TMP/contact-sheet.png" docs/contact-sheet.png
+  echo "  docs/contact-sheet.png"
+fi
 
 # And the phone's, if the browser tooling is here.
 if [ -d node_modules/puppeteer ]; then
   SHOTDIR="$TMP/webshots" SHEET="$TMP/phone.png" node tools/check-web.mjs >/dev/null 2>&1
   SHOTDIR="$TMP/webshots" SHEET="$TMP/phone.png" node tools/contact-sheet-web.mjs >/dev/null 2>&1
-  if [ -f "$TMP/phone.png" ]; then
+  if [ -f "$TMP/phone.png" ] && [ "$changed" -gt 0 ]; then
     cp "$TMP/phone.png" docs/contact-sheet-phone.png
     echo "  docs/contact-sheet-phone.png"
   fi
@@ -97,4 +104,8 @@ else
 fi
 
 echo
-echo "Now: git add docs/ && commit."
+if [ "$changed" -gt 0 ]; then
+  echo "Now: git add docs/ && commit."
+else
+  echo "Nothing changed, so there is nothing to commit."
+fi
