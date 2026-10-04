@@ -290,6 +290,8 @@ function sfx(cue) {
     case "f8_set": voice("click"); break;
     case "f8_step": voice("footstep"); break;
     case "f8_swivel": voice("click"); break;
+    case "f8_bright": voice("click"); break;
+    case "f8_dim": voice("click"); break;
     default: break;
   }
 }
@@ -461,6 +463,11 @@ Meeting.prototype.aim = function (s, setting) {
   if (this.lampSide === s) {
     if (this.lamp === setting) return false;
     this.lamp = setting;
+    // The desktop cues the setting change here -- f8_bright or f8_dim -- and
+    // the phone did not, so changing the lamp on the side it is already on was
+    // silent. The two files exist and the desktop plays them; the phone's
+    // palette had no entry for either.
+    if (setting === "BRIGHT") this.cue("f8_bright"); else this.cue("f8_dim");
     return true;
   }
   this.swivel = SWIVEL; this.swivelTo = s; this.swivelSetting = setting;
