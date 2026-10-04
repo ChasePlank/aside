@@ -68,11 +68,19 @@ retired-games/
   tools/<id>-*.mjs                  its trace or play script, if it had one
 ```
 
-**None of this is compiled.** It is out of `src/main/java`, so `javac` never
-sees it and its `SelfTest` never runs. That is the cost of retirement: this
-code can rot against the engine without anything telling you. It is kept
-because it is a record of what was tried, and because bringing one back
-should be cheap.
+**None of this is in the build.** It is out of `src/main/java`, so `javac` never
+sees it and its `SelfTest` never runs. It is kept because it is a record of what
+was tried, and because bringing one back should be cheap.
+
+**It cannot rot silently, though, and this file used to say it could.** The
+engine suite compiles everything under `retired-games/src/main/java` against the
+current engine and fails if any of it stops compiling -- a compile, not a test
+run, because a retired game's *behaviour* is not something anyone is relying on
+and its *compiling* is the thing that makes bringing it back cheap. So the
+sentence that used to be here, "this code can rot against the engine without
+anything telling you", was true when the cull was written and stopped being true
+when the check was added. It is the kind of line that goes stale by being
+*improved upon* rather than by being edited.
 
 ## Bringing one back
 
