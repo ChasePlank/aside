@@ -216,7 +216,20 @@ public class WebExport {
                 current.add(item("hide", "who", line.substring(5).strip()));
                 continue;
             }
-            if (line.startsWith("music ") || line.startsWith("sfx ")) continue;   // no audio in the web build yet
+            // MUSIC AND SFX ARE DROPPED, and this is the one place a story's
+            // desktop build and its phone build differ in what they can do.
+            //
+            // The comment here used to read "no audio in the web build yet",
+            // which stopped being true when the tap click landed -- the page
+            // has a synthesiser and plays a click on every tap. What is still
+            // true is narrower and worth stating exactly: the page carries no
+            // AUTHORED audio. The stories ask for `fan_hum`, `music_box`,
+            // `sea_swell` and eight effects, and those files are 1.4 to 1.7 MB
+            // each, so carrying them would add about 3 MB per story and take
+            // the shelf from 8.4 MB to roughly 20. That is a decision about
+            // what a phone should download, not an oversight, and it is left
+            // open deliberately rather than half-done.
+            if (line.startsWith("music ") || line.startsWith("sfx ")) continue;
             if (line.startsWith("~")) {
                 // "~ aff_monty +1" -> name + delta, so conditions can be evaluated
                 String rest = line.substring(1).strip();
