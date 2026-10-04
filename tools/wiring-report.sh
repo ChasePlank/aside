@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+#
+# wiring-report.sh - which engine classes the GAME never uses.
+#
+#   tools/wiring-report.sh [path-to-the-source-root]
+#
+# WHY THIS EXISTS. On 2026-10-02 a sweep for "engine features with no consumer" found invisible bats, invisible
+# particles and several dead classes, and the sweep was done by hand with grep. It has been re-done by hand twice
+# since, each time with a slightly different pattern, and each time the pattern produced a false answer: a grep
+# for `new Boss(` misses a class built through a factory, and a grep for a list name I GUESSED (`oneway`) missed
+# the real field (`oneways`) and reported a live feature as dead. Guessing names is the failure mode.
+#
+# So this reads the names out of the source instead of being told them, and it reports three things:
+#
+#   1. Engine classes the game never names. A test naming a class does not count - a class only a test can reach
+#      is a class the player cannot.
+#   2. World collections whose ONLY writer is an `add*` method that nothing calls. That is the exact shape of
+#      the moving-platform list: `movers` is filled by `addMover`, `addMover` is never called, so the list is
+#      always empty and the physics loop over it does nothing forever. Counting `list.add(` inside its own
+#      accessor is what makes a naive check miss this.
+#   3. Setters on engine fields that nothing calls, for the same reason.
+#
+# IT IS A REPORT, NOT A GATE. Dead code is a decision - wire it or delete it - and these four have been waiting
+# on that decision since 2026-10-02. A report that fails every run would be turned off. What it must not be is
+# silent: the point is that a NEW one shows up next to the four known ones.
+set -u
+cd "$(dirname "$0")/.." || exit 2
+SRC="${1:-src/main/java}"
+ENGINE="$SRC/aside/games/fruitjump/engine"
+
+[ -d "$ENGINE" ] || { echo "wiring-report: no engine package at $ENGINE" >&2; exit 2; }
+
+# A reference from a test file is not a use by the game. This is the filter that makes the rest honest.
+game_files() { grep -rl "$1" "$SRC" --include=*.java 2>/dev/null | grep -vE "(Test|Suite)\.java$"; }
+
+echo "=== engine classes the game never names ==="
+found=0
+for f in "$ENGINE"/*.java; do
+  n=$(basename "$f" .java)
+  case "$n" in *Test|*Suite) continue;; esac
+  refs=$(game_files "\b$n\b" | grep -v "/$n\.java$" | wc -l)
+  if [ "$refs" = "0" ]; then printf '  %-22s never named outside itself\n' "$n"; found=$((found+1)); fi
+done
+[ "$found" = "0" ] && echo "  none"
+
+echo
+echo "=== World collections whose only writer is an uncalled add* method ==="
+found=0
+for l in $(grep -oE "List<[A-Za-z.]+> [a-zA-Z]+" "$ENGINE/World.java" | awk '{print $NF}' | sort -u); do
+  # WHICH adder writes to it, and does the write sit INSIDE that adder's body?
+  #
+  # The first version asked whether any write happened OUTSIDE World.java. That is not the same question:
+  # `emitters.add(Emitter.burst(...))` sits in World's own splash code, so it counted as "inside the adder" and
+  # the report called a LIVE list dead. What matters is the method body, not the file.
+  adder=""
+  for m in $(grep -oE "public void add[A-Za-z]+\(" "$ENGINE/World.java" | sed 's/public void //; s/($//' | tr -d '('); do
+    if sed -n "/public void $m(/,/^    }/p" "$ENGINE/World.java" | grep -q "\b$l\.add("; then adder="$m"; break; fi
+  done
+  [ -z "$adder" ] && continue
+  # writes that are NOT in that body: those are real uses and the list is alive
+  body=$(sed -n "/public void $adder(/,/^    }/p" "$ENGINE/World.java")
+  alive=0
+  while IFS= read -r line; do
+    grep -qF "$line" <<<"$body" || alive=$((alive+1))
+  done < <(grep -rh "\b$l\.add(" "$SRC" --include=*.java 2>/dev/null)
+  if [ "$alive" = "0" ]; then
+    callers=$(grep -rn "\.$adder(" "$SRC" --include=*.java 2>/dev/null | grep -v "engine/World.java" | grep -vE "(Test|Suite)\.java$" | wc -l)
+    if [ "$callers" = "0" ]; then printf '  %-12s filled only by %s(), which nothing calls\n' "$l" "$adder"; found=$((found+1)); fi
+  fi
+done
+[ "$found" = "0" ] && echo "  none"
+
+echo
+echo "=== engine setters nothing calls ==="
+found=0
+for m in $(grep -rhoE "public void set[A-Z][A-Za-z]*\(" "$ENGINE"/*.java | sed 's/public void //; s/($//' | tr -d '(' | sort -u); do
+  callers=$(grep -rn "\.$m(" "$SRC" --include=*.java 2>/dev/null | grep -vE "(Test|Suite)\.java$" | grep -vE "public void $m\(" | wc -l)
+  if [ "$callers" = "0" ]; then printf '  %-22s never called\n' "$m"; found=$((found+1)); fi
+done
+[ "$found" = "0" ] && echo "  none"
+
+echo
+echo "A finding here is a QUESTION, not a fault: dead code is either a feature waiting to be wired or code"
+echo "waiting to be deleted, and only the person who wanted it can say which."
+echo
+echo "KNOWN, and expected in every run:"
+echo "  WaterProbe, LevelValidator   test tools. Nothing in the game should name them, and the filter that drops"
+echo "                               Test/Suite files is what keeps them out of reach."
+echo "  movers / addMover            the MovingPlatform path."
+echo "  setDirector                  the AIDirector path."
+echo "  setSeed, setVolleyCallback   on Boss."
+echo "  ParallaxLayer                nothing names it at all."
+echo "  That is the four from 2026-10-02 - Boss, AIDirector, MovingPlatform, ParallaxLayer - and they have been"
+echo "  waiting on a wire-or-delete decision since. ANYTHING ELSE ON THIS REPORT IS NEW AND WORTH A LOOK."
