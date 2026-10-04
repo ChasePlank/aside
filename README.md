@@ -186,7 +186,20 @@ npm install && node tools/check-web.mjs                # just the phone builds, 
 java --module-path $FX --add-modules $MODS -cp out aside.engine.SelfTest              # prints its own count
 java --module-path $FX --add-modules $MODS -cp out aside.audio.AudioTest             # needs a display
 java -cp out aside.games.fruitjump.engine.WaterProbe   # every pool is the shape it was built to be
+
+tools/regenerate-frames.sh                             # when the gate says a frame is STALE
+tools/mutate.sh <suite> <file> <anchor> <replacement>  # does any check notice this changing?
 ```
+
+**`tools/regenerate-frames.sh` is deliberately not part of the gate, and the gate is deliberately not part of
+it.** A check that rewrites the thing it is checking is not a check — so the gate reports a stale frame and this
+tool fixes it, and you commit what it wrote. It skips `contact-sheet.png`, `drift.png` and `ledger.png` by name,
+for the reasons above.
+
+**`tools/mutate.sh` asks what a suite does *not* cover.** It breaks one constant at a time, runs a suite after
+each, and restores the file — and it verifies each mutation actually applied, because a mutation that never
+applied reads exactly like a mutation the suite cannot see. That is not hypothetical: the first version of this
+test reported two of FNAF 9's constants as inert, and they are not.
 
 `tools/run-suites.sh` runs **every suite in the repository and prints one total**. It discovers them, so a new
 game or a new suite is covered the day it is added, and it prints the count rather than a doc asserting it —
