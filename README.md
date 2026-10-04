@@ -98,7 +98,17 @@ There are four families:
 - **Fruit Jump** — the platformer, and the oldest thing here. It has water: pools
   form in the gaps in the walk, a body swims in them, holds its breath, and gets
   out by a breach hop at the surface. **UP or W** jumps on land and strokes
-  upward in water; **DOWN or S** dives. `tools/ShotWater` is the only check that
+  upward in water; **DOWN or S** dives.
+  **A quarter of levels roll FLOODED** (5 of the first 40 come out wet enough to read as
+  one) — the walk itself under water, in runs with dry ground between them — and
+  **piranhas** live in the water, in groups of three to five. A piranha takes a **heart** where a bat only knocks you down, which is the one
+  difference that matters; it moves only when *you* are in the water, so getting out
+  loses it, and it is slower than you swim. Heals get **rarer with depth** (0.55 down
+  to a floor of 0.12), because a level 25 heal was worth far more than a level 2 one
+  and used to be exactly as easy to find. The water shape is asserted, not assumed:
+  a pool in a gap is two rows with a floor under it, a flooded walk is one row
+  ankle-deep on the walk's own floor, and `WaterProbe` and the gate both know the
+  difference by asking the generator where the walk is. `tools/ShotWater` is the only check that
   can see any of it — it drives the screen directly, counts water-coloured pixels
   and reads the climber back out by reflection, because a capture tool whose
   subject is off-screen still writes a png and still prints PASS.
