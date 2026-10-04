@@ -726,6 +726,17 @@ public class LevelGen {
         List<String> rows = new ArrayList<>();
         for (char[] row : g) rows.add(new String(row));
         this.lastMap = new LevelMap(rows);
+        // AND THE WALK'S FLOORS, which this path filled into `pathFloor` and then never published.
+        //
+        // Every tenth level comes through here, so `lastPathFloor` was NULL for a safe room on a fresh
+        // generator and - worse - the PREVIOUS level's floors on a reused one, because the field is only
+        // written by the other path. A stale answer rather than a missing one, which is the harder kind to
+        // notice.
+        //
+        // The readers guard with `c < gen.lastPathFloor.length`, and that guard NPEs on null rather than
+        // skipping - so the gate survived only because none of the checks happen to walk a safe-room level.
+        // Found by writing a difficulty-curve probe that walked levels 1 to 40 and died on level 10.
+        this.lastPathFloor = pathFloor.clone();
         return this.lastMap;
     }
 }
