@@ -16,7 +16,8 @@
 set -u
 
 cd "$(dirname "$0")/.." || exit 2
-OUT="${OUT:-out}"
+# OUT IS NOT DEFAULTED HERE: find-java.sh looks for a build directory,
+# because a default that names one is a guess. See the note there.
 # FX IS NOT DEFAULTED HERE, for the same reason JAVA is not: a value set
 # before find-java.sh runs makes its search a no-op, and this one defaulted
 # to a path that does not exist. Let the lookup do its job.
