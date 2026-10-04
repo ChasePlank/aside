@@ -90,6 +90,12 @@ echo "  drift    - Drift.of() seeds from System.nanoTime(), so the frame is a fu
 echo "  ledger   - opens from a save, so the frame is a function of what a previous run left behind"
 if [ $stale -ne 0 ]; then
   echo
-  echo "Regenerate with aside.tools.CheckGames and copy the frames to docs/frames/."
+  # NAME THE TOOL, not the steps it replaced. This said "regenerate with
+  # aside.tools.CheckGames and copy the frames to docs/frames/", which is the
+  # two-command job tools/regenerate-frames.sh was written to do -- so the one
+  # place a person looks when a frame is stale was telling them to do it by
+  # hand. A message that describes the manual version of a solved problem is
+  # worse than no message.
+  echo "Regenerate with tools/regenerate-frames.sh, then commit what it wrote."
   exit 1
 fi
