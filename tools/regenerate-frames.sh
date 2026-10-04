@@ -48,6 +48,19 @@ echo "running CheckGames into $TMP ..."
 tools/run-headless.sh "$JAVA" --module-path "$FX" \
   --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
   -Dshotdir="$TMP" -cp "$OUT:src/main/resources" aside.tools.CheckGames > "$TMP/log" 2>&1
+# DID IT ACTUALLY RUN? The first version of this script did not ask, and it
+# could not have been more wrong: JAVA was defaulted before the lookup so every
+# run died with "exec: java: not found", the unguarded glob then wrote a file
+# called `docs/frames/*.png` and counted it, and the script reported "1 frame(s)
+# updated" and told you to commit. It had never rendered a single game.
+#
+# A tool that reports success without checking is worse than no tool, because it
+# is believed. So the verdict is required now, and its absence is a failure.
+if ! grep -qE '=== [0-9]+ game' "$TMP/log"; then
+  echo "CheckGames did not run -- no verdict in its log. Nothing was written." >&2
+  tail -5 "$TMP/log" | sed 's/^/  /' >&2
+  exit 1
+fi
 grep -E '=== [0-9]+ game' "$TMP/log" | sed 's/^/  /'
 
 changed=0
