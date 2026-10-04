@@ -922,6 +922,7 @@ public class SelfTest {
         piranhasBiteSwimmers();
         aGroupOfPiranhasDoesNotMachineGun();
         waterAppearsAtTheTunedRate();
+        floodedLevelsKeepWaterInRuns();
 
         System.out.println("\n--- damage timing ---");
         damageIsMetered();
@@ -1437,6 +1438,47 @@ public class SelfTest {
         int pct = (int) Math.round(100.0 * stunned / total);
         check("bats: three bats do not pin you for more than a third of ten seconds (" + pct + "% stunned)",
                 pct <= 33);
+    }
+
+    /**
+     * A FLOODED LEVEL KEEPS ITS WATER IN RUNS, because a long stretch of it drowns you.
+     *
+     * <p>This is the whole point of the causeway shape and nothing was checking it. Zeroing the dry ledges -
+     * `int dry = 0` - leaves every check green, and the result is a flooded level whose water runs the length of
+     * the crossing. Two rows of water submerges the body about 90%, so the air bar runs the whole time; a long
+     * enough run kills the player before the far side. That is not a theory: it is what the first version of
+     * flooded levels did, and what the validator bot caught as four uncompletable levels in a hundred.
+     *
+     * <p>Measured on the game's own seeds: the longest wet run along the walk is 8 cells. The ceiling is 20,
+     * which is far above the design and far below "all of it".
+     *
+     * <p>Two neighbours in the sweep are still NOT CAUGHT and are left that way deliberately: `WADE_SUB = 0`
+     * changes whether shallow water reads as wading or swimming - a feel change, not a break - and
+     * `Piranha.IDLE_SPEED = 0` stops the fish drifting, which is cosmetic. Writing a check for either would be
+     * testing a number rather than a property.
+     */
+    static void floodedLevelsKeepWaterInRuns() {
+        int worst = 0, worstLevel = 0, flooded = 0;
+        for (int level = 1; level <= 40; level++) {
+            aside.games.fruitjump.engine.LevelGen gen =
+                    new aside.games.fruitjump.engine.LevelGen(60, 20, 1000L + level, level);
+            LevelMap m = gen.generate();
+            int cells = 0;
+            for (int r = 0; r < m.heightCells(); r++)
+                for (int c = 0; c < m.widthCells(); c++)
+                    if (m.cell(r, c) == '~') cells++;
+            if (cells < 20) continue;      // only the flooded ones
+            flooded++;
+            int run = 0;
+            for (int c = 0; c < m.widthCells(); c++) {
+                int fr = gen.lastPathFloor[c];
+                boolean wet = fr > 0 && m.cell(fr - 1, c) == '~';
+                run = wet ? run + 1 : 0;
+                if (run > worst) { worst = run; worstLevel = level; }
+            }
+        }
+        check("water: a flooded level keeps its water in runs, longest " + worst
+                + " cells (level " + worstLevel + ", " + flooded + " flooded levels)", worst <= 20);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
