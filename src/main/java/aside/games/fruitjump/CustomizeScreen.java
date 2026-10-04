@@ -88,7 +88,15 @@ public class CustomizeScreen extends UiScreen {
     public void tick(double dt) { draw(); }
 
     void draw() {
-        gc.setFill(Color.web("#1a1a2e"));
+        // THE SAME HORIZON, DIMMED. This screen already talked about the sunset - its own note says the body
+        // "has to read against both the sunset sky and the black ground" - and it was the last flat one. So the
+        // sky it names is behind it now.
+        //
+        // DIMMED HARDER THAN THE PAUSE, because this screen is the busiest in the game: seven option rows, two
+        // swatch rows, two preview boxes and two notes. The sky is context here, not the subject. The preview
+        // boxes stay black on purpose - their comment says why, and a sky behind them would undo it.
+        Skyline.paint(gc, W, H, Skyline.Mood.DUSK, true, true);
+        gc.setFill(Color.web("#0d0a09", 0.72));
         gc.fillRect(0, 0, W, H);
 
         gc.setFill(Color.web("#f5a623"));
