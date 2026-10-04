@@ -32,15 +32,27 @@ public class MainMenu extends UiScreen {
     static final Font F_TINY = Font.font("Arial", 13);
 
     /**
-     * THE TITLE LIVES HERE AND NOWHERE ELSE.
+     * THE TITLE ON THE TITLE SCREEN. It is NOT the only place the name lives - the library shelf has its own
+     * in FruitJumpGame.title(), and this comment claimed "and nowhere else" for a day, which was not true.
      *
-     * It said "TROPICAL PUNCH" - the wrong name, belonging to a different and
-     * as-yet-unbuilt game. This game is its own thing and still needs a real
-     * name (Kinger, Sept 28). Until then "Fruit Jump" is the working title,
-     * and renaming the title screen is this one constant.
+     * It said "TROPICAL PUNCH" - the wrong name, belonging to a different and as-yet-unbuilt game. Then it was
+     * "Fruit Jump", a working title with a note from Kinger (Sept 28) that the game "is its own thing and still
+     * needs a real name", and that the name was mine to give rather than his.
+     *
+     * HOLDFAST, chosen 2026-10-04. A holdfast is the root-like base a seaweed grips rock with, and "hold fast"
+     * is what a climber does - which is the whole game: a climber, a hookshot, and water that keeps arriving.
+     * The word is the two halves of this thing in one, and it is the kind of title a platformer can carry
+     * without explaining itself.
+     *
+     * The old note said renaming the title screen is this one constant, and that is still true - if this is
+     * wrong, it is wrong in one place.
      */
-    static final String TITLE = "FRUIT JUMP";
-    static final String SUBTITLE = "work in progress - the name is still open";
+    static final String TITLE = "HOLDFAST";
+    // The subtitle is the game's own sentence, and it was already written - in the library blurb, which said
+    // "A climber, a sunset, and a way home. Still needs a real name." I nearly invented a second premise
+    // ("a climber, a hookshot, and rising water") before reading it. The existing one is better and it is the
+    // voice this game has, so the title screen borrows it rather than competing with it.
+    static final String SUBTITLE = "a climber, a sunset, and a way home";
 
     final List<String> items = new ArrayList<>();
     int index = 0;

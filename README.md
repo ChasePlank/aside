@@ -95,7 +95,9 @@ There are four families:
 - **Five stories** — `overtime`, `the-lamp-room`, `the-discrepancy`, `the-water-line`, and `night-shift` (a
   test fixture). Four of them are stories you can play; each has its own register and its own art, and each is
   audited rather than asserted. See "What is in here" below.
-- **Fruit Jump** — the platformer, and the oldest thing here. It has water: pools
+- **Holdfast** — the platformer, and the oldest thing here. It was "Fruit Jump" as a working title until
+  2026-10-04; the name is settled now, and the premise it already had is the one it keeps: *a climber, a sunset,
+  and a way home.* It has water: pools
   form in the gaps in the walk, a body swims in them, holds its breath, and gets
   out by a breach hop at the surface. **UP or W** jumps on land and strokes
   upward in water; **DOWN or S** dives.
@@ -212,7 +214,8 @@ takes one suite as an argument. They also report in four different shapes (`791/
 no total could be printed. The runner reads all four.
 
 **`tools/release-status.sh` asks whether a player would notice.** Not "is main ahead" - that is a different
-question with a different answer. Fruit-Jump and wake were each dozens of commits ahead of their releases on
+question with a different answer. The Holdfast repository (still `ChasePlank/Fruit-Jump`, named for the working
+title) and wake were each dozens of commits ahead of their releases on
 2026-10-03 and needed nothing, because every one of those commits was documentation or tooling and the source a
 player downloads had not moved. Each repository declares what a player actually gets (`web/aside.html`,
 `src/main/java` and the jar, `index.html`) and this compares **that** range. `TAG=` overrides the release, which
