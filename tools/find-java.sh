@@ -52,7 +52,17 @@ if [ -z "${JAVA:-}" ]; then
 fi
 
 # --- JavaFX
-if [ -z "${FX:-}" ]; then
+#
+# AND THE SAME FOR FX, which is the same trap one variable over. Both
+# check-sheets.sh and regenerate-frames.sh defaulted FX to /root/javafx-sdk-27/lib
+# BEFORE sourcing this file -- a path that does not exist on this machine -- so
+# the search below was a no-op and the tools only worked because a caller passed
+# FX= explicitly. A directory that is not there is not a value.
+fx_works() {
+  [ -n "${1:-}" ] && [ -d "$1" ]
+}
+if ! fx_works "${FX:-}"; then
+  FX=""
   for c in /root/javafx-sdk-*/lib /usr/share/openjfx/lib "$HOME"/javafx-sdk-*/lib "$HOME"/Downloads/javafx-sdk-*/lib; do
     [ -d "$c" ] && { FX="$c"; break; }
   done

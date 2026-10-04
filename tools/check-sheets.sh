@@ -17,7 +17,9 @@ set -u
 
 cd "$(dirname "$0")/.." || exit 2
 OUT="${OUT:-out}"
-FX="${FX:-/root/javafx-sdk-27/lib}"
+# FX IS NOT DEFAULTED HERE, for the same reason JAVA is not: a value set
+# before find-java.sh runs makes its search a no-op, and this one defaulted
+# to a path that does not exist. Let the lookup do its job.
 
 . "$(dirname "$0")/find-java.sh"
 

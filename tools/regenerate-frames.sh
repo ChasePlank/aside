@@ -33,7 +33,9 @@ cd "$(dirname "$0")/.." || exit 2
 # the gate, rendering from `out`, reported ten frames stale. That is why regenerating the frames was done by hand
 # four times in one day: the tool that exists to do it could not see the difference it was there to fix.
 OUT="${OUT:-out}"
-FX="${FX:-/root/javafx-sdk-27/lib}"
+# FX IS NOT DEFAULTED HERE, for the same reason JAVA is not: a value set
+# before find-java.sh runs makes its search a no-op, and this one defaulted
+# to a path that does not exist. Let the lookup do its job.
 # JAVA IS NOT DEFAULTED HERE. It used to be `JAVA="${JAVA:-java}"` and then `. tools/find-java.sh`, which meant
 # find-java.sh could never override it - the variable was already set, so the lookup was a no-op and every run
 # died with "exec: java: not found" from run-headless.sh. The script then globbed an empty directory, created a
