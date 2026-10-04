@@ -33,6 +33,16 @@ import aside.games.fruitjump.engine.World;
 public class SelfTest {
     static int pass = 0, fail = 0;
 
+    /**
+     * The shelf's size ceiling, in KB.
+     *
+     * <p>One file a phone downloads, and it grows by accident rather than by
+     * decision. The known open question is the stories' authored audio: carrying
+     * it would add about 3 MB per story and take the shelf from 8.4 MB to
+     * roughly 20. Raising this number is a deliberate act.
+     */
+    static final long SHELF_CEILING_KB = 10240;
+
     /** One decimal place, for a number a person has to read in a report. */
 
     static double round1(double d) { return Math.round(d * 10) / 10.0; }
@@ -709,6 +719,16 @@ public class SelfTest {
                 System.out.println("       shelf: " + entries.size() + " builds, "
                         + absent.size() + " still on the desktop, "
                         + (generated.length() / 1024) + " KB");
+                // A CEILING, because the shelf is one file a phone downloads and
+                // it grows by accident rather than by decision. The known open
+                // question is the stories' authored audio: carrying it would add
+                // about 3 MB per story and take this from 8.4 MB to roughly 20.
+                // That is a decision, and this check is what makes it one --
+                // raising the ceiling is a deliberate act, not a side effect of
+                // inlining something.
+                long kb = generated.length() / 1024;
+                check("the shelf is still under its ceiling (" + kb + " KB of " + SHELF_CEILING_KB + ")",
+                        kb < SHELF_CEILING_KB);
             }
         } catch (Exception e) {
             check("the shelf can be generated from here (" + e.getMessage() + ")", false);
