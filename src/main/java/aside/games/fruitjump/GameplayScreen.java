@@ -715,11 +715,24 @@ public class GameplayScreen extends UiScreen {
             for (Tutorial.Sign s : signs) {
                 double sx = camera.worldToScreenX(s.x());
                 double sy = camera.worldToScreenY(s.y());
-                if (sx > CANVAS_W || sx + s.text().length() * 14 < 0) continue;
-                gc.setFill(Color.web("#1a1a2e"));
-                gc.fillText(s.text(), sx + 2, sy + 2);
-                gc.setFill(Color.WHITE);
-                gc.fillText(s.text(), sx, sy);
+                 java.util.List<String> lines = wrapSign(s.text());
+                double widest = 0;
+                for (String line : lines) widest = Math.max(widest, line.length());
+                if (sx > CANVAS_W || sx + widest * 14 < 0) continue;
+                // AND CLAMPED, because wrapping alone was not enough. Tutorial 9's PIRANHA sign is anchored so
+                // far right that even a 34-character line ran off - "they come in groups. get out an". A sign
+                // that is wrapped but still past the edge is a sign half-read.
+                //
+                // Clamping keeps it NEAR the thing it points at, which is the best a screen edge allows. 12px a
+                // character is a shade over the 22pt Arial this is drawn in, so the last character lands inside.
+                sx = Math.min(sx, CANVAS_W - widest * 12 - 8);
+                for (int i = 0; i < lines.size(); i++) {
+                    double ly = sy + i * 26;
+                    gc.setFill(Color.web("#1a1a2e"));
+                    gc.fillText(lines.get(i), sx + 2, ly + 2);
+                    gc.setFill(Color.WHITE);
+                    gc.fillText(lines.get(i), sx, ly);
+                }
             }
         }
 
@@ -898,4 +911,33 @@ public class GameplayScreen extends UiScreen {
             case DOWN, S -> down = false;
         }
     }
+    /**
+     * A SIGN THAT RUNS OFF THE EDGE IS WRAPPED, NOT MOVED.
+     *
+     * <p>Found by looking at tutorial 9: its two long signs are anchored near the right-hand end of the level, and
+     * the text simply ran past the edge of the screen - "unlike a bat, this one takes a H" and "they come in
+     * groups. get out an". The longest signs in the tutorial are 46 to 48 characters, which is around 550 pixels,
+     * so any sign anchored past about x=730 lost its end.
+     *
+     * <p>A sign points at something in the world, so moving it would move it away from the thing it is talking
+     * about. Making it taller keeps it where it belongs.
+     *
+     * <p>Thirty-four characters a line, broken on a space where there is one and mid-word only when a single word
+     * is longer than the line - which none of these are.
+     */
+    static java.util.List<String> wrapSign(String text) {
+        final int WIDTH = 34;
+         java.util.List<String> out = new java.util.ArrayList<>();
+        if (text.length() <= WIDTH) { out.add(text); return out; }
+        String rest = text;
+        while (rest.length() > WIDTH) {
+            int cut = rest.lastIndexOf(' ', WIDTH);
+            if (cut <= 0) cut = WIDTH;
+            out.add(rest.substring(0, cut).stripTrailing());
+            rest = rest.substring(cut).stripLeading();
+        }
+        if (!rest.isEmpty()) out.add(rest);
+        return out;
+    }
+
 }

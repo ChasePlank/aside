@@ -160,7 +160,13 @@ public class Tutorial {
                 s.add(new Sign(29 * 32, y, "STAND BACK. the blast hurts you too"));
             }
             case 4 -> {
-                s.add(new Sign(12 * 32, y, "ARROWS   F"));
+                // WAS JUST "ARROWS   F", and it was the only sign in the tutorial that named a key without
+                // saying what it does. Every other one follows the same shape - "BOMB  G  -  it drops at your
+                // feet", "SMACK - one life back" - so this one read as a missing line rather than a terse one.
+                // Found by putting all nine levels on one sheet and reading them, which is the only way this
+                // class of thing gets found: the gate checks that a level is PLAYABLE, not that it TEACHES.
+                s.add(new Sign(12 * 32, y, "ARROWS   F   -   hits what you face"));
+                s.add(new Sign(30 * 32, y, "the spiders are out of reach. shoot them"));
             }
             case 5 -> {
                 s.add(new Sign(10 * 32, y, "BATS KNOCK YOU DOWN"));
