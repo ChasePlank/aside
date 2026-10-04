@@ -19,7 +19,26 @@
 # Exits 2 with a message rather than letting a caller misread "no toolchain" as "the thing I was checking failed".
 
 # --- java
-if [ -z "${JAVA:-}" ]; then
+#
+# A JAVA THAT IS ALREADY SET IS CHECKED, NOT TRUSTED. This used to be a plain
+# `if [ -z "${JAVA:-}" ]`, which meant a caller that wrote `JAVA="${JAVA:-java}"`
+# BEFORE sourcing this file made the whole lookup a no-op -- and that is exactly
+# what tools/regenerate-frames.sh did. Every run died with "exec: java: not
+# found", the script never checked, and it reported success for a job it had
+# never done.
+#
+# So a value that is not a runnable java is treated as no value at all, and the
+# search runs anyway. The trap is removed rather than documented: a note about
+# the ordering is read after the mistake, not before it.
+java_works() {
+  [ -n "${1:-}" ] || return 1
+  case "$1" in
+    */*) [ -x "$1" ] ;;
+    *)   command -v "$1" >/dev/null 2>&1 ;;
+  esac
+}
+if ! java_works "${JAVA:-}"; then
+  JAVA=""
   if command -v java >/dev/null 2>&1; then JAVA=java
   else
     for c in /root/jdk-*/bin/java /usr/lib/jvm/*/bin/java "$HOME"/jdk*/bin/java; do
