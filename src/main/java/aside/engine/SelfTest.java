@@ -918,7 +918,9 @@ public class SelfTest {
         System.out.println("\n--- the weapons ---");
         weaponsDoWhatTheySay();
         batsChaseWhatIsNear();
+        aGroupOfBatsDoesNotPinYou();
         piranhasBiteSwimmers();
+        aGroupOfPiranhasDoesNotMachineGun();
         waterAppearsAtTheTunedRate();
 
         System.out.println("\n--- damage timing ---");
@@ -1358,6 +1360,83 @@ public class SelfTest {
         }
         check("water: most of levels 1-40 have some water (" + withWater + " of 40)", withWater >= 12);
         check("water: and a few of them are FLOODED (" + flooded + " of 40)", flooded >= 2);
+    }
+
+    /**
+     * A GROUP OF FISH DOES NOT MACHINE-GUN. Four piranhas in a pool with a swimmer bite four times in ten
+     * seconds - once each, then they break off.
+     *
+     * <p>The mutation sweep is what asked for this. `REAGGRO_DELAY = 0`, `HIT_COOLDOWN = 0` and `RECOVER_TIME = 0`
+     * all passed every check: the gate could not tell a fish that bites once and leaves from one that bites every
+     * frame it can. That is the same bug the bat had - "the bat comes straight back and the player is flat ~1s
+     * out of every ~1.75s, which is a stun-lock in practice even though every individual stun ends correctly",
+     * found by test rather than by reading - and the piranha inherited the shape of it without the test.
+     *
+     * <p>The ceiling is deliberately loose (8 against a measured 4) because the number that matters is the
+     * difference between four and sixty, not the difference between four and five.
+     *
+     * <p><b>HIT_COOLDOWN and RECOVER_TIME are still not caught, and that is honest rather than overlooked.</b>
+     * With REAGGRO_DELAY in place a fish breaks off for 2.5s whatever those two do, so zeroing them cannot
+     * change how many bites land - they are the second and third guards behind the one that governs the rhythm.
+     * The mutation sweep says exactly that, and the sweep is the right place for it.
+     */
+    static void aGroupOfPiranhasDoesNotMachineGun() {
+        String pool = String.join("\n",
+                "                        ", "                        ",
+                "########        ########",
+                "########~~~~~~~~########", "########~~~~~~~~########",
+                "########~~~~~~~~########", "########~~~~~~~~########",
+                "########################");
+        World w = new World();
+        aside.games.fruitjump.engine.LevelMap.parse(pool).buildWorld(w);
+        Physics.Body p = new Physics.Body(300, 140, 24, 44);
+        w.addBody(p);
+        w.playerBody = p;
+        for (int i = 0; i < 4; i++) {
+            w.addPiranha(new aside.games.fruitjump.engine.Piranha(310 + i * 12, 140, 3L + i));
+        }
+        int separate = 0;
+        boolean last = false;
+        for (double t = 0; t < 10.0; t += GameLoop.DT) {
+            w.update(GameLoop.DT);
+            if (w.piranhaBit && !last) separate++;
+            last = w.piranhaBit;
+        }
+        check("piranhas: a group of four bites four times in ten seconds, not sixty (" + separate + " bites)",
+                separate <= 8);
+    }
+
+    /**
+     * A GROUP OF BATS DOES NOT PIN YOU. Three bats around a player leave it standing most of the time.
+     *
+     * <p>REAGGRO_DELAY exists because of a real bug, and the comment on the constant says how it was found:
+     * "the bat comes straight back and the player is flat ~1s out of every ~1.75s, which is a stun-lock in
+     * practice even though every individual stun ends correctly. Found by test, not by reading." The mutation
+     * sweep says the fix was never protected - zeroing it leaves every check green.
+     *
+     * <p>The measure is the fraction of frames the player spends stunned: 10% of ten seconds with three bats.
+     *
+     * <p><b>What this check actually protects is the GROUP BREAK-OFF, not REAGGRO_DELAY.</b> Setting
+     * REAGGRO_DELAY to zero leaves the number at 10% - measured, not assumed - because the loop in World.update
+     * already makes every bat break off when one connects, and that is what ends the stun-lock. Removing THAT
+     * fails this check. So the constant is a second guard behind the one that does the work, and the check says
+     * which is which rather than implying both are covered.
+     */
+    static void aGroupOfBatsDoesNotPinYou() {
+        World w = new World();
+        Physics.Body p = new Physics.Body(200, 100, 24, 44);
+        w.addBody(p);
+        w.playerBody = p;
+        for (int i = 0; i < 3; i++) w.addBat(new Bat(210 + i * 14, 100, 5L + i));
+        int stunned = 0, total = 0;
+        for (double t = 0; t < 10.0; t += GameLoop.DT) {
+            w.update(GameLoop.DT);
+            total++;
+            if (p.stunTimer > 0) stunned++;
+        }
+        int pct = (int) Math.round(100.0 * stunned / total);
+        check("bats: three bats do not pin you for more than a third of ten seconds (" + pct + "% stunned)",
+                pct <= 33);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
