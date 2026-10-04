@@ -873,6 +873,7 @@ public class SelfTest {
         System.out.println("\n--- the weapons ---");
         weaponsDoWhatTheySay();
         batsChaseWhatIsNear();
+        piranhasBiteSwimmers();
 
         System.out.println("\n--- damage timing ---");
         damageIsMetered();
@@ -1236,6 +1237,54 @@ public class SelfTest {
             check("bats: a bat 900px away stays out of range (seed " + seed + ", stayed " + (int) far + "px)",
                     far > 870);
         }
+    }
+
+    /**
+     * A piranha bites a player who is IN the water with it, and leaves one on the bank alone.
+     *
+     * <p><b>This check did not exist, and the mutation sweep is what said so.</b> `AGGRO_RANGE = 1`,
+     * `BITE_RANGE = 4` and `DAMAGE = 0.0` all passed the whole gate - 424 checks green with a fish that never
+     * notices anyone. It is the same shape as the gap the sweep found for the weapons and the bats (the gate was
+     * strong on generation and empty on player-facing action), and this enemy landed AFTER that sweep, so it had
+     * the hole all over again.
+     *
+     * <p>The two halves are the design: it bites a swimmer, and it is the surface that saves you.
+     */
+    static void piranhasBiteSwimmers() {
+        check("piranhas: a fish in the water with a swimmer bites it", piranhaBites(true));
+        check("piranhas: the same fish leaves a player standing on the bank alone", !piranhaBites(false));
+        // BITE_RANGE IS NOT CAUGHT, and it is worth saying so rather than writing a check that looks
+        // decisive. Setting it to 4 still bites - the fish simply closes further first - so it changes how the
+        // enemy plays rather than whether it works. What IS caught is AGGRO_RANGE, because a fish that never
+        // notices anyone never bites at all.
+    }
+
+    /**
+     * A pool with banks either side, the player dropped into the water or onto the rock, and a fish 30px away.
+     * Returns whether it ever bit, over six seconds.
+     */
+    static boolean piranhaBites(boolean inWater) {
+        String pool = String.join("\n",
+                "                        ", "                        ",
+                "########        ########",
+                "########~~~~~~~~########", "########~~~~~~~~########",
+                "########~~~~~~~~########", "########~~~~~~~~########",
+                "########################");
+        World w = new World();
+        aside.games.fruitjump.engine.LevelMap.parse(pool).buildWorld(w);
+        // 300 is over the pool (columns 8-15 are x 256-512, water rows 3-6 are y 96-224); 100 is on the bank,
+        // whose top surface is row 2 at y 64.
+        double px = inWater ? 300 : 100;
+        double py = inWater ? 140 : 42;
+        Physics.Body p = new Physics.Body(px, py, 24, 44);
+        w.addBody(p);
+        w.playerBody = p;
+        w.addPiranha(new aside.games.fruitjump.engine.Piranha(px + 30, py, 3L));
+        for (double t = 0; t < 6.0; t += GameLoop.DT) {
+            w.update(GameLoop.DT);
+            if (w.piranhaBit) return true;
+        }
+        return false;
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
