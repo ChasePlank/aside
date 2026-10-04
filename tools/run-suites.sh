@@ -2,7 +2,7 @@
 #
 # Run every game suite in the repository and report a total.
 #
-#   tools/run-suites.sh              # uses ./out
+#   tools/run-suites.sh              # finds the build directory; OUT= overrides
 #   OUT=classes tools/run-suites.sh
 #
 # WHY THIS EXISTS. Nineteen games in this repository have a SelfTest and NOTHING RAN THEM. Not a script, not a
