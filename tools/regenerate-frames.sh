@@ -27,9 +27,18 @@
 set -u
 cd "$(dirname "$0")/.." || exit 2
 
-OUT="${OUT:-classes}"
+# OUT MUST MATCH THE OTHER TOOLS. This defaulted to `classes`, while run-suites.sh and check-sheets.sh both
+# default to `out`. So this tool rendered the games from a STALE BUILD, compared the results against frames that
+# were themselves made from that same stale build, found them identical, and reported "nothing to change" - while
+# the gate, rendering from `out`, reported ten frames stale. That is why regenerating the frames was done by hand
+# four times in one day: the tool that exists to do it could not see the difference it was there to fix.
+OUT="${OUT:-out}"
 FX="${FX:-/root/javafx-sdk-27/lib}"
-JAVA="${JAVA:-java}"
+# JAVA IS NOT DEFAULTED HERE. It used to be `JAVA="${JAVA:-java}"` and then `. tools/find-java.sh`, which meant
+# find-java.sh could never override it - the variable was already set, so the lookup was a no-op and every run
+# died with "exec: java: not found" from run-headless.sh. The script then globbed an empty directory, created a
+# file literally named `docs/frames/*.png` because the pattern did not expand, and printed "1 frame(s) updated".
+# It had never rendered a single game. Let find-java.sh do its job.
 . tools/find-java.sh
 
 TMP=$(mktemp -d)
@@ -42,6 +51,9 @@ tools/run-headless.sh "$JAVA" --module-path "$FX" \
 grep -E '=== [0-9]+ game' "$TMP/log" | sed 's/^/  /'
 
 changed=0
+# GUARD THE GLOB. Without this an empty directory leaves the pattern unexpanded, basename gives "*", and the
+# script writes a file called `docs/frames/*.png` and counts it as an update.
+shopt -s nullglob
 for f in "$TMP"/*.png; do
   n=$(basename "$f")
   case "$n" in contact-sheet.png|drift.png|ledger.png) continue;; esac
