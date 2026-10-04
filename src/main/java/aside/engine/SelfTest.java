@@ -840,6 +840,51 @@ public class SelfTest {
             }
         }
 
+        System.out.println("\n--- the phone builds' cues ---");
+        // Every cue a phone build's engine emits has a sound in its palette.
+        //
+        // Found by comparing FNAF 8's phone engine against its desktop one: the
+        // desktop cues `f8_bright` or `f8_dim` when the lamp setting changes on
+        // the side it is already on, and the phone's `aim()` cued nothing -- so
+        // changing the setting was silent on a phone and audible on a desktop,
+        // and the suite passed because nothing compared the two lists.
+        for (Game g : Games.all()) {
+            Path page = Path.of("web", g.id() + ".html");
+            if (!Files.exists(page)) continue;
+            String html;
+            try { html = Files.readString(page); } catch (Exception e) { continue; }
+            java.util.Set<String> cues = new java.util.TreeSet<>();
+            // ANY string inside a cue(...) call, not just a literal one. The
+            // first version matched only `cue("name")`, so a name chosen by a
+            // ternary -- which is exactly how the missing one was written --
+            // was invisible to it, and the check passed on the bug it was
+            // written for.
+            var m = java.util.regex.Pattern.compile("cue\\([^)]*?\\\"([a-z0-9_]+)\\\"")
+                    .matcher(html);
+            while (m.find()) {
+                String name = m.group(1);
+                // A name ending in "_" is a PREFIX being concatenated with a
+                // key -- `"step_" + key` -- not a cue, and no palette can have
+                // an entry for it. The rest are real names, including the ones
+                // chosen by a ternary, which is where the missing one was.
+                if (name.endsWith("_")) continue;
+                cues.add(name);
+            }
+            if (cues.isEmpty()) continue;
+            List<String> silent = new ArrayList<>();
+            // A cue is covered by a case, or by a startsWith handler -- FNAF 7
+            // handles `step_left`/`step_right` that way, because the engine
+            // builds them from a side name at runtime.
+            for (String cue : cues) {
+                if (html.contains("case \"" + cue + "\"")) continue;
+                if (html.contains("startsWith(\"" + cue + "\")")) continue;
+                silent.add(cue);
+            }
+            check(g.title() + ": every cue it emits has a sound"
+                    + (silent.isEmpty() ? " (" + cues.size() + ")" : " -- silent: " + silent),
+                    silent.isEmpty());
+        }
+
         System.out.println("\n--- the games' art ---");
         // Every image file a game ships is non-empty and has an extension the
         // loader reads. This does NOT check that the game asks for the right

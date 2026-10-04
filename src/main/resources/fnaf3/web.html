@@ -392,6 +392,8 @@ Game.prototype.canReboot = function (s) {
  */
 function sfx(cue) {
   switch (cue) {
+    case "camera_up": voice("click"); break;
+    case "camera_down": voice("click"); break;
     case "footstep": voice("footstep"); break;
     case "at_door": voice("knock"); break;
     case "door_close": voice("knock"); break;
