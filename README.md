@@ -191,6 +191,9 @@ java -cp out aside.games.fruitjump.engine.WaterProbe   # every pool is the shape
 
 tools/regenerate-frames.sh                             # when the gate says a frame is STALE
 tools/mutate.sh <suite> <file> <anchor> <replacement>  # does any check notice this changing?
+
+tools/wiring-report.sh                                 # which engine classes the GAME never uses
+tools/artifact-changed.sh <owner/repo> <local-file>    # is what I am about to publish actually different?
 ```
 
 **`tools/regenerate-frames.sh` is deliberately not part of the gate, and the gate is deliberately not part of
