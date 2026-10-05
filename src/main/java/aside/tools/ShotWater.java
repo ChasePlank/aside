@@ -76,7 +76,7 @@ public class ShotWater extends Application {
 
         double dt = 1.0 / 60;
         int splashTick = -1, lastSplashes = 0, splashShootAt = -1;
-        boolean jumped = false, shotPool = false, shotLip = false;
+        boolean jumped = false, shotPool = false, shotLip = false, ended = false;
         for (int i = 0; i < 900; i++) {
             // Jump just before the lip. Walking in produces no splash at all - the
             // surface is level with the walk, so the crossing happens on the first
@@ -100,6 +100,11 @@ public class ShotWater extends Application {
                 screen.handleKeyReleased(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.SPACE, false, false, false, false));
             }
             screen.tick(dt);
+            // STOP WHEN THE LEVEL ENDS. GameplayScreen replaces itself with GameOverScreen the frame the climber
+            // falls out of the world. Ticking a screen that is no longer shown still runs the physics one more
+            // frame each time, so the climber's y grew to 123063 and this tool printed that as a finding. It was
+            // reporting the position of a body in a level that was over.
+            if (ui.current() != screen) { ended = true; break; }
             // The lip: the frame the climber stops being on the ground and has not yet reached water.
             // A jump is the only way in that splashes, and the jump is triggered on x, below.
             if (!shotLip && jumped && !inWater(screen)) {
@@ -148,6 +153,7 @@ public class ShotWater extends Application {
         boolean under = false;
         for (int i = 0; i < 400 && !under; i++) {
             screen.tick(dt);
+            if (ui.current() != screen) { ended = true; break; }
             if (submersion(screen) >= 0.9) under = true;
         }
         shoot(scene, dir + "/water-dive.png", "submerged");
@@ -167,9 +173,15 @@ public class ShotWater extends Application {
             if (i % 24 == 0) screen.handleKey(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.UP, false, false, false, false));
             if (i % 24 == 12) screen.handleKeyReleased(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.UP, false, false, false, false));
             screen.tick(dt);
+            if (ui.current() != screen) { ended = true; break; }
         }
         shoot(scene, dir + "/water-out.png", "out of the pool");
         report(screen, "after tapping UP");
+        if (ended) {
+            System.out.println("THE LEVEL ENDED - the climber fell out of the world. Everything above is the");
+            System.out.println("position of a screen that is no longer shown, and the water it was walking to");
+            System.out.println("was never reached. This run says nothing about the water system.");
+        }
 
         javafx.application.Platform.exit();
     }

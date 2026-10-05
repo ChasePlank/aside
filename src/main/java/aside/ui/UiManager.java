@@ -53,6 +53,17 @@ public class UiManager {
         g.fillText(toastText, 14, 29);
     }
 
+    /**
+     * The screen currently on top, or null if the stack is empty.
+     *
+     * <p>Added because ShotWater could not tell that its level had ENDED. GameplayScreen replaces itself with
+     * GameOverScreen the frame the climber falls out of the world - and the tool kept calling tick() on the screen
+     * it still held a reference to, so the physics ran one more frame each time and the climber's y grew to
+     * 123063. It printed that number as a finding. A tool driving a screen has to be able to ask whether that
+     * screen is still the one being shown.
+     */
+    public UiScreen current() { return stack.peek(); }
+
     public String root() { return projectRoot; }
 
     public Pane getContainer() { return container; }
