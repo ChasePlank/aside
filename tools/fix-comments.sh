@@ -19,8 +19,13 @@
 set -u
 cd "${1:-$(dirname "$0")/..}" || exit 2
 
-SRC="src/main/java/aside/games/fruitjump"
-GATE="src/main/java/aside/engine/SelfTest.java"
+SRC="${SRC:-src/main/java/aside/games/fruitjump}"
+# EVERY GATE, NOT ONE. The first version pointed at src/main/java/aside/engine/SelfTest.java, which is only the
+# engine's own suite - and aside has a SelfTest per game module, twenty of them. It reported "Threat 5
+# fix-comments, 0 mentions" for the FNAF threat system, which is checked eight times in fnaf4/engine/SelfTest.java.
+# A map that looks in one place reports a gap that is not there - the same failure as every narrowed check this
+# week: the tool looking at less than it claims.
+GATES=$(find src/main/java -name "SelfTest.java" | tr '\n' ' ')
 [ -d "$SRC" ] || { echo "fix-comments: no $SRC here" >&2; exit 2; }
 
 PATTERN='//.*(was |used to|invisible|the first version|playtest|the bug)'
@@ -32,14 +37,19 @@ PATTERN='//.*(was |used to|invisible|the first version|playtest|the bug)'
 #
 # Reading the twenty by hand is what the ratio is FOR. It says where to look; it cannot say what you will find.
 
-printf '%-22s %-14s %s\n' "file" "fix-comments" "mentions in the gate"
+printf '%-46s %-14s %s\n' "file" "fix-comments" "mentions in any gate"
 echo "------------------------------------------------------------"
-for f in $(grep -rlE "$PATTERN" "$SRC" --include=*.java | sort); do
-  n=$(basename "$f" .java)
+# TEST FILES ARE THE GATES, NOT THE GAME. Including them buried the report in twenty rows all called "SelfTest",
+# and their own fix-comments are notes about tests rather than lessons a player taught. Excluded by name.
+# And the PATH is shown, because four different modules have a file called Bot.java.
+for f in $(grep -rlE "$PATTERN" "$SRC" --include=*.java | grep -v 'Test\.java$' | sort); do
+  n="${f#src/main/java/}"; n="${n%.java}"     # shown
+  b=$(basename "$f" .java)                    # searched for - the gate names classes, not paths
   c=$(grep -cE "$PATTERN" "$f")
   # the gate is one file; a mention is the class name appearing anywhere in it
-  m=$(grep -c "\b$n\b" "$GATE" 2>/dev/null || echo 0)
-  printf '%-22s %-14s %s\n' "$n" "$c" "$m"
+  # a mention is the class name appearing anywhere in ANY gate
+  m=$(grep -h "\b$b\b" $GATES 2>/dev/null | wc -l)
+  printf '%-46s %-14s %s\n' "$n" "$c" "$m"
 done | sort -k2 -rn
 echo
 echo "A low ratio is a QUESTION, not a fault - a screen cannot be tested headlessly, and some comments are"
