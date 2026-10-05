@@ -61,7 +61,15 @@ while IFS= read -r line; do
     *NOT\ CAUGHT*) echo "NOT CAUGHT"; missed=$((missed + 1)) ;;
     *)           echo "?? $out" ;;
   esac
-done < <(grep -rn "static final" "$MOD" --include=*.java 2>/dev/null | grep -vE "Test\.java" | sort)
+done < <(grep -rn "static final" "$MOD" --include=*.java 2>/dev/null \
+           | grep -vE "Test\.java" \
+           | grep -vE "^[^:]*:[0-9]+:.*=.*,.*=" \
+           | sort)
+# LINES THAT DECLARE SEVERAL CONSTANTS ARE SKIPPED. `static final int W = 1280, H = 720;` gives a greedy name match
+# and a value from a different constant - the first version reported NOT CAUGHT for "H" and "OY", which are not
+# constants at all. A tool that mangles its input reports confident nonsense, which is worse than reporting less.
+# One declaration per line is the rule, and the ones that break it are named in the header rather than silently
+# mishandled.
 
 # PUT THE BUILD BACK. mutate.sh restores the SOURCE file after every mutation, but it compiles into classes/ and
 # leaves whatever it last built there. A sweep that ends mid-injection leaves the gate failing on code that is not
