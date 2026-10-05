@@ -943,6 +943,8 @@ public class SelfTest {
         aGroupOfPiranhasDoesNotMachineGun();
         waterAppearsAtTheTunedRate();
         everyLevelPublishesItsWalkFloors();
+        laterLevelsAreBusierThanTheFirstTen();
+        enemyDensityScalesWithLevel();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1579,6 +1581,66 @@ public class SelfTest {
         }
         check("every one of levels 1-40 publishes its walk floors, safe rooms included (" + checked
                 + " checked, " + bad + " bad)", bad == 0);
+    }
+
+    /**
+     * LATER LEVELS ARE BUSIER THAN THE FIRST TEN. Measured, and deliberately loose.
+     *
+     * <p>What the generator actually does, per ten-level band: 2.30 enemies on 1-10, 3.40 on 11-20, 3.40 on
+     * 21-30, 3.00 on 31-40. So hazards rise out of the first band and then FLATTEN - they do not keep climbing.
+     *
+     * <p>AND THE REASON IS ONE LINE, found by reading it rather than by measuring: `enemyChance` is
+     * `0.40 + 0.10 * (levelNum - 1)` capped at 0.85, which SATURATES AT LEVEL 6. Every level from 7 to 40 draws
+     * enemies at the same density. What makes level 40 harder than level 20 is therefore not enemies at all - it
+     * is that heals get rarer with depth, which is the lever Kinger asked for and which the mutation sweep
+     * already covers.
+     *
+     * <p>So this asserts only that difficulty SCALES AT ALL - that the later bands are busier than the first -
+     * because that is the thing a regression would break, and because a check tight enough to notice 3.40
+     * against 3.00 would be reading noise. Ten levels a band is not a large sample.
+     */
+    static void laterLevelsAreBusierThanTheFirstTen() {
+        int first = 0, rest = 0;
+        for (int level = 1; level <= 40; level++) {
+            LevelMap m = new LevelGen(60, 20, 1000L + level, level).generate();
+            int hazards = 0;
+            for (int r = 0; r < m.heightCells(); r++)
+                for (int c = 0; c < m.widthCells(); c++) {
+                    char ch = m.cell(r, c);
+                    if (ch == 'o' || ch == 'b' || ch == 'x' || ch == '^') hazards++;
+                }
+            if (level <= 10) first += hazards; else rest += hazards;
+        }
+        double perFirst = first / 10.0, perRest = rest / 30.0;
+        check(String.format("levels 11-40 are busier than 1-10 (%.2f vs %.2f hazards a level)", perRest, perFirst),
+                perRest > perFirst);
+    }
+
+    /**
+     * AND THE ENEMY DENSITY ITSELF SCALES, which the check above does NOT prove.
+     *
+     * <p>Making `enemyChance` constant - so that nothing scales with level at all - still left that check green
+     * at 3.13 against 2.50, because it counts enemies, bats and spikes together and the bats carried it. A check
+     * whose name says "busier" was honest and a check whose docstring is about enemies was not measuring them.
+     *
+     * <p>Injected the fault is what showed it, which is the third time this week that breaking the thing a check
+     * claims to protect was the only way to find out what it actually protects.
+     */
+    static void enemyDensityScalesWithLevel() {
+        int early = 0, late = 0;
+        for (int level = 1; level <= 40; level++) {
+            LevelMap m = new LevelGen(60, 20, 1000L + level, level).generate();
+            int enemies = 0;
+            for (int r = 0; r < m.heightCells(); r++)
+                for (int c = 0; c < m.widthCells(); c++) {
+                    char ch = m.cell(r, c);
+                    if (ch == 'o' || ch == 's') enemies++;
+                }
+            if (level <= 10) early += enemies; else late += enemies;
+        }
+        double perEarly = early / 10.0, perLate = late / 30.0;
+        check(String.format("enemy density scales with level (%.2f on 1-10 vs %.2f on 11-40 a level)",
+                perEarly, perLate), perLate > perEarly);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
