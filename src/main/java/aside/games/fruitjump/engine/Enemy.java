@@ -41,8 +41,11 @@ public class Enemy {
     boolean stompImmune = false;  // spiked/shielded: stomping hurts the player
     
     // Ledge/wall detection memory (set by World each frame)
-    boolean hitWall = false;
-    boolean atLedge = false;
+    // PUBLIC LIKE `topDown`, because they are the World's report to this enemy for the frame - an interface
+    // rather than an internal. A check cannot see a package-private field from another package, and the branch
+    // that SETS these was the one thing the mutation sweep found unprotected.
+    public boolean hitWall = false;
+    public boolean atLedge = false;
 
     /** Wall sensor for top-down mode: solid tile just ahead in the
      *  current heading direction. (World.senseWall only probes

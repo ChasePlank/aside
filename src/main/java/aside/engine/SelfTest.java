@@ -952,6 +952,7 @@ public class SelfTest {
         arrowsHitWhatTheyPointAt();
         aCheckpointCarriesYourHealth();
         topDownEnemiesChaseInBothAxes();
+        topDownEnemiesSenseWallsInTheirHeading();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1906,6 +1907,52 @@ public class SelfTest {
             best = Math.min(best, Math.abs(e.body.y - 300));
         }
         return best;
+    }
+
+    /**
+     * TOP-DOWN ENEMIES SENSE WALLS IN THE DIRECTION THEY ARE FACING.
+     *
+     * <p>The last of the sweep's findings, and the one I first wrote the wrong check for. `World` chooses between
+     * `senseWallTopDown` and `senseWall` plus `senseLedge` on `e.topDown`, and disabling that branch left the gate
+     * green - because my earlier check measured the CHASE, which lives in updateAI and works in open space.
+     *
+     * <p>An enemy facing UP at a ceiling tells them apart, because side-view sensing only looks left and right.
+     * Top-down sensing sees it; side-view does not. Both halves asserted, for the usual reason.
+     */
+    static void topDownEnemiesSenseWallsInTheirHeading() {
+        check("a top-down enemy facing a ceiling turns, and a side-view one does not",
+                turnsAtCeiling(true) && !turnsAtCeiling(false));
+    }
+
+    /**
+     * Does an enemy heading UP into a ceiling come out heading somewhere else?
+     *
+     * <p>NOT THE `hitWall` FIELD, which was the first thing I tried. `hitWall` is consumed inside the same frame -
+     * `updateTopDown` sets it false and picks a new heading in the same call - so it is always false by the time
+     * anything outside can look. The observable thing is that the HEADING changed.
+     *
+     * <p>And the geometry has to be right: the first version put the enemy at column 2 with the ceiling starting
+     * at column 3, so it was BESIDE the ceiling rather than under it. Probed, not reasoned - the third time that
+     * has been true today.
+     */
+    static boolean turnsAtCeiling(boolean topDown) {
+        String lvl = String.join("\n",
+                "                        ",
+                "   #####                ",
+                "                        ",
+                "                        ",
+                "   ###                  ");
+        World w = new World();
+        aside.games.fruitjump.engine.LevelMap.parse(lvl).buildWorld(w);
+        Physics.Body p = new Physics.Body(400, 40, 24, 44);
+        w.addBody(p);
+        w.playerBody = p;
+        aside.games.fruitjump.engine.Enemy e = new aside.games.fruitjump.engine.Enemy(144, 64, 22, 22);
+        e.topDown = topDown;
+        e.hdx = 0; e.hdy = -1;                  // heading UP, at the ceiling
+        w.addEnemy(e);
+        w.update(GameLoop.DT);
+        return e.hdx != 0 || e.hdy != -1;
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
