@@ -53,6 +53,21 @@ public class SelfTest {
     public static void main(String[] args) {
         System.out.println("=== FNAF 2 self-test ===\n");
 
+        // 0. THE NIGHT-SELECT ROWS ARE THE SAME RECTANGLES THE MOUSE MAP TESTS AGAINST. MouseMap says so in its
+        // own comment: "the highlight is drawn from the same rectangle a click is tested against, so the row that
+        // lights up is the row that starts." That is an invariant, and the mutation sweep found nothing holding
+        // it: NIGHTS set to 0 left this suite green, and the night select would have drawn five rows and started
+        // none of them.
+        {
+            check("there are five nights to choose", MouseMap.NIGHTS == 5);
+            for (int i = 0; i < MouseMap.NIGHTS; i++) {
+                double[] r = MouseMap.nightRow(i);
+                double cx = r[0] + r[2] / 2, cy = r[1] + r[3] / 2;
+                check("clicking the middle of night row " + i + " selects night " + i,
+                        MouseMap.nightAt(cx, cy) == i);
+            }
+        }
+
         // 1. A passive player dies. Night 3, no input at all.
         {
             Game g = new Game(3, 12345L);
