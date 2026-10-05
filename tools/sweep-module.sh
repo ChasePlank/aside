@@ -60,6 +60,13 @@ while IFS= read -r line; do
   esac
 done < <(grep -rn "static final" "$MOD" --include=*.java 2>/dev/null | grep -vE "Test\.java" | sort)
 
+# PUT THE BUILD BACK. mutate.sh restores the SOURCE file after every mutation, but it compiles into classes/ and
+# leaves whatever it last built there. A sweep that ends mid-injection leaves the gate failing on code that is not
+# in the tree - which cost a wrong conclusion five times this week. Recompiling is the sweep's job, not the
+# caller's.
+"$JAVAC" -nowarn -cp "$CP" -d classes $(find src/main/java -name '*.java') 2>/dev/null || \
+  echo "NOTE: could not recompile after the sweep - recompile before believing the next result."
+
 echo
 echo "$MOD against $SUITE: $caught caught, $missed not caught, of $n tried."
 echo "A NOT CAUGHT is a QUESTION: the constant may be free (a label, a colour) or covered by a check that"
