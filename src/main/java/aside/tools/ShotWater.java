@@ -78,23 +78,21 @@ public class ShotWater extends Application {
         int splashTick = -1, lastSplashes = 0, splashShootAt = -1;
         boolean jumped = false, shotPool = false, shotLip = false, ended = false;
         for (int i = 0; i < 900; i++) {
-            // Jump just before the lip. Walking in produces no splash at all - the
-            // surface is level with the walk, so the crossing happens on the first
-            // frame of the fall, with vy about 20, and the system requires
-            // SPLASH_MIN_V (120) of impact speed. A jump comes down into the pool with
-            // speed, which is also what a missed jump looks like, and a missed jump is
-            // the case the pool exists for.
+            // WALK IN. DO NOT JUMP.
             //
-            // Triggered on the climber's own x, not on a frame count: the first attempt
-            // jumped at frame 115 and the climber was still 190px short of the pool, so
-            // it landed on the ground and the splash never happened.
+            // Three versions of this got steadily worse. The first jumped at a frame count; the second when the
+            // climber passed x=420, which was the pool's lip in one particular layout; the third tapped SPACE
+            // every thirty frames so it "could not miss". The third is the one that broke it: a periodic jump
+            // fires on flat ground and in the air and everywhere else, and at level 15 one of them puts the
+            // climber into a gap. The run ended in a pit before the pool and the tool printed the position of a
+            // dead screen as a finding - which is how this was found.
             //
-            // Tapped every 30 frames rather than triggered on a coordinate. The first version jumped
-            // when the climber passed x=420, which was the pool's lip in one particular level layout -
-            // and stopped being that the moment the generator changed. A periodic tap cannot miss: one
-            // of the jumps lands in the water with speed, which is what the splash needs and what a
-            // missed jump looks like.
-            if (!shotPool && i % 30 == 0) {
+            // And the premise was wrong. This comment used to say walking produces no splash because the surface
+            // is level with the walk and the system wants SPLASH_MIN_V of impact speed. WALKING IN SPLASHES:
+            // measured, "splash registered on frame 144, events=1", reached water, submersion 0.90. Whatever was
+            // true when that was written is not true now, and the tool was working around a constraint it did not
+            // have.
+            if (false) {
                 jumped = true;
                 screen.handleKey(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.SPACE, false, false, false, false));
                 screen.handleKeyReleased(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.SPACE, false, false, false, false));
