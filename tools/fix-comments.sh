@@ -24,6 +24,13 @@ GATE="src/main/java/aside/engine/SelfTest.java"
 [ -d "$SRC" ] || { echo "fix-comments: no $SRC here" >&2; exit 2; }
 
 PATTERN='//.*(was |used to|invisible|the first version|playtest|the bug)'
+# THERE WAS A "drawing" COLUMN HERE AND IT WAS WRONG. The idea was right: a file with twenty comments and three
+# mentions is fine if seventeen of them are about how things are drawn, and a target if ten are about behaviour.
+# The implementation counted LINES matching a list of drawing words, and a three-line comment saying "the pool was
+# drawn over the floor under it" matches on a line that does not carry the word. It reported 5 for GameplayScreen
+# where reading them gives 17. A column wrong by three times is worse than no column - it reads as a measurement.
+#
+# Reading the twenty by hand is what the ratio is FOR. It says where to look; it cannot say what you will find.
 
 printf '%-22s %-14s %s\n' "file" "fix-comments" "mentions in the gate"
 echo "------------------------------------------------------------"
