@@ -950,6 +950,7 @@ public class SelfTest {
         walkingIntoAnEnemyHurts();
         aHookshotPullAlwaysEnds();
         arrowsHitWhatTheyPointAt();
+        aCheckpointCarriesYourHealth();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1838,6 +1839,30 @@ public class SelfTest {
         w2.addProjectile(aside.games.fruitjump.engine.Projectile.arrow(200, 100, 1));
         for (int i = 0; i < 60; i++) w2.update(GameLoop.DT);
         check("weapons: an arrow kills a bat too, which is a separate list from enemies", w2.bats.isEmpty());
+    }
+
+    /**
+     * A CHECKPOINT CARRIES YOUR HEALTH, rather than handing you a fresh bar.
+     *
+     * <p>The exact bug a player reported: "lives still reset each level". The fix was six inline statements in
+     * GameplayScreen, and the mutation sweep found that changing the HP line to a flat 3 left the gate green at
+     * 449 passed, 0 failed - a screen needs a UiManager and a display, so nothing headless could reach it.
+     *
+     * <p>So the six statements are a named function now, checkpointFor(), and this calls it. Same shape as Wake's
+     * manual reset: behaviour written inline in a screen is behaviour no test can call.
+     */
+    static void aCheckpointCarriesYourHealth() {
+        aside.games.fruitjump.engine.Combat combat = new aside.games.fruitjump.engine.Combat();
+        combat.playerHP = 1;                       // a rough run, one heart left
+        combat.maxHP = 3;
+        aside.games.fruitjump.engine.PlayerInventory inv =
+                new aside.games.fruitjump.engine.PlayerInventory();
+        inv.keys = 2;
+        aside.games.fruitjump.engine.SaveSystem.GameState c =
+                aside.games.fruitjump.GameplayScreen.checkpointFor(7, combat, inv, 42.5);
+        check("a checkpoint carries your health into the next level, not a fresh bar (hp " + c.playerHP
+                + ", keys " + c.keys + ", level " + c.levelNum + ")",
+                c.playerHP == 1 && c.keys == 2 && c.levelNum == 7 && c.playerX < 0);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */

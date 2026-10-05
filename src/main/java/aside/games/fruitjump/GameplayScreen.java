@@ -359,13 +359,8 @@ public class GameplayScreen extends UiScreen {
                 return;
             }
             int nextLevel = levelNum + 1;
-            SaveSystem.GameState checkpoint = new SaveSystem.GameState();
-            checkpoint.levelNum = nextLevel;
-            checkpoint.playerX = -1; checkpoint.playerY = -1;  // -1 = spawn
-            checkpoint.playerHP = (int) combat.playerHP;
-            checkpoint.maxHP = (int) combat.maxHP;
-            checkpoint.keys = inventory.keys;
-            checkpoint.playTime = playTime;
+            SaveSystem.GameState checkpoint =
+                    checkpointFor(nextLevel, combat, inventory, playTime);
             try {
                 new SaveSystem().save(checkpoint, SAVE_FILE);
             } catch (java.io.IOException ex) {
@@ -938,6 +933,29 @@ public class GameplayScreen extends UiScreen {
         }
         if (!rest.isEmpty()) out.add(rest);
         return out;
+    }
+
+    /**
+     * The checkpoint that carries a run into the next level: HP, keys and time, spawning at the level start.
+     *
+     * <p>EXTRACTED SO A TEST CAN CALL IT, and that is the whole reason it is a method. It was six inline
+     * statements, and the mutation sweep found the consequence: changing `playerHP = combat.playerHP` to a flat
+     * `3` - the exact bug a player reported as "lives still reset each level" - left the gate green at 449
+     * passed, 0 failed. A screen needs a UiManager and a display, so nothing headless could reach the line.
+     *
+     * <p>Same shape as Wake's manual reset: behaviour written inline in a screen is behaviour no test can call,
+     * and behaviour belongs in a named function.
+     */
+    public static SaveSystem.GameState checkpointFor(int nextLevel, aside.games.fruitjump.engine.Combat combat,
+                                              aside.games.fruitjump.engine.PlayerInventory inv, double playTime) {
+        SaveSystem.GameState c = new SaveSystem.GameState();
+        c.levelNum = nextLevel;
+        c.playerX = -1; c.playerY = -1;      // -1 = spawn at the level start, but restore the stats
+        c.playerHP = (int) combat.playerHP;
+        c.maxHP = (int) combat.maxHP;
+        c.keys = inv.keys;
+        c.playTime = playTime;
+        return c;
     }
 
 }
