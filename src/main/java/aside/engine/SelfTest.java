@@ -946,6 +946,7 @@ public class SelfTest {
         laterLevelsAreBusierThanTheFirstTen();
         enemyDensityScalesWithLevel();
         nothingSpawnsOnYourHead();
+        noStepIsTallerThanTheJump();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1674,6 +1675,39 @@ public class SelfTest {
         }
         check("no ground enemy spawns within four cells of the spawn (nearest " + worst
                 + ", level " + worstLevel + ")", worst >= 4);
+    }
+
+    /**
+     * NO STEP UP IS TALLER THAN THE JUMP. Two cells, everywhere, on all 40 levels.
+     *
+     * <p>LevelGen says why in its own header: "jump v0 = 420, gravity 1200 -> apex ~73px ~ 2.3 cells", and the
+     * ascent to the exit is built from 2-cell climbs for exactly that reason. So the margin is 0.3 of a cell.
+     *
+     * <p>THE MUTATION SWEEP IS WHAT SHOWED NOTHING WAS HOLDING IT UP: changing the ascent's `lastFloorRow - 2` to
+     * `- 3` - a 3-cell climb, 96px, above the apex - left the whole gate green at 443 passed, 0 failed. The
+     * validator cannot see it either: it walks the level as a GRAPH and never models jump height, so a stair the
+     * player cannot climb is still a path it can take. Every generated level being "completable by construction"
+     * is a statement about the graph.
+     *
+     * <p>Measured across 40 levels the biggest step up is 2 cells (64px), so the assertion is exact rather than
+     * loose - and it is checked on EVERY column, not only the staircase, because a hill would break it the same
+     * way.
+     */
+    static void noStepIsTallerThanTheJump() {
+        int worst = 0, worstLevel = 0, worstCol = 0;
+        for (int level = 1; level <= 40; level++) {
+            aside.games.fruitjump.engine.LevelGen gen =
+                    new aside.games.fruitjump.engine.LevelGen(60, 20, 1000L + level, level);
+            gen.generate();
+            int[] f = gen.lastPathFloor;
+            for (int c = 1; c < f.length; c++) {
+                if (f[c] < 0 || f[c - 1] < 0) continue;      // a gap is a gap, not a step
+                int rise = f[c - 1] - f[c];                  // a step UP is a smaller row number
+                if (rise > worst) { worst = rise; worstLevel = level; worstCol = c; }
+            }
+        }
+        check("no step up is taller than the jump - 2 cells, 64px, against an apex of 73px (biggest " + worst
+                + " cells at level " + worstLevel + " col " + worstCol + ")", worst <= 2);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
