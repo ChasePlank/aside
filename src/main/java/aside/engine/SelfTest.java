@@ -954,6 +954,7 @@ public class SelfTest {
         topDownEnemiesChaseInBothAxes();
         topDownEnemiesSenseWallsInTheirHeading();
         aRetreatingBatGetsClearWithoutLeaving();
+        aSaveKnowsWhichGameItBelongsTo();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1997,6 +1998,40 @@ public class SelfTest {
         // round - it is the only value that separates the two, and it is the measured one.
         check(String.format("a retreating bat gets clear (%.0fpx) but not out of sight, against an aggro range "
                 + "of %.0f", far, aside.games.fruitjump.engine.Bat.AGGRO_RANGE), far > 100 && far < 290);
+    }
+
+    /**
+     * A SAVE KNOWS WHICH GAME IT BELONGS TO, and a fresh one is a platformer.
+     *
+     * <p>SaveSystem's comment carries the playtest: "Continue branches on this - a rooms save used to dump the
+     * player into the platformer (playtest round 5)". MainMenu does `if ("rooms".equals(st.mode))`, so the mode
+     * has to survive a round trip and it has to have the right default.
+     *
+     * <p>The sweep found both unprotected: changing the default to "rooms" left the gate green at 453 passed,
+     * 0 failed. The round trip would not catch that on its own, because it faithfully preserves whatever was
+     * written - which is why BOTH halves are asserted.
+     */
+    static void aSaveKnowsWhichGameItBelongsTo() {
+        check("a fresh save belongs to the platformer, not rooms",
+                "platformer".equals(new aside.games.fruitjump.engine.SaveSystem.GameState().mode));
+
+        java.io.File tmp;
+        try { tmp = java.io.File.createTempFile("wake-save-", ".txt"); } catch (java.io.IOException e) { tmp = null; }
+        if (tmp == null) { check("a save round-trips its mode", false); return; }
+        tmp.deleteOnExit();
+        aside.games.fruitjump.engine.SaveSystem.GameState s =
+                new aside.games.fruitjump.engine.SaveSystem.GameState();
+        s.mode = "rooms";
+        s.levelNum = 4;
+        try {
+            new aside.games.fruitjump.engine.SaveSystem().save(s, tmp.getAbsolutePath());
+            aside.games.fruitjump.engine.SaveSystem.GameState back =
+                    new aside.games.fruitjump.engine.SaveSystem().load(tmp.getAbsolutePath());
+            check("a save round-trips its mode, so Continue goes to the right game (rooms)",
+                    back != null && "rooms".equals(back.mode));
+        } catch (Exception e) {
+            check("a save round-trips its mode (" + e.getMessage() + ")", false);
+        }
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
