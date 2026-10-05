@@ -24,6 +24,7 @@ set -u
 # faithfully showed as UNKNOWN for all four constants, rather than as a fault. A sweep that cannot run its suite
 # must not read as a sweep that found nothing.
 . "$(dirname "$0")/find-java.sh"
+JAVAC="${JAVAC:-$(dirname "$JAVA")/javac}"   # find-java.sh sets JAVA and FX, not JAVAC
 
 MOD="${1:-}"; SUITE="${2:-}"; LIMIT="${3:-12}"
 [ -d "$MOD" ] || { echo "usage: tools/sweep-module.sh <module-dir> <suite-class> [limit]" >&2; exit 2; }
@@ -37,9 +38,11 @@ while IFS= read -r line; do
 
   # what kind of constant is it, and what is a blunt wrong version of it
   case "$decl" in
-    *'[]'*)  val=$(echo "$decl" | sed -n 's/.*{\(.*\)}.*/\1/p'); [ -n "$val" ] || continue
-             repl=$(echo "$val" | tr ',' '\n' | tac | tr '\n' ',' | sed 's/,$//')
-             old="{ $val }"; new="{ $repl }" ;;
+    # ARRAYS ARE SKIPPED. The anchor has to match the file's own spacing exactly, and the first version built
+    # "{ 1, 3, 5 }" where the file said "{1, 3, 5}" - so it reported ANCHOR MISSING, which reads like a fault in
+    # the code rather than in the tool. Better to say nothing than to say it wrongly.
+    *'[]'*)  printf '%-34s (array, skipped)\n' "$(echo "$decl" | sed -n 's/.* \([A-Z_][A-Z_0-9]*\) *=.*/\1/p')"
+             continue ;;
     *String*) val=$(echo "$decl" | sed -n 's/.*= *"\([^"]*\)".*/\1/p'); [ -n "$val" ] || continue
              old="\"$val\""; new="\"X\"" ;;
     *int*|*double*|*long*|*float*)
@@ -64,7 +67,11 @@ done < <(grep -rn "static final" "$MOD" --include=*.java 2>/dev/null | grep -vE 
 # leaves whatever it last built there. A sweep that ends mid-injection leaves the gate failing on code that is not
 # in the tree - which cost a wrong conclusion five times this week. Recompiling is the sweep's job, not the
 # caller's.
-"$JAVAC" -nowarn -cp "$CP" -d classes $(find src/main/java -name '*.java') 2>/dev/null || \
+# No -cp: CP belongs to mutate.sh, not to find-java.sh, and reaching for it here was the third unbound variable
+# in three runs. But it DOES need the JavaFX module path - without it the sources do not compile at all, and the
+# first fix reported "could not recompile" while looking correct.
+"$JAVAC" --module-path "$FX" --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
+  -nowarn -d classes $(find src/main/java -name '*.java') 2>/dev/null || \
   echo "NOTE: could not recompile after the sweep - recompile before believing the next result."
 
 echo
