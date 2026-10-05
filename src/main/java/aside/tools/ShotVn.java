@@ -44,6 +44,12 @@ public class ShotVn extends Application {
         // the overtime game's package - which is why I forgot it existed and nearly wrote it again. A tool
         // for the engine does not belong inside one game.
         String story = getParameters().getRaw().isEmpty() ? "overtime" : getParameters().getRaw().get(0);
+        // AND THE STORY'S OWN ART. Assets.load(".") reads the SHARED art/backgrounds and art/sprites, which
+        // overtime uses - so this tool looked like it worked. The three stories written since have their art
+        // under art/stories/<id>/, and without loadStory they rendered with NO background at all: a black frame
+        // with a text box, 14 KB instead of 882 KB. A tool for verifying the sprite pipeline that verifies
+        // nothing for three of four stories is worse than no tool, because it reports PASS.
+        aside.ui.Assets.loadStory(".", story);
         Script script = Script.load(Path.of("stories", story + ".aside"));
         Vn vn = new Vn(script);
         // Where to stop. "sprite" waits for someone to be standing in the scene; "choice" stops the moment the
