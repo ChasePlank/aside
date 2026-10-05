@@ -197,6 +197,7 @@ tools/artifact-changed.sh <owner/repo> <local-file>    # is what I am about to p
 tools/style-classes.sh [repo-dir]                      # does every style class the code asks for exist?
 tools/fix-comments.sh                                  # where has the code been taught something, and who checks it?
 tools/make-bundle.sh <name> <jar> [readme]             # a jar into a download that runs with nothing installed
+tools/sync-and-fix.sh                                  # merge origin/main, and fix what the merge made stale
 ```
 
 **`tools/regenerate-frames.sh` is deliberately not part of the gate, and the gate is deliberately not part of
