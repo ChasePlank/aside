@@ -159,7 +159,7 @@ open(p, "w").write(s.replace(f, t, 1))
     fail=1
     continue
   fi
-  OUT=$(java -cp "classes:$CP" "$SUITE" 2>&1 | tail -1)
+  OUT=$("$JAVA" -cp "classes:$CP" "$SUITE" 2>&1 | tail -1)
   # Two verdict formats in this repository: the engine and FNAF suites end with
   # "N passed, M failed", and the verb suites end with "N/M checks passed". The
   # first version of this test only knew the first, so every verb suite read as
