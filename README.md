@@ -198,6 +198,7 @@ tools/style-classes.sh [repo-dir]                      # does every style class 
 tools/fix-comments.sh                                  # where has the code been taught something, and who checks it?
 tools/make-bundle.sh <name> <jar> [readme]             # a jar into a download that runs with nothing installed
 tools/sync-and-fix.sh                                  # merge origin/main, and fix what the merge made stale
+tools/make-bundle-win.sh <name> <jar> [readme]         # the same, for Windows, cross-built
 ```
 
 **`tools/regenerate-frames.sh` is deliberately not part of the gate, and the gate is deliberately not part of
