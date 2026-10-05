@@ -947,6 +947,7 @@ public class SelfTest {
         enemyDensityScalesWithLevel();
         nothingSpawnsOnYourHead();
         noStepIsTallerThanTheJump();
+        walkingIntoAnEnemyHurts();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1708,6 +1709,31 @@ public class SelfTest {
         }
         check("no step up is taller than the jump - 2 cells, 64px, against an apex of 73px (biggest " + worst
                 + " cells at level " + worstLevel + " col " + worstCol + ")", worst <= 2);
+    }
+
+    /**
+     * WALKING INTO AN ENEMY HURTS, EVEN WHEN THE BOXES ONLY NEARLY TOUCH.
+     *
+     * <p>Combat carries a 4px tolerance for exactly this, and its comment says why: "Exact AABB overlap missed
+     * grazing touches - collision resolution keeps bodies just short of overlap, so walking into an enemy
+     * sometimes did nothing (playtest: 'enemies seem to only damage occasionally')."
+     *
+     * <p>THE MUTATION SWEEP IS WHAT SHOWED NOTHING WAS PROTECTING IT: setting the tolerance to zero left the gate
+     * green at 444 passed, 0 failed.
+     *
+     * <p>The player here stands two pixels short of the enemy's box - which is what a grazing touch IS. With the
+     * tolerance the contact registers and a heart goes; without it the player walks through untouched, which is
+     * the bug the playtest reported.
+     */
+    static void walkingIntoAnEnemyHurts() {
+        aside.games.fruitjump.engine.Combat combat = new aside.games.fruitjump.engine.Combat();
+        Physics.Body player = new Physics.Body(200, 100, 24, 44);
+        // two pixels short of touching: player's right edge at 212, enemy's left at 214
+        aside.games.fruitjump.engine.Enemy enemy = new aside.games.fruitjump.engine.Enemy(225, 100, 22, 22);
+        double before = combat.playerHP;
+        combat.processContact(player, enemy);
+        check(String.format("walking into an enemy hurts even when the boxes only nearly touch (%.0f -> %.0f)",
+                before, combat.playerHP), combat.playerHP < before);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
