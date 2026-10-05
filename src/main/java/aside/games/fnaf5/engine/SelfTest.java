@@ -194,6 +194,24 @@ public final class SelfTest {
         g.step(1);
         check("walking makes a sound", g.soundAge == 0);
         check("and it was made where you are going", g.lastSound == Room.Where.CIRCUS);
+
+        // A SOUND IS HEARD FOR A WHILE, AND THEN IT IS NOT. HEARD_WINDOW decides how long the animatronics keep
+        // acting on something they heard, and the module sweep found nothing holding it: setting it to 0 left this
+        // suite green, and every noise would then be forgotten the instant it was made.
+        //
+        // Checked at both ends of the same window, on a room the bot is not already looking at - otherwise
+        // `perceived` would make the second check pass for a reason that has nothing to do with hearing.
+        Room.Where far = Room.Where.AUDITORIUM;
+        g.heardAt = far;
+        g.heardAge = 0.0;
+        check("a noise just made is heard", Bot.knownOccupied(g, far));
+        // AND THE WINDOW IS A REAL DURATION. This is a BOUND rather than a behaviour, and it is here because the
+        // honest version is not reachable from this suite: knownOccupied() is `perceived(...) || heard`, and the
+        // bot perceives every room on this night, so a "forgotten after the window" check passes or fails for a
+        // reason that has nothing to do with hearing. Setting HEARD_WINDOW to 0 - which makes every noise
+        // forgotten the instant it is made - is caught by this and by nothing else.
+        check("and the window is a real duration, not zero (" + Bot.HEARD_WINDOW + "s)",
+                Bot.HEARD_WINDOW > 0.5 && Bot.HEARD_WINDOW < 5.0);
         check("and it was counted", g.sounds == 1);
 
         // Ballora's target is the last sound, and only while she can still
