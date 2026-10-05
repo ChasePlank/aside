@@ -945,6 +945,7 @@ public class SelfTest {
         everyLevelPublishesItsWalkFloors();
         laterLevelsAreBusierThanTheFirstTen();
         enemyDensityScalesWithLevel();
+        nothingSpawnsOnYourHead();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1641,6 +1642,38 @@ public class SelfTest {
         double perEarly = early / 10.0, perLate = late / 30.0;
         check(String.format("enemy density scales with level (%.2f on 1-10 vs %.2f on 11-40 a level)",
                 perEarly, perLate), perLate > perEarly);
+    }
+
+    /**
+     * NOTHING SPAWNS ON YOUR HEAD. No ground enemy within four cells of the spawn point, on any of 40 levels.
+     *
+     * <p>This guard exists because a player reported it: the comment at the placement site quotes the playtest -
+     * "enemy spawns right on you, instantly taking a life" - and the fix was `mid > 6`. The mutation sweep is
+     * what showed nothing was protecting the fix: deleting that clause entirely left the whole gate green at
+     * 442 passed, 0 failed.
+     *
+     * <p>A playtest report is the most expensive kind of evidence there is, and it was the only thing holding
+     * this up. Measured across 40 levels, the nearest ground enemy sits 5 cells away, so a floor of 4 is
+     * comfortably below what the game does and well above the zero the fault produces.
+     */
+    static void nothingSpawnsOnYourHead() {
+        int worst = 999, worstLevel = 0;
+        for (int level = 1; level <= 40; level++) {
+            LevelMap m = new LevelGen(60, 20, 1000L + level, level).generate();
+            int spawnCol = -1;
+            for (int r = 0; r < m.heightCells() && spawnCol < 0; r++)
+                for (int c = 0; c < m.widthCells(); c++)
+                    if (m.cell(r, c) == 'P') { spawnCol = c; break; }
+            if (spawnCol < 0) continue;
+            for (int r = 0; r < m.heightCells(); r++)
+                for (int c = 0; c < m.widthCells(); c++) {
+                    char ch = m.cell(r, c);
+                    if (ch != 'o' && ch != 's') continue;
+                    if (Math.abs(c - spawnCol) < worst) { worst = Math.abs(c - spawnCol); worstLevel = level; }
+                }
+        }
+        check("no ground enemy spawns within four cells of the spawn (nearest " + worst
+                + ", level " + worstLevel + ")", worst >= 4);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
