@@ -170,8 +170,19 @@ public class Enemy {
         }
 
         if (state == AIState.PATROL) {
-            // Wall ahead: pick a new random heading (avoid oscillation:
-            // never the exact reverse unless it's the only option)
+            // Wall ahead: pick a new random heading.
+            //
+            // IT MUST ACTUALLY TURN. This avoided the exact REVERSE -- to stop
+            // the enemy oscillating back and forth -- and that was not enough:
+            // it could still pick the heading it already had, so an enemy that
+            // walked up into a ceiling could walk up into it again, stall for a
+            // frame, and try again. The visible effect is small; the effect on
+            // the suite was not, because the check that asserts "a top-down
+            // enemy facing a ceiling turns" reads the heading and was therefore
+            // FLAKY -- it passed or failed depending on an unseeded Random.
+            //
+            // So the same heading is excluded too. `tries` still bounds it, so
+            // a corner with no way out picks something rather than looping.
             if (hitWall) {
                 hitWall = false;
                 double oldX = hdx, oldY = hdy;
@@ -183,7 +194,8 @@ public class Enemy {
                         case 2 -> { hdx = 0; hdy = 1; }
                         default -> { hdx = 0; hdy = -1; }
                     }
-                } while (hdx == -oldX && hdy == -oldY && ++tries < 4);
+                } while ((hdx == oldX && hdy == oldY || hdx == -oldX && hdy == -oldY)
+                        && ++tries < 4);
             }
             body.vx = hdx * patrolSpeed;
             body.vy = hdy * patrolSpeed;
