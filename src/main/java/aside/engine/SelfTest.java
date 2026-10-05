@@ -949,6 +949,7 @@ public class SelfTest {
         noStepIsTallerThanTheJump();
         walkingIntoAnEnemyHurts();
         aHookshotPullAlwaysEnds();
+        arrowsHitWhatTheyPointAt();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1791,6 +1792,52 @@ public class SelfTest {
             if (hook.state != aside.games.fruitjump.engine.Hookshot.State.PULLING) return t;
         }
         return -1;
+    }
+
+    /**
+     * AN ARROW KILLS WHAT IT FLIES INTO - both lists.
+     *
+     * <p>Two separate playtest reports, two separate pieces of code, and neither was protected. World says so in
+     * its own comments: the arrow-enemy check "was missing entirely - arrows flew through enemies (playtest:
+     * 'arrows fire, but do nothing')", and the arrow-bat check exists because "they were not in `enemies`, so an
+     * arrow flew straight through one (playtest: the bat reads as invincible)".
+     *
+     * <p>The mutation sweep found both: disabling either collision left the gate green at 447 passed, 0 failed.
+     * The existing weapon check measures that an arrow FLIES - seventy pixels in a tenth of a second - which is
+     * a different question from whether it lands on anything.
+     *
+     * <p>They are checked separately because they ARE separate loops: a bat is not in `enemies`, and a fix to one
+     * would leave the other broken.
+     */
+    static void arrowsHitWhatTheyPointAt() {
+        // ON A FLOOR. An enemy in an empty World FALLS - the first version of this put one at y=100 and by the
+        // time the arrow arrived it was twenty pixels lower, so the arrow sailed over it and the check failed
+        // for a reason that had nothing to do with arrows. A bat does not fall, which is why that half passed.
+        String flat = String.join("\n", "                        ", "                        ",
+                "                        ", "########################");
+        World w = new World();
+        aside.games.fruitjump.engine.LevelMap.parse(flat).buildWorld(w);
+        // The floor's top is row 3, y=96, so the enemy's 22-tall box centres at 85 and the arrow flies at that
+        // height. THREE ATTEMPTS TO GET THIS RIGHT, all by probing rather than reasoning: first an enemy in an
+        // empty World, which FELL; then one at y=104, which snapped UP to the floor; then an arrow at y=106,
+        // which was INSIDE the ground and died on the frame it spawned.
+        Physics.Body player = new Physics.Body(80, 74, 24, 44);
+        w.addBody(player);
+        w.playerBody = player;
+        aside.games.fruitjump.engine.Enemy enemy = new aside.games.fruitjump.engine.Enemy(270, 85, 22, 22);
+        w.addEnemy(enemy);
+        w.addProjectile(aside.games.fruitjump.engine.Projectile.arrow(200, 85, 1));
+        for (int i = 0; i < 60; i++) w.update(GameLoop.DT);
+        check("weapons: an arrow kills the enemy it flies into", enemy.dead);
+
+        World w2 = new World();
+        Physics.Body p2 = new Physics.Body(80, 100, 24, 44);
+        w2.addBody(p2);
+        w2.playerBody = p2;
+        w2.addBat(new aside.games.fruitjump.engine.Bat(300, 100, 7L));
+        w2.addProjectile(aside.games.fruitjump.engine.Projectile.arrow(200, 100, 1));
+        for (int i = 0; i < 60; i++) w2.update(GameLoop.DT);
+        check("weapons: an arrow kills a bat too, which is a separate list from enemies", w2.bats.isEmpty());
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
