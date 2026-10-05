@@ -951,6 +951,7 @@ public class SelfTest {
         aHookshotPullAlwaysEnds();
         arrowsHitWhatTheyPointAt();
         aCheckpointCarriesYourHealth();
+        topDownEnemiesChaseInBothAxes();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1863,6 +1864,48 @@ public class SelfTest {
         check("a checkpoint carries your health into the next level, not a fresh bar (hp " + c.playerHP
                 + ", keys " + c.keys + ", level " + c.levelNum + ")",
                 c.playerHP == 1 && c.keys == 2 && c.levelNum == 7 && c.playerX < 0);
+    }
+
+    /**
+     * A TOP-DOWN ENEMY CHASES IN BOTH AXES; a side-view one only sideways.
+     *
+     * <p>Enemy says why: "the side-view AI only ever sets vx - in top-down rooms enemies slid left/right and
+     * never tracked the player vertically (playtest: 'enemies can only move left and right, not up or down')".
+     * The mutation sweep found the branch that implements it - `if (e.topDown)` in World - unprotected: disabling
+     * it left the gate green at 449 passed, 0 failed.
+     *
+     * <p>Both halves are asserted together because either alone would pass for the wrong reason. A top-down enemy
+     * that closed the gap would pass even if BOTH modes closed it, and a side-view enemy that did not would pass
+     * even if NEITHER did. Measured: 100px of vertical gap closes to 69 for a top-down enemy and stays at 100 for
+     * a side-view one.
+     *
+     * <p><b>AND THIS DOES NOT PROTECT THE BRANCH.</b> Disabling `if (e.topDown)` in World still leaves the gate
+     * green at 451 passed, 0 failed - measured, not assumed. That branch chooses top-down WALL SENSING
+     * (`senseWallTopDown` against `senseWall` plus `senseLedge`), and the movement lives in `updateAI`, which this
+     * exercises in open space with no walls. So the branch is still unprotected, and saying so here is better than
+     * a docstring that implies the sweep's finding is closed when it is not.
+     */
+    static void topDownEnemiesChaseInBothAxes() {
+        double td = closestVerticalApproach(true), side = closestVerticalApproach(false);
+        check(String.format("a top-down enemy closes the vertical gap, a side-view one does not (%.0fpx vs %.0fpx "
+                + "from 100px)", td, side), td < 90 && side > 95);
+    }
+
+    /** Closest a chasing enemy starting 100px below the player gets, over a second and a half. */
+    static double closestVerticalApproach(boolean topDown) {
+        World w = new World();
+        Physics.Body player = new Physics.Body(300, 300, 24, 44);
+        w.addBody(player);
+        w.playerBody = player;
+        aside.games.fruitjump.engine.Enemy e = new aside.games.fruitjump.engine.Enemy(300, 400, 22, 22);
+        e.topDown = topDown;
+        w.addEnemy(e);
+        double best = Math.abs(e.body.y - 300);
+        for (int i = 0; i < 90; i++) {
+            w.update(GameLoop.DT);
+            best = Math.min(best, Math.abs(e.body.y - 300));
+        }
+        return best;
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
