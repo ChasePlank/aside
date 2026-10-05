@@ -953,6 +953,7 @@ public class SelfTest {
         aCheckpointCarriesYourHealth();
         topDownEnemiesChaseInBothAxes();
         topDownEnemiesSenseWallsInTheirHeading();
+        aRetreatingBatGetsClearWithoutLeaving();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -1953,6 +1954,49 @@ public class SelfTest {
         w.addEnemy(e);
         w.update(GameLoop.DT);
         return e.hdx != 0 || e.hdy != -1;
+    }
+
+    /**
+     * A RETREATING BAT GETS CLEAR WITHOUT FLYING OUT OF SIGHT.
+     *
+     * <p>The comment carries the playtest: "level 2 bat flew off screen, it doesnt need to fly that far, just a
+     * little past the range. Flying out of sight makes the bat forgettable, and the point of the follow is that
+     * the player can SEE it and plan around it."
+     *
+     * <p><b>IT CATCHES ONE END AND NOT THE OTHER, and that is measured rather than hoped.</b> RETREAT_TIME set to
+     * 0.05 fails it - the bat barely leaves. RETREAT_TIME set to 20 does NOT, because the RANGE stops the bat at
+     * 1.15 x 260 = 299 before the timer ever matters, so the two guards cover each other. Setting the multiplier
+     * to 10.0 is likewise not caught, for the mirror-image reason: the timer stops it first.
+     *
+     * <p>So this protects "the bat gets clear", and "the bat does not go too far" is protected by the range - but
+     * neither line is individually observable, and the mutation sweep will keep reporting both as NOT CAUGHT. That
+     * is written here so the next person reading a sweep result knows it is already understood rather than
+     * overlooked.
+     */
+    static void aRetreatingBatGetsClearWithoutLeaving() {
+        World w = new World();
+        Physics.Body p = new Physics.Body(300, 300, 24, 44);
+        w.addBody(p);
+        w.playerBody = p;
+        aside.games.fruitjump.engine.Bat bat = new aside.games.fruitjump.engine.Bat(300, 300, 11L);
+        w.addBat(bat);
+        bat.flee();                      // a knockdown clears the swarm, so every bat retreats
+        // MEASURED ONLY WHILE RETREATING. The first version tracked the furthest distance over three seconds,
+        // which included the bat WANDERING afterwards - so a 0.05s retreat still "got far" and the check passed.
+        // What the retreat guard controls is how far the bat gets while it is retreating, and that is what is
+        // measured.
+        double far = 0;
+        for (int i = 0; i < 180; i++) {
+            w.update(GameLoop.DT);
+            if (bat.state == aside.games.fruitjump.engine.Bat.State.RETREAT) {
+                far = Math.max(far, Math.hypot(bat.body.x - 300, bat.body.y - 300));
+            }
+        }
+        // 100 TO 290. Measured, a retreating bat gets 269px; with RETREAT_TIME at 20 the RANGE stops it at
+        // 1.15 x 260 = 299. Those are ten pixels apart, which is why the ceiling is 290 rather than something
+        // round - it is the only value that separates the two, and it is the measured one.
+        check(String.format("a retreating bat gets clear (%.0fpx) but not out of sight, against an aggro range "
+                + "of %.0f", far, aside.games.fruitjump.engine.Bat.AGGRO_RANGE), far > 100 && far < 290);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */
