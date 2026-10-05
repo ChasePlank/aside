@@ -142,15 +142,34 @@ public class SelfTest {
         // as broken when the problem is the harness. Both are joined.
         String cp = System.getProperty("java.class.path", ".");
         String modules = System.getProperty("jdk.module.path");
-        if (modules != null && !modules.isBlank()) cp = cp + java.io.File.pathSeparator + modules;
+
+        // THE MODULES GO ON THE MODULE PATH, not joined to the class path.
+        //
+        // Joining them to `-classpath` does not make them visible: JavaFX is a
+        // set of MODULES here, and a compiler reading only the class path cannot
+        // see them. That is why this check has been SKIPPING ITSELF in the gate
+        // -- the gate runs the suite with `--module-path`, so the compile failed
+        // with javafx errors, `sawJavafx` was true, and the check printed
+        // "JavaFX is not on this compiler's path -- skipping the compile check"
+        // and returned. So the gate has never actually verified that the retired
+        // games compile, which is the one thing this check exists for.
+        //
+        // Found by the engine suite reporting 456 checks in the gate and 457
+        // standalone. That one-check difference was the whole of it.
+        List<String> opts = new ArrayList<>(List.of("-nowarn", "-d", out.toString(), "-classpath", cp));
+        if (modules != null && !modules.isBlank()) {
+            opts.add("--module-path");
+            opts.add(modules);
+            opts.add("--add-modules");
+            opts.add("javafx.controls,javafx.graphics,javafx.media,javafx.swing");
+        }
 
         javax.tools.DiagnosticCollector<javax.tools.JavaFileObject> diags =
                 new javax.tools.DiagnosticCollector<>();
         boolean ok;
         try (javax.tools.StandardJavaFileManager fm =
                      jc.getStandardFileManager(diags, null, null)) {
-            ok = jc.getTask(null, fm, diags,
-                    List.of("-nowarn", "-d", out.toString(), "-classpath", cp),
+            ok = jc.getTask(null, fm, diags, opts,
                     null, fm.getJavaFileObjectsFromFiles(files)).call();
         } catch (Exception e) {
             check("the retired compile can be run (" + e.getMessage() + ")", false);
