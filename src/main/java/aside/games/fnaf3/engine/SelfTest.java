@@ -410,6 +410,11 @@ public final class SelfTest {
         check("no two night rows overlap", nightsDisjoint);
 
         boolean nightHits = true;
+        // ASSERT THERE ARE ROWS BEFORE ASSERTING THEY WORK. nightHits starts true and the loop below never runs
+        // when NIGHTS is 0, so this check passed vacuously - the night select would have drawn nothing and started
+        // nothing, and the suite stayed green. The mutation sweep found it only because fnaf2's copy of this check
+        // asserts the count first; without that line both are vacuous.
+        check("there are five nights to choose", MouseMap.NIGHTS == 5);
         for (int i = 1; i <= MouseMap.NIGHTS; i++) {
             double[] r = MouseMap.nightRow(i);
             if (MouseMap.nightAt(r[0] + r[2] / 2, r[1] + r[3] / 2) != i) nightHits = false;
