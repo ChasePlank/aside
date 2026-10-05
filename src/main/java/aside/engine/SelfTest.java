@@ -955,6 +955,7 @@ public class SelfTest {
         topDownEnemiesSenseWallsInTheirHeading();
         aRetreatingBatGetsClearWithoutLeaving();
         aSaveKnowsWhichGameItBelongsTo();
+        theLevelFillsTheWindow();
         floodedLevelsKeepWaterInRuns();
         floodedLevelsDoNotDrownYou();
 
@@ -2032,6 +2033,25 @@ public class SelfTest {
         } catch (Exception e) {
             check("a save round-trips its mode (" + e.getMessage() + ")", false);
         }
+    }
+
+    /**
+     * THE LEVEL FILLS THE WINDOW, and is long enough to be a level.
+     *
+     * <p>GameplayScreen's comment says why the height is what it is: "20 rows is not arbitrary: at 2x a cell is 64
+     * physical px, so 20 rows = 1280px, just over the 1200px canvas, and the level fills the window. (At 14 rows
+     * the level was 896px tall inside a 1200px canvas, so most of the vertical space was empty - that is what made
+     * everything read as 'sitting at the top'.)"
+     *
+     * <p>The mutation sweep found both numbers unprotected: 14 rows - the exact value the comment says was wrong -
+     * and a 20-column width both left the gate green at 455 passed, 0 failed.
+     */
+    static void theLevelFillsTheWindow() {
+        int tall = aside.games.fruitjump.GameplayScreen.LEVEL_H * 64;    // 2x scale, 64 physical px a cell
+        int wide = aside.games.fruitjump.GameplayScreen.LEVEL_W * 64;
+        check("a level is at least as tall as the canvas, so it does not read as sitting at the top ("
+                + tall + "px against 1200)", tall >= 1200);
+        check("and long enough to be a level rather than a screen (" + wide + "px)", wide >= 2000);
     }
 
     /** How close a bat starting `distance` from the player ever gets, over six seconds. */

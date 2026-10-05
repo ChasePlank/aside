@@ -195,6 +195,7 @@ tools/mutate.sh <suite> <file> <anchor> <replacement>  # does any check notice t
 tools/wiring-report.sh                                 # which engine classes the GAME never uses
 tools/artifact-changed.sh <owner/repo> <local-file>    # is what I am about to publish actually different?
 tools/style-classes.sh [repo-dir]                      # does every style class the code asks for exist?
+tools/fix-comments.sh                                  # where has the code been taught something, and who checks it?
 ```
 
 **`tools/regenerate-frames.sh` is deliberately not part of the gate, and the gate is deliberately not part of

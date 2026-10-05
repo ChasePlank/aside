@@ -41,7 +41,11 @@ public class GameplayScreen extends UiScreen {
     // level fills the window. (At 14 rows the level was 896px tall
     // inside a 1200px canvas, so most of the vertical space was empty --
     // that is what made everything read as "sitting at the top".)
-    private static final int LEVEL_W = 60, LEVEL_H = 20;
+    // PUBLIC LIKE THE ENGINE'S OWN REPORTS, because a check has to be able to read them. They are the game's
+    // shape, not an internal: 20 rows at 64 physical pixels is 1280px against a 1200px canvas, and the mutation
+    // sweep found both numbers unprotected - 14 rows, the value the comment says made everything "read as sitting
+    // at the top", left the gate green at 455 passed, 0 failed.
+    public static final int LEVEL_W = 60, LEVEL_H = 20;
 
     // Engine state
     private final World world;
