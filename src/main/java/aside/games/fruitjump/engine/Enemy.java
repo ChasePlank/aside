@@ -186,16 +186,36 @@ public class Enemy {
             if (hitWall) {
                 hitWall = false;
                 double oldX = hdx, oldY = hdy;
-                int tries = 0;
-                do {
-                    switch (tdr.nextInt(4)) {
-                        case 0 -> { hdx = 1; hdy = 0; }
-                        case 1 -> { hdx = -1; hdy = 0; }
-                        case 2 -> { hdx = 0; hdy = 1; }
-                        default -> { hdx = 0; hdy = -1; }
+                // PICK FROM THE ALLOWED SET, do not retry until you get one.
+                //
+                // The previous version rolled a d4 and re-rolled if it landed on
+                // the heading it already had or the exact reverse. With two of
+                // the four faces excluded that is a 1-in-16 chance of exhausting
+                // the retries and accepting the same heading anyway -- so the
+                // enemy still stalled at a wall about one time in sixteen, and
+                // the check that reads the heading was still flaky at about that
+                // rate. Measured: six runs gave five 455/0 and one 454/1.
+                //
+                // Collecting the allowed headings first makes the turn certain,
+                // and the fallback only fires in a corner where every direction
+                // is the one it came from.
+                double[] dxs = {1, -1, 0, 0};
+                double[] dys = {0, 0, 1, -1};
+                int allowed = 0;
+                for (int i = 0; i < 4; i++) {
+                    if (dxs[i] == oldX && dys[i] == oldY) continue;      // same
+                    if (dxs[i] == -oldX && dys[i] == -oldY) continue;    // reverse
+                    allowed++;
+                }
+                int pick = tdr.nextInt(allowed > 0 ? allowed : 4);
+                int seen = 0;
+                for (int i = 0; i < 4; i++) {
+                    if (allowed > 0) {
+                        if (dxs[i] == oldX && dys[i] == oldY) continue;
+                        if (dxs[i] == -oldX && dys[i] == -oldY) continue;
                     }
-                } while ((hdx == oldX && hdy == oldY || hdx == -oldX && hdy == -oldY)
-                        && ++tries < 4);
+                    if (seen++ == pick) { hdx = dxs[i]; hdy = dys[i]; break; }
+                }
             }
             body.vx = hdx * patrolSpeed;
             body.vy = hdy * patrolSpeed;
