@@ -66,7 +66,7 @@ if ! grep -qE '=== [0-9]+ game' "$TMP/log"; then
 fi
 grep -E '=== [0-9]+ game' "$TMP/log" | sed 's/^/  /'
 
-changed=0
+changed=0; writeFails=0
 # GUARD THE GLOB. Without this an empty directory leaves the pattern unexpanded, basename gives "*", and the
 # script writes a file called `docs/frames/*.png` and counts it as an update.
 shopt -s nullglob
@@ -74,9 +74,17 @@ for f in "$TMP"/*.png; do
   n=$(basename "$f")
   case "$n" in contact-sheet.png|drift.png|ledger.png) continue;; esac
   if [ -f "docs/frames/$n" ] && cmp -s "$f" "docs/frames/$n"; then continue; fi
-  cp "$f" "docs/frames/$n"
-  echo "  docs/frames/$n"
-  changed=$((changed + 1))
+  # CHECK THE WRITE. `changed` used to increment whether or not cp succeeded, so on a full disk every copy failed,
+  # the count still rose, and this script printed "Now: git add docs/ && commit." - which is exactly how a stale
+  # frames directory was reported as an update. The harness said "[output file write failed]" in the same output;
+  # the sign-off came after it and a sign-off is what a working run looks like.
+  if cp "$f" "docs/frames/$n"; then
+    echo "  docs/frames/$n"
+    changed=$((changed + 1))
+  else
+    echo "  COULD NOT WRITE docs/frames/$n" >&2
+    writeFails=$((writeFails + 1))
+  fi
 done
 echo "  $changed frame(s) updated"
 
@@ -87,8 +95,8 @@ echo "  $changed frame(s) updated"
 # the sheet either (check-sheets.sh skips it by name for the same reason), so
 # that diff was pure noise -- a commit every fire that said nothing.
 if [ "$changed" -gt 0 ]; then
-  cp "$TMP/contact-sheet.png" docs/contact-sheet.png
-  echo "  docs/contact-sheet.png"
+  if cp "$TMP/contact-sheet.png" docs/contact-sheet.png; then echo "  docs/contact-sheet.png"
+  else echo "  COULD NOT WRITE docs/contact-sheet.png" >&2; writeFails=$((writeFails + 1)); fi
 fi
 
 # And the phone's, if the browser tooling is here.
@@ -103,7 +111,26 @@ else
   echo "  phone sheet NOT regenerated - run 'npm install' first"
 fi
 
+# AND CONFIRM IT AT THE END, rather than trusting the count. The count is this script's belief about what it did;
+# comparing the copies is evidence of what actually landed.
+mismatch=0
+for f in "$TMP"/*.png; do
+  # phone.png is the PHONE SHEET, and it is copied to docs/contact-sheet-phone.png - not into docs/frames/. The
+    # first version of this check looked for it in docs/frames/phone.png and reported a stale frame that was never
+    # supposed to be there. Same shape as the tail -3 mistake earlier the same night: a check looking in the wrong
+    # place and reporting a fault that is its own.
+    n=$(basename "$f"); case "$n" in contact-sheet.png|drift.png|ledger.png|phone.png) continue;; esac
+  if [ ! -f "docs/frames/$n" ] || ! cmp -s "$f" "docs/frames/$n"; then
+    echo "  STALE: docs/frames/$n" >&2; mismatch=$((mismatch + 1))
+  fi
+done
+
 echo
+if [ "$writeFails" -gt 0 ] || [ "$mismatch" -gt 0 ]; then
+  echo "WRITES FAILED: $writeFails refused, $mismatch frame(s) on disk do not match what was generated." >&2
+  echo "The frames directory is stale. Nothing here is safe to commit." >&2
+  exit 1
+fi
 if [ "$changed" -gt 0 ]; then
   echo "Now: git add docs/ && commit."
 else
