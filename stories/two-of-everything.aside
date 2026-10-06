@@ -15,6 +15,7 @@ author: Roxanne
 start: kitchen
 
 == kitchen ==
+show nell neutral at left
 bg kitchen_boxes
 music fan_hum
 Nell gets there first, which she will mention, and puts the kettle on, which she will also mention.
@@ -29,6 +30,8 @@ Tom arrives at eleven with a van and an apology. The apology is for being late. 
 * "You brought the van." -> van
 
 == tea ==
+show nell neutral at left
+show tom neutral at right
 He takes the tea. He stands in the doorway of the kitchen he grew up in and does not sit down, because every
 chair has something on it.
 
@@ -44,6 +47,8 @@ chair has something on it.
 * "Don't. Let's start." -> loft
 
 == van ==
+show nell neutral at left
+show tom neutral at right
 "I brought the van," he says. "For the piano."
 
 "You're not taking the piano."
@@ -58,6 +63,8 @@ would have meant admitting whose it was.
 * "Come on. The loft first." -> loft
 
 == say_it ==
+show nell neutral at left
+show tom neutral at right
 "Dad's," Tom says. "It was all Dad's, and she couldn't throw it out, and she couldn't use it either, so it lived
 in a cupboard for twenty years being his."
 
@@ -73,6 +80,8 @@ work, which is the only way she has ever looked at anything.
 * Go up to the loft. -> loft
 
 == loft ==
+show nell neutral at left
+show tom neutral at right
 bg loft_light
 The loft is hot and full of light and the sort of dust that has opinions.
 
@@ -88,6 +97,8 @@ everything."
 * "We don't know that. She might have unpacked it a hundred times." -> unpacked
 
 == chose ==
+show nell neutral at left
+show tom neutral at right
 "That's what I tell myself," Tom says.
 
 "That's what I tell myself too," Nell says. "Which is why it's true."
@@ -98,6 +109,8 @@ and they do not talk about the label again, which is a kind of agreement.
 * At the end of the day. -> table
 
 == unpacked ==
+show nell neutral at left
+show tom neutral at right
 "That is genuinely the worst thing you have ever said to me in a loft," Tom says.
 
 "Probably."
@@ -110,6 +123,8 @@ trousers, which for Nell is close to a confession.
 * At the end of the day. -> table
 
 == table ==
+show nell neutral at left
+show tom neutral at right
 bg table_evening
 By six the house is a house. It is astonishing how quickly a house stops being somebody's.
 
@@ -125,6 +140,7 @@ about it.
 * "Leave them both on the table and lock up." -> ending_table
 
 == ending_case ==
+show nell neutral at center
 bg table_evening
 He takes the case. She does not say anything about it, and she takes nothing at all, which he notices and does not
 mention, and which will be the thing she is angry about in about four years.
@@ -138,6 +154,8 @@ wanted the thing itself. They wanted to be the one who was given it.
 -> END
 
 == ending_scissors ==
+show nell neutral at left
+show tom neutral at right
 bg front_step
 She takes the scissors, and she does not even like the scissors, and he knows she does not like the scissors.
 
