@@ -199,6 +199,7 @@ tools/fix-comments.sh                                  # where has the code been
 tools/make-bundle.sh <name> <jar> [readme]             # a jar into a download that runs with nothing installed
 tools/sync-and-fix.sh                                  # merge origin/main, and fix what the merge made stale
 tools/diff.sh <a> <b> [filter]                         # diff two things, and count what a filter would have hidden
+tools/self-test.sh                                     # break what each tool looks at; do the tools notice?
 tools/make-bundle-win.sh <name> <jar> [readme]         # the same, for Windows, cross-built
 ```
 

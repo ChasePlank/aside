@@ -232,6 +232,15 @@ if command -v node >/dev/null 2>&1; then
   if [ $cp_rc -ne 0 ]; then fail=$((fail + 1)); failed_names+=("port-comparisons"); fi
 fi
 
+# AND THE TOOLS THEMSELVES. Every tool here is a check, and a check that cannot fail is worse than no check because
+# it is believed - Rule 15 was written down after a mutation harness shipped broken while the suites it ran passed
+# beautifully. self-test.sh breaks a known thing for each tool and requires the tool to complain.
+if [ -x tools/self-test.sh ]; then
+  st_out=$(tools/self-test.sh 2>&1); st_rc=$?
+  echo "$st_out" | grep -E 'FAIL|tool self-test' | sed 's/^/  /'
+  if [ $st_rc -ne 0 ]; then fail=$((fail + 1)); failed_names+=("tool-self-tests"); fi
+fi
+
 # WHAT THIS IS NOT RUNNING. Every class with a main is either in the list above or matched by the pattern
 # below, and anything else is printed - so a checker added tomorrow is visible rather than silently absent. This
 # is the half that makes curating the list safe.
