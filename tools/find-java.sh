@@ -15,6 +15,8 @@
 #   JAVA   the java binary        (override with JAVA=)
 #   FX     the JavaFX lib dir     (override with FX=)
 #   OUT    the build directory    (override with OUT=; defaults to out/ or classes/)
+#   JAVAC  the compiler            (derived from JAVA)
+#   JAR    the packer              (derived from JAVA)
 #
 # Exits 2 with a message rather than letting a caller misread "no toolchain" as "the thing I was checking failed".
 
@@ -48,6 +50,30 @@ if ! java_works "${JAVA:-}"; then
 fi
 if [ -z "${JAVA:-}" ]; then
   echo "find-java: no java found - set JAVA=/path/to/bin/java" >&2
+  return 2 2>/dev/null || exit 2
+fi
+
+# --- javac and jar
+#
+# SIBLINGS OF JAVA, and derived from it rather than looked up again. They live next to it in every JDK, and the
+# alternative was a FOURTH variable each tool derives for itself - which is the exact failure that created this
+# file in the first place: three tools each grew their own "find a JDK". A tool that needs the compiler now sources
+# this and has it.
+# AND RESOLVE THE BARE CASE. `JAVA` is often just `java` from PATH, and `${java%/java}` strips nothing, so the
+# derivation gave `java/javac` - which is not a path. That failure surfaced as "line 34: /root/release/aside.jar:
+# No such file or directory" from a *different* script, which is the worst kind: the error names the caller's
+# variable and not the lookup that left it empty.
+java_bin_dir() {
+  case "$JAVA" in
+    */*) dirname "$JAVA" ;;
+    *)   dirname "$(command -v "$JAVA" 2>/dev/null || echo "$JAVA")" ;;
+  esac
+}
+JBIN="$(java_bin_dir)"
+JAVAC="${JAVAC:-$JBIN/javac}"
+JAR="${JAR:-$JBIN/jar}"
+if [ ! -x "$JAVAC" ]; then
+  echo "find-java: no javac next to $JAVA - set JAVAC=/path/to/javac" >&2
   return 2 2>/dev/null || exit 2
 fi
 
