@@ -98,6 +98,7 @@ step and the chalk line is behind you.
 == flood ==
 sfx static
 The pump in the sub-basement fails at 4:10, which you know because the light changes when it does.
+bg archive_stairs
 
 The water comes up the room the way water does: without hurry, and without any interest in what it is covering.
 
@@ -106,6 +107,7 @@ The water comes up the room the way water does: without hurry, and without any i
 
 == one_more ==
 The water is at your knees on the bottom flight and it is cold in a way that makes the decision for you about
+bg archive_stairs
 how far you are willing to go.
 
 There is one shelf within reach. It is the planning minutes: dull, heavy, and the thing a city actually needs
@@ -117,6 +119,7 @@ when it wants to prove that a street was a street.
 
 == watch ==
 You sit on the top step with your feet on the third one down, which stays dry, and you watch the line go under.
+bg archive_stairs
 
 It takes eleven minutes. You have never actually watched it happen before. It is the first year you have not
 been carrying something.
@@ -127,6 +130,7 @@ been carrying something.
 == ending_official ==
 ~ ending official
 You carry the planning minutes up four flights, one volume at a time, and you are still carrying them when the
+bg archive_upper
 water reaches the ceiling of the room they came from.
 
 The city will ask for those volumes in forty years and they will be here, dry, and the person who asks will not
@@ -140,6 +144,7 @@ water and you draw a new one, higher, on a wall that is still dry.
 == ending_personal ==
 ~ ending personal
 The box is still on its shelf when you get there, floating, lid down, and you go in up to your shoulders to get
+bg archive_upper
 it and the cards inside are ruined.
 
 You take it up anyway. You spread the cards out on the reading room table and they dry badly and the ink runs,
@@ -153,6 +158,7 @@ were actually carrying.
 == ending_nothing ==
 ~ ending nothing
 You go up. You do not take anything.
+bg archive_upper
 
 At the top of the stairs you sit down and let the building do what it has been going to do since the first
 spring, and you think about the fact that a line is not a wall and never was, and that you have spent nineteen
@@ -164,6 +170,7 @@ In the morning you will be the only person who knows what was on the shelves, an
 
 == ending ==
 The water stops at the second floor, which nobody expected, and stays there.
+bg archive_upper
 
 In the spring you go back down with a new piece of chalk. The room is a room again: eleven metres of silt, and
 shelving standing in it like a burned forest, and light coming down through the reading room windows in a way it
@@ -179,6 +186,7 @@ because that is what you do.
 
 == ending_box ==
 The box dried badly and the cards are stuck together in one block, and the line you wanted is the line that went
+bg archive_upper
 first.
 
 You put it on the shelf it came off. It is above the new line now, which is the only thing you were ever
@@ -189,6 +197,7 @@ actually asked to do.
 
 == ending_date ==
 "Fourth of April."
+bg archive_upper
 
 It sounds like nothing. It sounds like a date. Nineteen years of this and the whole job has been: notice where
 the water is, and say so, and do it again next year.
@@ -197,6 +206,7 @@ the water is, and say so, and do it again next year.
 
 == ending_self ==
 You took nothing, and you are the only copy.
+bg archive_upper
 
 Every rate book, every planning minute, every card in that box: the water has them now, and what it does not
 have is the nineteen years of knowing where they were. That is not a comfort and it is not a substitute. It is
