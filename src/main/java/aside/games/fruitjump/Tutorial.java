@@ -175,7 +175,12 @@ public class Tutorial {
             case 6 -> {
                 s.add(new Sign(12 * 32, y, "SNACK  -  one life back"));
                 s.add(new Sign(22 * 32, y, "JAR  -  a life FOREVER, and a full refill"));
-                s.add(new Sign(30 * 32, y, "KEY  -  opens the door"));
+                // MOVED RIGHT, from 30 * 32. The JAR sign to its left is 41 characters and wraps to a 34-character
+                // line, which at the 12px-a-character this is drawn in spans about 408px from 704 - ending
+                // near 1112. The KEY sign started at 960 and sat INSIDE it, so the two overlaid and neither
+                // could be read. Nothing checks sign collisions: wrapSign keeps a sign on the screen and
+                // the clamp keeps it near its object, and neither knows about the sign next to it.
+                s.add(new Sign(38 * 32, y, "KEY  -  opens the door"));
             }
             case 7 -> {
                 s.add(new Sign(20 * 32, y - 60, "WHAT IS OUT THERE"));
@@ -196,7 +201,11 @@ public class Tutorial {
                 s.add(new Sign(8 * 32, y + 26, "you walk through it. it does not slow you down"));
                 s.add(new Sign(20 * 32, y - 60, "PIRANHA"));
                 s.add(new Sign(20 * 32, y - 34, "unlike a bat, this one takes a HEART"));
-                s.add(new Sign(20 * 32, y - 8, "they come in groups. get out and they lose you"));
+                // MOVED DOWN to y + 26, from y - 8. The sign above it is 36 characters, so it WRAPS ONTO A SECOND
+                // LINE - and that second line landed on y - 8, which is exactly where this one started. They
+                // printed on top of each other and neither could be read. A sign that wraps occupies TWO rows,
+                // and the next sign down has to clear both.
+                s.add(new Sign(20 * 32, y + 26, "they come in groups. get out and they lose you"));
                 s.add(new Sign(44 * 32, y, "that is everything. good luck"));
             }
             default -> { }
