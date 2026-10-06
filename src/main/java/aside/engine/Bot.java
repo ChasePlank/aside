@@ -41,6 +41,14 @@ public class Bot {
         public List<String> unreachableBeats = new ArrayList<>();
         /** Distinct terminal scenes (paths may converge on the same one). */
         public Set<String> endings = new LinkedHashSet<>();
+
+        /**
+         * Scenes that can be reached from themselves - a loop. Not a fault: a hub is a loop, and so is any story
+         * where you come back to a room. It is reported because it is the one shape where UNREACHABLE can mean
+         * something other than "the script is broken", and the report should say so rather than leave the reader
+         * to work it out.
+         */
+        public Set<String> cyclicScenes = new LinkedHashSet<>();
         /** How many explored paths ended at each terminal scene. */
         public Map<String, Integer> endingCounts = new LinkedHashMap<>();
         public Map<String, Double> varMin = new LinkedHashMap<>();
@@ -87,6 +95,22 @@ public class Bot {
               .append(budgetHit ? "   (UNRELIABLE: traversal did not finish)" : "")
               .append('\n');
             for (String s : u) sb.append("    ").append(budgetHit ? "?? " : "!! ").append(s).append('\n');
+
+            // SAY WHY, WHEN THERE IS A WHY TO SAY. "Unreachable" has two causes and only one of them is a broken
+            // script. The other is a loop the search cannot re-enter, because it dedupes states and buckets
+            // counters - and a reader who does not already know that will spend an hour looking for a typo that
+            // is not there. That is exactly what happened to the eighth story.
+            if (!cyclicScenes.isEmpty()) {
+                sb.append("loops:               ").append(cyclicScenes.size())
+                  .append(" scene(s) can be re-entered\n");
+                for (String s : cyclicScenes) sb.append("    .. ").append(s).append('\n');
+                if (!u.isEmpty() && !budgetHit) {
+                    sb.append("    NOTE: this story loops, and a loop whose progress is tracked by a COUNTER alone\n");
+                    sb.append("          collapses to one state - the traversal buckets counters, so count 0 and\n");
+                    sb.append("          count 1 are the same state and it never re-enters the room. If the scenes\n");
+                    sb.append("          above look reachable to you, gate the loop on a FLAG per branch instead.\n");
+                }
+            }
 
             sb.append("missing targets:     ").append(missingTargets.size()).append('\n');
             for (String s : missingTargets) sb.append("    !! ").append(s).append('\n');
@@ -295,6 +319,19 @@ public class Bot {
                     + " reach is unknown rather than unreachable");
         }
 
+        // A LOOP IS NOT A FAULT, BUT IT CHANGES WHAT "UNREACHABLE" MEANS.
+        //
+        // This traversal dedupes states by (scene, beat, variables) and BUCKETS counters - every value between two
+        // thresholds is one state. That is right, and it is what lets a five-night story finish. But it means a
+        // loop whose progress is tracked by a COUNTER ALONE collapses: if the room offers the same choices at
+        // count 0 and count 1, those are genuinely the same state, the search never re-expands it, and everything
+        // past the loop is reported unreachable.
+        //
+        // That is exactly what happened to the eighth story. The report said "7 unreachable scenes" and the cause
+        // was one counter where a flag per branch was needed. So the cycles are counted here and the audit says
+        // so, because otherwise the reader has to rediscover the auditor's own state model to read its output.
+        r.cyclicScenes = findCycles(script);
+
         return r;
     }
 
@@ -307,6 +344,34 @@ public class Bot {
      * traversal that finishes a five-night story and one that dies at 1.6x
      * the default budget.
      */
+    /**
+     * Which scenes can be reached from themselves. Small stories, so a plain per-scene search is fine and a
+     * Tarjan would be more machinery than the question needs.
+     */
+    Set<String> findCycles(Script script) {
+        Map<String, Set<String>> edges = new java.util.HashMap<>();
+        for (Map.Entry<String, Scene> e : script.scenes.entrySet()) {
+            Set<String> out = new java.util.LinkedHashSet<>();
+            for (Beat b : e.getValue().beats) {
+                if (b.target != null) out.add(b.target);
+                if (b.choices != null) for (Choice c : b.choices) if (c.target != null) out.add(c.target);
+            }
+            edges.put(e.getKey(), out);
+        }
+        Set<String> cyclic = new java.util.LinkedHashSet<>();
+        for (String start : edges.keySet()) {
+            Set<String> seen = new java.util.HashSet<>();
+            java.util.ArrayDeque<String> stack = new java.util.ArrayDeque<>(edges.get(start));
+            while (!stack.isEmpty()) {
+                String n = stack.pop();
+                if (n.equals(start)) { cyclic.add(start); break; }
+                if (!seen.add(n)) continue;
+                for (String m : edges.getOrDefault(n, Set.of())) stack.push(m);
+            }
+        }
+        return cyclic;
+    }
+
     long signatureHash(Vn v) {
         String s = signature(v);
         long h = 0xcbf29ce484222325L;
