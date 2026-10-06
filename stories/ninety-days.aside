@@ -1,0 +1,198 @@
+# A short story for the Aside engine.
+#
+# EIGHTH REGISTER, AND THE FIRST WITH A DIFFERENT SHAPE. The seven before it are chains: a scene leads to two or
+# three, and the ending is whichever branch you took. This one is a HUB. You stand in one room with a shelf, you
+# choose what to look at, and you come back. Nothing branches until the end, and the ending does not depend on
+# which item you chose - it depends on HOW MANY you bothered to, which is a different question and the reason the
+# shape is worth having.
+#
+# The register is wry, warm and procedural: a lost-property office on disposal day. Unclaimed property is held
+# ninety days and then it goes, and the person who runs the office has been logging other people's things for
+# eleven years. Each item on the shelf is a small story about somebody who did not come back for it. The last
+# item is the first one ever logged, and it has been on the shelf the whole time.
+#
+# Three endings, and none of them resolves the suitcase.
+#
+# WHY EVERY ITEM HAS A FLAG AND NOT JUST A COUNTER. The first version of this tracked progress with a single
+# `seen` counter and gated the last choice on `seen >= 3`, and the auditor reported it as broken: 7 unreachable
+# scenes, 0 paths explored, 0 endings. The reason is in the auditor's own design - it dedupes states by a
+# signature of (scene, beat, variables), and it BUCKETS counters, collapsing every value between two thresholds
+# into one state. `seen=0` and `seen=1` are the same state, so the search never re-expanded the hub after the
+# first item, `seen` never reached 3, and the whole second half of the story was invisible to it.
+#
+# That is the search being right and the script being wrong. From `office` with seen=0 and seen=1 the OFFERED
+# CHOICES were identical, so those two states genuinely had the same future - the story let you pick up the same
+# shoe five times. Gating each item on its own flag makes the states differ, which is both what a shelf does and
+# what lets the story be walked. A hub needs flags, not a counter.
+
+title: Ninety Days
+author: Roxanne
+start: office
+
+== office ==
+bg lost_office
+music fan_hum
+The office is a desk, a shelf, and a book. The shelf has five things on it and the book has five lines in it, and
+between them they are the whole of the job.
+
+Ninety days. That is the rule and it is a good rule, because it means you never have to decide anything: you
+write the date in the book and the date decides for you. Today is disposal day for everything logged in July.
+
+The book is open at July. You have read it already, the way you read it every quarter, and now you do the part
+that is not in the rule, which is picking each thing up one last time.
+
+* A single shoe, size six, off the 07:40. -> shoe [if !s_shoe]
+* A tin of paint, unopened, with the receipt still taped to it. -> paint [if !s_paint]
+* A phone, dead, with four hundred unread messages on it. -> phone [if !s_phone]
+* A passport, expired four years. -> passport [if !s_passport]
+* A jar of marmalade, homemade, labelled in biro. -> marmalade [if !s_marmalade]
+* That is everything. -> shelf [if seen >= 3]
+
+== shoe ==
+~ seen +1
+~ s_shoe true
+A single shoe. Left on the 07:40, which is the 07:40 to the coast, and somebody got off at the coast with one
+shoe and did not notice, or noticed and did not care, or was in no state to notice either way.
+
+Size six. Worn through at the outside of the heel, which is how people walk when they are carrying something on
+that side. You have thought about that more than the shoe deserves.
+
+* Put it back. -> office
+
+== paint ==
+~ seen +1
+~ s_paint true
+One litre of a colour called Weathered Copper, unopened, with the receipt still taped to the tin and the date on
+the receipt four days before it was handed in.
+
+Somebody bought paint, carried it onto a bus, and then had a week in which they did not need it. You do not know
+what happened in that week and you never will, and the tin is not going to tell you, and you have decided that
+this is the most honest object on the shelf.
+
+* Put it back. -> office
+
+== phone ==
+~ seen +1
+~ s_phone true
+It is dead and it will not charge. Four hundred unread messages, which you know because the lock screen still
+shows the count, and the count is the only thing on it that still works.
+
+Four hundred. You have watched that number for ninety days and it has not gone up, and you have decided that
+this is because nobody is sending them any more rather than because nobody is receiving them, and you are aware
+that you have no evidence for this at all.
+
+* Put it back. -> office
+
+== passport ==
+~ seen +1
+~ s_passport true
+Expired four years ago, which means it was already expired when it was handed in, which means somebody carried an
+expired passport around with them and then lost it and then did not come back for it.
+
+There is a photograph in it of a person who is twelve years younger than the person who lost it. You look at the
+photograph for slightly longer than you look at the others.
+
+* Put it back. -> office
+
+== marmalade ==
+~ seen +1
+~ s_marmalade true
+A jar of marmalade, homemade, labelled in biro with a date and a name and the word SEVILLE. It is the only thing
+on the shelf that somebody made.
+
+It has been here eighty-eight days. You have thought about the marmalade more than any of it, because a jar of
+something you made is not the sort of thing you leave on a bus by accident, and because it is the one item on the
+shelf that was clearly meant for somebody.
+
+* Put it back. -> office
+
+== shelf ==
+There is one more thing on the shelf and it is not in the book, because it was logged before the book.
+
+A suitcase. Eleven years ago, the first week you had this job, handed in off a service that does not run any more.
+You wrote it on a page of a different book and then the book changed and it did not get carried over, and so it
+has never had a date, and so it has never come up for disposal, and so it has been on that shelf for eleven years
+while everything around it came and went.
+
+You have never opened it. You have thought about opening it roughly once a quarter for eleven years.
+
+* Open it. -> open
+* Put it in the skip with the rest. -> dispose
+* Write today's date on it and give it ninety days. -> keep
+
+== open ==
+bg lost_office_open
+The catches are stiff and the first one takes a thumbnail with it.
+
+Inside: a man's coat, folded, in a plastic bag that has gone brittle. A paperback with a cracked spine and a
+bus ticket for a bookmark, on a page about a third of the way in. A photograph of two people on a beach, in
+colour, which dates it. A tin of boiled sweets with three sweets left.
+
+That is all. There is nothing in it that explains anything, and no name anywhere, and the coat is not your size
+and never was.
+
+You sit with it for a while. Then you fold the coat back the way it was, because it was folded well and you are
+not going to be the one who ruined it.
+
+* -> end_open
+
+== dispose ==
+bg lost_office_open
+You carry the suitcase out to the skip and put it in, and it lands on the paint and the shoe and the rest of July,
+and it makes a sound that is much smaller than eleven years should make.
+
+Back at the desk you write the line in the book that you have been not writing for eleven years: date, description,
+disposed. The book is complete now. Every object in this office has a date next to it and there is nothing left on
+the shelf, and the job is exactly what it is supposed to be, which is a job with no decisions in it.
+
+* -> end_dispose
+
+== keep ==
+You write today's date on the tag and hang it back on the handle, which means it goes on the shelf for another
+ninety days, which means in ninety days you will stand here again and do this again.
+
+It is not a decision. It is the absence of one, and you know that, and you have made it eleven years running,
+and you have decided that a person is allowed one thing they do not decide about.
+
+* -> end_keep
+
+== end_open ==
+bg lost_office_open
+The skip goes at four. The shoe goes, and the paint, and the phone with its four hundred messages, and the
+expired passport, and the marmalade, which is the only one you hesitate over and which you put in anyway because
+eighty-eight days is eighty-eight days.
+
+The suitcase does not go, because it is open now and you cannot put an open suitcase in a skip, and by the time
+you have worked out what to do with it the van has gone.
+
+So it is on the shelf, open, with a folded coat and a paperback and a photograph in it, and it will be there
+tomorrow, and you have decided that this is fine. It is the first thing anybody ever handed in to you and it is
+still here, and that is not the same as it being unclaimed.
+
+-> END
+
+== end_dispose ==
+The skip goes at four and it is not full, which is unusual, and the driver says so, and you say yes.
+
+Back at the desk the shelf is empty and the book has six lines in it and the office is a desk, a shelf and a book
+with nothing on the shelf and nothing left to decide. You will log something new on Thursday, probably, because
+people leave things on buses at a rate that has not changed in eleven years.
+
+You go home at five. On the way out you check the shelf, which you have never done before, and there is nothing
+on it, which you knew.
+
+-> END
+
+== end_keep ==
+The skip goes at four without the suitcase in it, and the driver does not say anything, because he has never
+known what is on your shelf and is not going to start now.
+
+It has ninety days. In ninety days it will come up, and you will stand here with the book open, and you will
+write another date on it, and that will be the twelfth time.
+
+You have decided that this is not a failure. The rule exists so that somebody else's things do not become your
+problem, and the suitcase is not a problem. It is just a thing that is here, on a shelf, in a room you are in
+every day, and you have decided that a room you are in every day is allowed to have one thing in it that you
+have not finished with.
+
+-> END
