@@ -1,0 +1,148 @@
+# A short story for the Aside engine.
+#
+# SEVENTH REGISTER. Overtime is horror and performance; The Lamp Room is warm and about tending; The Discrepancy
+# is quiet and wry; The Water Line is elegiac and practical; Two of Everything is two people and a house.
+#
+# This one is technical and warm, and it is the first that insists on nothing supernatural. A signalman works the
+# last night in a mechanical signal box before the panel at the regional centre takes the line. He is not sad
+# about the levers. What goes when the box closes is not the labour - it is the courtesy: the five beats the book
+# does not list, because the book records codes and the men had manners.
+#
+# Six scenes, three endings, one sitting. No variables: the routing carries the whole story, and a flag nothing
+# reads is a fault this engine's auditor has found in four scripts now.
+
+title: Bell Codes
+author: Roxanne
+start: box
+
+== box ==
+bg box_interior
+music fan_hum
+Eighteen lever, forty-one. The frame has been the same colour since before you were born, and the paint has gone
+the way of everything else here, which is to say it has lasted.
+
+You put your bag under the bench and take your coat off, because the box is warm and the night outside is not.
+
+The notice is on the board where notices go. One week. The box closes, the levers are secured, the panel at the
+regional centre takes the line, and the bells go quiet. It has been coming for eleven years. You have read it
+eleven times and it has said the same thing every time, which is a quality you can admire in a notice.
+
+* Read it again, the way you would read a diagram. -> routine
+* Hang your coat up. It is a shift like any other. -> routine
+
+== routine ==
+sfx bell
+The line runs north to south through this box and you are the only thing standing between the two.
+Two bells from Wrenmoor means a train has entered the section. One from you sends it on. Two-two back from
+Ashfield means it has arrived. Down the board, lever by lever, and you are the hinge.
+
+The book is on the shelf: BELL CODES. Everything in it is four beats or fewer. You have known it since you were
+twenty-three and you could write it out in the dark, and tonight, being the last night, you just might.
+
+At 02:14 the bell rings.
+
+It is not a code. Five beats, the last one held.
+Then nothing.
+
+* Take the book down. There is no five-beat code in it, and you want to be sure. -> book
+* Answer it. Whatever it was, it wanted an answer. -> answer
+* Ring the regional centre. That is what the book is for. -> control
+
+== book ==
+bg box_interior_book
+sfx book
+You take the book down and open it, which you have not done in nine years, and the spine makes a sound like a door
+in another building.
+
+One. Two-one. Two-two. Three. Three-three. Four. Six. There is no five. There is not only no five-beat code -
+there is nothing above four beats anywhere in it, and the last code page is dated 1938 and signed by a man called
+Ackroyd whose handwriting is worse than yours.
+
+* Read the back pages. It is a short book, and it is the last night. -> old_pages
+* Put it back. The answer is not in a book. -> answer
+
+== old_pages ==
+The back pages are the oldest and they are not codes. They are notes, in three hands, about the codes.
+
+Ackroyd, 1938: "Wrenmoor signs off five. Not in the book. Courtesy."
+
+Below it, 1971: "Wrenmoor still signs off five. Told the inspector it was interference."
+
+Below that, in a hand you know because you have seen it on your own timesheets, your predecessor, 1984:
+"Wrenmoor closed today. He signed off five and then the circuit was cut. Nobody answered. I was on the Ashfield
+side and I heard it and I did not answer, and I have thought about it every shift since."
+
+The five beats are a man going home. It has never been in the book, because it was never railway business.
+It was manners, and the men kept it, and the book does not record manners.
+
+The tapper is quiet under your hand. Whoever it was, they are waiting.
+
+* Send it back. Five beats, the last one held. -> end_courtesy
+* Write it in the log and leave it at that. -> end_record
+
+== answer ==
+sfx bell
+You put your hand on the tapper and send five beats back into the dark, the last one held, the way you would
+acknowledge anything. It is not in the book. It is not a fault either.
+
+There is no reply, and you did not expect one, and that is the whole of it: a thing that had been said and had not
+been answered for forty-two years has now been answered, and you did it without knowing what it meant, which is how
+most courtesies are performed.
+
+* Sit with it. You will never find out, and it was still the right thing to send. -> end_blind
+* Go back for the book. You would rather know. -> book
+
+== control ==
+bg box_interior
+sfx phone
+The regional centre answers on the second ring, which is the most impressive thing that has happened tonight.
+You give them the time, the section, the beats, and you hear a man write it down.
+
+"Held, the last one? That is not one of ours. Interference. It is a wet night, you get that."
+
+You say yes. It is a wet night. It is in fact the driest night in a month, and you do not say so, because he
+wrote it down and that is the record, and you have been doing this long enough to know the difference between
+being right and being useful.
+
+* Open the book. You are not finished. -> book
+* Leave it. He wrote it down. -> end_record
+
+== end_courtesy ==
+bg box_dawn
+The dark does not answer, and you find that you did not need it to. Someone kept a courtesy for forty-two years
+in the margins of a book that was not for courtesies, and tonight it was answered by a man on the last shift of a
+box that is closing, which is the kind of handover the railway has always actually been made of.
+
+The light comes up the way it does, grey from the east and then ordinary. The first train of the morning takes
+the section and you send it on with one bell, and Ashfield answers two-two.
+
+You write the five beats in the log before you go, so the record has them, because the record is what there will
+be. The book stays on the shelf. It is railway property.
+
+-> END
+
+== end_record ==
+bg box_dawn
+The log has one line in it that is not like the others. You write the time, and the beats, and then the word
+the book uses for a thing you cannot place: UNIDENTIFIED.
+
+At 05:40 the light comes up. The first train takes the section and you send it on with one bell, and Ashfield
+answers two-two, and the line is the line again.
+
+Somewhere in the archive there is now a page with five beats on it and no explanation, and in forty years somebody
+will find it and wonder, which is the closest thing to being remembered that a signal box has ever managed.
+
+-> END
+
+== end_blind ==
+bg box_dawn
+You sit with your hand on the tapper and the line doing nothing, which is the job: you are the thing that knows
+where the trains are, and for four hours there are no trains, and you know exactly where they are.
+
+At 05:40 the light comes up. The first train takes the section and you send it on with one bell, and Ashfield
+answers two-two.
+
+You will never know what it was. It was answered, and it was answered by somebody who did not know what he was
+answering, and you have decided that this does not make it less of an answer.
+
+-> END
