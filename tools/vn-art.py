@@ -77,6 +77,22 @@ def fit_height(im, h):
     return im.resize((max(1, round(sw * h / sh)), h), Image.LANCZOS)
 
 
+def sprite_bytes(src):
+    im = Image.open(src).convert("RGBA")
+    im = fit_height(im, SPRITE_H)
+    buf = io.BytesIO()
+    im.save(buf, "WEBP", quality=SPRITE_Q, method=6, exact=True)
+    return buf.getvalue()
+
+
+def background_bytes(src):
+    im = Image.open(src).convert("RGB")
+    im = cover(im, BG_W, BG_H)
+    buf = io.BytesIO()
+    im.save(buf, "JPEG", quality=BG_Q, optimize=True, progressive=True)
+    return buf.getvalue()
+
+
 def build():
     """Return {relative path: bytes} for everything art/web/ should hold."""
     out = {}
@@ -105,6 +121,34 @@ def build():
         buf = io.BytesIO()
         im.save(buf, "JPEG", quality=BG_Q, optimize=True, progressive=True)
         out["backgrounds/%s.jpg" % stem] = buf.getvalue()
+
+    # AND THE PER-STORY ART, which this tool did not process at all.
+    #
+    # `art/stories/<id>/` holds a story's own backgrounds and sprites, and the
+    # export read them straight from there -- so a story's art went into its
+    # phone build as RAW PNGs while the shared art went in downscaled. The
+    # fifth story's art is 4 MB, which made its page 5.3 MB and took the shelf
+    # from 8.4 MB to 13.7 MB, past the ceiling that exists to make shelf growth
+    # a decision. Nothing failed; the page was just four times bigger than it
+    # needed to be.
+    #
+    # Same treatment, same sizes, written under `stories/<id>/` so the export
+    # can prefer them and fall back to the raw directory.
+    stories_root = os.path.join("art", "stories")
+    if os.path.isdir(stories_root):
+        for story in sorted(os.listdir(stories_root)):
+            for kind, ext, fn in (("sprites", "webp", sprite_bytes),
+                                  ("backgrounds", "jpg", background_bytes)):
+                d = os.path.join(stories_root, story, kind)
+                if not os.path.isdir(d):
+                    continue
+                for name in sorted(os.listdir(d)):
+                    src = os.path.join(d, name)
+                    if not os.path.isfile(src):
+                        continue
+                    stem = os.path.splitext(name)[0]
+                    sources.append(src)
+                    out["stories/%s/%s/%s.%s" % (story, kind, stem, ext)] = fn(src)
 
     # The manifest is the one thing here that is not an image, and it is the
     # thing that makes staleness checkable. art/web/ is derived, and a derived

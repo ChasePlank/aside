@@ -95,6 +95,7 @@ public final class PhoneShelf {
             case "overtime" -> "A visual novel. What you say carries.";
             case "redaction" -> "Keeps the file in this browser. One sitting, and a board that counts.";
             case "lamp-room" -> "A visual novel. Keeps the watch in this browser.";
+            case "two-of-everything" -> "A visual novel. Keeps the pair in this browser.";
             case "discrepancy" -> "A visual novel. Keeps the audit in this browser.";
             case "water-line" -> "A visual novel. Nineteen years, one chalk line, three ways to leave it.";
             default -> "";
