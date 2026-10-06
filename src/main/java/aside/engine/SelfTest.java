@@ -410,6 +410,29 @@ public class SelfTest {
 
         check("traversal reached an ending", !r.endings.isEmpty());
         check("traversal found multiple endings", r.endings.size() >= 2);
+
+        // LOOPS ARE REPORTED, AND THE REPORT IS THE POINT.
+        //
+        // A scene that can be reached from itself is not a fault - a hub is a loop - so this asserts the count is
+        // REPORTED, not that it is zero. It exists because the one shape where "unreachable" means something other
+        // than "the script is broken" is a loop the traversal cannot re-enter: it dedupes states and buckets
+        // counters, so a hub gated by a counter alone collapses to one state and everything past it goes
+        // invisible. That cost ten minutes of looking for a typo that was not there, and the audit now says so.
+        // The fixture loops too - it is the demo story, and it has a deliberate unreachable scene - so this
+        // asserts the count is REPORTED rather than that it is zero. The NOTE that goes with it is a HINT and not
+        // a verdict, which is why it is worded as one: it fires whenever a story loops and something is
+        // unreachable, and this fixture is the case where those two facts are unrelated.
+        check("the fixture's loop is reported", !r.cyclicScenes.isEmpty());
+
+        // And the other direction, on a story that IS a loop. The hub story is discovered by name rather than
+        // hardcoded into a fixture, because a hub is the shape this exists for and the fixture is a chain.
+        Path hubPath = Path.of("stories", "ninety-days.aside");
+        if (!Files.exists(hubPath)) hubPath = Path.of("..", "stories", "ninety-days.aside");
+        if (Files.exists(hubPath)) {
+            Bot.Report hr = new Bot().run(Script.load(hubPath));
+            check("a hub story reports its loops", hr.cyclicScenes.size() >= 2);
+            check("and it is still CLEAN", hr.unreachableScenes().isEmpty() && hr.endings.size() == 3);
+        }
         check("traversal caught the unreachable scene",
                 r.unreachableScenes().contains("epilogue"));
         check("traversal caught the read-only variable typo",
