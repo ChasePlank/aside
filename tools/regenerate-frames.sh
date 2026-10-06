@@ -14,6 +14,15 @@
 # check that rewrites the thing it is checking is not a check. This is the tool
 # you run when the gate says STALE, and then you commit what it wrote.
 #
+# WHEN A MERGE CONFLICTS ON docs/contact-sheet.png, AND IT WILL. That file is generated, and two agents working at
+# once both regenerate it, so a merge between them always conflicts on it -- twice on 2026-10-06 alone. The
+# resolution is NOT to pick a side: take either, then run this script, then commit what it wrote. Picking a side
+# leaves a sheet that describes a library that no longer exists, and the gate's contact-sheets check is what
+# catches that if you skip the second step.
+#
+# (There is no clean git-side fix. `merge=ours` needs a driver defined in each clone's config, which does not
+# travel with the repository, so it would work here and silently not work for anyone else.)
+#
 # THE THREE IT SKIPS, and why they are named rather than detected:
 #
 #   contact-sheet.png  contains drift.png and ledger.png, so it inherits both
