@@ -204,17 +204,41 @@ public class GameScreen extends UiScreen {
             gc.strokeRect(r[0], r[1], r[2], r[3]);
         }
 
-        // Buttons, mounted inside the doorway edge
+        // LIGHT stands above DOOR and each button carries its own key. The keys are Q/E for
+        // lights and A/D for doors, and Q/E sit ABOVE A/D on a keyboard - so the order has to
+        // be LIGHT on top, which is what Kinger's playtest asked for: "the visual button on top
+        // isnt the key layout on top, theyre reversed and it can be confusing".
+        //
+        // PORTED FROM THE STANDALONE EDITION, 6 October 2026, AND IT FIXES A REAL BUG HERE.
+        // This copy had the LIGHT label above the DOOR label, and the COLOURS THE OTHER WAY
+        // ROUND: the top button was filled from `closed` (the door) and the bottom one from
+        // `lit` (the light). So closing a door turned the button labelled LIGHT red, and
+        // turning a light on turned the button labelled DOOR gold. The labels were swapped to
+        // match the keyboard and the fills were left where they were.
+        //
+        // The key letters were missing here too. Both were in the standalone and the nightly
+        // check-fnaf-match.sh reported the pair as matching throughout, because it compares
+        // the screens by MARKER and "LIGHT above DOOR" is satisfied by the label order - the
+        // colour binding is not a marker and nothing was looking at it.
         double bx = side < 0 ? r[0] + r[2] + 12 : r[0] - 52;
         double by = 250;
-        gc.setFill(closed ? Color.web("#E94560") : Color.web("#5A2A3A"));
+        String lightKey = side < 0 ? "Q" : "E";
+        String doorKey = side < 0 ? "A" : "D";
+
+        gc.setFill(lit ? Color.web("#FFD700") : Color.web("#5A502A"));
         gc.fillOval(bx, by, 40, 40);
         gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Arial", 16));
+        gc.fillText(lightKey, bx + 13, by + 27);
         gc.setFont(Font.font("Arial", 9));
         gc.fillText("LIGHT", bx + 3, by + 62);
 
-        gc.setFill(lit ? Color.web("#FFD700") : Color.web("#5A502A"));
+        gc.setFill(closed ? Color.web("#E94560") : Color.web("#5A2A3A"));
         gc.fillOval(bx, by + 90, 40, 40);
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Arial", 16));
+        gc.fillText(doorKey, bx + 13, by + 117);
+        gc.setFont(Font.font("Arial", 9));
         gc.fillText("DOOR", bx + 4, by + 152);
 
         // Door warning: pixel sprite pulses when someone is at this door
