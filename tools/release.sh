@@ -22,7 +22,8 @@ VERSION="${1:-}"
 [ -n "$VERSION" ] || { echo "usage: tools/release.sh <version>   e.g. 1.15" >&2; exit 2; }
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"          # the engine repository
-TP="${TP:-$HERE/../tp}"                            # the release repository
+TP="${TP:-$(cd "$HERE/../tp" 2>/dev/null && pwd)}"  # the release repository, resolved - the printed publish
+                                                   # command must not contain a ".." for someone to copy
 [ -d "$TP" ] || { echo "release: no release repository at $TP - set TP=" >&2; exit 2; }
 
 step() { printf '\n=== %s ===\n' "$1"; }
