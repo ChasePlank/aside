@@ -105,6 +105,35 @@ marker() {                       # marker <label> <regex> <file>
   fi
 }
 mpass=0; mdiffer=0; mdiffering=()
+
+# ORDER, NOT PRESENCE. A marker can only say a thing is in both copies or in neither, and the bug this exists for
+# is not about presence: the LIGHT button was filled from the DOOR state and the DOOR button from the light state,
+# in one edition only. Both copies contained every line involved. What differed was WHICH LINE CAME FIRST.
+#
+# So this asserts an ORDER inside the button-drawing block, in BOTH editions. A check that only compared the two
+# against each other would pass if both were wrong the same way; requiring the correct order catches the side that
+# has it wrong.
+button_block() {   # <file> -> the lines that draw the two buttons
+  awk '/double bx = side < 0/ { f=1 } f { print } f && /fillText\("DOOR"/ { exit }' "$1"
+}
+
+ordered() {        # ordered <label> <file> <earlier-regex> <later-regex>
+  local label="$1" file="$2" erx="$3" lrx="$4" ok=1
+  for dir in "$SCREENS_HERE" "$SCREENS_THEIRS"; do
+    [ -f "$dir/$file" ] || { ok=0; continue; }
+    local a b
+    a=$(button_block "$dir/$file" | grep -nE "$erx" | head -1 | cut -d: -f1)
+    b=$(button_block "$dir/$file" | grep -nE "$lrx" | head -1 | cut -d: -f1)
+    [ -n "$a" ] && [ -n "$b" ] && [ "$a" -lt "$b" ] || ok=0
+  done
+  if [ "$ok" = 1 ]; then
+    printf '  %-34s %s\n' "$label" "lit first, then door, in both"
+    mpass=$((mpass + 1))
+  else
+    printf '  %-34s %s\n' "$label" "WRONG ORDER IN AT LEAST ONE COPY" >&2
+    mdiffer=$((mdiffer + 1)); mdiffering+=("$label")
+  fi
+}
 echo "=== screens, by marker ==="
 marker "the seed field"            'public final long seed'            GameScreen.java
 marker "the -Dfnaf.seed override"  'fnaf\.seed'                       GameScreen.java
@@ -114,6 +143,12 @@ marker "bio: left door"            'Left door'                        InfoScreen
 marker "bio: right door"           'Right door'                       InfoScreen.java
 marker "bio: the blackout"         'blackout'                         InfoScreen.java
 marker "bio: Kid's Cove"           "Kid's Cove"                     InfoScreen.java
+# THE BUTTONS CARRY THEIR OWN KEYS: Q/E on the lights, A/D on the doors. Absent from this edition entirely until
+# 6 October 2026, and the presence marker would have caught that half.
+marker "the light key letter"      'lightKey'                        GameScreen.java
+marker "the door key letter"       'doorKey'                         GameScreen.java
+# AND THE BINDING, which is the half a marker cannot see.
+ordered "LIGHT is filled from the light"  GameScreen.java  'lit \? Color'  'closed \? Color' 
 
 echo
 echo "=== $pass engine file(s) identical, $differ differing; $mpass marker(s) agree, $mdiffer not ==="
