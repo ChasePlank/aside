@@ -200,6 +200,7 @@ tools/make-bundle.sh <name> <jar> [readme]             # a jar into a download t
 tools/sync-and-fix.sh                                  # merge origin/main, and fix what the merge made stale
 tools/diff.sh <a> <b> [filter]                         # diff two things, and count what a filter would have hidden
 tools/self-test.sh                                     # break what each tool looks at; do the tools notice?
+tools/find-drift.py <a.java> <b.java>                  # two copies of one file: what drifted, what went missing
 tools/make-bundle-win.sh <name> <jar> [readme]         # the same, for Windows, cross-built
 ```
 
