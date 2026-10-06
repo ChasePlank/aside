@@ -72,10 +72,15 @@ else
   echo "  against the bytes already in the latest release, and refuses when they are identical. On 2026-10-04 a"
   echo "  release went out byte-identical to the previous one, because nothing did that comparison."
   echo
-  echo "AND CHECK THE STYLE CLASSES, WHICH HAVE NO GATE OF THEIR OWN:"
-  echo "  tools/style-classes.sh /path/to/the/repo"
-  echo "  The release repository has no test suite, so a style class the code asks for and the stylesheet does"
-  echo "  not define is invisible there. On 2026-10-04 four labels used \"menu-item\", the stylesheet had no rule"
-  echo "  for it, and two lines of the game-over screen were nearly unreadable."
+  echo "AND RUN THE RELEASE'S OWN GATE, WHICH IT NOW HAS:"
+  echo "  cd /path/to/Fruit-Jump && tools/run-suites.sh"
+  echo "  Eighteen checks: the tests, the README counts, the committed jar against a fresh build, the stylesheet,"
+  echo "  and a self-test that breaks each of those tools and requires it to notice."
+  echo ""
+  echo "  THIS ADVICE USED TO SAY THE RELEASE HAD NO TEST SUITE, and it was true when written. It is not any more -"
+  echo "  the release got a gate on 2026-10-06 - and the style-class check it told you to run by hand is now part of"
+  echo "  that gate, in the repository where the bug actually happened. On 2026-10-04 four labels there used"
+  echo "  \"menu-item\", the stylesheet had no rule for it, and two lines of the game-over screen were nearly"
+  echo "  unreadable; the check existed in the ENGINE's tools and was never run where it mattered."
 fi
 exit $need
