@@ -55,6 +55,7 @@ show tom neutral at right
 
 "I'm not taking the piano. I'm taking the opportunity to have brought a van."
 
+show nell wry at left
 Nell laughs, which surprises both of them, and then they stand there for a moment being pleased about it. Two
 toasters. Two sets of the good scissors. Their mother, who never threw anything away because throwing it away
 would have meant admitting whose it was.
@@ -88,6 +89,7 @@ The loft is hot and full of light and the sort of dust that has opinions.
 There are two suitcases. Matching. His and hers, and hers has a label on it with a destination on it that is not
 this house, and the label is forty years old and the handwriting on it is her mother's, young.
 
+show tom flat at right
 Tom sits down on the floor of the loft, which he has not done since he was nine.
 
 "She nearly went," he says. "She had the case packed and a label written and she stayed, and then we got two of
@@ -101,6 +103,8 @@ show nell neutral at left
 show tom neutral at right
 "That's what I tell myself," Tom says.
 
+show nell warm at left
+show tom warm at right
 "That's what I tell myself too," Nell says. "Which is why it's true."
 
 They carry the suitcases down together and put them by the van, and it takes the rest of the day to do the loft,
@@ -115,6 +119,7 @@ show tom neutral at right
 
 "Probably."
 
+show nell tired at left
 They laugh, and it is not entirely a joke, and Nell sits down on the floor next to him in the dust in her good
 trousers, which for Nell is close to a confession.
 
@@ -159,6 +164,7 @@ show tom neutral at right
 bg front_step
 She takes the scissors, and she does not even like the scissors, and he knows she does not like the scissors.
 
+show tom flat at right
 "You didn't want those," he says, on the step.
 
 "I wanted them more than you wanted the case."
