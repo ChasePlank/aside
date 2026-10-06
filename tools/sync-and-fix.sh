@@ -24,7 +24,11 @@ else
 fi
 
 # The frames are derived from the game code, so anything that changed the code changed them.
-if DISPLAY="${DISPLAY:-:99}" tools/regenerate-frames.sh >/dev/null 2>&1; then
+# KEEP THE OUTPUT. This used to run the regeneration with `>/dev/null 2>&1` and then blame the failure on "no
+# display?" - which hid the callee's own diagnosis. regenerate-frames.sh now distinguishes a missing display from a
+# refused write and says which, and a caller that swallows that is a caller that cannot be told what is wrong.
+FRAMES_LOG=/tmp/sync-frames.log
+if DISPLAY="${DISPLAY:-:99}" tools/regenerate-frames.sh >"$FRAMES_LOG" 2>&1; then
   if ! git diff --quiet -- docs/frames 2>/dev/null; then
     git add docs/frames
     git commit -q -m "Regenerate the frames the merge made stale" -- docs/frames
@@ -33,5 +37,7 @@ if DISPLAY="${DISPLAY:-:99}" tools/regenerate-frames.sh >/dev/null 2>&1; then
     echo "frames still current"
   fi
 else
-  echo "NOTE: could not regenerate frames (no display?). The contact-sheet gate will fail until they are."
+  echo "NOTE: could not regenerate frames. What it said:"
+  tail -5 "$FRAMES_LOG" | sed 's/^/    /'
+  echo "  The contact-sheet gate will fail until this is fixed."
 fi
