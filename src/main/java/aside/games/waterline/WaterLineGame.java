@@ -15,9 +15,14 @@ import java.io.File;
  * what gets carried. Nothing supernatural happens; the whole story is a sorting problem with a person attached
  * to it. Three endings, and the one that costs the most is the one where you take nothing.
  *
- * It has no art of its own yet, which the engine is built to survive - a story with no art directory falls back
- * to the shared one rather than failing, so this reads as a story told over a room instead of in one. Worth
- * knowing rather than hiding: the three earlier stories each have their own backgrounds and this does not.
+ * <p>It has ONE background - the archive basement - and no sprites, which is not an oversight: there is nobody
+ * else in this story to draw. Every story before this one is a single person alone, and the two after it kept
+ * that shape. The only story in the engine with character sprites is Two of Everything, and it has them because
+ * it is the only one with two people in it.
+ *
+ * <p>(This paragraph used to say it had no art at all. That was true when it was written and stopped being true
+ * when the basement was drawn, and nothing updated it - which is the same thing that happened to the water
+ * probe's comment about splashes.)
  */
 public class WaterLineGame implements Game {
 
