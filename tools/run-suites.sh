@@ -222,6 +222,14 @@ if command -v node >/dev/null 2>&1; then
       echo "  $t ok     $t_last"
     fi
   done
+
+  # AND THE TWO THAT NEED A SETUP STEP, which is why they were still out of this loop: bearings-trace wants a seed
+  # and the java side run separately, redaction-trace wants a reference dump made first. Run by hand with neither,
+  # both exit 1 - which looks exactly like a failure and is not one, so nobody ran them. compare-ports.sh does the
+  # setup for both and diffs them.
+  cp_out=$(tools/compare-ports.sh 2>&1); cp_rc=$?
+  echo "$cp_out" | sed 's/^/  /'
+  if [ $cp_rc -ne 0 ]; then fail=$((fail + 1)); failed_names+=("port-comparisons"); fi
 fi
 
 # WHAT THIS IS NOT RUNNING. Every class with a main is either in the list above or matched by the pattern
