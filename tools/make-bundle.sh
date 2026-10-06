@@ -30,6 +30,13 @@
 #
 # THE VERIFICATION IS THE POINT. `env -i PATH=/usr/bin:/bin` clears Java off the PATH entirely, and the bundle is
 # extracted into an empty directory first. Anything less is testing this machine, not the download.
+
+# WHAT IT LEAVES BEHIND, AND WHY THAT MATTERS. A jlink runtime is built once into /root/bundle-cache (60 MB) so
+# the second bundle is fast, and the output is /root/bundle/ plus /root/<name>-linux-x64.tar.gz (about 60 MB each).
+# None of it is cleaned up. On 2026-10-06 the sandbox hit 91 per cent full - which is the point at which memory
+# commits start failing - and the cause was this plus the Windows tool's cache plus a pile of already-published
+# archives sitting in /root. All of it is regenerable and safe to delete; the cost is a re-download.
+
 set -u
 
 NAME="${1:-}"; JAR="${2:-}"; README="${3:-}"

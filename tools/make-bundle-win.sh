@@ -21,6 +21,13 @@
 # WHAT IT CANNOT DO IS RUN IT. There is no Windows here, so the verification checks the contents - the runtime
 # reports the modules the launcher asks for, the JavaFX jars and natives are present, and the jar is byte-identical
 # to the one verified on Linux - and SAYS that the launcher itself is untested.
+
+# WHAT IT LEAVES BEHIND, AND WHY THAT MATTERS. This tool is the expensive one: it caches a JDK 21 for Linux, a
+# JDK 21 for Windows and a Windows JavaFX SDK under /root/win-cache (519 MB, by far the largest thing either
+# bundle tool creates), and it downloads more JDKs to /root as loose zips. None of it is cleaned up. On
+# 2026-10-06 the sandbox hit 91 per cent full - the point at which memory commits start failing - and this cache
+# was most of it. It is regenerable and safe to delete; the cost is a re-download of about 300 MB.
+
 set -u
 
 NAME="${1:-}"; JAR="${2:-}"; README="${3:-}"
