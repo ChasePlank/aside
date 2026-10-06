@@ -65,5 +65,33 @@ else
 fi
 
 echo
+# ---- style-classes.sh must notice a class the code needs that is not defined ---------------------------------
+# It runs against the RELEASE, where style.css lives; from this repository it exits 2 saying "nothing to compare",
+# which is honest rather than silent. Tested where it works.
+TP="${TP:-../tp}"
+if [ -f "$TP/src/main/resources/style.css" ]; then
+  cp "$TP/src/main/resources/style.css" /tmp/st-css.bak
+  python3 - "$TP" <<'PYX'
+import re, sys
+p = sys.argv[1] + "/src/main/resources/style.css"
+css = open(p).read()
+m = re.search(r'\.menu-item\s*\{[^}]*\}', css, flags=re.S)
+assert m, "no .menu-item rule to remove"
+open(p, "w").write(css[:m.start()] + css[m.end():])
+PYX
+  # NO tail HERE. The first version piped the tool through `tail -3` and then looked for the class name - and the
+  # tool reports "1 class(es) used but not defined" in its summary WITHOUT naming the class in the last three lines,
+  # so the test failed while the tool was working perfectly. A narrowed check, inside the tool built to prevent
+  # narrowed checks. Match the tool's own verdict over its whole output.
+  out=$(tools/style-classes.sh "$TP" 2>&1); rc=$?
+  cp /tmp/st-css.bak "$TP/src/main/resources/style.css"
+  if [ $rc -ne 0 ] && echo "$out" | grep -q "used but not defined"; then
+    ok "style-classes.sh notices an undefined class" "$(echo "$out" | grep 'used but not defined' | tr -s ' ')"
+  else bad "style-classes.sh notices an undefined class" "reported clean with .menu-item removed"; fi
+else
+  printf '  %-38s skip    no %s/src/main/resources/style.css\n' "style-classes.sh notices an undefined class" "$TP"
+fi
+
+echo
 echo "=== $pass tool self-test(s) passed, $fail failed ==="
 [ "$fail" = 0 ] || exit 1
