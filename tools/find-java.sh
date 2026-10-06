@@ -39,14 +39,28 @@ java_works() {
     *)   command -v "$1" >/dev/null 2>&1 ;;
   esac
 }
-if ! java_works "${JAVA:-}"; then
+# A JDK, NOT A JRE. EVERY TOOL HERE COMPILES, so the java that matters is one with a javac beside it - and the
+# order used to be the opposite: "whatever `java` is on PATH, and only go looking for a real JDK if nothing is on
+# PATH at all". On 2026-10-06 installing maven for an unrelated verification pulled in openjdk-17-jre-headless, so
+# /usr/bin/java appeared with no javac next to it, find-java picked it, and THE WHOLE GATE STOPPED - on a machine
+# with a perfectly good JDK sitting at /root/jdk-27+35. That is not a corner case: a system JRE on PATH is the
+# normal state of a normal machine. The search now looks for a JDK first and only falls back to a bare runtime.
+java_with_javac() {
+  [ -n "${1:-}" ] || return 1
+  case "$1" in
+    */*) [ -x "$1" ] && [ -x "$(dirname "$1")/javac" ] ;;
+    *)   p=$(command -v "$1" 2>/dev/null) && [ -x "$(dirname "$p")/javac" ] ;;
+  esac
+}
+if ! java_with_javac "${JAVA:-}"; then
   JAVA=""
-  if command -v java >/dev/null 2>&1; then JAVA=java
-  else
-    for c in /root/jdk-*/bin/java /usr/lib/jvm/*/bin/java "$HOME"/jdk*/bin/java; do
-      [ -x "$c" ] && { JAVA="$c"; break; }
-    done
-  fi
+  for c in /root/jdk-*/bin/java /usr/lib/jvm/*/bin/java "$HOME"/jdk*/bin/java; do
+    [ -x "$c" ] && [ -x "$(dirname "$c")/javac" ] && { JAVA="$c"; break; }
+  done
+  # only if there is no JDK anywhere: a runtime that cannot compile is still better than nothing for the tools
+  # that only RUN things, and they will say so if it is wrong for them
+  if [ -z "$JAVA" ] && java_works "${JAVA_OR_PATH:-}"; then :; fi
+  if [ -z "$JAVA" ] && command -v java >/dev/null 2>&1; then JAVA=$(command -v java); fi
 fi
 if [ -z "${JAVA:-}" ]; then
   echo "find-java: no java found - set JAVA=/path/to/bin/java" >&2

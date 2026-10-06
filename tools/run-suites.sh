@@ -29,7 +29,13 @@ cd "$(dirname "$0")/.." || exit 2
 # because a default that names one is a guess. See the note there.
 # The toolchain, from the one place that looks for it. This file used to carry its own default and then tell the
 # user to set JAVA when it was wrong - which it was, on the machine this runs on.
-. "$(dirname "$0")/find-java.sh"
+. "$(dirname "$0")/find-java.sh" || {
+  # SOURCING IT IS NOT ENOUGH. find-java returns 2 when it cannot find a usable JDK, and this line ignored that -
+  # so the gate carried on to the next thing and died with "OUT: unbound variable", because OUT is set later in
+  # find-java and never got assigned. A confusing second error hiding a clear first one.
+  echo "run-suites: no usable JDK - see the message above" >&2
+  exit 2
+}
 
 if [ ! -d "$OUT" ]; then
   echo "no build in $OUT - compile first, e.g." >&2
