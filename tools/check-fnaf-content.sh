@@ -33,7 +33,18 @@ S_DIR="$STANDALONE/src/main/java/fnaf"
 [ -d "$S_DIR" ] || { echo "no $S_DIR (pass the standalone path)" >&2; exit 2; }
 
 norm() {
+  # PROSE GOES OUTSIDE THE sed SCRIPT. It was inside it, and an apostrophe in a word like the one two lines up
+  # closed the shell single-quote and made bash try to execute the rest of the explanation. Twice tonight the same
+  # mistake in two different scripts - prose in a place that is code.
+  #
+  # WHAT IS NORMALISED, and every rule was learned by reading a diff rather than guessed:
+  #   trailing comments   - the platformer copy learned this first; a line differing only by an end-of-line
+  #                         remark is not drift
+  #   the canvas plumbing - the standalone carries its own Canvas/GraphicsContext/StackPane and wires them to the
+  #                         window; the UiScreen base class does it in aside
+  #   the window fitting  - four methods of plumbing, not four methods of game
   sed -E '
+    s#//.*$##
     /^(package|import) /d
     s/aside\.games\.fnaf/fnaf/g
     s/aside\.ui\.//g
@@ -43,13 +54,6 @@ norm() {
     s/"fnaf\/images\/"/"images\/"/g
     s/Games\.saveDir\("fnaf"\)/SAVE_DIR/g
     s/Paths\.get\(System\.getProperty\("user\.dir"\), "fnaf-progress\.txt"\)/SAVE_DIR/g
-    # THE CANVAS PLUMBING, learned by reading PauseScreen line by line after the first run flagged 21 lines and
-    # every single one turned out to be framework. The standalone carries its own Canvas/GraphicsContext/StackPane
-    # and wires them to the window itself; aside inherits all of that from UiScreen. Same behaviour, different
-    # plumbing - so it comes out before the comparison, and what is left is content.
-    # ANY declaration of the canvas plumbing, not just `private final`. The standalone declares canvas, gc, root
-    # and timer as plain package-private fields; aside inherits every one of them from UiScreen, so they are
-    # declared in one and not the other and the comparison read that as 84 lines of difference.
     /^[[:space:]]*(private |public |protected )?(final )?(Canvas|GraphicsContext|StackPane|AnimationTimer)[[:space:]]+(canvas|gc|root|timer);/d
     /^[[:space:]]*(private |public |protected )?(final )?long lastPulse/d
     s/canvas = new Canvas\(W, H\);//g
@@ -58,13 +62,25 @@ norm() {
     s/canvas\.setManaged\(false\);//g
     s/GameScreen\.fitToWindow\(root, canvas\);//g
     /@Override public Parent getRoot\(\) \{ return root; \}/d
+    s/root\.getStyleClass\(\)\.add\("screen-bg"\);//g
+    /^[[:space:]]*static void fitToWindow\(StackPane parent, Canvas canvas\) \{/d
+    /^[[:space:]]*static void fitCanvas\(StackPane parent, Canvas canvas\) \{/d
+    /canvas\.setScaleX\(scale\);/d
+    /canvas\.setScaleY\(scale\);/d
+    /canvas\.setTranslateX\(\(pw - canvas\.getWidth\(\) \* scale\) \/ 2\);/d
+    /canvas\.setTranslateY\(\(ph - canvas\.getHeight\(\) \* scale\) \/ 2\);/d
+    /parent\.widthProperty\(\)\.addListener\(l\);/d
+    /parent\.heightProperty\(\)\.addListener\(l\);/d
+    /javafx\.beans\.value\.ChangeListener<Number> l = /d
+    /fitCanvas\(parent, canvas\);/d
+    /fitToWindow\(root, canvas\);/d
+    /^[[:space:]]*double pw = parent\.getWidth\(\), ph = parent\.getHeight\(\);/d
+    /^[[:space:]]*if \(pw <= 0 \|\| ph <= 0\) return;/d
+    /^[[:space:]]*double scale = Math\.min\(pw \/ canvas\.getWidth\(\), ph \/ canvas\.getHeight\(\)\);/d
     s/ScreenManager manager/Manager ui/g
     s/\bmanager\b/ui/g
     s/public void tick\(\)/public void tick(double dt)/g
     s/[[:space:]]+$//
-    # BLANK LINES LAST. Stripping them first meant every line this normalises away punched a gap that then read
-    # as a difference - PauseScreen came back at 5 lines and all five were empty. An artefact of the instrument,
-    # reported as a fault in the thing measured.
     /^[[:space:]]*$/d
   ' "$1"
 }
