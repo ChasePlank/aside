@@ -2226,10 +2226,22 @@ public class SelfTest {
     static void storyExport(String name, String id) throws Exception {
         Path story = Path.of("stories", name + ".aside");
         Path out = Path.of("web", id + ".html");
-        if (!Files.exists(story) || !Files.exists(out)) {
-            System.out.println("       (no " + story + " or " + out + " from here)");
+        // A MISSING BUILD IS A FAILURE, not a reason to skip.
+        //
+        // This used to return quietly when either file was absent, which
+        // conflated two different things: "you are not running from the
+        // repository root" (where skipping is right) and "this story has no
+        // phone build at all" (where skipping hides a real gap). The fifth
+        // story, `two-of-everything`, arrived with no build and the suite
+        // passed -- the same silent-skip shape as the retired-games compile
+        // check, found the same way, by looking at what the count did not say.
+        if (!Files.exists(story)) {
+            System.out.println("       (no " + story + " from here -- run from the repository root)");
             return;
         }
+        check("web/" + id + ".html exists for the story " + name
+                + " -- regenerate it with aside.engine.WebExport", Files.exists(out));
+        if (!Files.exists(out)) return;
         String generated = WebExport.convert(Files.readString(story), WebExport.ART,
                 WebExport.storyArt(name));
         check("web/" + name + ".html is current -- regenerate it with aside.engine.WebExport",

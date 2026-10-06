@@ -107,6 +107,21 @@ public class WebExport {
      */
     static Path storyArt(String storyId) {
         if (storyId == null || storyId.isBlank()) return null;
+        // THE DOWNSCALED COPIES FIRST, the raw directory as the fallback.
+        //
+        // This returned `art/stories/<id>` and nothing else, so a story's own
+        // art went into its phone build as RAW PNGs while the shared art went
+        // in downscaled -- because `tools/vn-art.py` only ever processed
+        // `art/sprites/` and `art/backgrounds/`. The fifth story's art is 4 MB,
+        // which made its page 5.3 MB and took the shelf from 8.4 MB to 13.7 MB,
+        // past the ceiling that exists to make shelf growth a decision.
+        //
+        // `vn-art.py` writes `art/web/stories/<id>/` now. Preferring it is what
+        // makes the per-story art the same size as everything else; the raw
+        // directory stays as the fallback so a story whose art has not been
+        // through the tool still exports rather than exporting blank.
+        Path web = Path.of("art", "web", "stories", storyId);
+        if (Files.isDirectory(web)) return web;
         Path p = Path.of("art", "stories", storyId);
         return Files.isDirectory(p) ? p : null;
     }
