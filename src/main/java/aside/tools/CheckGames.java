@@ -36,7 +36,21 @@ public class CheckGames extends Application {
 
     private static final int TICKS = 12;
     private static final int FLOOR = 500;          // a blank frame is 0; nothing here is close to this
-    private static final int COLOURS = 40;         // a backdrop has a handful; anything with text has many
+    // HOW MANY DISTINCT COLOURS A REAL SCREEN HAS. This was 40, on the reasoning that "a backdrop has a handful
+    // and anything with text has many" - which is true and far too generous. MEASURED, by hiding art/ entirely and
+    // running this check:
+    //
+    //   with art        lamp-room 91406   discrepancy 65725   overtime 58524   water-line 45289   two-of-everything 32851
+    //   art hidden      lamp-room   262   discrepancy   279   overtime   294   water-line   230   two-of-everything   286
+    //
+    // Every one of those still reported `ok` at a floor of 40. FIVE GAMES LOST ALL THEIR ART AND THE GATE SAID
+    // "25 game(s) opened, drew a screen and took a key, 0 did not". A visual novel with no pictures is a text file.
+    //
+    // The floor now sits in the gap: above every art-less render observed (max 294) and below every real one
+    // (min 821, redaction). 400 is 36 per cent under the lowest real screen and 1.4x over the highest broken one.
+    // If a future game legitimately renders under 400 it should be LOOKED AT rather than waved through - that is
+    // the point of a floor.
+    private static final int COLOURS = 400;
     private static final String OUT = System.getProperty("shotdir", "/root/downloads/games");
 
     private final List<Game> games = Games.all();
