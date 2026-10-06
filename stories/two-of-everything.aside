@@ -1,0 +1,171 @@
+# A short story for the Aside engine.
+# Fifth register. Night Shift is a demo, Overtime is horror and performance, The Lamp Room is warm and about
+# tending, The Discrepancy is quiet and wry, The Water Line is elegiac and practical. All five of those are ONE
+# person alone with a task.
+#
+# This one is TWO people, and that is the whole point of it: a brother and a sister clearing out their mother's
+# house in a weekend, talking to each other instead of to the reader. Warm, funny where it can be, and about the
+# difference between what a family keeps and what it says. Six scenes, three endings, one sitting.
+#
+# The thing it is actually about: a house with two of everything is a house where two people disagreed and neither
+# of them ever threw anything away.
+
+title: Two of Everything
+author: Roxanne
+start: kitchen
+
+== kitchen ==
+bg kitchen_boxes
+music fan_hum
+Nell gets there first, which she will mention, and puts the kettle on, which she will also mention.
+
+There are boxes in the kitchen. There were boxes in the kitchen when they were children and there are boxes in
+the kitchen now, and the difference is that these ones have her mother's handwriting on them, and say things
+like: spoons (good).
+
+Tom arrives at eleven with a van and an apology. The apology is for being late. The van is for the piano.
+
+* "There's tea." -> tea
+* "You brought the van." -> van
+
+== tea ==
+He takes the tea. He stands in the doorway of the kitchen he grew up in and does not sit down, because every
+chair has something on it.
+
+"She labelled the spoons," he says.
+
+"She labelled everything. There are two of everything, Tom. Two toasters. Two of the good scissors."
+
+"You know why."
+
+"I know why."
+
+* "Say it anyway." -> say_it
+* "Don't. Let's start." -> loft
+
+== van ==
+"I brought the van," he says. "For the piano."
+
+"You're not taking the piano."
+
+"I'm not taking the piano. I'm taking the opportunity to have brought a van."
+
+Nell laughs, which surprises both of them, and then they stand there for a moment being pleased about it. Two
+toasters. Two sets of the good scissors. Their mother, who never threw anything away because throwing it away
+would have meant admitting whose it was.
+
+* "Say the thing about the toasters." -> say_it
+* "Come on. The loft first." -> loft
+
+== say_it ==
+"Dad's," Tom says. "It was all Dad's, and she couldn't throw it out, and she couldn't use it either, so it lived
+in a cupboard for twenty years being his."
+
+"That's not a reason to keep two toasters."
+
+"It's a reason they came in twos."
+
+Nell puts her tea down on a box marked *cups (everyday)* and looks at the room the way she looks at a problem at
+work, which is the only way she has ever looked at anything.
+
+"Right," she says. "Loft."
+
+* Go up to the loft. -> loft
+
+== loft ==
+bg loft_light
+The loft is hot and full of light and the sort of dust that has opinions.
+
+There are two suitcases. Matching. His and hers, and hers has a label on it with a destination on it that is not
+this house, and the label is forty years old and the handwriting on it is her mother's, young.
+
+Tom sits down on the floor of the loft, which he has not done since he was nine.
+
+"She nearly went," he says. "She had the case packed and a label written and she stayed, and then we got two of
+everything."
+
+* "She chose us." -> chose
+* "We don't know that. She might have unpacked it a hundred times." -> unpacked
+
+== chose ==
+"That's what I tell myself," Tom says.
+
+"That's what I tell myself too," Nell says. "Which is why it's true."
+
+They carry the suitcases down together and put them by the van, and it takes the rest of the day to do the loft,
+and they do not talk about the label again, which is a kind of agreement.
+
+* At the end of the day. -> table
+
+== unpacked ==
+"That is genuinely the worst thing you have ever said to me in a loft," Tom says.
+
+"Probably."
+
+They laugh, and it is not entirely a joke, and Nell sits down on the floor next to him in the dust in her good
+trousers, which for Nell is close to a confession.
+
+"If she unpacked it a hundred times," she says, "she packed it a hundred times too."
+
+* At the end of the day. -> table
+
+== table ==
+bg table_evening
+By six the house is a house. It is astonishing how quickly a house stops being somebody's.
+
+The van is full. There are two boxes on the kitchen table that are not going in it, and both of them know which
+two, and neither of them has moved them.
+
+The label on the case and the second set of scissors. One is going to Tom's and one is going to Nell's, and
+whoever picks first gives the other one away, and they are both standing at the table being extremely casual
+about it.
+
+* "You take the case. You've got the room." -> ending_case
+* "I'll take the scissors. You had them last." -> ending_scissors
+* "Leave them both on the table and lock up." -> ending_table
+
+== ending_case ==
+bg table_evening
+He takes the case. She does not say anything about it, and she takes nothing at all, which he notices and does not
+mention, and which will be the thing she is angry about in about four years.
+
+Driving away, Nell thinks: the scissors were the better thing to want.
+
+She is still thinking it at the first roundabout, and at the second, and then she stops, because she has just
+understood that he took the case for the same reason she wanted the scissors, which is that neither of them
+wanted the thing itself. They wanted to be the one who was given it.
+
+-> END
+
+== ending_scissors ==
+bg front_step
+She takes the scissors, and she does not even like the scissors, and he knows she does not like the scissors.
+
+"You didn't want those," he says, on the step.
+
+"I wanted them more than you wanted the case."
+
+He looks at her. He is the younger one and he has always been able to tell, and she watches him decide not to
+say the true thing, which is that the case was never going to be his and the scissors were never going to be
+hers and their mother had forty years to say what she meant and she labelled the spoons instead.
+
+"Right," he says. "See you at Christmas."
+
+"See you at Christmas."
+
+-> END
+
+== ending_table ==
+bg table_evening
+They put both boxes back on the table with the same hands at the same time, which takes some doing.
+
+Tom locks up. Nell waits in the van. Neither of them says the obvious thing, which is that the next person
+through that door will be a stranger with a clipboard, and the stranger will take the case and the scissors and
+everything else on the table, and will not know what any of it was for.
+
+What they have done instead is leave the house exactly as their mother kept it: two of everything, neither one
+chosen, nobody admitting whose it was.
+
+It is a terrible way to end and it is also, and both of them know this, the only one that is actually about her.
+
+-> END
