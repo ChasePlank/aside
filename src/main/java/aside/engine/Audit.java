@@ -24,6 +24,7 @@ public class Audit {
         }
         int failures = 0;
         int inconclusiveRuns = 0;
+        int heapHits = 0;
         for (String arg : args) {
             Path p = Path.of(arg);
             if (!Files.exists(p)) {
@@ -63,9 +64,11 @@ public class Audit {
             // A budget hit is not a finding. The traversal not finishing means the results are PARTIAL, which is
             // different from them being wrong - and calling an honest "I could not check everything" ISSUES FOUND
             // teaches the reader to distrust the verdict. Three states, not two.
-            boolean inconclusive = r.budgetHit;
+            boolean inconclusive = r.budgetHit || r.heapHit;
             System.out.println("\n" + (inconclusive
-                    ? "INCONCLUSIVE - budget hit, results partial"
+                    ? (r.heapHit
+                        ? "INCONCLUSIVE - ran out of heap, results partial"
+                        : "INCONCLUSIVE - budget hit, results partial")
                     : clean ? "CLEAN" : "ISSUES FOUND"));
             // An inconclusive run is not a failure. The verdict above already says the results are partial;
             // counting it here as well would make the exit status contradict the verdict, which is the same
@@ -75,11 +78,14 @@ public class Audit {
             // definition, so requiring clean meant the counter could never fire - a condition that excludes the
             // case it exists for.
             if (inconclusive) inconclusiveRuns++;
+            if (r.heapHit) heapHits++;
             System.out.println();
         }
         if (inconclusiveRuns > 0) {
             System.out.println();
-            System.out.println(inconclusiveRuns + " story(ies) inconclusive - raise the budget to finish them.");
+            System.out.println(inconclusiveRuns + " story(ies) inconclusive - raise the "
+                    + (heapHits > 0 ? "HEAP (-Xmx) rather than the budget" : "budget")
+                    + " to finish them.");
             System.out.println("Not counted as failures, because a partial check is not a finding.");
         }
         if (failures > 0) System.exit(1);

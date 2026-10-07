@@ -61,6 +61,18 @@ public class Bot {
         public int pathsExplored = 0;
         public int statesExpanded = 0;
         public boolean budgetHit = false;
+
+        /**
+         * The traversal ran out of HEAP rather than out of budget. Kept apart from budgetHit because the two have
+         * different remedies and the advice was wrong: this used to set budgetHit, so a story that exhausted the
+         * JVM heap was reported as "INCONCLUSIVE - budget hit" and the reader was told to raise the budget.
+         *
+         * MEASURED on 2026-10-07, on overtime: raising the budget from 2,000,000 to 30,000,000 changed nothing,
+         * because the budget was never the limit. Raising the HEAP is what moves it - 512m reaches 93 of 131
+         * scenes, 2g reaches 117, and 3g reaches all 131 with all six endings. The default heap cannot audit the
+         * largest story in the library, and the message sent you to the wrong dial.
+         */
+        public boolean heapHit = false;
         public List<String> warnings = new ArrayList<>();
 
         public Set<String> unreachableScenes() {
@@ -313,7 +325,7 @@ public class Bot {
             // report, so the report itself has room to be written.
             seen.clear();
             stack.clear();
-            r.budgetHit = true;
+            r.heapHit = true;
             r.warnings.add("ran out of memory after " + r.statesExpanded
                     + " states — the traversal did not finish, so anything it did not"
                     + " reach is unknown rather than unreachable");
