@@ -14,11 +14,14 @@ import java.io.File;
  * <p>A piano tuner, forty years of other people's instruments, and the one piano they could not finish. The fork
  * goes on the bench first, because it is the only thing in the room that is not an opinion.
  *
- * <p>THE TENTH REGISTER AND THE FIRST THAT IS NOT A CHOICE TREE. Every story before this branches: you pick, and
+ * <p>THE NINTH REGISTER AND THE FIRST THAT IS NOT A CHOICE TREE. Every story before this branches: you pick, and
  * the ending is whichever branch you took. This one does not branch at all until its last scene, because it is a
  * RECOLLECTION and the past is not a thing you choose. There is one choice in the whole script, at the end, and it
  * is not about what happened - it is about which memory the narrator settles on.
  *
+ *
+ * <p>(This said TENTH until the count was checked: there are nine stories, Bell Codes is the seventh and Ninety
+ * Days the eighth. A number in a comment is a claim, which is the thing this project keeps relearning.)
  * <p>That shows up in the auditor as a number: <b>paths explored: 3</b>, where Ninety Days - a hub - has 48. The
  * traversal count is a signature of the shape.
  *
