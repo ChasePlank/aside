@@ -62,7 +62,7 @@ TO PUBLISH, which is a decision and not a step:
 
   gh release create $VERSION -R ChasePlank/Fruit-Jump \\
      --title "Holdfast $VERSION" \\
-     --notes-file <notes.md> \\
+     --notes-file $TP/docs/release-notes-$VERSION.md \\
      /root/holdfast-$VERSION-windows-x64.zip /root/holdfast-$VERSION-linux-x64.tar.gz $TP/tropical-punch.jar
 
   Write the notes FIRST and name the files exactly as they are attached. Eleven of fifteen past releases named a
