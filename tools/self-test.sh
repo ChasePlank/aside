@@ -92,6 +92,31 @@ else
   printf '  %-38s skip    no %s/src/main/resources/style.css\n' "style-classes.sh notices an undefined class" "$TP"
 fi
 
+# ---- find-drift.py must report a line that falls BETWEEN its two thresholds --------------------------------
+# THE FAULT IS THE ORIGINAL BUG, and it hid a real divergence: the release's LevelValidator gained
+# "player.grounded && " in front of a condition - nineteen characters added to a sixty-character line, a
+# similarity of about 0.75 - and the tool said "0 with NO counterpart, 0 near miss(es)" and "nothing: the two
+# differ only in comments, imports, or not at all" for a file that had diverged. The band between --gap and
+# --near is where small edits to long lines live, which is most real drift.
+tmpd=$(mktemp -d)
+cat > "$tmpd/a.java" <<'JA'
+class A {
+    void f() { if (player.grounded && player.x - windowX < 10) player.vy = JUMP_V; }
+}
+JA
+cat > "$tmpd/b.java" <<'JB'
+class A {
+    void f() { if (player.x - windowX < 10) player.vy = JUMP_V; }
+}
+JB
+out=$(python3 tools/find-drift.py "$tmpd/a.java" "$tmpd/b.java" 2>&1); rc=$?
+rm -rf "$tmpd"
+if echo "$out" | grep -q "changed between the thresholds" && echo "$out" | grep -q "player.grounded"; then
+  ok "find-drift reports the band between its thresholds" "$(echo "$out" | grep 'changed between' | head -1 | tr -s ' ')"
+else
+  bad "find-drift reports the band between its thresholds" "a small edit to a long line was reported nowhere"
+fi
+
 echo
 echo "=== $pass tool self-test(s) passed, $fail failed ==="
 [ "$fail" = 0 ] || exit 1

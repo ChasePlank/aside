@@ -70,7 +70,7 @@ def main():
     bset = {t for _, t in B}
     blines = [t for _, t in B]
 
-    near, gaps = [], []
+    near, gaps, changed = [], [], []
     for i, t in A:
         if t in bset:
             continue
@@ -83,9 +83,22 @@ def main():
             near.append((ratio, i, t, best))
         elif ratio < args.gap:
             gaps.append((i, t))
+        else:
+            # THE BAND BETWEEN THE TWO THRESHOLDS, WHICH USED TO BE DROPPED.
+            #
+            # A line whose best match falls between --gap and --near was reported NOWHERE: not as a gap, not as a
+            # near miss. On 2026-10-07 that hid a real divergence - the release's LevelValidator had gained
+            # "player.grounded && " in front of a condition, nineteen characters added to a sixty-character line,
+            # a similarity of about 0.75 - and this tool said "0 line(s) with NO counterpart, 0 near miss(es)" and
+            # "nothing: the two differ only in comments, imports, or not at all" for a file that had diverged.
+            #
+            # The band is exactly where small edits to long lines live, which is most real drift. It is reported
+            # as its own list now, because a silent band is worse than either threshold being wrong.
+            changed.append((ratio, i, t, best))
 
     print(f"  {os.path.basename(args.a)}: {len(A)} line(s)   {os.path.basename(args.b)}: {len(B)} line(s)")
-    print(f"  {len(gaps)} line(s) with NO counterpart in B   {len(near)} near miss(es)\n")
+    print(f"  {len(gaps)} line(s) with NO counterpart in B   {len(near)} near miss(es)"
+          f"   {len(changed)} changed between the thresholds\n")
 
     if gaps:
         print("  --- NO COUNTERPART (A has it, B does not) ---")
@@ -103,7 +116,15 @@ def main():
             print(f"        B  {m[:104]}")
         print()
 
-    if not gaps and not near:
+    if changed:
+        print("  --- CHANGED, BETWEEN THE THRESHOLDS (neither a gap nor a near miss) ---")
+        for r, i, t, m in sorted(changed, reverse=True)[:args.limit]:
+            print(f"  {r:.2f}  A:{i}")
+            print(f"        A  {t[:104]}")
+            print(f"        B  {(m or '')[:104]}")
+        print()
+
+    if not gaps and not near and not changed:
         print("  nothing: the two differ only in comments, imports, or not at all")
     return 0
 
