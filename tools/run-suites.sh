@@ -51,7 +51,7 @@ fi
 # main in this repository is either run here or named as a tool, and anything else is printed. A list that can go
 # stale silently would be a problem; a list that reports what it is missing is just a list.
 SUITES=(
-  aside.engine.SelfTest                          # the engine, the auditor, the shelf
+  aside.engine.SelfTest                          # the engine and the shelf; the auditor, on two fixtures
   aside.audio.AudioTest                          # every cue has a file, and plays
   aside.games.fruitjump.engine.WaterProbe        # every pool is the shape it was built to be
   aside.games.fruitjump.engine.WaterSuite
@@ -241,6 +241,17 @@ fi
 # AND THE TOOLS THEMSELVES. Every tool here is a check, and a check that cannot fail is worse than no check because
 # it is believed - Rule 15 was written down after a mutation harness shipped broken while the suites it ran passed
 # beautifully. self-test.sh breaks a known thing for each tool and requires the tool to complain.
+# THE STORIES, WHICH NOTHING WAS AUDITING. The suite list above says SelfTest covers "the engine, the auditor,
+# the shelf" - and SelfTest audits TWO stories: night-shift as its fixture and ninety-days for the hub check. There
+# are nine, and nothing in this file mentioned `stories/` or `.aside` at all, so seven were unchecked - including
+# overtime, the largest thing in the library. The comment was the claim and the coverage was two fixtures.
+if [ -x tools/audit-stories.sh ]; then
+  echo "  --- the stories ---"
+  stories_out=$(JAVA="$JAVA" OUT="$OUT" tools/audit-stories.sh 2>&1); stories_rc=$?
+  echo "$stories_out" | sed 's/^/  /'
+  if [ $stories_rc -ne 0 ]; then fail=$((fail + 1)); failed_names+=("story-audits"); fi
+fi
+
 if [ -x tools/self-test.sh ]; then
   st_out=$(tools/self-test.sh 2>&1); st_rc=$?
   echo "$st_out" | grep -E 'FAIL|tool self-test' | sed 's/^/  /'
