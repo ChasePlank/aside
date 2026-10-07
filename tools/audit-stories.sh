@@ -73,6 +73,33 @@ for f in stories/*.aside; do
   fi
 done
 
+# AND THAT NO STORY CLAIMS TO BE LATER THAN THE LIBRARY IS. Four of the scripts open with an ordinal - Bell Codes
+# says SEVENTH, Ninety Days EIGHTH, A440 NINTH, Changeover TENTH - and they are claims like any other. I wrote
+# "TENTH" on A440 when there were nine stories, and nothing would have caught it; the count only came right by
+# accident when a tenth was written.
+#
+# This catches OVER-claiming, which is the direction that actually happened. It cannot catch under-claiming - a new
+# story that says nothing at all is not wrong, just quiet - and that is fine, because the fault was a number that
+# had run ahead of the thing it counted.
+total_stories=$(ls stories/*.aside 2>/dev/null | wc -l)
+highest=0
+for f in stories/*.aside; do
+  [ -f "$f" ] || continue
+  word=$(grep -oE "\b(FIRST|SECOND|THIRD|FOURTH|FIFTH|SIXTH|SEVENTH|EIGHTH|NINTH|TENTH|ELEVENTH|TWELFTH)\b" "$f" | head -1)
+  case "$word" in
+    FIRST) n=1;; SECOND) n=2;; THIRD) n=3;; FOURTH) n=4;; FIFTH) n=5;; SIXTH) n=6;;
+    SEVENTH) n=7;; EIGHTH) n=8;; NINTH) n=9;; TENTH) n=10;; ELEVENTH) n=11;; TWELFTH) n=12;; *) n=0;;
+  esac
+  if [ "$n" -gt "$highest" ]; then highest=$n; highest_name=$(basename "$f" .aside); fi
+done
+echo "  highest ordinal claimed: $highest ($highest_name)   stories: $total_stories"
+if [ "$highest" -le "$total_stories" ]; then
+  echo "  ok"
+else
+  echo "  MISMATCH - $highest_name claims to be story $highest and there are only $total_stories" >&2
+  issues=$((issues + 1)); failed_names+=("ordinal")
+fi
+
 echo
 if [ "$issues" -eq 0 ]; then
   echo "=== $clean story(ies) clean, $inconclusive inconclusive, 0 with issues ==="

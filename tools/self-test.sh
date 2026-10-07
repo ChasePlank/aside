@@ -92,6 +92,28 @@ else
   printf '  %-38s skip    no %s/src/main/resources/style.css\n' "style-classes.sh notices an undefined class" "$TP"
 fi
 
+# ---- audit-stories.sh must notice a story claiming to be later than the library -------------------------------
+# THE FAULT IS THE ONE THAT ACTUALLY HAPPENED: A440 said "TENTH REGISTER" when there were nine stories, and nothing
+# would have caught it. The count only came right by accident when a tenth was written.
+if [ -x tools/audit-stories.sh ] && [ -f stories/a440.aside ]; then
+  OR_BAK=$(mktemp); cp stories/a440.aside "$OR_BAK"
+  python3 - <<'PY'
+p='stories/a440.aside'; s=open(p).read()
+old = 'NINTH REGISTER'
+assert old in s, 'the ordinal is not there to change'
+open(p,'w').write(s.replace(old, 'ELEVENTH REGISTER', 1))
+PY
+  out=$(JAVA="${JAVA:-/root/jdk-27+35/bin/java}" OUT="${OUT:-out}" tools/audit-stories.sh 2>&1); rc=$?
+  cp "$OR_BAK" stories/a440.aside; rm -f "$OR_BAK"
+  if [ $rc -ne 0 ] && echo "$out" | grep -q "claims to be story 11"; then
+    ok "audit-stories.sh notices an over-claimed ordinal" "$(echo "$out" | grep 'highest ordinal' | tr -s ' ')"
+  else
+    bad "audit-stories.sh notices an over-claimed ordinal" "reported clean with a story claiming to be 11 of 10"
+  fi
+else
+  bad "audit-stories.sh notices an over-claimed ordinal" "no audit-stories.sh or no a440.aside"
+fi
+
 # ---- audit-stories.sh must notice a story with a broken jump ------------------------------------------------
 # Seven stories were not audited by anything until this step existed, so the step itself has to be shown to work.
 # The fault is a jump to a scene that does not exist - the plainest thing the auditor is for.
