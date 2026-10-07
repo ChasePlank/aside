@@ -1,0 +1,138 @@
+# A short story for the Aside engine.
+#
+# TENTH REGISTER, AND THE FIRST THAT IS NOT A CHOICE TREE. Every story before this branches: you pick, and the
+# ending is whichever branch you took. This one does not branch at all until its last scene, because it is a
+# RECOLLECTION and the past is not a thing you choose. There is one choice in the whole script, at the end, and it
+# is not about what happened - it is about which memory the narrator settles on.
+#
+# The register is technical and quiet, and it is the second story with no supernatural event in it at all. A piano
+# tuner, forty years of other people's instruments, and the one piano they could not finish.
+#
+# Six scenes, three endings, one sitting. No variables: the routing carries it.
+
+title: A440
+author: Roxanne
+start: bench
+
+== bench ==
+bg workshop_bench
+music fan_hum
+sfx fork
+The fork goes on the bench first, because it is the only thing in the room that is not an opinion.
+
+A440. Four hundred and forty cycles a second, agreed on by everybody in 1939 and argued about ever since by
+everybody who has ever tuned anything. You have carried the same fork since you were twenty-two. It is not
+accurate and it never was; it is CONSISTENT, which is the thing that matters when you are the one who has to
+decide what a piano is going to be for the next year.
+
+You are seventy-one. You have tuned about four thousand instruments and you can remember perhaps nine of them.
+
+-> first
+
+== first ==
+bg workshop_bench
+The first was a Challen upright in a church hall, and you remember it because you broke a string.
+
+Nobody tells you that you will break a string. They tell you about the fork and the temperament and the circle of
+fifths, and then you are nineteen years old with a piece of wire in your hand and a vicar in the doorway asking
+whether that was supposed to happen. It was not.
+
+You paid for the string out of your own pocket and you tuned that piano for eleven years afterwards, and the vicar
+never once mentioned it, which is either the kindest thing anybody has ever done for you or the most
+English.
+
+-> second
+
+== second ==
+bg workshop_bench
+The second was a Bechstein in a house with a name instead of a number, and the woman who owned it played while you
+worked.
+
+That is not how it is done. You tune with the owner out of the room, or at least quiet, because you are listening
+for beats between two notes and a person playing Chopin over the top of that is a person making your job
+impossible. You did not ask her to stop.
+
+She played the same eight bars every time for six years and you never found out what they were, and you have
+looked, since, in the way you look for things now, which is to say occasionally and without much hope.
+
+-> third
+
+== third ==
+bg workshop_bench
+The third was a school piano and it does not matter which school, because they are all the same piano: a Yamaha U1
+with a cracked music desk, gum on the underside of the lid, and a middle C that has been hit approximately nine
+hundred thousand times by people who do not yet know that they are learning something.
+
+You tuned it every September for twenty-two years. You could hear the September in it. A piano that has had a
+summer off is a piano that has gone flat in a particular way, and after a few years you could tell how hot the
+summer had been from the pitch of the middle register, which is not a thing anybody has ever wanted to know.
+
+-> fourth
+
+== fourth ==
+bg workshop_bench
+And then there is the one you did not finish.
+
+A Blüthner, rosewood, in a flat above a shop, and it had not been tuned since 1974. You spent four hours on it.
+You got the temperament in and the middle three octaves clean and it was, for about twenty minutes, a good piano
+again - and then you stopped, because the soundboard had a crack in it that you had not seen and the whole thing
+was going to go out of tune again within the month no matter what you did.
+
+You told the owner. The owner said, well, it's better than it was. And it was. And you have thought about that
+piano roughly once a month for eleven years, which is a lot of thinking for twenty minutes of work.
+
+-> last
+
+== last ==
+bg workshop_bench
+The fork is still on the bench. It is not accurate and it never was.
+
+You are going to stop doing this. Not today and probably not this year, but the hands go and the hearing goes and
+you have watched two people you trained keep going a year too long, and you have decided not to be the third.
+
+Forty years of other people's instruments, and the thing you are going to carry out of this room is not the fork.
+It is which of them you keep.
+
+* The Challen, and the string you broke, and the vicar who never mentioned it. -> end_string
+* The Bechstein, and eight bars of something you never identified. -> end_eight
+* The Blüthner, and the twenty minutes it was a good piano again. -> end_twenty
+
+== end_string ==
+bg workshop_bench
+You keep the Challen.
+
+Not because it was the first, and not because of the eleven years afterwards - because of the doorway. A man in a
+doorway asking whether that was supposed to happen, and then not asking again, ever, for eleven years, while you
+learned the job on his piano.
+
+You put the fork in your pocket. It has been in your pocket for forty-nine years and it will be in your pocket
+when they find you, and that is a ridiculous thing to be buried with, and you have decided that you do not care.
+
+-> END
+
+== end_eight ==
+bg workshop_bench
+You keep the Bechstein.
+
+Eight bars, six years, and no idea what they were - and you have decided that this is the correct way to remember
+a piece of music. You heard it the way it was meant to be heard, which is while somebody else was doing something
+else, and every time you have tried to find it since you have been listening to it as a problem to solve.
+
+You put the fork in your pocket. You will not need it again and you are taking it anyway.
+
+-> END
+
+== end_twenty ==
+bg workshop_bench
+You keep the Blüthner.
+
+Twenty minutes, eleven years ago, in a flat above a shop. You did not fix it and you told the owner you had not
+fixed it, and the owner said it was better than it was, and both of those things are true and neither of them is
+the point.
+
+The point is that you know exactly what a piano sounds like when it has just been brought back, and you got to
+hear it one more time than the piano deserved, and you have decided that this is what the work was for.
+
+You put the fork in your pocket. It is not accurate. It never was.
+
+-> END

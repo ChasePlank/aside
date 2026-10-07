@@ -98,6 +98,7 @@ public final class PhoneShelf {
             case "two-of-everything" -> "A visual novel. Keeps the pair in this browser.";
             case "bell-codes" -> "A visual novel. Keeps the last shift in this browser.";
             case "ninety-days" -> "A visual novel. Keeps the shelf in this browser.";
+            case "a440" -> "A visual novel. Keeps the fork in this browser.";
             case "discrepancy" -> "A visual novel. Keeps the audit in this browser.";
             case "water-line" -> "A visual novel. Nineteen years, one chalk line, three ways to leave it.";
             default -> "";
