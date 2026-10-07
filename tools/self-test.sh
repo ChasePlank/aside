@@ -92,6 +92,28 @@ else
   printf '  %-38s skip    no %s/src/main/resources/style.css\n' "style-classes.sh notices an undefined class" "$TP"
 fi
 
+# ---- audit-stories.sh must notice a story with a broken jump ------------------------------------------------
+# Seven stories were not audited by anything until this step existed, so the step itself has to be shown to work.
+# The fault is a jump to a scene that does not exist - the plainest thing the auditor is for.
+if [ -x tools/audit-stories.sh ] && [ -f stories/a440.aside ]; then
+  AS_BAK=$(mktemp); cp stories/a440.aside "$AS_BAK"
+  python3 - <<'PY'
+p='stories/a440.aside'; s=open(p).read()
+old = '-> second'
+assert old in s, 'the jump to break is not there'
+open(p,'w').write(s.replace(old, '-> a_scene_that_does_not_exist', 1))
+PY
+  out=$(JAVA="${JAVA:-/root/jdk-27+35/bin/java}" OUT="${OUT:-out}" tools/audit-stories.sh 2>&1); rc=$?
+  cp "$AS_BAK" stories/a440.aside; rm -f "$AS_BAK"
+  if [ $rc -ne 0 ] && echo "$out" | grep -q "a440.*ISSUES"; then
+    ok "audit-stories.sh notices a broken jump" "$(echo "$out" | grep 'with issues' | tr -s ' ')"
+  else
+    bad "audit-stories.sh notices a broken jump" "reported clean with a jump to a missing scene"
+  fi
+else
+  bad "audit-stories.sh notices a broken jump" "no audit-stories.sh or no a440.aside"
+fi
+
 # ---- find-drift.py must report a line that falls BETWEEN its two thresholds --------------------------------
 # THE FAULT IS THE ORIGINAL BUG, and it hid a real divergence: the release's LevelValidator gained
 # "player.grounded && " in front of a condition - nineteen characters added to a sixty-character line, a
