@@ -21,6 +21,27 @@ pass=0; fail=0
 ok()   { printf '  %-38s ok      %s\n' "$1" "$2"; pass=$((pass+1)); }
 bad()  { printf '  %-38s FAIL    %s\n' "$1" "$2"; fail=$((fail+1)); }
 
+# PUT THE STORY BACK EVEN IF THIS SCRIPT IS INTERRUPTED.
+#
+# Two of the checks below BREAK A TRACKED FILE on purpose - they copy
+# stories/a440.aside aside, inject a fault, run the tool, and copy it back. The
+# copy-back was a plain line at the end of each block, so a kill in between left
+# the fault in the working tree: found on 2026-10-07 with a440.aside sitting at
+# "ELEVENTH REGISTER" and ten stories, which is exactly the over-claim the check
+# exists to catch, left behind by the check itself.
+#
+# A mutation harness that can leave a mutation behind is worse than no harness,
+# for the same reason a check that cannot fail is worse than no check.
+STORY_BAK=""
+restore_story() {
+  if [ -n "$STORY_BAK" ] && [ -f "$STORY_BAK" ]; then
+    cp "$STORY_BAK" stories/a440.aside 2>/dev/null || true
+    rm -f "$STORY_BAK"
+    STORY_BAK=""
+  fi
+}
+trap restore_story EXIT INT TERM
+
 # ---- diff.sh must report what a filter hides ---------------------------------------------------------------
 printf 'a\nb\nc\n' > /tmp/st-a; printf 'a\nB\nC\n' > /tmp/st-b
 out=$(tools/diff.sh /tmp/st-a /tmp/st-b '^[+-][bB]' 2>&1)
@@ -96,7 +117,7 @@ fi
 # THE FAULT IS THE ONE THAT ACTUALLY HAPPENED: A440 said "TENTH REGISTER" when there were nine stories, and nothing
 # would have caught it. The count only came right by accident when a tenth was written.
 if [ -x tools/audit-stories.sh ] && [ -f stories/a440.aside ]; then
-  OR_BAK=$(mktemp); cp stories/a440.aside "$OR_BAK"
+  STORY_BAK=$(mktemp); cp stories/a440.aside "$STORY_BAK"
   python3 - <<'PY'
 p='stories/a440.aside'; s=open(p).read()
 old = 'NINTH REGISTER'
@@ -104,7 +125,7 @@ assert old in s, 'the ordinal is not there to change'
 open(p,'w').write(s.replace(old, 'ELEVENTH REGISTER', 1))
 PY
   out=$(tools/audit-stories.sh 2>&1); rc=$?
-  cp "$OR_BAK" stories/a440.aside; rm -f "$OR_BAK"
+  restore_story
   if [ $rc -ne 0 ] && echo "$out" | grep -q "claims to be story 11"; then
     ok "audit-stories.sh notices an over-claimed ordinal" "$(echo "$out" | grep 'highest ordinal' | tr -s ' ')"
   else
@@ -118,7 +139,7 @@ fi
 # Seven stories were not audited by anything until this step existed, so the step itself has to be shown to work.
 # The fault is a jump to a scene that does not exist - the plainest thing the auditor is for.
 if [ -x tools/audit-stories.sh ] && [ -f stories/a440.aside ]; then
-  AS_BAK=$(mktemp); cp stories/a440.aside "$AS_BAK"
+  STORY_BAK=$(mktemp); cp stories/a440.aside "$STORY_BAK"
   python3 - <<'PY'
 p='stories/a440.aside'; s=open(p).read()
 old = '-> second'
@@ -126,7 +147,7 @@ assert old in s, 'the jump to break is not there'
 open(p,'w').write(s.replace(old, '-> a_scene_that_does_not_exist', 1))
 PY
   out=$(tools/audit-stories.sh 2>&1); rc=$?
-  cp "$AS_BAK" stories/a440.aside; rm -f "$AS_BAK"
+  restore_story
   if [ $rc -ne 0 ] && echo "$out" | grep -q "a440.*ISSUES"; then
     ok "audit-stories.sh notices a broken jump" "$(echo "$out" | grep 'with issues' | tr -s ' ')"
   else
