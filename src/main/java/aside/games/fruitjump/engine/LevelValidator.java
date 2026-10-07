@@ -195,7 +195,7 @@ public class LevelValidator {
             if (windowT <= 0) { windowX = player.x; windowT = 0.5; }
             windowT -= GameLoop.DT;
             if (windowT <= 0) {
-                if (player.x - windowX < 10) player.vy = JUMP_V;
+                if (player.grounded && player.x - windowX < 10) player.vy = JUMP_V;
                 windowX = player.x;
                 windowT = 0.5;
             }

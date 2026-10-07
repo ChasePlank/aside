@@ -732,7 +732,13 @@ public class GameplayScreen extends UiScreen {
                 //
                 // Clamping keeps it NEAR the thing it points at, which is the best a screen edge allows. 12px a
                 // character is a shade over the 22pt Arial this is drawn in, so the last character lands inside.
-                sx = Math.min(sx, CANVAS_W - widest * 12 - 8);
+                double realW = 0;
+                for (String line : lines) {
+                    javafx.scene.text.Text t = new javafx.scene.text.Text(line);
+                    t.setFont(gc.getFont());
+                    realW = Math.max(realW, t.getLayoutBounds().getWidth());
+                }
+                sx = Math.min(sx, CANVAS_W - realW - 8);
                 for (int i = 0; i < lines.size(); i++) {
                     double ly = sy + i * 26;
                     gc.setFill(Color.web("#1a1a2e"));

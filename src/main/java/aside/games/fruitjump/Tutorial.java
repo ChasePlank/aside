@@ -74,6 +74,19 @@ public class Tutorial {
                 // Target practice: two spiders at range, nothing in between.
                 put(g, 30, FLOOR - 1, 'o');
                 put(g, 40, FLOOR - 1, 'o');
+
+                // AND A LEDGE THE HOOKSHOT IS THE ONLY WAY UP TO. The sign above teaches the control; this is the
+                // level teaching the USE, which is what the sign could not do on its own - every other mechanic in
+                // the tutorial is taught beside the thing it is for.
+                //
+                // SIX ROWS UP, and above the SIGN ROW rather than on it. The signs are drawn at y = (FLOOR - 4) *
+                // 32, so a ledge at FLOOR - 4 would have the words inside the stone - and the sign-collision check
+                // compares signs to signs, not signs to terrain, so it would not have said so.
+                //
+                // Six rows is 192px. The jump apex is about 73px, so it is well out of reach; the hookshot's range
+                // is 400px, so it is well inside that.
+                for (int c = 8; c <= 14; c++) put(g, c, FLOOR - 6, '#');
+                put(g, 11, FLOOR - 7, 'h');     // a snack, so the reward is the reason to go up
             }
             case 5 -> {
                 // Bats, and room to learn that one knockdown clears the swarm.
@@ -168,21 +181,21 @@ public class Tutorial {
                 s.add(new Sign(29 * 32, y, "STAND BACK. the blast hurts you too"));
             }
             case 4 -> {
-                // WAS JUST "ARROWS   F", and it was the only sign in the tutorial that named a key without
-                // saying what it does. Every other one follows the same shape - "BOMB  G  -  it drops at your
-                // feet", "SMACK - one life back" - so this one read as a missing line rather than a terse one.
-                // Found by putting all nine levels on one sheet and reading them, which is the only way this
-                // class of thing gets found: the gate checks that a level is PLAYABLE, not that it TEACHES.
-                s.add(new Sign(12 * 32, y, "ARROWS   F   -   hits what you face"));
-                s.add(new Sign(30 * 32, y, "the spiders are out of reach. shoot them"));
+                // WAS JUST "ARROWS   F", the only sign in the tutorial that named a key without saying what it
+                // does, when every other one follows "BOMB  G  -  it drops at your feet".
+                s.add(new Sign(20 * 32, y, "ARROWS   F   -   hits what you face"));
+                s.add(new Sign(32 * 32, y, "the spiders are out of reach. shoot them"));
                 // AND THE HOOKSHOT, which the README leads with - "with hookshot, bombs, bow" - and which the
                 // tutorial never mentioned in any of its nine levels. It fires at a wall and pulls you to it, so
                 // it belongs on the level that is already about reaching what you cannot walk to.
                 // TWO SIGNS, AND THE SECOND IS BELOW THE FIRST'S WRAP. The first is 37 characters and wraps to a
                 // 34-character line, so its second line lands where a sign 26px below would start - which is the
                 // same collision the JAR and KEY signs had on tutorial 6. TutorialTest caught it on the first run.
-                s.add(new Sign(44 * 32, y, "HOOKSHOT   X   -   pulls you to a wall"));
-                s.add(new Sign(44 * 32, y + 52, "Shift + X fires it upward"));
+                // BACK AT 44, under the ledge. The signs are about thirteen tiles wide once wrapped, so there is no
+                // room for a third one between the arrows sign at 12 and the spiders sign at 30 - 24 overlapped
+                // both, which the collision check caught twice.
+                s.add(new Sign(8 * 32, y, "HOOKSHOT   X   -   pulls you to a wall"));
+                s.add(new Sign(8 * 32, y + 52, "Shift + X fires it upward"));
             }
             case 5 -> {
                 s.add(new Sign(10 * 32, y, "BATS KNOCK YOU DOWN"));
@@ -192,10 +205,8 @@ public class Tutorial {
                 s.add(new Sign(12 * 32, y, "SNACK  -  one life back"));
                 s.add(new Sign(22 * 32, y, "JAR  -  a life FOREVER, and a full refill"));
                 // MOVED RIGHT, from 30 * 32. The JAR sign to its left is 41 characters and wraps to a 34-character
-                // line, which at the 12px-a-character this is drawn in spans about 408px from 704 - ending
-                // near 1112. The KEY sign started at 960 and sat INSIDE it, so the two overlaid and neither
-                // could be read. Nothing checks sign collisions: wrapSign keeps a sign on the screen and
-                // the clamp keeps it near its object, and neither knows about the sign next to it.
+                // line, so it reaches past x = 1000. The KEY sign started at 960 and sat INSIDE it, and the two
+                // overlaid so that neither could be read - visible on tutorial 6 since October.
                 s.add(new Sign(38 * 32, y, "KEY  -  opens the door"));
             }
             case 7 -> {
@@ -222,9 +233,8 @@ public class Tutorial {
                 s.add(new Sign(44 * 32, y - 60, "DEEP WATER"));
                 s.add(new Sign(44 * 32, y - 34, "SPACE swims up.   DOWN / S dives"));
                 // MOVED DOWN to y + 26, from y - 8. The sign above it is 36 characters, so it WRAPS ONTO A SECOND
-                // LINE - and that second line landed on y - 8, which is exactly where this one started. They
-                // printed on top of each other and neither could be read. A sign that wraps occupies TWO rows,
-                // and the next sign down has to clear both.
+                // LINE - and that line landed exactly where this one started. A sign that wraps occupies two
+                // rows, and the next sign down has to clear both.
                 s.add(new Sign(20 * 32, y + 26, "they come in groups. get out and they lose you"));
                 s.add(new Sign(44 * 32, y, "that is everything. good luck"));
             }
