@@ -125,7 +125,7 @@ old = '-> second'
 assert old in s, 'the jump to break is not there'
 open(p,'w').write(s.replace(old, '-> a_scene_that_does_not_exist', 1))
 PY
-  out=$(JAVA="${JAVA:-/root/jdk-27+35/bin/java}" OUT="${OUT:-out}" tools/audit-stories.sh 2>&1); rc=$?
+  out=$(tools/audit-stories.sh 2>&1); rc=$?
   cp "$AS_BAK" stories/a440.aside; rm -f "$AS_BAK"
   if [ $rc -ne 0 ] && echo "$out" | grep -q "a440.*ISSUES"; then
     ok "audit-stories.sh notices a broken jump" "$(echo "$out" | grep 'with issues' | tr -s ' ')"

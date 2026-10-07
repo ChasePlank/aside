@@ -21,8 +21,14 @@
 set -u
 cd "$(dirname "$0")/.." || exit 2
 
-JAVA="${JAVA:-/root/jdk-27+35/bin/java}"
-OUT="${OUT:-out}"
+# JAVA, FX AND OUT ARE FOUND, NOT GUESSED. This script defaulted JAVA to a
+# path that does not exist here and OUT to `out` while this sandbox builds to
+# `classes`, so it exited 2 with "no build in out" -- and the tool self-test,
+# which injects a broken jump and requires this script to complain, read that
+# as "reported clean with a jump to a missing scene". The tool was fine; the
+# guess was not. find-java.sh looks for the toolchain and the build directory,
+# and an explicit JAVA/OUT still wins.
+. "$(dirname "$0")/find-java.sh"
 HEAP="${HEAP:-3g}"
 # AND THE BUDGET, WHICH IS A SEPARATE DIAL. MEASURED on overtime: a 3g heap alone still stops at 114 of 131
 # scenes, because the default budget is 600,000 states and the traversal needs about 3.1 million. The two limits
