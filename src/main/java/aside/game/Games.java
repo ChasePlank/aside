@@ -85,6 +85,7 @@ public final class Games {
         g.add(new aside.games.bellcodes.BellCodesGame());
         g.add(new aside.games.ninetydays.NinetyDaysGame());
         g.add(new aside.games.a440.A440Game());
+        g.add(new aside.games.changeover.ChangeoverGame());
         g.add(new aside.games.twoofeverything.TwoOfEverythingGame());
         g.add(new aside.games.discrepancy.DiscrepancyGame());
         return g;

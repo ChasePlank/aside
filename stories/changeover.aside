@@ -1,0 +1,176 @@
+# A short story for the Aside engine.
+#
+# TENTH REGISTER, AND THE FIRST WITH TWO NARRATORS. Every story before this has one voice. This one alternates:
+# every scene is a letter, and the letters go back and forth between two people who ran a cinema together and are
+# no longer in the same building. The reader sees both sides; neither of them does.
+#
+# That is the whole formal idea. The choices are what each of them WRITES - and because a letter cannot be
+# unsent, a choice made in one scene is a fact the other person has to answer in the next. Nothing here is
+# hidden from the reader and everything is hidden from the characters, which is the opposite of how the other
+# nine work.
+#
+# The register is technical and affectionate, and it is the third story with nothing supernatural in it at all.
+# A projectionist, two reels, and the year the cinema stopped.
+#
+# Ten scenes, three endings. No variables: the routing carries it.
+
+title: Changeover
+author: Roxanne
+start: letter_one
+
+== letter_one ==
+bg booth_desk
+music fan_hum
+sfx projector
+sfx projector
+The carbon arc is the part nobody warns you about.
+
+You are forty minutes into a two-hour film and the rod is down to the length of your thumb, and if you let it go
+past that the light goes orange and then it goes out, and two hundred people in the dark find out that the film
+they are watching was being held up by a person. You learn to hear it. It is not a sound exactly. It is the
+projector sounding slightly more pleased with itself.
+
+I am writing this on the back of a reel label because it is what is in front of me.
+
+* Tell her about the arc, because she will laugh. -> letter_two_warm
+* Tell her the cinema is closing. -> letter_two_plain
+
+== letter_two_warm ==
+bg booth_desk
+She writes back in pencil, on the back of a shopping list, which is what she always did.
+
+That is exactly it. That is the sound. Nobody believes me when I say you can hear a carbon arc going, and you have
+described it in one line - it sounds pleased with itself - and I have been trying to say that since 1994.
+
+I am in a flat with a window that faces a car park and I have not run a projector in eleven months and I still
+look at the clock at twenty past the hour.
+
+* Tell her you have been offered the job of running it down. -> letter_three
+
+== letter_two_plain ==
+bg booth_desk
+She writes back in pencil, on the back of a shopping list, which is what she always did.
+
+So it is happening. I have been waiting for that letter for two years and I still was not ready for it, which is
+a stupid thing to be.
+
+Eleven months since I ran anything. I still look at the clock at twenty past the hour. I do not know what I am
+supposed to do with that.
+
+* Tell her you have been offered the job of running it down. -> letter_three
+
+== letter_three ==
+bg booth_desk
+They have offered me the run-down.
+
+Six weeks, one screen, whatever we can still sell tickets for, and then the building goes to whoever is buying it.
+I said I would think about it and I have been thinking about it for four days, which is four days longer than it
+took me to say yes to the job in the first place.
+
+* Take it. Somebody has to be the last one. -> letter_four_take
+* Turn it down. You should not have to be the one who turns the lights off. -> letter_four_refuse
+
+== letter_four_take ==
+bg booth_desk
+I took it.
+
+I want to be careful about why, because the reason I gave them is not the reason. The reason I gave them is that I
+know the building and the equipment and it is sensible. The reason is that I have been the one in the booth for
+nineteen years and I am not going to hand the last six weeks to somebody who has never threaded a platter.
+
+* Tell her that. -> letter_five
+
+== letter_four_refuse ==
+bg booth_desk
+I turned it down.
+
+They have given it to a man called Derek who I have never met and who, I am told, is very good with people. He
+will run it down for six weeks and he will do it perfectly well and it will not matter to him at all, which is
+probably the correct way to do it.
+
+I have not slept properly since I said no, which tells you what I actually think.
+
+* Tell her that. -> letter_five
+
+== letter_five ==
+bg booth_desk
+She does not answer for eleven days, and then the letter is four pages long and the first page is about her
+sister.
+
+The second page is the one that matters. She says: I have been trying to work out whether I left because it was
+ending or whether it ended because I left, and I have decided that I am never going to know, and I have decided
+that I am allowed to stop asking.
+
+* Write back that she is allowed. -> letter_six_allowed
+* Write back that you do not think she is. -> letter_six_not
+
+== letter_six_allowed ==
+bg booth_desk
+I wrote back and told her she was allowed, and that I had been asking the same question from the other side of it.
+
+She will read that on a Thursday and I will not know what she thinks of it until the following Tuesday, which is
+how this has always worked and is, I have decided, not a fault in it.
+
+* And then the last week. -> last_week
+
+== letter_six_not ==
+bg booth_desk
+I wrote back and told her I did not think she was allowed, because the place did not end when she left. It ended
+when the last of us stopped.
+
+That is a cruel thing to put in a letter and I knew it when I wrote it and I posted it anyway, and I have thought
+about nothing else for six days.
+
+* And then the last week. -> last_week
+
+== last_week ==
+bg booth_desk
+The last week is six days and I run four of them.
+
+On the Thursday there are nine people in a two-hundred-and-forty seat screen and I run the film properly anyway,
+because that is the job, and because the alternative is deciding that nine people do not deserve a carbon arc
+held at the right length.
+
+On the Saturday I run the last one. I do the changeover by hand - there is no need, it is a platter, it has been a
+platter since 1998 - and I do it by hand anyway, two reels, the way she taught me, and the splice holds.
+
+* Write to her about the changeover. -> end_changeover
+* Write to her about the nine people. -> end_nine
+* Do not write. -> end_nothing
+
+== end_changeover ==
+bg booth_desk
+I wrote to her about the changeover.
+
+Two reels, the way she taught me, and the splice held - and she will know exactly what that means, which is the
+only reason to write it down. Nobody else in the world would read that sentence and understand that I am telling
+her it went well.
+
+She writes back in pencil, on the back of a shopping list, and the whole letter is one line: I knew it would.
+
+-> END
+
+== end_nine ==
+bg booth_desk
+I wrote to her about the nine people.
+
+Because that is the part I cannot get past. Nine people on a Thursday, and I held the arc at the right length for
+all of them, and none of them will ever know that anyone did that.
+
+She writes back in pencil, on the back of a shopping list: that is the job. that was always the job. you did it
+for nineteen years and nine of them were the ones who found out.
+
+-> END
+
+== end_nothing ==
+bg booth_desk
+I did not write.
+
+There is no reason for it. I had the letter in my pocket for four days and then the building was sold and then it
+was a month later and then writing would have been a thing about the delay rather than a thing about the
+changeover.
+
+She writes anyway, in pencil, on the back of a shopping list, and she has heard, because people hear. The whole
+letter is one line: I knew it would.
+
+-> END
