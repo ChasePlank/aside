@@ -51,6 +51,14 @@ step "5/6  is the artifact actually different from the last one?"
 step "6/6  do the release notes name files that exist?"
 ( cd "$TP" && tools/check-release-notes.sh ) || die "the notes name a file attached to nothing - fix them before publishing"
 
+# AND THE DRAFT, WHICH IS THE ONE THAT MATTERS. The check above reads PUBLISHED releases, so the notes about to be
+# attached were the only ones never verified - on 2026-10-07 the whole release passed and 1.15's notes were not
+# among the fifteen it checked. The publish command below uses those notes. The artifacts are named here because a
+# draft has no release to read them from.
+( cd "$TP" && tools/check-release-notes.sh --draft "docs/release-notes-$VERSION.md" \
+    "holdfast-$VERSION-windows-x64.zip" "holdfast-$VERSION-linux-x64.tar.gz" "tropical-punch.jar" ) \
+  || die "the DRAFT notes name a file this release would not attach - fix them before publishing"
+
 cat <<EOF
 
 === everything that can be checked here has passed ===
