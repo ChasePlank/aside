@@ -98,7 +98,14 @@ fi
 # build can go anywhere -- the sandbox builds to `classes/`, and every tool run
 # from here had to be told OUT=classes or it looked in a directory that was not
 # there. A default that names a directory is a guess; a lookup is not.
-if [ -z "${OUT:-}" ]; then
+# AND A PRE-SET OUT IS CHECKED, NOT TRUSTED -- the same rule as JAVA and FX.
+# This was the trap one more time: `self-test.sh` passed `OUT="${OUT:-out}"`
+# down to `audit-stories.sh`, which sources this file, and because the variable
+# was already set the lookup never ran -- so the audit exited 2 with "no build
+# in out" and the tool self-test read that as "reported clean". A directory
+# that is not there is not a value.
+if [ -z "${OUT:-}" ] || [ ! -d "${OUT}/aside" ]; then
+  OUT=""
   for c in out classes build target/classes; do
     [ -d "$c/aside" ] && { OUT="$c"; break; }
   done

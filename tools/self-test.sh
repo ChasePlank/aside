@@ -103,7 +103,7 @@ old = 'NINTH REGISTER'
 assert old in s, 'the ordinal is not there to change'
 open(p,'w').write(s.replace(old, 'ELEVENTH REGISTER', 1))
 PY
-  out=$(JAVA="${JAVA:-/root/jdk-27+35/bin/java}" OUT="${OUT:-out}" tools/audit-stories.sh 2>&1); rc=$?
+  out=$(tools/audit-stories.sh 2>&1); rc=$?
   cp "$OR_BAK" stories/a440.aside; rm -f "$OR_BAK"
   if [ $rc -ne 0 ] && echo "$out" | grep -q "claims to be story 11"; then
     ok "audit-stories.sh notices an over-claimed ordinal" "$(echo "$out" | grep 'highest ordinal' | tr -s ' ')"
