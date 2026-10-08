@@ -73,6 +73,23 @@ def declared_fields():
 
 
 SOURCES = None
+COMMENT = re.compile(r"//.*$|/\*.*?\*/")
+
+
+def strip_comment(line):
+    """A COMMENT IS NOT A READ, and this was counting them.
+
+    The names in this file's own explanations are mentions of a value, not uses of it - and on 2026-10-08 that made
+    the tool quietly drop a real finding: `Boss.deadTimer` stayed write-only, and the commit that WIRED the other
+    one wrote three comments mentioning `deadTimer`, each of which counted as a read. Documentation hiding the
+    thing it documents.
+    """
+    stripped = COMMENT.sub("", line)
+    # a line that is only a comment leaves nothing to tokenise, which is the point
+    return stripped.strip()
+
+
+SOURCES = None
 
 
 INDEX = None
@@ -92,9 +109,10 @@ def index():
         assign = re.compile(r"\s*(=[^=]|\+\+|--|\+=|-=|\*=|/=)")
         for f, lines in sources():
             for lineno, line in enumerate(lines, 1):
-                for m in ident.finditer(line):
+                code = line if "//" not in line and "/*" not in line else strip_comment(line)
+                for m in ident.finditer(code):
                     name = m.group(0)
-                    is_write = assign.match(line[m.end():]) is not None
+                    is_write = assign.match(code[m.end():]) is not None
                     INDEX.setdefault(name, []).append((f, lineno, is_write))
     return INDEX
 
@@ -116,6 +134,19 @@ def sources():
     return SOURCES
 
 
+DECLARERS = None
+
+
+def declarers():
+    """name -> set of classes that declare a value with that name."""
+    global DECLARERS
+    if DECLARERS is None:
+        DECLARERS = {}
+        for cls, name, _path, _line in declared_fields():
+            DECLARERS.setdefault(name, set()).add(cls)
+    return DECLARERS
+
+
 def reads_and_writes(name, decl_path, decl_line):
     """Reads and writes of a field, NOT counting its own declaration.
 
@@ -126,9 +157,16 @@ def reads_and_writes(name, decl_path, decl_line):
     Found by injecting a write-only field on purpose and watching the tool not report it, which is the whole reason
     for fault-injecting a check before trusting it.
     """
+    # A CROSS-FILE READ IS ONLY ATTRIBUTABLE WHEN THE NAME IS UNIQUE. `Boss.deadTimer` and `Enemy.deadTimer` are
+    # two different fields with one name, and counting by name let Enemy's new reader clear Boss's field - which is
+    # the same blind spot the wiring report documents for its caller check ("it cannot see the TYPE of the
+    # receiver"). Same-file reads always count; cross-file reads count only when one class declares the name.
+    unique_name = len(declarers().get(name, ())) <= 1
     reads = writes = 0
     for f, lineno, is_write in index().get(name, ()):
         if True:
+            if f != decl_path and not unique_name:
+                continue
             if f == decl_path and lineno == decl_line:
                 # ITS OWN DECLARATION IS A WRITE IF IT HAS AN INITIALISER AND NEVER A READ. Excluding the line
                 # entirely was the second version and it lost the dead constants - `Boss.maxPhase = 3` with nothing
