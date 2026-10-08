@@ -252,6 +252,25 @@ if [ -x tools/audit-stories.sh ]; then
   if [ $stories_rc -ne 0 ]; then fail=$((fail + 1)); failed_names+=("story-audits"); fi
 fi
 
+# AND THAT NO COMMENT STATES A TUTORIAL COUNT THAT DISAGREES WITH Tutorial.LAST. This check lived only in the
+# release repository, which is the wrong place for it: aside is the source of truth, the comments are AUTHORED here,
+# and one of the four stale instances found on 7 October was in this tree - in GameplayScreen's Tutorial-mode
+# javadoc, saying "the first eight levels" while LAST is 9. Drift written here was only ever noticed at release
+# time, a week later.
+#
+# NOT `-x`. The convention above tests for an executable tool, but this one is a Python file run through python3,
+# and a file mode lost in a copy would make the check silently not run - which is the failure this whole section
+# exists to prevent. A missing tool is a FAILURE here, not a skip: something has to be the thing that fails.
+if [ -f tools/check-tutorial-counts.py ]; then
+  echo "  --- stated tutorial counts ---"
+  tut_out=$(python3 tools/check-tutorial-counts.py 2>&1); tut_rc=$?
+  echo "$tut_out" | grep -E "STALE|claim\(s\)|===" | sed 's/^/  /'
+  if [ $tut_rc -ne 0 ]; then fail=$((fail + 1)); failed_names+=("tutorial-counts"); fi
+else
+  echo "  --- stated tutorial counts NOT CHECKED - tools/check-tutorial-counts.py is missing ---"
+  fail=$((fail + 1)); failed_names+=("tutorial-counts-missing")
+fi
+
 if [ -x tools/self-test.sh ]; then
   st_out=$(tools/self-test.sh 2>&1); st_rc=$?
   echo "$st_out" | grep -E 'FAIL|tool self-test' | sed 's/^/  /'

@@ -40,7 +40,30 @@ restore_story() {
     STORY_BAK=""
   fi
 }
-trap restore_story EXIT INT TERM
+# THE SAME HAZARD FOR THE TUTORIAL-COUNT INJECTIONS BELOW, and the same fix. They break GameplayScreen.java on
+# purpose, so a kill between the injection and the copy-back would leave a stale count sitting in the tree - which
+# is the exact fault the check exists to catch, left behind by the check itself.
+TUT_BAK=""
+TUT_FILE=src/main/java/aside/games/fruitjump/GameplayScreen.java
+# THE "CANNOT READ LAST" INJECTION NEEDS A SECOND FILE, and I got this wrong the first time: `LAST` is declared in
+# Tutorial.java, so a sed aimed at GameplayScreen did not apply at all. The block now greps for its own injection
+# before trusting the result, which is the only reason it failed loudly instead of passing quietly - and a negative
+# test that cannot apply is the worst kind, because it reports success for having done nothing.
+LAST_BAK=""
+LAST_FILE=src/main/java/aside/games/fruitjump/Tutorial.java
+restore_tut() {
+  if [ -n "$TUT_BAK" ] && [ -f "$TUT_BAK" ]; then
+    cp "$TUT_BAK" "$TUT_FILE" 2>/dev/null || true
+    rm -f "$TUT_BAK"
+    TUT_BAK=""
+  fi
+  if [ -n "$LAST_BAK" ] && [ -f "$LAST_BAK" ]; then
+    cp "$LAST_BAK" "$LAST_FILE" 2>/dev/null || true
+    rm -f "$LAST_BAK"
+    LAST_BAK=""
+  fi
+}
+trap 'restore_story; restore_tut' EXIT INT TERM
 
 # ---- diff.sh must report what a filter hides ---------------------------------------------------------------
 printf 'a\nb\nc\n' > /tmp/st-a; printf 'a\nB\nC\n' > /tmp/st-b
@@ -181,6 +204,63 @@ if echo "$out" | grep -q "changed between the thresholds" && echo "$out" | grep 
 else
   bad "find-drift reports the band between its thresholds" "a small edit to a long line was reported nowhere"
 fi
+
+# ---- check-tutorial-counts.py must notice the claim SPELLED AS A WORD ------------------------------------------
+# THE INJECTION THAT WAS MISSING WHERE IT MATTERED. A check for this exact class of staleness already existed in the
+# release repository, and its self-test injected the phrase it was written for - `ends at 8` - so it passed for
+# months while four comments across the two repositories said "eight hand-built levels". A self-test that only
+# exercises the shape the implementer was already thinking about certifies the blind spot. This injects the shape
+# that actually escaped.
+TUT_BAK=$(mktemp); cp "$TUT_FILE" "$TUT_BAK"
+sed -i 's/first nine levels/first eight levels/' "$TUT_FILE"
+if ! grep -q "first eight levels" "$TUT_FILE"; then
+  bad "check-tutorial-counts notices a word-form count" "the injection did not apply"
+else
+  out=$(python3 tools/check-tutorial-counts.py 2>&1); rc=$?
+  if [ $rc -ne 0 ] && echo "$out" | grep -q "STALE"; then
+    ok "check-tutorial-counts notices a word-form count" "$(echo "$out" | grep -m1 'STALE' | tr -s ' ')"
+  else
+    bad "check-tutorial-counts notices a word-form count" "reported clean with a comment saying eight"
+  fi
+fi
+restore_tut
+
+# ---- and it must stay QUIET about a claim it is only DISCUSSING ---------------------------------------------------
+# A NEGATIVE TEST, which the block above cannot be. The tool skips quoted text, because Tutorial.java's header
+# quotes the old wrong wording in order to record the mistake - so a check that could not tell a quoted claim from
+# an asserted one would fail on the correction itself. That makes "does not fire" the correct behaviour here. A rule
+# tested only in the firing direction is not tested, and if the quote-skipping breaks, nothing else here notices.
+TUT_BAK=$(mktemp); cp "$TUT_FILE" "$TUT_BAK"
+sed -i 's/first nine levels/claims to be the "first eight levels"/' "$TUT_FILE"
+if ! grep -q '"first eight levels"' "$TUT_FILE"; then
+  bad "check-tutorial-counts ignores a quoted claim" "the injection did not apply"
+else
+  out=$(python3 tools/check-tutorial-counts.py 2>&1); rc=$?
+  if [ $rc -eq 0 ]; then
+    ok "check-tutorial-counts ignores a quoted claim" "quoted text did not trip the tool"
+  else
+    bad "check-tutorial-counts ignores a quoted claim" "flagged quoted text: $(echo "$out" | grep -m1 'STALE' | tr -s ' ')"
+  fi
+fi
+restore_tut
+
+# ---- and it must FAIL rather than pass when it cannot read the value it compares against --------------------------
+# A TOOL THAT CANNOT RUN IS NOT A TOOL THAT PASSED. If `int LAST = ...` stops being parseable - renamed, moved, or
+# turned into a computed expression - the tool has nothing to compare a claim against, and reporting "clean" there
+# is the exact defect this project keeps finding. Exit 2, never 0.
+LAST_BAK=$(mktemp); cp "$LAST_FILE" "$LAST_BAK"
+sed -i 's/int LAST = 9;/int LAST = LAST;/' "$LAST_FILE"
+if ! grep -q "int LAST = LAST;" "$LAST_FILE"; then
+  bad "check-tutorial-counts refuses to pass without LAST" "the injection did not apply"
+else
+  out=$(python3 tools/check-tutorial-counts.py 2>&1); rc=$?
+  if [ $rc -eq 2 ]; then
+    ok "check-tutorial-counts refuses to pass without LAST" "exit 2, not 0"
+  else
+    bad "check-tutorial-counts refuses to pass without LAST" "exit $rc - it did not refuse"
+  fi
+fi
+restore_tut
 
 echo
 echo "=== $pass tool self-test(s) passed, $fail failed ==="
