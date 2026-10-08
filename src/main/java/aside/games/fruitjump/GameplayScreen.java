@@ -683,6 +683,12 @@ public class GameplayScreen extends UiScreen {
             double bx = camera.worldToScreenX(bb.x0), by = camera.worldToScreenY(bb.y0);
             double bw = (bb.x1 - bb.x0) * S, bh = (bb.y1 - bb.y0) * S;
             if (!(bx > CANVAS_W || by > CANVAS_H || bx + bw < 0 || by + bh < 0)) {
+                // AND IT FADES WHILE IT DIES. The engine has always given the boss a one-second DYING window
+                // before it is dead - a beat for the death to be seen - and this asked only `isDead()`, which is
+                // false for that whole second, so the beat showed a boss in perfect health. Boss.deathFade() is
+                // the question this could not previously ask.
+                final double bossFade = world.boss.deathFade();
+                gc.setGlobalAlpha(bossFade);
                 // THE SPRITE FILLS ITS BOX EXACTLY. 64 grid pixels at SCALE lands one to one on the 128 physical
                 // pixels the box is, so nothing here is resampled - which is the whole reason the grid is 64.
                 gc.drawImage(Sprites.boss2x, bx, by, bw, bh);
@@ -694,6 +700,14 @@ public class GameplayScreen extends UiScreen {
                     gc.setFill(Color.web("#FBDD7E"));
                     gc.fillOval(camera.worldToScreenX(wp.x0), camera.worldToScreenY(wp.y0),
                                 (wp.x1 - wp.x0) * S, (wp.y1 - wp.y0) * S);
+                }
+                gc.setGlobalAlpha(1.0);
+                // The same white wash the enemies get, over the whole box: a boss dying should be the loudest
+                // thing on the screen, and for a second it is.
+                double bossWash = Math.max(0.0, 1.0 - (1.0 - bossFade) * 2.0);
+                if (bossWash > 0) {
+                    gc.setFill(Color.web("#FFFFFF", bossWash * 0.6));
+                    gc.fillRect(bx, by, bw, bh);
                 }
             }
         }
@@ -725,7 +739,11 @@ public class GameplayScreen extends UiScreen {
 
         // Enemies: sprite at 2x
         for (Enemy e : world.enemies) {
-            if (e.dead) continue;
+            // A DEAD ENEMY IS DRAWN UNTIL ITS FADE RUNS OUT. This skipped dead ones outright, so every kill was a
+            // disappearance on the frame it happened - and it left Enemy.deadTimer counting a fade nothing drew.
+            // The counter was the whole mechanism; this is the half that was missing. See Enemy.deathFade().
+            final double fade = e.deathFade();
+            if (fade <= 0) continue;
             // Drawn at the SPRITE's own size and bottom-aligned on the body's
             // feet, rather than stretched into the collision box. A snake is
             // longer than it is tall, and forcing it into a square box would
@@ -751,7 +769,15 @@ public class GameplayScreen extends UiScreen {
             double sx = camera.worldToScreenX(e.body.x) - w / 2;
             double sy = camera.worldToScreenY(e.body.y + e.body.hh) - h;
             if (sx > CANVAS_W || sx + w < 0) continue;
+            gc.setGlobalAlpha(fade);
             gc.drawImage(img, sx, sy, w, h);
+            gc.setGlobalAlpha(1.0);
+            // A white wash over the first third of the fade: the hit reads as a hit, and then the thing goes.
+            double wash = Math.max(0.0, 1.0 - (1.0 - fade) * 3.0);
+            if (wash > 0) {
+                gc.setFill(Color.web("#FFFFFF", wash * 0.75));
+                gc.fillRect(sx, sy, w, h);
+            }
         }
 
         // Bats: flying pursuers, centred on the body.
