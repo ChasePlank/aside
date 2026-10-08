@@ -1039,6 +1039,7 @@ public class SelfTest {
         parallaxLayersScaleWithTheirFactor();
         theRunHasAnEnd();
         theRunContainsTheGame();
+        theTutorialTeachesTheGame();
         roomsModeHasAWayOut();
         soundHonoursTheGlobalMuteAndVolume();
 
@@ -1305,48 +1306,90 @@ public class SelfTest {
      * piranhas out of forty levels and no bats at all. The list below is copied from the switch in LevelMap that
      * reads them, which is the only place that decides what a character means.
      */
-    static void theRunContainsTheGame() {
-        final int W = 60, H = 20, LEVELS = 120;
-        final String[] names = {
-            "water", "piranhas", "spikes", "cracked floor", "one-way planks",
-            "pickups (snack/jar/coin)", "bats", "snakes", "doors or keys",
-            "moving platforms", "bosses",
-        };
-        int[] found = new int[names.length];
+    /** The mechanics a level contains, as flags in the order of {@link #MECHANICS}. */
+    static final String[] MECHANICS = {
+        "water", "piranhas", "spikes", "cracked floor", "one-way planks",
+        "pickups (snack/jar/coin)", "bats", "snakes", "doors or keys",
+        "moving platforms", "bosses",
+    };
 
-        for (int level = 1; level <= LEVELS; level++) {
-            LevelMap m = new LevelGen(W, H, 1000L + level, level).generate();
-            boolean[] hit = new boolean[names.length];
-            for (int r = 0; r < m.heightCells(); r++) {
-                for (int c = 0; c < m.widthCells(); c++) {
-                    switch (m.cell(r, c)) {
-                        case '~': case '>': case '<': case 'V': case 'A': hit[0] = true; break;
-                        case 'f': hit[1] = true; break;
-                        case '^': hit[2] = true; break;
-                        case 'C': hit[3] = true; break;
-                        case '=': hit[4] = true; break;
-                        case 'h': case 'j': case 'o': hit[5] = true; break;
-                        case 'b': hit[6] = true; break;
-                        case 's': hit[7] = true; break;
-                        case 'D': case 'k': hit[8] = true; break;
-                        default: break;
-                    }
+    /**
+     * Which of {@link #MECHANICS} this map contains.
+     *
+     * <p>One copy, used by both coverage checks - the file already carries a note about a water check that was
+     * COPIED rather than shared and then had to be fixed in two places, and there is no reason to make that
+     * mistake twice in one file.
+     *
+     * <p><b>THE CELL SYMBOLS ARE LevelMap's PARSER'S AND ARE NOT GUESSED.</b> The first measurement used 'P' for a
+     * piranha - that is the PLAYER SPAWN - and 'B' for a bat, which is 'b', and reported forty piranhas out of
+     * forty levels and no bats at all. The switch below is copied from the one in LevelMap that decides what a
+     * character means, which is the only place that decides it.
+     */
+    static boolean[] mechanicsIn(LevelMap m) {
+        boolean[] hit = new boolean[MECHANICS.length];
+        for (int r = 0; r < m.heightCells(); r++) {
+            for (int c = 0; c < m.widthCells(); c++) {
+                switch (m.cell(r, c)) {
+                    case '~': case '>': case '<': case 'V': case 'A': hit[0] = true; break;
+                    case 'f': hit[1] = true; break;
+                    case '^': hit[2] = true; break;
+                    case 'C': hit[3] = true; break;
+                    case '=': hit[4] = true; break;
+                    case 'h': case 'j': case 'o': hit[5] = true; break;
+                    case 'b': hit[6] = true; break;
+                    case 's': hit[7] = true; break;
+                    case 'D': case 'k': hit[8] = true; break;
+                    default: break;
                 }
             }
-            if (!m.movers.isEmpty()) hit[9] = true;
-            if (m.hasBoss()) hit[10] = true;
-            for (int i = 0; i < names.length; i++) if (hit[i]) found[i]++;
+        }
+        if (!m.movers.isEmpty()) hit[9] = true;
+        if (m.hasBoss()) hit[10] = true;
+        return hit;
+    }
+
+    static void theRunContainsTheGame() {
+        final int W = 60, H = 20, LEVELS = 120;
+        int[] found = new int[MECHANICS.length];
+        for (int level = 1; level <= LEVELS; level++) {
+            boolean[] hit = mechanicsIn(new LevelGen(W, H, 1000L + level, level).generate());
+            for (int i = 0; i < MECHANICS.length; i++) if (hit[i]) found[i]++;
         }
 
         java.util.List<String> missing = new java.util.ArrayList<>();
         StringBuilder counted = new StringBuilder();
-        for (int i = 0; i < names.length; i++) {
-            if (found[i] == 0) missing.add(names[i]);
+        for (int i = 0; i < MECHANICS.length; i++) {
+            if (found[i] == 0) missing.add(MECHANICS[i]);
             if (i > 0) counted.append(", ");
-            counted.append(names[i]).append(" ").append(found[i]);
+            counted.append(MECHANICS[i]).append(" ").append(found[i]);
         }
         check("every mechanic turns up in a generated run (" + LEVELS + " levels: " + counted + ")",
                 missing.isEmpty());
+    }
+
+    /**
+     * The other direction: every mechanic a generated RUN can contain must be TAUGHT by the tutorial.
+     *
+     * <p><b>THIS IS THE SAME FAULT SEEN FROM THE OTHER SIDE, AND I CREATED IT MYSELF.</b> On 8 October I gave the
+     * generator one-way planks - and the tutorial, hand-built across eleven levels, had never contained one. So the
+     * game taught a player how to jump, shoot, bomb, swim and fight, and then placed a plank in the run that
+     * nothing had ever explained. The run-coverage check above cannot see that; it asks whether the run contains
+     * the game, not whether the game contains the teaching.
+     *
+     * <p>Levels 1 to Tutorial.LAST, through the public {@code Tutorial.map}, so this is about the levels that
+     * actually ship rather than about a list kept beside them.
+     */
+    static void theTutorialTeachesTheGame() {
+        int[] found = new int[MECHANICS.length];
+        for (int level = 1; level <= aside.games.fruitjump.Tutorial.LAST; level++) {
+            boolean[] hit = mechanicsIn(aside.games.fruitjump.Tutorial.map(level));
+            for (int i = 0; i < MECHANICS.length; i++) if (hit[i]) found[i]++;
+        }
+        java.util.List<String> untaught = new java.util.ArrayList<>();
+        for (int i = 0; i < MECHANICS.length; i++) if (found[i] == 0) untaught.add(MECHANICS[i]);
+        check("and the tutorial teaches every mechanic the run can contain ("
+                + aside.games.fruitjump.Tutorial.LAST + " levels; untaught: "
+                + (untaught.isEmpty() ? "none" : untaught) + ")", untaught.isEmpty());
     }
 
     /**
