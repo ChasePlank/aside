@@ -83,6 +83,12 @@ public class AudioSystem {
     }
     
     // --- Volume ---
+    // DEAD STATE, and tools/wiring-report.sh says so: nothing in the game sets any of these, so both volumes
+    // sit at their defaults and `muted` is always false. The real level lives on aside.ui.Audio and is applied
+    // to the clip by games.fruitjump.Sound, which is the half allowed to touch JavaFX - this class is
+    // deliberately JavaFX-free so it can run headless. Kept rather than deleted because it is public API inside
+    // the engine and that is a wire-or-delete decision, not an oversight; the note is here so the next reader
+    // does not have to rediscover it with grep.
     double sfxVolume = 0.8;
     double musicVolume = 0.6;
     boolean muted = false;
@@ -125,7 +131,11 @@ public class AudioSystem {
         if (sfx == Sfx.LAND && landCooldown > 0) return;
         if (sfx == Sfx.LAND) landCooldown = LAND_COOLDOWN_TIME;
         
-        log(String.format("SFX %s vol=%.2f", sfx.name, sfxVolume));
+        // NO VOLUME IN THIS LINE, and it used to print one. The field it named was read nowhere else, so the
+        // log said "vol=0.80" whatever the player had actually set: the real level lives on aside.ui.Audio and
+        // is applied to the clip by Sound, which is the half that touches JavaFX. A log line is a claim, and the
+        // only volume this class could honestly report is the one it does not own.
+        log(String.format("SFX %s", sfx.name));
     }
     
     /** Switch music track. Only logs if the track actually changes. */
@@ -138,7 +148,7 @@ public class AudioSystem {
         
         String from = currentMusic.trackName != null ? currentMusic.trackName : "silence";
         String to = music.trackName != null ? music.trackName : "silence";
-        log(String.format("MUSIC %s -> %s vol=%.2f", from, to, musicVolume));
+        log(String.format("MUSIC %s -> %s", from, to));   // see the note on the SFX line above
         currentMusic = music;
     }
     
