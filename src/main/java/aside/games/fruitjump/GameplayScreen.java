@@ -325,6 +325,19 @@ public class GameplayScreen extends UiScreen {
 
         // Engine step
         world.update(dt);
+        // THE GLOBAL MUTE AND VOLUME KEYS REACH THIS GAME HERE, and they did not before. Those keys live on
+        // aside.ui.Audio (M, and [ / ] - see UiManager), and this game's cues go through Sound, which knew
+        // nothing about them: pressing M in the platformer said "SOUND OFF" and the cues kept playing. The
+        // bridge is in this screen rather than inside Sound because Sound deliberately does NOT import
+        // aside.ui.* - that is what lets it travel with the release sync - and this screen is a wiring file
+        // that the sync skips. Read every frame rather than pushed on change, because two field reads are
+        // cheaper than a listener and cannot get out of step.
+        if (aside.ui.Audio.A != null) {
+            sound.setEnabled(aside.ui.Audio.A.enabled);
+            // sfxVolume and not musicVolume, because every cue this backend plays IS an effect: it loads
+            // AudioSystem.sfxNames() and nothing else, and the platformer has no music track of its own.
+            sound.setVolume(aside.ui.Audio.A.sfxVolume);
+        }
         sound.drain(audio);
         combat.update(dt);
 

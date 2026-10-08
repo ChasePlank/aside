@@ -1037,6 +1037,7 @@ public class SelfTest {
 
         tutorialLevelsArePlayable();
         parallaxLayersScaleWithTheirFactor();
+        soundHonoursTheGlobalMuteAndVolume();
 
         // The release's pocket test, ported. It is the only check that exercises bomb -> cracked
         // FLOOR -> fall through with real physics, and until now aside had no floor pocket at all.
@@ -1223,6 +1224,52 @@ public class SelfTest {
         check("tutorial: the bot finishes every level that needs only jumping (" + botFinished + "/"
                 + botChecked + " checked; skipped as bomb-only: " + skipped.toString().trim() + ")",
                 botChecked > 0 && botFinished == botChecked);
+    }
+
+    /**
+     * The platformer's sound backend must obey the global mute and the global volume.
+     *
+     * <p>It did not, and nothing could tell: the global keys live on {@code aside.ui.Audio} and
+     * {@code games.fruitjump.Sound} ignored them entirely, so pressing M during the game showed a toast saying
+     * SOUND OFF while every cue kept playing at full volume. No automated check this project has could see it,
+     * because with no sound device {@code play()} does nothing either way - a control that appears to work and
+     * does nothing is invisible from the outside.
+     *
+     * <p>So the decision was separated from the sound-making: {@code Sound.play} decides WHETHER and HOW LOUD and
+     * hands that to a sink, and this test installs a recorder as the sink. The audible half is still not verified
+     * here and cannot be in this environment - what is verified is the half that had the bug.
+     *
+     * <p>The mute case is the one that matters. It is asserted as "no cue REACHES the sink", not as a flag on
+     * Sound, so a future change that keeps the flag and sounds the cue anyway still fails.
+     */
+    static void soundHonoursTheGlobalMuteAndVolume() {
+        aside.games.fruitjump.Sound s = new aside.games.fruitjump.Sound();
+        java.util.List<String> cues = new java.util.ArrayList<>();
+        java.util.List<Double> vols = new java.util.ArrayList<>();
+        s.setSink((cue, vol) -> { cues.add(cue); vols.add(vol); });
+
+        s.setVolume(0.4);
+        s.play("land");
+        check("sound: a cue reaches the sink at the volume it was given ("
+                + (vols.isEmpty() ? "nothing played" : String.format("%.2f", vols.get(0))) + ")",
+                cues.size() == 1 && Math.abs(vols.get(0) - 0.4) < 1e-9);
+
+        s.setEnabled(false);
+        s.play("land");
+        check("sound: MUTED means no cue reaches the sink at all (" + cues.size() + " after 2nd play)",
+                cues.size() == 1);
+
+        s.setEnabled(true);
+        s.play("land");
+        check("sound: unmuting sounds it again (" + cues.size() + " cue(s))", cues.size() == 2);
+
+        s.setVolume(1.5);
+        s.play("land");
+        boolean up = cues.size() == 3 && vols.get(2) == 1.0;
+        s.setVolume(-2.0);
+        s.play("land");
+        boolean down = cues.size() == 4 && vols.get(3) == 0.0;
+        check("sound: volume is clamped to 0..1, so a caller cannot hand the sink a nonsense level", up && down);
     }
 
     /**

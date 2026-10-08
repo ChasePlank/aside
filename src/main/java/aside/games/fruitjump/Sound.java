@@ -27,6 +27,24 @@ public class Sound {
     private final Map<String, AudioClip> clips = new LinkedHashMap<>();
     private final Map<String, String> missing = new LinkedHashMap<>();
     private boolean enabled = true;
+    private double volume = 1.0;
+
+    /**
+     * How a cue is actually sounded, separated from the DECISION to sound it.
+     *
+     * <p><b>Why this seam exists.</b> The volume path had a defect that nothing could see: the global mute and
+     * volume keys live on {@code aside.ui.Audio} and this backend ignored them, so pressing M in the platformer
+     * said "SOUND OFF" and the game kept playing. It was invisible to every check here because the audible
+     * result cannot be observed in a sandbox with no sound device - {@code play()} returns early when the clip is
+     * missing, which is the same thing it does when it is working. Splitting "should this sound, and how loud"
+     * from "make the sound" makes the first half an ordinary function with an ordinary test, and leaves only the
+     * second half unverifiable. {@code SelfTest} drives this with a recorder.
+     */
+    public interface Sink {
+        void play(String cue, double volume);
+    }
+
+    private Sink sink = this::playClip;
 
     /**
      * Load every cue the engine can post, from {@code root/audio} or from the jar.
@@ -88,19 +106,38 @@ public class Sound {
         for (String cue : audio.drainPending()) play(cue);
     }
 
-    public void play(String cue) {
-        if (!enabled) return;
+    /** The real sounding: the volume is applied to the clip, then it plays. */
+    private void playClip(String cue, double volume) {
         AudioClip c = clips.get(cue);
         if (c == null) return;          // no file for this cue, or no sound device. Either way, nothing to do.
         try {
+            c.setVolume(volume);
             c.play();
         } catch (Exception ignored) {
             // A clip that will not start must never take the game with it.
         }
     }
 
+    /**
+     * Sound a cue, if sound is on.
+     *
+     * <p>Two decisions, both here and both checkable: whether to sound at all, and how loud. What happens next is
+     * the sink's business.
+     */
+    public void play(String cue) {
+        if (!enabled) return;
+        sink.play(cue, volume);
+    }
+
     public void setEnabled(boolean on) { enabled = on; }
     public boolean isEnabled() { return enabled; }
+
+    /** Volume for this backend, 0..1. Clamped, so a caller cannot hand the sink a nonsense level. */
+    public void setVolume(double v) { volume = Math.max(0.0, Math.min(1.0, v)); }
+    public double volume() { return volume; }
+
+    /** For tests: sound cues through something other than JavaFX. Null restores the real clips. */
+    public void setSink(Sink s) { sink = (s == null ? this::playClip : s); }
     public int loaded() { return clips.size(); }
     public Map<String, String> missing() { return missing; }
 }
