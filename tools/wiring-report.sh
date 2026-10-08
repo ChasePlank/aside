@@ -27,6 +27,7 @@ set -u
 cd "$(dirname "$0")/.." || exit 2
 SRC="${1:-src/main/java}"
 ENGINE="$SRC/aside/games/fruitjump/engine"
+# Every finding this run, so the KNOWN list at the bottom can be CHECKED against it rather than asserted. See there.
 
 [ -d "$ENGINE" ] || { echo "wiring-report: no engine package at $ENGINE" >&2; exit 2; }
 
@@ -34,12 +35,13 @@ ENGINE="$SRC/aside/games/fruitjump/engine"
 game_files() { grep -rl "$1" "$SRC" --include=*.java 2>/dev/null | grep -vE "(Test|Suite)\.java$"; }
 
 echo "=== engine classes the game never names ==="
+FINDINGS=""
 found=0
 for f in "$ENGINE"/*.java; do
   n=$(basename "$f" .java)
   case "$n" in *Test|*Suite) continue;; esac
   refs=$(game_files "\b$n\b" | grep -v "/$n\.java$" | wc -l)
-  if [ "$refs" = "0" ]; then printf '  %-22s never named outside itself\n' "$n"; found=$((found+1)); fi
+  if [ "$refs" = "0" ]; then printf '  %-22s never named outside itself\n' "$n"; found=$((found+1)); FINDINGS="$FINDINGS $n"; fi
 done
 [ "$found" = "0" ] && echo "  none"
 
@@ -65,7 +67,7 @@ for l in $(grep -oE "List<[A-Za-z.]+> [a-zA-Z]+" "$ENGINE/World.java" | awk '{pr
   done < <(grep -rh "\b$l\.add(" "$SRC" --include=*.java 2>/dev/null)
   if [ "$alive" = "0" ]; then
     callers=$(grep -rn "\.$adder(" "$SRC" --include=*.java 2>/dev/null | grep -v "engine/World.java" | grep -vE "(Test|Suite)\.java$" | wc -l)
-    if [ "$callers" = "0" ]; then printf '  %-12s filled only by %s(), which nothing calls\n' "$l" "$adder"; found=$((found+1)); fi
+    if [ "$callers" = "0" ]; then printf '  %-12s filled only by %s(), which nothing calls\n' "$l" "$adder"; found=$((found+1)); FINDINGS="$FINDINGS $l"; fi
   fi
 done
 [ "$found" = "0" ] && echo "  none"
@@ -75,7 +77,7 @@ echo "=== engine setters nothing calls ==="
 found=0
 for m in $(grep -rhoE "public void set[A-Z][A-Za-z]*\(" "$ENGINE"/*.java | sed 's/public void //; s/($//' | tr -d '(' | sort -u); do
   callers=$(grep -rn "\.$m(" "$SRC" --include=*.java 2>/dev/null | grep -vE "(Test|Suite)\.java$" | grep -vE "public void $m\(" | wc -l)
-  if [ "$callers" = "0" ]; then printf '  %-22s never called\n' "$m"; found=$((found+1)); fi
+  if [ "$callers" = "0" ]; then printf '  %-22s never called\n' "$m"; found=$((found+1)); FINDINGS="$FINDINGS $m"; fi
 done
 [ "$found" = "0" ] && echo "  none"
 
@@ -83,12 +85,33 @@ echo
 echo "A finding here is a QUESTION, not a fault: dead code is either a feature waiting to be wired or code"
 echo "waiting to be deleted, and only the person who wanted it can say which."
 echo
-echo "KNOWN, and expected in every run:"
-echo "  WaterProbe, LevelValidator   test tools. Nothing in the game should name them, and the filter that drops"
-echo "                               Test/Suite files is what keeps them out of reach."
-echo "  movers / addMover            the MovingPlatform path."
-echo "  setDirector                  the AIDirector path."
-echo "  setSeed, setVolleyCallback   on Boss."
-echo "  ParallaxLayer                nothing names it at all."
-echo "  That is the four from 2026-10-02 - Boss, AIDirector, MovingPlatform, ParallaxLayer - and they have been"
-echo "  waiting on a wire-or-delete decision since. ANYTHING ELSE ON THIS REPORT IS NEW AND WORTH A LOOK."
+# THE KNOWN LIST IS CHECKED AGAINST THIS RUN, NOT TYPED. It used to be six lines of echo naming what to
+# expect, and within one working day two of its four entries had been wired - MovingPlatform and ParallaxLayer -
+# so it was telling a reader to expect findings that could no longer happen, which is worse than having no list:
+# it would make the next real finding look familiar. The list is a claim about the code, so the tool measures it
+# against the report it just produced. Both branches are exercised right now, because WaterProbe is still on the
+# report and the two that were wired are not.
+#
+# A NEW SECTION MUST APPEND TO $FINDINGS. The footer can only be as complete as what the sections tell it, so a
+# fourth section that prints findings without recording them would leave the list silently short - not wrong in
+# the way the typed list was, but wrong the same direction. Left as a comment rather than a guard because the
+# guard would be a second copy of the same analysis, and this is a report rather than a gate.
+echo "KNOWN FINDINGS - each one checked against the report above, not assumed:"
+known() {
+  for n in $1; do
+    case " $FINDINGS " in
+      *" $n "*) printf '  %-26s still unwired   (%s)\n' "$2" "$n"; return;;
+    esac
+  done
+  printf '  %-26s NOT ON THIS RUN - wired, or deleted, or renamed\n' "$2"
+}
+known "WaterProbe LevelValidator" "test tools"
+known "movers"                   "MovingPlatform"
+known "setDirector"              "AIDirector"
+known "setSeed setVolleyCallback" "Boss"
+known "ParallaxLayer"            "ParallaxLayer"
+echo
+echo "  The four from 2026-10-02 are Boss, AIDirector, MovingPlatform and ParallaxLayer, and they have been"
+echo "  waiting on a wire-or-delete decision since. ANYTHING ELSE ON THIS REPORT IS NEW AND WORTH A LOOK - and a"
+echo "  name above that has left the report has been dealt with, so its return would be a REGRESSION, not a"
+echo "  familiar sight."
