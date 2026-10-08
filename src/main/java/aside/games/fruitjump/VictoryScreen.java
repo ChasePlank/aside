@@ -1,5 +1,6 @@
 package aside.games.fruitjump;
 
+import aside.games.fruitjump.engine.AudioSystem;
 import aside.ui.UiManager;
 import aside.ui.UiScreen;
 import javafx.scene.input.KeyCode;
@@ -35,6 +36,9 @@ public class VictoryScreen extends UiScreen {
         super(ui);
         this.levelsClimbed = levelsClimbed;
         this.playTime = playTime;
+        // The fourth track, and the one that most needed an ending to exist: this screen is the only place
+        // `victory-theme` belongs, and until this hour there was no such screen and no such file.
+        if (aside.ui.Audio.A != null) aside.ui.Audio.A.music(AudioSystem.Music.VICTORY.track());
     }
 
     @Override

@@ -91,6 +91,8 @@ public class GameplayScreen extends UiScreen {
     private final Sprites.Look look;
     /** Floating tutorial words, or null on a generated level. */
     private final AudioSystem audio;
+    /** The last track this screen asked the UI player for, so it asks only when the engine changes its mind. */
+    private String musicPlaying;
     private final Sound sound;
     private final java.util.List<Tutorial.Sign> signs;
     /**
@@ -183,6 +185,10 @@ public class GameplayScreen extends UiScreen {
         // The engine posts cue names; Sound plays them. Kept here rather than inside World because the
         // engine must stay JavaFX-free - it runs headless in the gate and on machines with no sound device.
         audio = new AudioSystem();
+        // The engine asks; the screen plays. `AudioSystem` records which track is current and knows nothing about
+        // JavaFX, and `Sound` is the platformer's own audio and deliberately does not import aside.ui.* - so the
+        // bridge is here, in a wiring file, exactly like the global volume two lines below.
+        audio.playMusic(AudioSystem.Music.LEVEL);
         world.setAudio(audio);
         sound = Sound.load(ui.root());
         inventory = new PlayerInventory();
@@ -352,6 +358,13 @@ public class GameplayScreen extends UiScreen {
         // aside.ui.* - that is what lets it travel with the release sync - and this screen is a wiring file
         // that the sync skips. Read every frame rather than pushed on change, because two field reads are
         // cheaper than a listener and cannot get out of step.
+        // AND THE MUSIC, the other half of the same bridge. Asked once per change rather than every frame, because
+        // `Audio.music` starts a player and a per-frame call would restart the track continuously.
+        String wantMusic = audio.currentMusicName();
+        if (wantMusic != null && !wantMusic.equals(musicPlaying) && aside.ui.Audio.A != null) {
+            musicPlaying = wantMusic;
+            aside.ui.Audio.A.music(wantMusic);
+        }
         if (aside.ui.Audio.A != null) {
             sound.setEnabled(aside.ui.Audio.A.enabled);
             // sfxVolume and not musicVolume, because every cue this backend plays IS an effect: it loads

@@ -49,7 +49,7 @@ public class AudioSystem {
     }
     
     // --- Music states ---
-    enum Music {
+    public enum Music {
         TITLE("title-theme"),
         LEVEL("level-theme"),
         BOSS("boss-theme"),
@@ -58,6 +58,9 @@ public class AudioSystem {
         
         final String trackName;
         Music(String track) { this.trackName = track; }
+
+        /** The file this track names, without an extension. Public so a screen can play the track it requested. */
+        public String track() { return trackName; }
     }
     
     // --- Event log (headless output) ---
@@ -139,6 +142,15 @@ public class AudioSystem {
     }
     
     /** Switch music track. Only logs if the track actually changes. */
+    /**
+     * The track name the engine is currently asking for, or null.
+     *
+     * <p>The field was package-private, so nothing outside the engine could read it - which is why `playMusic`
+     * could record a track and no one could act on it. The platformer's screens are the other half: they read this
+     * and play it, the same way they read the global volume and push it into Sound.
+     */
+    public String currentMusicName() { return currentMusic.trackName; }
+
     public void playMusic(Music music) {
         if (currentMusic == music) return;  // no restart on same track
         if (muted) {

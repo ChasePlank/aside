@@ -1391,6 +1391,27 @@ public class SelfTest {
                     + missing.size() + " missing)" + (missing.isEmpty() ? "" : "  -- " + missing),
                     cues > 0);
             check("audio: nothing is missing", missing.isEmpty());
+
+            // AND THE PLATFORMER'S MUSIC, which is a separate list and was a separate silence. AudioSystem.Music
+            // declared four tracks, the boss asked for one of them on every phase change, and NOT ONE had a file:
+            // every request was silence and nothing said so, for as long as the enum has existed. The SFX were in
+            // the same state until a generator was written for them, and its own guard SKIPPED these four on
+            // purpose - so this is the first thing to check them at all.
+            java.io.File audioDir = new java.io.File("audio");
+            java.util.List<String> tracksMissing = new java.util.ArrayList<>();
+            int tracks = 0;
+            for (aside.games.fruitjump.engine.AudioSystem.Music m
+                    : aside.games.fruitjump.engine.AudioSystem.Music.values()) {
+                String track = m.track();
+                if (track == null) continue;              // NONE has no file and needs none
+                tracks++;
+                boolean present = new java.io.File(audioDir, track + ".wav").isFile()
+                        || new java.io.File(audioDir, track + ".mp3").isFile();
+                if (!present) tracksMissing.add(track);
+            }
+            check("audio: every music track the engine can ask for has a file (" + tracks + " track(s), "
+                    + tracksMissing.size() + " missing)" + (tracksMissing.isEmpty() ? "" : "  -- " + tracksMissing),
+                    tracks > 0 && tracksMissing.isEmpty());
         } catch (Throwable t) {
             check("audio: the cue folder could be read (" + t + ")", false);
         }

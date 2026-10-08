@@ -2,6 +2,7 @@ package aside.games.fruitjump;
 
 import aside.games.fruitjump.engine.SaveSystem;
 import aside.ui.LibraryScreen;
+import aside.games.fruitjump.engine.AudioSystem;
 import aside.ui.UiManager;
 import aside.ui.UiScreen;
 import javafx.scene.input.KeyCode;
@@ -61,6 +62,9 @@ public class MainMenu extends UiScreen {
 
     public MainMenu(UiManager ui) {
         super(ui);
+        // The fourth track's most natural home, and the one the whole set was written around: the evening starts
+        // here. Null-guarded because a screen can be built before the audio singleton is loaded.
+        if (aside.ui.Audio.A != null) aside.ui.Audio.A.music(AudioSystem.Music.TITLE.track());
         items.add("New Game");
         if (new File(SAVE_FILE).exists()) items.add("Continue");
         items.add("Rooms Mode");
