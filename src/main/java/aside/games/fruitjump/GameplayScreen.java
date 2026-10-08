@@ -33,6 +33,24 @@ public class GameplayScreen extends UiScreen {
     // The engine (physics, world coords) is untouched — only the VIEW
     // scales. Nearest-neighbor smoothing keeps pixel art crisp at 2x.
     private static final double SCALE = 2.0;
+
+    /**
+     * How many levels the climb takes to reach the deepest sky.
+     *
+     * <p><b>THE RUN IS ONE EVENING, AND THIS IS THE ONLY THING THAT SAYS SO.</b> The game's own sentence is "a
+     * climber, a sunset, and a way home" - and until this existed every generated level looked identical, so a
+     * forty-level run had no sense of going anywhere and the sunset read as a wallpaper rather than as a time of
+     * day. The sun now starts high and sinks as the run goes on, and the sky deepens with it.
+     *
+     * <p>It is deliberately MODEST and deliberately ONE NUMBER. The world is a black silhouette against this sky,
+     * so a sky that darkened too far would swallow the thing the player is looking at - and the premise is a
+     * sunset, not a night. Forty levels is far enough that the change reads as weather over a run rather than as a
+     * palette swap between adjacent levels.
+     *
+     * <p>The tutorial does not use it at all: its levels are hand-built and the sunset is the game's identity, so
+     * they keep the canonical sky. This is progression for the generated run, which is the part that has none.
+     */
+    private static final int LEVELS_TO_DUSK = 40;
     private static final int VIEW_W = 800, VIEW_H = 600;
     private static final int CANVAS_W = (int) (VIEW_W * SCALE), CANVAS_H = (int) (VIEW_H * SCALE);
 
@@ -445,17 +463,28 @@ public class GameplayScreen extends UiScreen {
         // which is the whole point of the look -- and which is also why
         // chambers get their own slightly-lifted dark below (two blacks
         // in a row would make a carved room invisible).
-        gc.setFill(Color.web("#E8763A"));
+        // How far into the evening this level is. 0 for every tutorial level, so the hand-built ones keep the
+        // canonical sunset; otherwise it climbs to 1 by LEVELS_TO_DUSK.
+        double dusk = tutorial ? 0.0
+                : Math.max(0.0, Math.min(1.0, (levelNum - 1) / (double) LEVELS_TO_DUSK));
+
+        gc.setFill(Color.web("#E8763A").interpolate(Color.web("#B4482C"), dusk));
         gc.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
         // The sun: backdrop, screen-anchored, no parallax. It is meant
         // to read as far away, so it should NOT track the camera.
+        //
+        // It SINKS with the run, and gets a little larger as it goes - which is what a sun near the horizon does,
+        // and it is what makes the deepening sky read as time passing rather than as a tint. By the last levels its
+        // centre is below the far ridge's baseline, so it is drawn behind the hills: the ridges are painted after
+        // this, so the setting is done by the existing draw order rather than by clipping anything.
         {
-            double sunR = CANVAS_H * 0.30;
+            double sunR = CANVAS_H * (0.30 + 0.06 * dusk);
+            double sunY = CANVAS_H * (0.38 + 0.14 * dusk);
             gc.setFill(Color.web("#F7C847"));
-            gc.fillOval(CANVAS_W / 2.0 - sunR, CANVAS_H * 0.38 - sunR, sunR * 2, sunR * 2);
+            gc.fillOval(CANVAS_W / 2.0 - sunR, sunY - sunR, sunR * 2, sunR * 2);
             gc.setFill(Color.web("#FBDD7E"));
-            gc.fillOval(CANVAS_W / 2.0 - sunR * 0.62, CANVAS_H * 0.38 - sunR * 0.72,
+            gc.fillOval(CANVAS_W / 2.0 - sunR * 0.62, sunY - sunR * 0.72,
                         sunR * 1.24, sunR * 1.24);
         }
 
