@@ -104,6 +104,11 @@ There are four families:
   form in the gaps in the walk, a body swims in them, holds its breath, and gets
   out by a breach hop at the surface. **UP or W** jumps on land and strokes
   upward in water; **DOWN or S** dives.
+  **The run ends.** Forty levels is the climb: the sky deepens and the sun sinks the whole way, and reaching the
+  exit on level 40 ends it at HOME - the same night horizon the game-over screen paints, with the climber standing
+  on the rock rather than absent from it. That screen offers to keep climbing, so the endless run is still there;
+  what the ending gives it is somewhere to be going, which the game's own sentence ("a way home") had been asking
+  for since it had a name.
   **A boss every tenth level** — a hunched, horned brute that only takes damage while the mark on its back is
   lit, and that throws charges when the player keeps their distance. It is taught in tutorial 11 and then it is
   part of the run, because a mechanic that lives only in a lesson is a mechanic the game does not have. The

@@ -1037,6 +1037,7 @@ public class SelfTest {
 
         tutorialLevelsArePlayable();
         parallaxLayersScaleWithTheirFactor();
+        theRunHasAnEnd();
         soundHonoursTheGlobalMuteAndVolume();
 
         // The release's pocket test, ported. It is the only check that exercises bomb -> cracked
@@ -1280,6 +1281,34 @@ public class SelfTest {
         s.play("land");
         boolean down = cues.size() == 4 && vols.get(3) == 0.0;
         check("sound: volume is clamped to 0..1, so a caller cannot hand the sink a nonsense level", up && down);
+    }
+
+    /**
+     * The run must have an end, and the sun must be down when it arrives.
+     *
+     * <p>The game's sentence is "a climber, a sunset, and a way home", and until this hour nothing implemented the
+     * third part: the generated run was endless and death was the only terminal state. It now ends at
+     * {@code LevelGen.FINAL_LEVEL}, and this checks the two things that could go wrong quietly.
+     *
+     * <p><b>First: that the goal is past the tutorial.</b> The tutorial has its own ending (level
+     * {@code Tutorial.LAST} sends the player to the menu), so a goal at or below it would never be reached, and the
+     * ending screen would be dead code that a passing gate could not see.
+     *
+     * <p><b>Second: that the dusk ramp finishes exactly at the goal.</b> The sky deepens over
+     * {@code LEVELS_TO_DUSK} levels and the run ends at {@code FINAL_LEVEL}; if those two drift apart the game
+     * either ends while the sun is still up or keeps climbing after it has gone down, and NOTHING ELSE WOULD
+     * NOTICE. They are one number today - this is what keeps them one number.
+     */
+    static void theRunHasAnEnd() {
+        int goal = aside.games.fruitjump.engine.LevelGen.FINAL_LEVEL;
+        int dusk = aside.games.fruitjump.GameplayScreen.LEVELS_TO_DUSK;
+
+        check("the run ends past the tutorial, so the ending is reachable (goal " + goal
+                + ", tutorial ends at " + aside.games.fruitjump.Tutorial.LAST + ")",
+                goal > aside.games.fruitjump.Tutorial.LAST);
+        check("and the sun is fully down at exactly that level (dusk ramp " + dusk + ", goal " + goal + ")",
+                dusk == goal);
+        check("the goal is a sane length for a run (1 < " + goal + " <= 200)", goal > 1 && goal <= 200);
     }
 
     /**

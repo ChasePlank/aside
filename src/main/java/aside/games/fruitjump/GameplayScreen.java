@@ -50,7 +50,7 @@ public class GameplayScreen extends UiScreen {
      * <p>The tutorial does not use it at all: its levels are hand-built and the sunset is the game's identity, so
      * they keep the canonical sky. This is progression for the generated run, which is the part that has none.
      */
-    private static final int LEVELS_TO_DUSK = 40;
+    public static final int LEVELS_TO_DUSK = LevelGen.FINAL_LEVEL;
     private static final int VIEW_W = 800, VIEW_H = 600;
     private static final int CANVAS_W = (int) (VIEW_W * SCALE), CANVAS_H = (int) (VIEW_H * SCALE);
 
@@ -429,6 +429,13 @@ public class GameplayScreen extends UiScreen {
             if (tutorial && Tutorial.endsTheTutorial(levelNum)) {
                 // The tutorial is done - back to the menu, not on to level 9.
                 ui.replace(new MainMenu(ui));
+                return;
+            }
+            // AND THIS IS THE WAY HOME. The run has a length (LevelGen.FINAL_LEVEL) and its end is the dusk - the
+            // sun the whole climb has been sinking towards. It offers to keep climbing, so the endless run is still
+            // there; what changes is that the game now has somewhere to be going.
+            if (!tutorial && levelNum >= LevelGen.FINAL_LEVEL) {
+                ui.replace(new VictoryScreen(ui, levelNum, playTime));
                 return;
             }
             int nextLevel = levelNum + 1;

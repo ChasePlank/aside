@@ -83,6 +83,23 @@ public class LevelGen {
      */
     public static final int BOSS_EVERY = 10;
 
+    /**
+     * How long a run is: reaching the exit on this level is the way home.
+     *
+     * <p><b>THE GAME HAD NO ENDING AT ALL.</b> Its own sentence is "a climber, a sunset, and a way home" - and
+     * until this existed the generated run was endless and death was the only terminal state. The only trace of an
+     * ending anywhere in the code was a `Music.VICTORY` entry that nothing played and no file backed. A premise
+     * with a destination and a game without one is a game that contradicts its own sentence.
+     *
+     * <p>Forty because that is where the evening finishes: {@code GameplayScreen.LEVELS_TO_DUSK} is this number,
+     * so the sun is fully down at exactly the level that ends the run. A check asserts the two agree, because
+     * "the game ends while the sun is still up" is a taste fault that nothing else would notice.
+     *
+     * <p>IT IS A DOOR, NOT A WALL. The ending screen offers to keep climbing, so the endless run is still there for
+     * anyone who wants it - this gives the climb a shape without taking the treadmill away.
+     */
+    public static final int FINAL_LEVEL = 40;
+
     final int width, height;
     final Random rng;
     final int levelNum;
