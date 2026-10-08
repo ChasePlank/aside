@@ -54,7 +54,26 @@ cd "$(dirname "$0")/.." || exit 2
 . tools/find-java.sh
 
 TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT
+# THE PLATFORMER'S AUTOSAVE MOVES ASIDE FOR THE RUN, and this is what made the frames look machine-specific.
+# Holdfast writes user.home/.tropical-punch-autosave.txt while it is played, and its menu adds a "Continue" item
+# whenever that file exists - so the fruitjump frame is a function of whether ANYBODY has played the game since the
+# last regeneration, not of the code. MEASURED: with the file present this machine disagreed with the committed
+# frame in 8653 pixels, every one of them inside the menu; with the file absent it renders the committed frame BYTE
+# FOR BYTE, and check-sheets reports 0 STALE. Two agents spent an hour flipping that one frame back and forth,
+# blamed the machine, and one of them wrote it into memory as an environment difference. It was a save file.
+#
+# NOT $HOME. Java takes user.home from the OS, not from the environment: here $HOME is /root/workspace and
+# user.home is /root, so a script that moved "$HOME/..." would move the wrong file and look like it worked. The
+# JVM is asked, because the JVM is what decides.
+AUTOSAVE_HOME=$("$JAVA" -XshowSettings:properties -version 2>&1 | sed -n 's/^ *user.home = //p' | head -1)
+[ -n "$AUTOSAVE_HOME" ] || AUTOSAVE_HOME="${HOME:-/root}"
+AUTOSAVE="$AUTOSAVE_HOME/.tropical-punch-autosave.txt"
+AUTOSAVE_BAK=""
+if [ -e "$AUTOSAVE" ]; then AUTOSAVE_BAK="$TMP/autosave.bak"; mv "$AUTOSAVE" "$AUTOSAVE_BAK"; fi
+restore_autosave() {
+  if [ -n "$AUTOSAVE_BAK" ] && [ -e "$AUTOSAVE_BAK" ]; then mv "$AUTOSAVE_BAK" "$AUTOSAVE"; fi
+}
+trap 'restore_autosave; rm -rf "$TMP"' EXIT
 
 echo "running CheckGames into $TMP ..."
 tools/run-headless.sh "$JAVA" --module-path "$FX" \
