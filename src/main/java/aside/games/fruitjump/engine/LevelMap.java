@@ -49,6 +49,24 @@ public class LevelMap {
      *  mention one, and this comment is here so nobody goes looking for it. See Tutorial level 10. */
     public final List<MoverSpec> movers = new ArrayList<>();
 
+    /**
+     * The level's boss, if it declares one.
+     *
+     * <p>A SPEC for the same reason the movers are: a map is data and the World builds the things. Where a boss
+     * stands, how big it is and what seed its attack order comes from are all decisions the level makes, and a
+     * text grid holds one character per cell with room for none of them.
+     */
+    public BossSpec boss = null;
+
+    /** One boss's declaration: where it stands, how big it is, and the seed its attack order is rolled from. */
+    public record BossSpec(double x, double y, double w, double h, long seed) {}
+
+    /** Declare a boss for this level. */
+    public void addBoss(BossSpec spec) { boss = spec; }
+
+    /** Does this level have one? SelfTest needs to know, because the validating bot cannot fight. */
+    public boolean hasBoss() { return boss != null; }
+
     /** One moving platform's declaration. Pixels, screen coordinates, matching World's geometry. */
     public record MoverSpec(MovingPlatform.PathType type, double x0, double y0, double w, double h,
                             double amplitude, double period) {
@@ -252,6 +270,14 @@ public class LevelMap {
         // its geometry, which is also why `stale movers` on the wiring report is a map-level fact.
         for (MoverSpec m : movers) {
             world.addMover(new MovingPlatform(m.type(), m.x0(), m.y0(), m.w(), m.h(), m.amplitude(), m.period()));
+        }
+
+        // The boss. Seeded from the level so its attack order is the same on every attempt at that level - the
+        // same reason the generator is seeded, and the same reason LevelGen's save system keys on a level number.
+        if (boss != null) {
+            Boss b = new Boss(boss.x(), boss.y(), boss.w(), boss.h());
+            b.setSeed(boss.seed());
+            world.setBoss(b);
         }
     }
 

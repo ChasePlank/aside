@@ -1190,6 +1190,7 @@ public class SelfTest {
         int total = 0, grounded = 0, botChecked = 0, botFinished = 0;
         StringBuilder bad = new StringBuilder();
         StringBuilder skipped = new StringBuilder();
+        StringBuilder bossSkipped = new StringBuilder();
         for (int level = 1; level <= aside.games.fruitjump.Tutorial.LAST; level++) {
             total++;
             aside.games.fruitjump.engine.LevelMap map = aside.games.fruitjump.Tutorial.map(level);
@@ -1215,6 +1216,14 @@ public class SelfTest {
                     if (map.cell(r, c) == 'C') needsBomb = true;
             if (needsBomb) { skipped.append("L").append(level).append(" "); continue; }
 
+            // AND A LEVEL WITH A BOSS IS SKIPPED BY A SECOND NAMED RULE, for a stronger version of the same
+            // reason. The bot only jumps, and a boss counts damage ONLY while its weak point is open - so a bot
+            // with no weapons cannot open it, cannot kill it, and will eventually be killed by it. Reporting that
+            // as a broken level would be this check lying about what it measured: the boss is precisely the thing
+            // a jump-only bot cannot see. Named and printed like the bomb rule above, and narrow in the same way -
+            // a level with a boss is skipped, and a level the bot cannot finish for any OTHER reason still fails.
+            if (map.hasBoss()) { bossSkipped.append("L").append(level).append(" "); continue; }
+
             botChecked++;
             if (aside.games.fruitjump.engine.LevelValidator.validateLevel(map, 40.0)) botFinished++;
             else bad.append("L").append(level).append(":bot stuck ");
@@ -1222,7 +1231,8 @@ public class SelfTest {
         check("tutorial: every one of the " + total + " hand-built levels spawns on solid ground"
                 + (bad.isEmpty() ? "" : "  -- " + bad), grounded == total);
         check("tutorial: the bot finishes every level that needs only jumping (" + botFinished + "/"
-                + botChecked + " checked; skipped as bomb-only: " + skipped.toString().trim() + ")",
+                + botChecked + " checked; skipped as bomb-only: " + skipped.toString().trim()
+                + "; skipped as needing a fight the bot cannot have: " + bossSkipped.toString().trim() + ")",
                 botChecked > 0 && botFinished == botChecked);
     }
 

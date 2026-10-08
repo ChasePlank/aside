@@ -323,6 +323,20 @@ public class Boss {
     }
 
     /** Boss attacks damage the player on contact during EXECUTE. */
+    /**
+     * The boss's box, for the two things outside this class that need it: World's weapon routing and the
+     * screen's contact check. Its body was package-private, so neither could see where it was.
+     */
+    public Physics.AABB aabb() { return body.aabb(); }
+
+    public double hp() { return hp; }
+    public double maxHP() { return maxHP; }
+    public int phase() { return phase; }
+    public boolean isDead() { return dead; }
+
+    /** True during RECOVER and PHASE_ENTER - the only window in which damage counts. */
+    public boolean weakPointOpen() { return weakPointOpen; }
+
     public boolean isDangerous() {
         return state == State.EXECUTE && !dead;
     }

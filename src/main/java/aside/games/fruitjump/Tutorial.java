@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The first ten levels are hand-built tutorials, not generated ones.
+ * The first eleven levels are hand-built tutorials, not generated ones.
  *
  * Each teaches exactly one thing and shows it rather than saying it, in the
  * order the player needs it: move, fight, blast, shoot, deal with the bat,
- * know your items, know your enemies, know the ground, know the water, and
- * know that the ground can move under you.
- * Level 10 ends the run back at the menu.
+ * know your items, know your enemies, know the ground, know the water,
+ * know that the ground can move under you, and know what a boss is.
+ * Level 11 ends the run back at the menu.
  *
  * THIS HEADER SAID "eight" AND "Level 8 ends the run" LONG AFTER LEVEL 9 EXISTED. Water was added as level 9 and
  * the count and the list were not revisited, so the claim was false in the file that DEFINES `LAST` - and the
@@ -29,14 +29,14 @@ import java.util.List;
  * have to be right because they are the first thing anyone plays.
  */
 public class Tutorial {
-    public static final int LAST = 10;
+    public static final int LAST = 11;
     static final int W = 60, H = 20, FLOOR = 17;
 
     public static boolean isTutorial(int level) {
         return level >= 1 && level <= LAST;
     }
 
-    /** The last tutorial level sends the player back to the menu instead of level 11. */
+    /** The last tutorial level sends the player back to the menu instead of level 12. */
     public static boolean endsTheTutorial(int level) {
         return level == LAST;
     }
@@ -174,6 +174,21 @@ public class Tutorial {
                 // cycle takes - and a grid holds one character per cell with no room for either. It is declared
                 // below, where the numbers can say what they are for.
             }
+            case 11 -> {
+                // A BOSS. Everything before this taught what the player controls and what the world does;
+                // this is the first thing in the game that fights back on purpose, and the first that cannot be
+                // solved by being careful.
+                //
+                // A FLAT WALK AND NOTHING ELSE, deliberately. Every mechanic it needs is already taught - the
+                // arrows, the bomb, the hookshot, the stomp - so the level adds no new furniture, and the fight is
+                // read off the boss itself: the rim goes red when it is dangerous and blue when it is not, and the
+                // mark on its back is lit only while damage counts. The one thing worth teaching here is that the
+                // MARK is the opening, which the sign says and the fight repeats.
+                //
+                // THE BOSS IS NOT IN THIS GRID. Where it stands, how big it is and what seed its attack order
+                // comes from are all decisions a character-per-cell grid has no room for, so it is declared below
+                // beside the lift. See LevelMap.BossSpec.
+            }
             default -> { }
         }
 
@@ -205,6 +220,19 @@ public class Tutorial {
         //
         // Period 6s over the 384px round trip: slow enough to read and to step onto, which is the only thing the
         // timing has to be. There is no window to miss - the bay holds you if you mistime it.
+        // LEVEL 11'S BOSS, standing on the walk at the middle of the level.
+        //
+        // THE NUMBERS ARE THE GEOMETRY. FLOOR is row 17, so the walk's surface is at 544; a 64-high body centred at
+        // 512 has its feet exactly on it. It is wide enough (64) to read as a wall you cannot walk through, which
+        // is the point - the fight happens where it stands.
+        //
+        // SEEDED FROM THE LEVEL NUMBER, so its attack order is the same on every attempt at this level. Unseeded,
+        // its `new Random()` would make every attempt at the fight different in a way nothing could test, which is
+        // the mistake the FNAF screens record in their own comments ("made every run unreplayable").
+        if (level == 11) {
+            built.addBoss(new LevelMap.BossSpec(31 * 32, 512, 64, 64, level));
+        }
+
         if (level == 10) {
             built.addMover(LevelMap.MoverSpec.vertical(
                     37 * 32,     // x 1184: centred in the bay, right edge flush with the ledge at 1216
@@ -252,7 +280,7 @@ public class Tutorial {
                 s.add(new Sign(20 * 32, y, "ARROWS   F   -   hits what you face"));
                 s.add(new Sign(32 * 32, y, "the spiders are out of reach. shoot them"));
                 // AND THE HOOKSHOT, which the README leads with - "with hookshot, bombs, bow" - and which the
-                // tutorial never mentioned in any of its ten levels. It fires at a wall and pulls you to it, so
+                // tutorial never mentioned in any of its levels. It fires at a wall and pulls you to it, so
                 // it belongs on the level that is already about reaching what you cannot walk to.
                 // TWO SIGNS, AND THE SECOND IS BELOW THE FIRST'S WRAP. The first is 37 characters and wraps to a
                 // 34-character line, so its second line lands where a sign 26px below would start - which is the
@@ -303,9 +331,10 @@ public class Tutorial {
                 // LINE - and that line landed exactly where this one started. A sign that wraps occupies two
                 // rows, and the next sign down has to clear both.
                 s.add(new Sign(20 * 32, y + 26, "they come in groups. get out and they lose you"));
-                // "that is everything. good luck" MOVED OFF THIS LEVEL when level 10 arrived. It is the
-                // tutorial's last word, and leaving it on what is now the second-to-last level would have been
-                // a small lie told just before a player met one more thing.
+                // "that is everything. good luck" MOVED OFF THIS LEVEL AGAIN when level 11 arrived, and for the
+                // second time. It is the tutorial's last word, and leaving it on a level that is no longer last
+                // would be the same small lie twice - so it lives on whatever level is last, which last time was
+                // 10 and is now 11.
             }
             case 10 -> {
                 s.add(new Sign(24 * 32, y, "MOVING PLATFORM"));
@@ -314,7 +343,13 @@ public class Tutorial {
                 // ABOVE THE LEDGE, at y - 96, not on the sign row. The ledge's own surface is at FLOOR - 6, which
                 // is ABOVE where signs are drawn by default (FLOOR - 4), so words on the usual row would have
                 // landed inside the stone - the fault level 4 records finding by rendering it.
-                s.add(new Sign(44 * 32, y - 96, "that is everything. good luck"));
+                // the parting line moved to level 11, which is now the last one
+            }
+            case 11 -> {
+                s.add(new Sign(22 * 32, y, "A BOSS"));
+                s.add(new Sign(22 * 32, y + 26, "it is only hurt while the mark is lit"));
+                s.add(new Sign(22 * 32, y + 52, "back off when the rim goes red"));
+                s.add(new Sign(44 * 32, y - 34, "that is everything. good luck"));
             }
             default -> { }
         }

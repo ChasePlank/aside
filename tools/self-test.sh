@@ -245,7 +245,7 @@ else
     bad "check-tutorial-counts notices a word-form count" "the injection did not apply"
   else
     out=$(python3 tools/check-tutorial-counts.py 2>&1); rc=$?
-    if [ $rc -ne 0 ] && echo "$out" | grep -q "STALE"; then
+    if [ $rc -ne 0 ] && echo "$out" | grep -q "STALE.*$WRONG_W hand-built levels"; then
       ok "check-tutorial-counts notices a word-form count" "$(echo "$out" | grep -m1 'STALE' | tr -s ' ')"
     else
       bad "check-tutorial-counts notices a word-form count" "reported clean with a comment saying $WRONG_W"
@@ -270,11 +270,17 @@ else
   if ! grep -q "the header once claimed \"$WRONG_W hand-built levels\"" "$TUT_FILE"; then
     bad "check-tutorial-counts ignores a quoted claim" "the injection did not apply"
   else
-    out=$(python3 tools/check-tutorial-counts.py 2>&1); rc=$?
-    if [ $rc -eq 0 ]; then
-      ok "check-tutorial-counts ignores a quoted claim" "quoted text did not trip the tool"
+    out=$(python3 tools/check-tutorial-counts.py 2>&1)
+    # ASSERT THE SPECIFIC THING, NOT GLOBAL CLEANLINESS. This used to require rc=0 - and the day a genuinely stale
+    # count appeared elsewhere in the tree (GameplayScreen's "first ten levels", caught by this same tool while the
+    # library grew to eleven levels), this NEGATIVE test failed and reported "flagged quoted text" about a fault
+    # that was real and somewhere else. A negative test that asserts nothing else was found is a test that fails
+    # for other people's reasons. What it is actually about is whether the QUOTED claim was reported, so that is
+    # what it checks: the injected wording must not appear in the output.
+    if echo "$out" | grep -q "$WRONG_W hand-built levels"; then
+      bad "check-tutorial-counts ignores a quoted claim" "the quoted claim WAS reported: $(echo "$out" | grep -m1 'STALE' | tr -s ' ')"
     else
-      bad "check-tutorial-counts ignores a quoted claim" "flagged quoted text: $(echo "$out" | grep -m1 'STALE' | tr -s ' ')"
+      ok "check-tutorial-counts ignores a quoted claim" "quoted text was not reported (any other finding is not this test's business)"
     fi
   fi
   restore_tut

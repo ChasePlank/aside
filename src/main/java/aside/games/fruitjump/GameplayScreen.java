@@ -123,7 +123,7 @@ public class GameplayScreen extends UiScreen {
     }
 
     /**
-     * Tutorial mode. A SEPARATE mode rather than the first ten levels of every
+     * Tutorial mode. A SEPARATE mode rather than the first eleven levels of every
      * run - a returning player should not have to sit through the explanations
      * again (Kinger, Sept 29).
      */
@@ -365,6 +365,15 @@ public class GameplayScreen extends UiScreen {
         // Enemy contact (stomp or hurt — Combat decides)
         for (Enemy e : new ArrayList<>(world.enemies)) {
             combat.processContact(player, e);
+        }
+
+        // AND THE BOSS, which is not an Enemy and so is not in that loop. Contact damage only while it is
+        // dangerous - its telegraph - and Combat's own i-frames are what stop a charge from draining the player
+        // in one pass. The same division as everywhere else here: the engine says what is happening, the screen
+        // decides what it costs.
+        if (world.boss != null && !world.boss.isDead() && world.boss.isDangerous()
+                && player.aabb().overlaps(world.boss.aabb())) {
+            combat.hurtPlayer(player, world.boss.aabb().x0);
         }
 
         // Pickups (tryCollect applies HP/keys + audio itself)
@@ -612,6 +621,28 @@ public class GameplayScreen extends UiScreen {
             gc.fillRect(sx, sy, w, h);
             gc.setFill(Color.web("#7FD4E8"));
             gc.fillRect(sx, sy, w, 8);
+        }
+        // The boss, if the level has one. Drawn from its box rather than as a sprite, for now: the body, a rim
+        // that says whether it is dangerous, and a bright weak point while one is open. The weak point is the
+        // whole fight - it is the only time damage counts - so it has to be visible, and a shape that changes
+        // colour is more legible for that than a sprite frame would be.
+        if (world.boss != null) {
+            Physics.AABB bb = world.boss.aabb();
+            double bx = camera.worldToScreenX(bb.x0), by = camera.worldToScreenY(bb.y0);
+            double bw = (bb.x1 - bb.x0) * S, bh = (bb.y1 - bb.y0) * S;
+            if (!(bx > CANVAS_W || by > CANVAS_H || bx + bw < 0 || by + bh < 0)) {
+                gc.setFill(Color.web("#141B26"));
+                gc.fillRect(bx, by, bw, bh);
+                gc.setFill(world.boss.isDead() ? Color.web("#4A5560")
+                        : world.boss.isDangerous() ? Color.web("#C4402A") : Color.web("#7FD4E8"));
+                gc.fillRect(bx, by, bw, 12);
+                if (world.boss.weakPointOpen()) {
+                    Physics.AABB wp = world.boss.weakPointBox();
+                    gc.setFill(Color.web("#FBDD7E"));
+                    gc.fillOval(camera.worldToScreenX(wp.x0), camera.worldToScreenY(wp.y0),
+                                (wp.x1 - wp.x0) * S, (wp.y1 - wp.y0) * S);
+                }
+            }
         }
         // Spikes: sprite (32 logical → 64 physical)
         for (Physics.AABB t : world.spikes) {
