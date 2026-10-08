@@ -214,8 +214,10 @@ public class GameplayScreen extends UiScreen {
         // The ridges behind the level. Vertical positions are in PHYSICAL px and stay put while the camera moves
         // vertically, which is what ParallaxLayer documents ("fixed for now, could be parallax too") - and it is
         // the behaviour that suits a horizon: the ground rises and falls in front of it, the hills do not.
-        ridgeFar = ParallaxLayer.far(CANVAS_H * 0.72);
-        ridgeNear = ParallaxLayer.near(CANVAS_H * 0.80);
+        // THE OFFSET IS NOW A LIFT ABOVE THE TERRAIN, not a fraction of the canvas - see horizonScreenY for what
+        // that fixed fraction did wrong. Far sits higher because it is further away.
+        ridgeFar = ParallaxLayer.far(64);
+        ridgeNear = ParallaxLayer.near(26);
 
         // Weapons
         hookshot = new Hookshot(player);
@@ -497,8 +499,9 @@ public class GameplayScreen extends UiScreen {
         // then the terrain's own near-black #0D0A09. Each step darkens toward the player, which is what makes the
         // distance read - the ground is not "behind" the hills because it was drawn later, it is in front because
         // it is darker.
-        drawRidge(ridgeFar, Color.web("#9C4E2C"), 0.10);
-        drawRidge(ridgeNear, Color.web("#4A2417"), 0.07);
+        double horizon = horizonScreenY();
+        drawRidge(ridgeFar, Color.web("#9C4E2C"), 0.10, horizon);
+        drawRidge(ridgeNear, Color.web("#4A2417"), 0.07, horizon);
 
         // Underground background: for each column, everything from the
         // topmost ground cell down is INSIDE the terrain, not open sky.
@@ -918,11 +921,44 @@ public class GameplayScreen extends UiScreen {
      * comes from the layer in LOGICAL px (camera space) and is scaled to physical px here; the vertical position
      * is the layer's own offsetY, already in physical px.
      */
-    private void drawRidge(ParallaxLayer layer, Color colour, double amplitudeFraction) {
+    /**
+     * The screen y of the terrain's top edge, so the ridges can be hung above it.
+     *
+     * <p><b>WHY THIS IS COMPUTED AND NOT A CONSTANT.</b> These baselines were `CANVAS_H * 0.72` and `0.80` - 864
+     * and 960 on a 1200-tall canvas - and the generated walk does not land at a fixed screen height: MEASURED, its
+     * top edge sits at y 896 on one level and y 832 on another, a 64px swing that is more than the band between
+     * those baselines. So on the levels whose ground sat higher, the terrain buried the parallax layers
+     * completely: level 1 showed 18,713 far-ridge pixels and levels 20 and 40 showed about 700, which is a sliver
+     * at the edge. The layers were drawn, and the feature was invisible - the same shape as a boss that exists
+     * only in the tutorial.
+     *
+     * <p>The rule is the one the underground fill below already uses - a column's terrain starts at its topmost
+     * ground-ish cell - and the MEDIAN across columns is taken rather than the highest or the lowest, because one
+     * raised structure would move a maximum and one pit would move a minimum. The two passes agreeing matters:
+     * the fill is what covers the ridges, so the horizon has to be measured the way the fill sees the world.
+     */
+    private double horizonScreenY() {
+        double[] tops = new double[map.widthCells()];
+        int n = 0;
+        for (int c = 0; c < map.widthCells(); c++) {
+            for (int r = 0; r < map.heightCells(); r++) {
+                char ch = map.cell(r, c);
+                if (ch == '#' || ch == 'C' || ch == '^' || ch == '/' || ch == '\\' || ch == '~') {
+                    tops[n++] = camera.worldToScreenY(r * 32.0);
+                    break;
+                }
+            }
+        }
+        if (n == 0) return CANVAS_H * 0.72;   // no terrain at all: fall back to where it used to be
+        java.util.Arrays.sort(tops, 0, n);
+        return tops[n / 2];
+    }
+
+    private void drawRidge(ParallaxLayer layer, Color colour, double amplitudeFraction, double horizon) {
         final double S = SCALE;
         double period = RIDGE_PERIOD * S;
         double shift = -layer.getOffsetX(camera) * S;
-        double baseline = layer.getOffsetY();
+        double baseline = horizon - layer.getOffsetY();   // the layer's offsetY is now a lift above the horizon
         double amplitude = amplitudeFraction * CANVAS_H;
 
         // ONE POLYGON ACROSS THE WHOLE SPAN, not one per period. Tiling it and fixing the seam by overlapping
