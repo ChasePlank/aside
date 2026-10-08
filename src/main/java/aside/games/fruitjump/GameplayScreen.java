@@ -631,8 +631,9 @@ public class GameplayScreen extends UiScreen {
             double bx = camera.worldToScreenX(bb.x0), by = camera.worldToScreenY(bb.y0);
             double bw = (bb.x1 - bb.x0) * S, bh = (bb.y1 - bb.y0) * S;
             if (!(bx > CANVAS_W || by > CANVAS_H || bx + bw < 0 || by + bh < 0)) {
-                gc.setFill(Color.web("#141B26"));
-                gc.fillRect(bx, by, bw, bh);
+                // THE SPRITE FILLS ITS BOX EXACTLY. 64 grid pixels at SCALE lands one to one on the 128 physical
+                // pixels the box is, so nothing here is resampled - which is the whole reason the grid is 64.
+                gc.drawImage(Sprites.boss2x, bx, by, bw, bh);
                 gc.setFill(world.boss.isDead() ? Color.web("#4A5560")
                         : world.boss.isDangerous() ? Color.web("#C4402A") : Color.web("#7FD4E8"));
                 gc.fillRect(bx, by, bw, 12);

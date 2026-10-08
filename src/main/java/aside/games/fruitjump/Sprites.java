@@ -18,6 +18,9 @@ import java.util.Map;
  *     (JavaFX 17 has no smoothing toggle; pre-scaling is the crisp path).
  */
 public class Sprites {
+    /** The boss, at grid size and at SCALE: see Sprite.BOSS for why 64 divides its box exactly. */
+    static final WritableImage boss, boss2x;
+
     static final WritableImage banana, enemy, heart, key, spike,
             door, crack, exit, bomb, bombFlash, arrow;
 
@@ -89,6 +92,10 @@ public class Sprites {
         bombFlash = Sprite.build(Sprite.BOMB, flashPal);
 
         // 2x pre-scaled variants (nearest-neighbor, crisp pixel grid)
+        boss   = Sprite.build(Sprite.BOSS, Sprite.bossPal());
+        boss2x = Sprite.buildScaled(Sprite.BOSS, Sprite.bossPal(),
+                Sprite.BOSS[0].length() * SCALE, Sprite.BOSS.length * SCALE);
+
         banana2x = Sprite.buildScaled(Sprite.BANANA, pal, Sprite.BANANA[0].length() * SCALE, Sprite.BANANA.length * SCALE);
         enemy2x  = Sprite.buildScaled(Sprite.ENEMY, pal, Sprite.ENEMY[0].length() * SCALE, Sprite.ENEMY.length * SCALE);
         heart2x  = Sprite.buildScaled(Sprite.HEART, pal, Sprite.HEART[0].length() * SCALE, Sprite.HEART.length * SCALE);
