@@ -110,7 +110,7 @@ public class GameplayScreen extends UiScreen {
     }
 
     /**
-     * Tutorial mode. A SEPARATE mode rather than the first eight levels of every
+     * Tutorial mode. A SEPARATE mode rather than the first nine levels of every
      * run - a returning player should not have to sit through the explanations
      * again (Kinger, Sept 29).
      */
