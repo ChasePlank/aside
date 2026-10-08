@@ -100,6 +100,21 @@ public class LevelGen {
      */
     public static final int FINAL_LEVEL = 40;
 
+    /**
+     * How often a run gets a moving platform: every third level.
+     *
+     * <p><b>THE RUN NEVER HAD ONE, AND THE TUTORIAL IS WHERE THE MECHANIC LIVED.</b> Level 10 has a lift, and its
+     * own comment explains the bay built around it. `LevelMap` builds whatever a map declares, `World` carries a
+     * rider, the screen draws them - and `LevelGen` has never called `addMover`, so across forty generated levels
+     * a player would not meet the thing the tutorial taught. That is the boss's shape exactly: the machinery
+     * complete, the recognition present, and the appearance confined to a lesson.
+     *
+     * <p>Three rather than ten, because a moving platform is furniture rather than a set-piece. A ferry is not a
+     * gate: it is placed over a gap the player can already jump, so riding it is a way across rather than the only
+     * way across, and a level where it is missed is a level that still finishes.
+     */
+    public static final int MOVER_EVERY = 3;
+
     final int width, height;
     final Random rng;
     final int levelNum;
@@ -149,6 +164,35 @@ public class LevelGen {
     }
 
     /** Generate a level as ASCII rows. */
+    /**
+     * A gap a ferry can shuttle across, as {middle column, walk row}, or null if this level has no such gap.
+     *
+     * <p><b>IT REFUSES RATHER THAN GUESSES</b>, the same rule the boss placement follows and for the same reason: a
+     * generated level is a random walk, and a platform dropped at "about the middle" would sometimes be inside a
+     * hill. What it wants is a run of columns with NO floor, two to four wide, with flat floors either side at the
+     * same height - the ordinary gap the jump already clears. The ferry rides at that height, so its box passes
+     * through the air above the neighbouring floors and intersects nothing.
+     */
+    private int[] ferryGap(char[][] g) {
+        // THE WHOLE WALK, NOT ITS MIDDLE HALF. The first version searched the middle half and found NOTHING on any
+        // of the thirteen levels that asked for a ferry - measured - because a gap in the carved walk is rare and
+        // turns up wherever the walk happened to jump: level 3's sits at columns 9 and 10, well outside a search
+        // that started at fifteen. The guard columns are the spawn area at the left and the exit stair at the right.
+        for (int col = 6; col <= width - 8; col++) {
+            if (pathFloor[col] >= 0) continue;
+            int start = col, end = col;
+            while (end + 1 < width && pathFloor[end + 1] < 0) end++;
+            int len = end - start + 1;
+            col = end;
+            if (len < 2 || len > 4) continue;
+            if (start == 0 || end + 1 >= width) continue;
+            int left = pathFloor[start - 1], right = pathFloor[end + 1];
+            if (left < 3 || right < 3 || left != right) continue;   // flat either side, and both are real floors
+            return new int[] { (start + end) / 2, left };
+        }
+        return null;
+    }
+
     /**
      * A column the boss can stand in, or -1 if this level has no such stretch.
      *
@@ -680,6 +724,32 @@ public class LevelGen {
         // The walk's floor per column, or -1 where there is no walk (a gap). Kept because a check cannot tell a
         // FLOODED GAP from a FLOODED WALK by looking at the grid: both are water at the walk's level with a solid
         // floor under them. The difference is whether the walk claims a floor there, and only the generator knows.
+        // AND THIS IS THE WALK PATH, which is where the ferry belongs. My first attempt put this block beside
+        // the BOSS, and the boss's block is in the SAFE-ROOM path - the one only tenth levels take. A
+        // diagnostic print fired on level 30 and on no other multiple of three, which is how that was found:
+        // thirteen levels asked for a ferry, none got one, and the reason was which of the two `return`s the
+        // code sat above.
+        // A FERRY OVER A GAP, every third level. Placed after the map is built because it needs the finished walk to
+        // find a gap, and skipped silently when there is none - a level without a ferry is a level without a
+        // ferry, and a generator that refuses is worse than one that occasionally leaves something out.
+        if (levelNum > 0 && levelNum % MOVER_EVERY == 0) {
+            int[] gap = ferryGap(g);
+            if (gap != null) {
+                double surface = gap[1] * 32.0;
+                double centreX = gap[0] * 32.0 + 32.0;      // the middle of the cell
+                double w = 96, h = 16;                      // three cells wide, one thin platform
+                // IT RIDES ONE ROW ABOVE THE WALK, which is not decoration: THE GAPS ARE WHERE THE WATER GOES
+                // ("pools form in the gaps"), so a dry gap essentially does not exist - the first version refused
+                // flooded ones and consequently found NOTHING on any of the thirteen levels that asked. One row up
+                // clears the water's surface, which sits on the walk row, and 32px is well inside the 73px jump, so
+                // the ferry is boardable from either lip.
+                // Amplitude walks it across the gap either side of its middle, so it reaches both. Period three
+                // seconds: slow enough to step onto, fast enough that waiting is not the game.
+                this.lastMap.addMover(LevelMap.MoverSpec.horizontal(
+                        centreX, surface - h / 2 - 32, w, h, 48, 3.0));
+            }
+        }
+
         this.lastPathFloor = pathFloor.clone();
         return this.lastMap;
     }
