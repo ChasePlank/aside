@@ -29,12 +29,37 @@ public class VictoryScreen extends UiScreen {
     static final Font F_STAT = Font.font("Arial", 30);
     static final Font F_HINT = Font.font("Arial", 22);
 
-    final int levelsClimbed;
+    final String line;
+    final String enterHint;
+    final java.util.function.Supplier<UiScreen> onEnter;
     final double playTime;
 
+    /** The climb: ENTER carries on from the next level. */
     public VictoryScreen(UiManager ui, int levelsClimbed, double playTime) {
+        this(ui, "Climbed " + levelsClimbed + " levels, and the sun went down on the way",
+                "ENTER  keep climbing",
+                () -> new GameplayScreen(ui, levelsClimbed + 1), playTime);
+    }
+
+    /**
+     * Rooms mode, which has its own way home.
+     *
+     * <p><b>THE SAME SCREEN, BECAUSE IT IS THE SAME SENTENCE.</b> The two modes differ in what "a way home" means -
+     * getting to the top of the climb, or finding the way out of a grid of rooms - and not in what it looks like,
+     * so they share the horizon and differ in one line and one key. A second ending screen would have been two
+     * copies of a picture that already exists twice in this project.
+     */
+    public static VictoryScreen roomsOut(UiManager ui, int roomsVisited, double playTime) {
+        return new VictoryScreen(ui, "Found the way out, through " + roomsVisited + " rooms",
+                "ENTER  another way out", () -> new RoomsScreen(ui, 1), playTime);
+    }
+
+    private VictoryScreen(UiManager ui, String line, String enterHint,
+                          java.util.function.Supplier<UiScreen> onEnter, double playTime) {
         super(ui);
-        this.levelsClimbed = levelsClimbed;
+        this.line = line;
+        this.enterHint = enterHint;
+        this.onEnter = onEnter;
         this.playTime = playTime;
         // The fourth track, and the one that most needed an ending to exist: this screen is the only place
         // `victory-theme` belongs, and until this hour there was no such screen and no such file.
@@ -44,9 +69,9 @@ public class VictoryScreen extends UiScreen {
     @Override
     public void handleKey(KeyEvent e) {
         if (e.getCode() == KeyCode.ENTER) {
-            // On to the next level, and the run continues past its own ending - the way home is a place you can
-            // leave again rather than a full stop.
-            ui.replace(new GameplayScreen(ui, levelsClimbed + 1));
+            // The run continues past its own ending - the way home is a place you can leave again rather than a
+            // full stop. What ENTER does differs by mode and is supplied by whoever built the screen.
+            ui.replace(onEnter.get());
         } else if (e.getCode() == KeyCode.ESCAPE) {
             ui.replace(new MainMenu(ui));
         }
@@ -64,12 +89,12 @@ public class VictoryScreen extends UiScreen {
 
         gc.setFill(Color.web("#c9c9d6"));
         gc.setFont(F_STAT);
-        gc.fillText("Climbed " + levelsClimbed + " levels, and the sun went down on the way", 94, 290);
+        gc.fillText(line, 94, 290);
         gc.fillText(String.format("Time: %.1f seconds", playTime), 94, 336);
 
         gc.setFont(F_HINT);
         gc.setFill(Color.web("#f5a623"));
-        gc.fillText("ENTER  keep climbing", 94, 420);
+        gc.fillText(enterHint, 94, 420);
         gc.setFill(Color.web("#8a8aa0"));
         gc.fillText("ESC  main menu", 94, 460);
     }

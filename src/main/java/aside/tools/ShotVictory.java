@@ -28,7 +28,12 @@ public class ShotVictory extends Application {
         double time = Double.parseDouble(System.getProperty("time", "1284.5"));
 
         UiManager ui = new UiManager(".");
-        ui.push(new VictoryScreen(ui, levels, time));
+        aside.ui.Audio.load(".");
+        // Two endings, one screen: `-Drooms=1` renders the rooms-mode variant, which differs in one line and one
+        // key because the two modes differ in what "a way home" means rather than in what it looks like.
+        boolean rooms = System.getProperty("rooms") != null;
+        ui.push(rooms ? VictoryScreen.roomsOut(ui, levels, time)
+                      : new VictoryScreen(ui, levels, time));
         Scene scene = new Scene(new StackPane(ui.getContainer()), 1600, 1200, Color.BLACK);
         stage.setScene(scene);
         stage.show();
@@ -36,8 +41,8 @@ public class ShotVictory extends Application {
 
         var img = scene.snapshot(null);
         javax.imageio.ImageIO.write(javafx.embed.swing.SwingFXUtils.fromFXImage(img, null),
-                "png", new java.io.File(dir, "victory.png"));
-        System.out.println("wrote " + dir + "/victory.png");
+                "png", new java.io.File(dir, rooms ? "victory-rooms.png" : "victory.png"));
+        System.out.println("wrote " + dir + "/" + (rooms ? "victory-rooms.png" : "victory.png"));
         Platform.exit();
     }
 

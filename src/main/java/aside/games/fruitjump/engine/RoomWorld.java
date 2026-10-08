@@ -24,6 +24,19 @@ public class RoomWorld {
     public final int cols, rows;
     public final Room[][] grid;
     public String startRoomId, exitRoomId;
+
+    /**
+     * Is this room the one the path leads to?
+     *
+     * <p><b>THE EXIT ROOM WAS SET AND NOTHING EVER ASKED.</b> This class chooses a start room, walks a guaranteed
+     * path to an exit room and publishes both ids - and until now NOTHING outside this file read `exitRoomId`.
+     * Rooms mode therefore had a designated goal that arriving at did exactly nothing: you could cross the whole
+     * grid to the room the generator had picked, and the game would not notice. The same shape as the platformer
+     * having no ending, in the other mode.
+     */
+    public boolean isExit(String roomId) {
+        return exitRoomId != null && exitRoomId.equals(roomId);
+    }
     public final List<String> mainPath = new ArrayList<>();  // room IDs start→exit
     final Random rng;
 

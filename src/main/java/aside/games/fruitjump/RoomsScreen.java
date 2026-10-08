@@ -30,6 +30,12 @@ public class RoomsScreen extends UiScreen {
     final Combat combat;
     final PlayerInventory inventory;
 
+    /** How many rooms this run has been through, for the ending's line. Starts at 1: the start room counts. */
+    int roomsVisited = 1;
+
+    /** Seconds since this run began, for the ending's line. Rooms mode had no clock at all before this. */
+    double elapsed = 0;
+
     double accumulator = 0;
     boolean left, right, up, down;
     int facing = 1;  // 1=right, -1=left (persists — render + future weapons)
@@ -45,6 +51,7 @@ public class RoomsScreen extends UiScreen {
     public RoomsScreen(UiManager ui, int levelNum, SaveSystem.GameState resume) {
         super(ui);
         world = new RoomWorld(5, 5, 2000L + levelNum);  // 25 rooms — theme changes every 10 along the path
+        roomsVisited = 1;                              // the room you start in is one you have been in
         phys = new World();
         combat = new Combat();
         inventory = new PlayerInventory();
@@ -151,6 +158,7 @@ public class RoomsScreen extends UiScreen {
     public void tick(double dt) {
         // The host ticks only the top screen, so a pushed pause overlay
         // freezes this one automatically -- no timer to stop and start.
+        elapsed += dt;
         accumulator += Math.min(dt, 0.25);
         while (accumulator >= GameLoop.DT) {
             update(GameLoop.DT);
@@ -176,6 +184,15 @@ public class RoomsScreen extends UiScreen {
         // Room changed (transition completed): load the new room's
         // content + autosave (Continue resumes in the last room).
         if (!screens.currentRoomId().equals(roomBefore)) {
+            roomsVisited++;
+            // AND ARRIVING AT THE EXIT ROOM IS THE WAY OUT, which nothing recognised before: the generator picked
+            // an exit, drew a guaranteed path to it, and crossing into it was an ordinary room change. The ending
+            // is the same screen the climb ends on, because it is the same sentence - a way home - and the two
+            // modes differ in what that means rather than in what it looks like.
+            if (world.isExit(screens.currentRoomId())) {
+                ui.replace(VictoryScreen.roomsOut(ui, roomsVisited, elapsed));
+                return;
+            }
             loadRoom(screens.currentRoomId());
             autosave();
         }

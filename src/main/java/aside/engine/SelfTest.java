@@ -1038,6 +1038,7 @@ public class SelfTest {
         tutorialLevelsArePlayable();
         parallaxLayersScaleWithTheirFactor();
         theRunHasAnEnd();
+        roomsModeHasAWayOut();
         soundHonoursTheGlobalMuteAndVolume();
 
         // The release's pocket test, ported. It is the only check that exercises bomb -> cracked
@@ -1281,6 +1282,30 @@ public class SelfTest {
         s.play("land");
         boolean down = cues.size() == 4 && vols.get(3) == 0.0;
         check("sound: volume is clamped to 0..1, so a caller cannot hand the sink a nonsense level", up && down);
+    }
+
+    /**
+     * Rooms mode must have a way out, and the game must recognise arriving in it.
+     *
+     * <p><b>The generator chose a start room, walked a guaranteed path and published an exit room, and NOTHING
+     * read it.</b> Crossing into that room was an ordinary room change, so the mode had a designated goal that
+     * arriving at did nothing - the same shape as the platformer having no ending, in the other mode. This checks
+     * the four things that make the ending reachable rather than decorative.
+     *
+     * <p>It is checked against the SAME seed the screen uses ({@code 2000L + levelNum} with level 1), so it is
+     * asserting about the world a player actually starts in rather than about worlds in general.
+     */
+    static void roomsModeHasAWayOut() {
+        aside.games.fruitjump.engine.RoomWorld w =
+                new aside.games.fruitjump.engine.RoomWorld(5, 5, 2000L + 1);
+
+        check("rooms: the world names an exit room (" + w.exitRoomId + ")", w.exitRoomId != null && !w.exitRoomId.isBlank());
+        check("rooms: the exit is not the room you start in (" + w.startRoomId + " -> " + w.exitRoomId + ")",
+                w.exitRoomId != null && !w.exitRoomId.equals(w.startRoomId));
+        check("rooms: and it is the END of the guaranteed path (" + w.mainPath.size() + " rooms long)",
+                !w.mainPath.isEmpty() && w.mainPath.get(w.mainPath.size() - 1).equals(w.exitRoomId));
+        check("rooms: the world agrees that room is the exit", w.isExit(w.exitRoomId));
+        check("rooms: and it disagrees about every other room", !w.isExit(w.startRoomId));
     }
 
     /**

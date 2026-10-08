@@ -104,6 +104,12 @@ There are four families:
   form in the gaps in the walk, a body swims in them, holds its breath, and gets
   out by a breach hop at the surface. **UP or W** jumps on land and strokes
   upward in water; **DOWN or S** dives.
+  **Rooms mode** is the other game in this one: a 5x5 grid of rooms with the camera fixed per room and the screen
+  changing when you cross an edge — the screen-transition architecture the Scratch project was built around, and
+  the one the real game is headed for. The generator walks a guaranteed path from your start room to an exit room,
+  the floor and walls change biome every ten rooms, and **arriving in the exit room is the way out** — which
+  nothing recognised until now: the world picked an exit, drew a path to it, and crossing into it was an ordinary
+  room change. It ends on the same screen the climb does, because it is the same sentence.
   **The run ends.** Forty levels is the climb: the sky deepens and the sun sinks the whole way, and reaching the
   exit on level 40 ends it at HOME - the same night horizon the game-over screen paints, with the climber standing
   on the rock rather than absent from it. That screen offers to keep climbing, so the endless run is still there;
