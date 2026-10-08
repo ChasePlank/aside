@@ -88,6 +88,7 @@ public final class Games {
         g.add(new aside.games.changeover.ChangeoverGame());
         g.add(new aside.games.twoofeverything.TwoOfEverythingGame());
         g.add(new aside.games.discrepancy.DiscrepancyGame());
+        g.add(new aside.games.lastcrossing.LastCrossingGame());
         return g;
     }
 

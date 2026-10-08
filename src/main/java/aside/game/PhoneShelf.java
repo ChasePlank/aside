@@ -101,6 +101,7 @@ public final class PhoneShelf {
             case "a440" -> "A visual novel. Keeps the fork in this browser.";
             case "changeover" -> "A visual novel. Keeps the reels in this browser.";
             case "discrepancy" -> "A visual novel. Keeps the audit in this browser.";
+            case "last-crossing" -> "A visual novel. Keeps the last three nights in this browser.";
             case "water-line" -> "A visual novel. Nineteen years, one chalk line, three ways to leave it.";
             default -> "";
         };

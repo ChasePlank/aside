@@ -1,0 +1,288 @@
+# A short story for the Aside engine.
+#
+# ELEVENTH REGISTER, AND THE FIRST THAT OFFERS THE SAME DECISION MORE THAN ONCE. Every story before this one
+# moves forward: a choice leads to a scene, the scene leads to the next thing, and the reader is always further
+# along than they were. This one circles. The ferryman is asked the same question at the same waterline on three
+# different nights, and the only thing that changes between them is how many times he has said not yet - so the
+# flags are the whole engine of the story, and the three endings are what a crossing, two deferrals, and a
+# refusal respectively add up to.
+#
+# It is also the first story here about a job that is ENDING rather than one being done badly. The bridge opens
+# on Monday. Nothing is broken, nobody is cruel, and the work was good for nineteen years.
+#
+# THE ART IS NOT DRAWN YET, AND THAT IS STATED RATHER THAN HIDDEN. The four backgrounds this story stages itself
+# on - river_jetty, far_bank, dawn_river, dawn_bridge - have no files under art/stories/the-last-crossing/, so
+# WebExport reports "no art for: ..." for every one of them and the phone build carries the words only. That is a
+# known state in this library and not a fault in the script: WebExport's own header names two other stories in it.
+# The names are reserved so the art can be dropped in without touching the script, and drawing it is the
+# remaining work - the README's "each has its own art" is not yet true of this one.
+
+title: The Last Crossing
+author: Roxanne
+start: jetty
+
+== jetty ==
+bg river_jetty
+music sea_swell
+The jetty is four planks and a bell, and the bell is older than the planks.
+You have poled this crossing for nineteen years. The river is not wide. It has never been wide.
+
+Upstream there is a line of dark with a light at each end, and a crane above it that has not moved all week.
+
+The bell goes. It is nearly midnight.
+
+* Answer it. -> passenger
+* Let it ring itself out. -> quiet
+* Look upstream first. -> upstream
+
+== upstream ==
+bg river_jetty
+They are painting the railings. You can see that much even in the dark, because they have left a lamp on.
+Painting the railings is the last thing anybody does to a bridge.
+~ looked true
+-> jetty_after
+
+== jetty_after ==
+The bell has stopped, which is what it does if you leave it alone, and then it is just a bell
+hanging over water doing nothing at all.
+-> jetty_two
+
+== quiet ==
+bg river_jetty
+You let it ring. Three times, then a pause, then nothing.
+Whoever it was has walked back up the lane, and you did not see their face, and you will not think about
+that until later, which is a thing you know about yourself.
+~ refused_once true
+-> jetty_two
+
+== jetty_two ==
+The water goes past the way it always goes past, and you stand on your own jetty with the pole in your hand
+like a man holding a stick he has forgotten the reason for.
+
+* Go home. It is nearly midnight and the bridge opens Monday. -> go_home
+* Take the pole out of its rest and put it back. Twice. -> fidgit [if looked]
+* Answer it, if it goes again. -> passenger_two [if refused_once]
+
+== fidgit ==
+bg river_jetty
+You take the pole out of its rest and put it back, and then do it again, because the rest is worn
+and the pole has a place it likes, and after nineteen years a man is allowed a superstition
+or two about a piece of wood.
+-> jetty_two
+
+== go_home ==
+bg river_jetty
+You go home. The jetty stays where it is, which is the arrangement you have had for nineteen years
+and which ends on Monday whether anyone winds it up or not.
+-> dawn_bridge
+
+== passenger ==
+bg river_jetty
+sfx bell
+A woman with a holdall and a coat that is not a coat for this weather.
+
+ferry: It is midnight.
+passenger: I know what time it is.
+passenger: I need the other side.
+ferry: There is a bridge. It opens Monday.
+passenger: It is not Monday.
+
+She is right about that, which is the difficulty with most people who come down the lane at this hour.
+
+* Pole her across. -> cross_now
+* Ask her what is on the other side. -> ask
+* Tell her to come back Monday. -> defer
+
+== ask ==
+bg river_jetty
+passenger: My sister. She is not well and she is not going to get better, and the bus
+passenger: does not run the lane at night.
+passenger: You are the last person on this river who can do anything about that.
+~ asked true
+-> passenger_choice
+
+== passenger_choice ==
+The holdall is heavy. She has not put it down, which tells you she expects to be told no.
+
+* Pole her across. -> cross_now
+* Tell her to come back Monday. -> defer
+
+== cross_now ==
+bg far_bank
+sfx footstep
+You pole her across. It takes four minutes, which it has taken four minutes for nineteen years.
+She steps off onto the far stones and does not thank you, and then does, and then goes,
+and the last thing you hear is the holdall knocking against the lane wall going up.
+
+You pole back. The river is exactly as wide going back.
+-> far_bank
+
+== far_bank ==
+bg far_bank
+music sea_swell
+Nineteen years, and the thing you will remember is not the crossing.
+It is that she did not put the holdall down until she was on the far stones,
+which is what being braced looks like when nobody has been kind to you for a while.
+-> END
+
+== defer ==
+bg river_jetty
+ferry: Come back Monday. The bridge will be open and it will cost you nothing.
+passenger: And tonight it costs you four minutes.
+
+She goes back up the lane. You listen to the holdall the whole way, which is a long way.
+~ deferred_once true
+-> night_two
+
+== night_two ==
+bg river_jetty
+music sea_swell
+The next night. Same bell, same water, and you are early because you told yourself you would be.
+
+The bell goes at half eleven, which is earlier than last night, which means she has been walking
+around the lane for an hour deciding whether to come back.
+
+* Answer it. -> passenger_two
+* Sit down on the jetty and wait for the bell to stop. -> wait_two
+
+== wait_two ==
+bg river_jetty
+You sit on the planks. The bell goes three times and stops, and then goes once more, which is either
+her making sure or her giving up, and you will never know which, and that is the part you keep.
+~ deferred_twice true
+-> night_three
+
+== passenger_two ==
+bg river_jetty
+ferry: It is midnight again.
+passenger: It was always going to be midnight.
+passenger: Are you poling or are you standing?
+
+* Pole her across. -> cross_late
+* Say not tonight. -> not_tonight
+
+== not_tonight ==
+bg river_jetty
+ferry: Not tonight.
+passenger: Monday, then. And you will be on the jetty watching the bridge, and I will be on it,
+passenger: and neither of us will say anything about tonight, because there will not be a tonight.
+~ deferred_twice true
+-> night_three
+
+== cross_late ==
+bg far_bank
+sfx footstep
+You pole her across. It takes four minutes and then the second four minutes coming back,
+and you are in bed by one, and nobody will ever know, and that is what makes it a job
+rather than a favour.
+~ crossed true
+-> dawn_river
+
+== night_three ==
+bg river_jetty
+music sea_swell
+Sunday. The last night the jetty is anything.
+
+She is already on the jetty when you get there, sitting on the planks with the holdall on her knees
+and a ticket in her coat pocket that says Monday, because the bridge does not need you to be brave,
+it only needs you to be patient.
+
+ferry: You have a ticket.
+passenger: It was cheaper than the fare a person would have charged me.
+passenger: I came down to give you the last night.
+
+* Pole her across tonight. -> cross_final
+* Sit down beside her and do not pole anybody anywhere. -> sit_final
+* Tell her you heard the bell. Both times. -> confess [if !deferred_once]
+* Tell her you stood on the planks and let it ring. -> confess [if deferred_twice]
+
+== confess ==
+bg river_jetty
+ferry: I heard it. I stood on these planks and let it ring.
+passenger: I know. I watched you not answer it.
+passenger: That is why I got the ticket.
+~ confessed true
+-> night_three_choice
+
+== night_three_choice ==
+The water goes past. She has put the holdall down on the planks, which is new.
+
+* Pole her across. -> cross_final
+* Sit down beside her. -> sit_final
+* Ask her what she told her sister. -> sister [if asked]
+
+== sister ==
+bg river_jetty
+passenger: I told her I had a way of getting there.
+passenger: I did not tell her that it was a man on a jetty at midnight who keeps saying not yet.
+passenger: She would have asked me what he was like, and I would have had to say kind,
+passenger: and then she would have wanted to meet you, and you are not somebody anybody meets.
+-> night_three_choice
+
+== sit_final ==
+bg river_jetty
+You sit down. The planks are cold and the river goes past and neither of you says much,
+and after a while she says the thing that you will end up telling whoever asks you about it.
+
+passenger: It was never the crossing.
+passenger: It was that there was a person down here at midnight with a pole.
+-> dawn_river
+
+== cross_final ==
+bg far_bank
+sfx footstep
+You pole her across on the last night. It takes four minutes. It takes four minutes every time.
+She steps off onto the far stones and puts the holdall down and turns round, which is a thing
+she has not done any of the other nights.
+passenger: Thank you. I would have understood if you had not.
+ferry: I know.
+~ crossed true
+-> dawn_river
+
+== dawn_river ==
+bg dawn_river
+music sea_swell
+The morning comes the way mornings do: without ceremony and slightly early, and the crane has moved.
+
+The bridge opens at nine. It is a good bridge. It will do the job for sixty years
+and nobody will ever be down here at midnight because of it.
+
+You pole across once more with nothing to carry, because the jetty is yours until Monday
+and a man is allowed to finish the thing he started.
+
+* Say it out loud. -> last_word [if confessed]
+* Say it out loud anyway. -> last_word [if !confessed]
+* Think about the four minutes. -> four_minutes [if crossed]
+* Let the water say it. -> END
+
+== last_word ==
+ferry: That is the last crossing.
+ferry: Somebody should say it out loud.
+-> END
+
+== four_minutes ==
+bg dawn_river
+Four minutes each way. It has taken four minutes for nineteen years and it will take four minutes
+exactly once more, with nothing to carry.
+
+Nobody will ever ask you what you did on the last night the jetty was anything.
+You will answer it anyway, in your own head, for years: I poled her across.
+
+ferry: That is the last crossing.
+-> END
+
+== dawn_bridge ==
+bg dawn_bridge
+sfx bell
+The morning comes the way mornings do: without ceremony and slightly early.
+
+The bridge opens at nine, and people walk across it the way people walk across new things,
+which is quickly, and looking at their feet.
+
+You did not pole anybody anywhere on any of the last three nights. Nobody will ever know that either.
+There is a bell on the jetty and it still rings, and it will ring for a while, and then it will be
+an old bell over water that nobody hears.
+
+ferry: Monday.
+
+-> END

@@ -92,9 +92,12 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Five stories** — `overtime`, `the-lamp-room`, `the-discrepancy`, `the-water-line`, and `night-shift` (a
-  test fixture). Four of them are stories you can play; each has its own register and its own art, and each is
-  audited rather than asserted. See "What is in here" below.
+- **Eleven stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+  `the-lamp-room`, `the-discrepancy`, `the-water-line` and `the-last-crossing`, plus `night-shift` (a test
+  fixture). Ten are stories you can play, each with its own register, and each is audited rather than asserted —
+  `tools/audit-stories.sh` prints every one with its scene and ending counts. This bullet said "five" and named
+  five while `stories/` held eleven, which is the same fault as a comment that outlives its code: nothing was
+  checking it, and the five newest were missing from it. See "What is in here" below.
 - **Holdfast** — the platformer, and the oldest thing here. It was "Fruit Jump" as a working title until
   2026-10-04; the name is settled now, and the premise it already had is the one it keeps: *a climber, a sunset,
   and a way home.* It has water: pools
@@ -296,6 +299,34 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`stories/the-water-line.aside`** — an archivist in a city that is flooding, moving the collection up a floor
   every few years and deciding what gets carried. 18 scenes, 103 beats, 25 choice options, CLEAN. Three narrative
   endings again, and the one that costs the most is the one where you take nothing.
+- **`stories/two-of-everything.aside`** — a brother and a sister clearing out their mother's house in a weekend.
+  **The first story here with two people in it** — the five before it are each one person alone with a task — and
+  its subject is a house where two people disagreed and neither of them ever threw anything away. 11 scenes, 3
+  endings.
+- **`stories/bell-codes.aside`** — a signalman works the last night in a mechanical signal box before the panel at
+  the regional centre takes the line. **The first story here that insists on nothing supernatural at all.** What
+  goes when the box closes is not the labour — it is the courtesy: the five beats the book does not list, because
+  the book records codes and the men had manners. 9 scenes, 3 endings.
+- **`stories/ninety-days.aside`** — a lost-property office on disposal day, and **the first story here with a
+  different shape**: a hub rather than a chain. You stand in one room with a shelf, choose what to look at, and
+  come back; the ending depends not on WHICH item you chose but on HOW MANY you bothered to, which is a different
+  question and the reason the shape is worth having. 13 scenes, 3 endings.
+- **`stories/a440.aside`** — **the first story here that is not a choice tree.** It does not branch until its last
+  scene, because it is a recollection and the past is not a thing you choose; the one choice is which memory the
+  narrator settles on. A piano tuner, forty years of other people's instruments, and the one piano they could not
+  finish. 9 scenes, 3 endings.
+- **`stories/changeover.aside`** — two projectionists who ran a cinema together and are no longer in the same
+  building, and **the first story here with two narrators**: every scene is a letter, and the reader sees both
+  sides while neither of them does. A letter cannot be unsent, so a choice in one scene becomes a fact the other
+  person has to answer in the next. 13 scenes, 3 endings.
+- **`stories/the-last-crossing.aside`** — a ferryman, a rope ferry, and the last three nights before a bridge
+  opens and makes him unnecessary. **The first story here that offers the same decision more than once**: he is
+  asked the same question at the same waterline three nights running, and the only thing that changes between
+  them is how many times he has said not yet, so the flags are the entire engine of the story. Nothing is broken,
+  nobody is cruel, and the work was good for nineteen years — which is what makes it the first story here about a
+  job that is ENDING rather than one being done badly. **Its backgrounds are borrowed** from the lamp room's
+  coast rather than drawn, which is the remaining work and the reason "its own art" is not yet true of it.
+  28 scenes, 4 endings.
 - **`stories/night-shift.aside`** — **a test fixture, not a story.** It contains deliberately planted
   problems (an unreachable scene, a variable typo, beats after a jump, and a fork whose choices do
   nothing) so the self-test can assert the auditor catches them. It is written to be read as well as
