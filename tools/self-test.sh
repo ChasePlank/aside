@@ -139,20 +139,36 @@ fi
 # ---- audit-stories.sh must notice a story claiming to be later than the library -------------------------------
 # THE FAULT IS THE ONE THAT ACTUALLY HAPPENED: A440 said "TENTH REGISTER" when there were nine stories, and nothing
 # would have caught it. The count only came right by accident when a tenth was written.
+#
+# THE INJECTED ORDINAL IS DERIVED NOW, NOT TYPED, and that is the second version. It used to replace NINTH with a
+# hardcoded ELEVENTH - and the day an eleventh story was actually written, claiming eleven stopped being an
+# over-claim, so the injection injected nothing and this block reported "reported clean with a story claiming to be
+# 11 of 10" against a library that legitimately has eleven. Same shape as the tutorial-count fixture fixed the day
+# before: A FIXTURE THAT COPIES THE CURRENT VALUE BREAKS ON THE ONE OCCASION IT EXISTS FOR.
 if [ -x tools/audit-stories.sh ] && [ -f stories/a440.aside ]; then
-  STORY_BAK=$(mktemp); cp stories/a440.aside "$STORY_BAK"
-  python3 - <<'PY'
-p='stories/a440.aside'; s=open(p).read()
+  STORIES=$(ls stories/*.aside 2>/dev/null | wc -l | tr -d ' ')
+  WORDS=(ZERO FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH EIGHTH NINTH TENTH ELEVENTH TWELFTH THIRTEENTH
+         FOURTEENTH FIFTEENTH SIXTEENTH)
+  OVER=$((STORIES + 1))
+  OVER_WORD="${WORDS[$OVER]:-}"
+  if [ -z "$OVER_WORD" ]; then
+    bad "audit-stories.sh notices an over-claimed ordinal" "no ordinal word for $OVER stories - extend the table"
+  else
+    STORY_BAK=$(mktemp); cp stories/a440.aside "$STORY_BAK"
+    python3 - "$OVER_WORD" <<'PY'
+import sys
+p = 'stories/a440.aside'; s = open(p).read()
 old = 'NINTH REGISTER'
 assert old in s, 'the ordinal is not there to change'
-open(p,'w').write(s.replace(old, 'ELEVENTH REGISTER', 1))
+open(p, 'w').write(s.replace(old, sys.argv[1] + ' REGISTER', 1))
 PY
-  out=$(tools/audit-stories.sh 2>&1); rc=$?
-  restore_story
-  if [ $rc -ne 0 ] && echo "$out" | grep -q "claims to be story 11"; then
-    ok "audit-stories.sh notices an over-claimed ordinal" "$(echo "$out" | grep 'highest ordinal' | tr -s ' ')"
-  else
-    bad "audit-stories.sh notices an over-claimed ordinal" "reported clean with a story claiming to be 11 of 10"
+    out=$(tools/audit-stories.sh 2>&1); rc=$?
+    restore_story
+    if [ $rc -ne 0 ] && grep -q "claims to be story $OVER" <<<"$out"; then
+      ok "audit-stories.sh notices an over-claimed ordinal" "$(echo "$out" | grep 'highest ordinal' | tr -s ' ')"
+    else
+      bad "audit-stories.sh notices an over-claimed ordinal" "reported clean with a story claiming to be $OVER of $STORIES"
+    fi
   fi
 else
   bad "audit-stories.sh notices an over-claimed ordinal" "no audit-stories.sh or no a440.aside"
