@@ -132,9 +132,22 @@ public class Camera {
         return (worldY - (y - viewH() / 2)) * scale;
     }
     
-    /** Get parallax offset for a layer with given scroll factor (0 = fixed, 1 = camera speed). */
+    /**
+     * Get parallax offset for a layer with given scroll factor (0 = fixed in screen space, 1 = moves with camera).
+     *
+     * <p>RETURNED THE COMPLEMENT UNTIL 2026-10-08, and nothing noticed because nothing had ever called it. The
+     * doc comment above says 0 = fixed and 1 = camera speed; ParallaxLayer's says the same and adds "far layers
+     * (low factor) move slowly"; the factories are {@code far(0.3)} and {@code near(0.6)}. The body was
+     * {@code x * (1 - scrollFactor)}, which under that contract makes the FAR layer move at 70% and the NEAR one
+     * at 40% - the two of them swapped, and both of them wrong at the ends (a layer that should sit still in the
+     * sky would have travelled with the world). Three documents agreed with each other and disagreed with the
+     * code, which is the shape of defect this project keeps finding: an unwired feature has no consumer to
+     * disagree with it, so it is only ever as correct as the day it was written.
+     *
+     * <p>Found by wiring the thing, which is the argument for wiring or deleting dead code rather than leaving it.
+     */
     public double parallaxOffset(double scrollFactor) {
-        // Layer moves less than camera, creating depth
-        return x * (1 - scrollFactor);
+        // Layer moves less than camera, creating depth.
+        return x * scrollFactor;
     }
 }

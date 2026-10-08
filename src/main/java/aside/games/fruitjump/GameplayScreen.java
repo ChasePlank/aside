@@ -56,6 +56,19 @@ public class GameplayScreen extends UiScreen {
     private final Camera camera;
     private final int levelNum;
 
+    /** Ridge profiles, as fractions of one period across and of the layer's amplitude up. Jagged rather than
+     *  smooth on purpose: a smooth hill on a horizon reads as a smudge, and the four other screens that draw this
+     *  horizon (Skyline) use a polygon ridge for the same reason. */
+    private static final double[] RIDGE_X = {0.00, 0.13, 0.26, 0.44, 0.57, 0.71, 0.88, 1.00};
+    private static final double[] RIDGE_H = {0.58, 0.18, 0.46, 0.04, 0.34, 0.12, 0.42, 0.58};
+    /** One ridge period, logical px. Wide enough that the repeat is not obvious at 800 logical px of viewport. */
+    private static final double RIDGE_PERIOD = 640;
+
+    /** The two background ridges. far() scrolls at 30% of the camera and near() at 60%, which is what makes the
+     *  sky read as depth rather than as a flat panel - the whole point of the class, and it had no consumer. */
+    private final ParallaxLayer ridgeFar;
+    private final ParallaxLayer ridgeNear;
+
     // The climber's current look (hair length grid + hair/pack palette).
     private final Sprites.Look look;
     /** Floating tutorial words, or null on a generated level. */
@@ -179,6 +192,12 @@ public class GameplayScreen extends UiScreen {
         camera = new Camera(CANVAS_W, CANVAS_H);
         camera.setScale(SCALE);
         camera.setRoom(LEVEL_W * 32, LEVEL_H * 32);
+
+        // The ridges behind the level. Vertical positions are in PHYSICAL px and stay put while the camera moves
+        // vertically, which is what ParallaxLayer documents ("fixed for now, could be parallax too") - and it is
+        // the behaviour that suits a horizon: the ground rises and falls in front of it, the hills do not.
+        ridgeFar = ParallaxLayer.far(CANVAS_H * 0.72);
+        ridgeNear = ParallaxLayer.near(CANVAS_H * 0.80);
 
         // Weapons
         hookshot = new Hookshot(player);
@@ -417,6 +436,18 @@ public class GameplayScreen extends UiScreen {
             gc.fillOval(CANVAS_W / 2.0 - sunR * 0.62, CANVAS_H * 0.38 - sunR * 0.72,
                         sunR * 1.24, sunR * 1.24);
         }
+
+        // TWO RIDGES, at 30% and 60% of the camera's speed. Between the sun and the terrain there was nothing but
+        // flat orange - the sun is deliberately screen-anchored because it is meant to read as far away, and the
+        // terrain is nearest, so with no layer in between the sky had no depth at all and the parallax machinery
+        // sat unused ("ParallaxLayer: nothing names it at all", the wiring report).
+        //
+        // The colours are a ramp rather than two choices: sky #E8763A, then farther #9C4E2C, then nearer #4A2417,
+        // then the terrain's own near-black #0D0A09. Each step darkens toward the player, which is what makes the
+        // distance read - the ground is not "behind" the hills because it was drawn later, it is in front because
+        // it is darker.
+        drawRidge(ridgeFar, Color.web("#9C4E2C"), 0.10);
+        drawRidge(ridgeNear, Color.web("#4A2417"), 0.07);
 
         // Underground background: for each column, everything from the
         // topmost ground cell down is INSIDE the terrain, not open sky.
@@ -798,6 +829,55 @@ public class GameplayScreen extends UiScreen {
             if (d.aabb() == t) return true;
         }
         return false;
+    }
+
+    /**
+     * One ridge, tiled across the viewport and scrolled at its layer's rate.
+     *
+     * <p>Deliberately a procedural polygon and not a sprite. The README's own note on this item was that the
+     * layers "need something to draw, so this one comes with art or with a procedural shape standing in for it",
+     * and a polygon has an advantage a sprite would not: it tiles, so the depth reads at any camera position
+     * instead of running out at the end of a finite strip. The other four screens that draw this game's horizon
+     * already do it this way.
+     *
+     * <p>Units, because they are not the same and the difference is easy to get wrong: the horizontal shift
+     * comes from the layer in LOGICAL px (camera space) and is scaled to physical px here; the vertical position
+     * is the layer's own offsetY, already in physical px.
+     */
+    private void drawRidge(ParallaxLayer layer, Color colour, double amplitudeFraction) {
+        final double S = SCALE;
+        double period = RIDGE_PERIOD * S;
+        double shift = -layer.getOffsetX(camera) * S;
+        double baseline = layer.getOffsetY();
+        double amplitude = amplitudeFraction * CANVAS_H;
+
+        // ONE POLYGON ACROSS THE WHOLE SPAN, not one per period. Tiling it and fixing the seam by overlapping
+        // adjacent tiles by a pixel did NOT work - the shared edge is a slanted line meeting a vertical one, and
+        // the seam survived at (174,87,47) against the ridge's (156,78,44), a 22% blend with the sky. Measured
+        // twice: once to see it, once to find the overlap had not shifted it. A single polygon has no internal
+        // edges to blend, which is the only version of this that cannot have the fault.
+        int n = RIDGE_X.length;
+        int firstTile = (int) Math.floor(-shift / period) - 1;
+        int lastTile = (int) Math.ceil((CANVAS_W - shift) / period) + 1;
+        int points = n + (lastTile - firstTile) * (n - 1) + 2;
+        double[] px = new double[points];
+        double[] py = new double[points];
+        int k = 0;
+        for (int t = firstTile; t <= lastTile; t++) {
+            double x0 = shift + t * period;
+            // Skip the tile's first point after the first tile: consecutive periods share it, and two identical
+            // consecutive vertices are the kind of thing that draws a hairline nobody can explain later.
+            for (int i = (t == firstTile ? 0 : 1); i < n; i++) {
+                px[k] = x0 + RIDGE_X[i] * period;
+                py[k] = baseline - RIDGE_H[i] * amplitude;
+                k++;
+            }
+        }
+        // Down the right edge, along the bottom, and the closing edge runs back up the left one.
+        px[k] = px[k - 1]; py[k] = CANVAS_H; k++;
+        px[k] = px[0];     py[k] = CANVAS_H; k++;
+        gc.setFill(colour);
+        gc.fillPolygon(px, py, k);
     }
 
     private void drawGroundTile(Physics.AABB t, java.util.HashSet<Long> solidCells) {

@@ -1036,6 +1036,7 @@ public class SelfTest {
                 + doorFailures + " unfinished)", doorFailures == 0);
 
         tutorialLevelsArePlayable();
+        parallaxLayersScaleWithTheirFactor();
 
         // The release's pocket test, ported. It is the only check that exercises bomb -> cracked
         // FLOOR -> fall through with real physics, and until now aside had no floor pocket at all.
@@ -1222,6 +1223,47 @@ public class SelfTest {
         check("tutorial: the bot finishes every level that needs only jumping (" + botFinished + "/"
                 + botChecked + " checked; skipped as bomb-only: " + skipped.toString().trim() + ")",
                 botChecked > 0 && botFinished == botChecked);
+    }
+
+    /**
+     * A parallax layer's offset must be proportional to ITS OWN factor, and in the direction that factor means.
+     *
+     * <p>Written the day the feature was first wired, because that is when the bug was found and it had been there
+     * the whole time: {@code Camera.parallaxOffset} returned {@code x * (1 - scrollFactor)} - the complement of its
+     * own doc comment ("0 = fixed in screen space, 1 = moves with camera") and of {@code ParallaxLayer}'s ("far
+     * layers (low factor) move slowly"). Under that formula the FAR layer moved at 70% of the camera and the NEAR
+     * one at 40%: swapped, and both wrong at the ends, where a layer meant to sit still in the sky would have
+     * travelled with the world. Three documents agreed with each other and disagreed with the code, and nothing
+     * noticed because the class had no consumer. This check is what stops a consumer quietly losing it again.
+     *
+     * <p>The assertions are RELATIONAL and deliberately do not name the camera's x, which no public method
+     * exposes. That also makes them stronger than a spot value: the ratio 0.6/0.3 = 2 and the ordering
+     * 0 &lt; far &lt; near &lt; camera are exactly what the inversion breaks, and neither can be satisfied by
+     * accident.
+     *
+     * <p>The first check is that the camera actually MOVED. Without it, a camera at x = 0 makes every offset 0 and
+     * every assertion below true - a check that cannot fail, which is the defect this file exists to avoid.
+     */
+    static void parallaxLayersScaleWithTheirFactor() {
+        aside.games.fruitjump.engine.Camera cam = new aside.games.fruitjump.engine.Camera(1600, 1200);
+        cam.setScale(1.0);
+        cam.setRoom(20000, 5000);
+        for (int i = 0; i < 240; i++) cam.update(1.0 / 60, 4000, 1000, 0);
+
+        double fixed = cam.parallaxOffset(0.0);
+        double far = cam.parallaxOffset(0.3);
+        double near = cam.parallaxOffset(0.6);
+        double withCamera = cam.parallaxOffset(1.0);
+
+        check("parallax: the camera moved, so the offsets below are not all zero (x = "
+                + String.format("%.1f", withCamera) + ")", withCamera > 100.0);
+        check("parallax: factor 0 is FIXED in screen space, not travelling with the world", fixed == 0.0);
+        check("parallax: a higher factor moves more - 0 < far < near < camera ("
+                + String.format("%.1f < %.1f < %.1f < %.1f", fixed, far, near, withCamera) + ")",
+                fixed < far && far < near && near < withCamera);
+        check("parallax: the rates are proportional - near is exactly twice far ("
+                + String.format("%.1f vs %.1f", near, 2 * far) + ")",
+                Math.abs(near - 2 * far) < 1e-6);
     }
 
     /**
