@@ -1038,6 +1038,7 @@ public class SelfTest {
         tutorialLevelsArePlayable();
         parallaxLayersScaleWithTheirFactor();
         theRunHasAnEnd();
+        theRunContainsTheGame();
         roomsModeHasAWayOut();
         soundHonoursTheGlobalMuteAndVolume();
 
@@ -1282,6 +1283,70 @@ public class SelfTest {
         s.play("land");
         boolean down = cues.size() == 4 && vols.get(3) == 0.0;
         check("sound: volume is clamped to 0..1, so a caller cannot hand the sink a nonsense level", up && down);
+    }
+
+    /**
+     * Every mechanic the game can put in a level must turn up somewhere in a generated run.
+     *
+     * <p><b>THIS IS THE CHECK FOR THE FAULT THAT HAS COST THREE HOURS IN THREE DAYS.</b> The boss was wired, drawn
+     * and taught on tutorial level 11 and no generated level has ever contained one. The moving platform was wired,
+     * drawn and taught on level 10, and `LevelGen` had never called `addMover` - so across forty levels a player
+     * would not meet the thing the tutorial taught. One-way planks were in the parser, in the physics and in the
+     * tutorial, and appeared on NONE of forty generated levels. Each was found by hand, one mechanic at a time,
+     * days apart. A tutorial is where a mechanic is taught; THE RUN IS WHERE IT HAS TO APPEAR.
+     *
+     * <p>It measures rather than asserts a list: generate a long run and count what turns up. The range is 120
+     * levels rather than 40 because the thinnest mechanics are genuinely rare - spikes land on 5 of 120 and one-way
+     * planks on 6 - and a check that passes by a margin of one is a check that fails when a seed changes. 120
+     * levels generate in under a tenth of a second, so the width is free.
+     *
+     * <p><b>THE CELL SYMBOLS ARE LevelMap's PARSER'S AND ARE NOT GUESSED.</b> The first version of this measurement
+     * used 'P' for a piranha - that is the PLAYER SPAWN - and 'B' for a bat - that is 'b' - and duly reported forty
+     * piranhas out of forty levels and no bats at all. The list below is copied from the switch in LevelMap that
+     * reads them, which is the only place that decides what a character means.
+     */
+    static void theRunContainsTheGame() {
+        final int W = 60, H = 20, LEVELS = 120;
+        final String[] names = {
+            "water", "piranhas", "spikes", "cracked floor", "one-way planks",
+            "pickups (snack/jar/coin)", "bats", "snakes", "doors or keys",
+            "moving platforms", "bosses",
+        };
+        int[] found = new int[names.length];
+
+        for (int level = 1; level <= LEVELS; level++) {
+            LevelMap m = new LevelGen(W, H, 1000L + level, level).generate();
+            boolean[] hit = new boolean[names.length];
+            for (int r = 0; r < m.heightCells(); r++) {
+                for (int c = 0; c < m.widthCells(); c++) {
+                    switch (m.cell(r, c)) {
+                        case '~': case '>': case '<': case 'V': case 'A': hit[0] = true; break;
+                        case 'f': hit[1] = true; break;
+                        case '^': hit[2] = true; break;
+                        case 'C': hit[3] = true; break;
+                        case '=': hit[4] = true; break;
+                        case 'h': case 'j': case 'o': hit[5] = true; break;
+                        case 'b': hit[6] = true; break;
+                        case 's': hit[7] = true; break;
+                        case 'D': case 'k': hit[8] = true; break;
+                        default: break;
+                    }
+                }
+            }
+            if (!m.movers.isEmpty()) hit[9] = true;
+            if (m.hasBoss()) hit[10] = true;
+            for (int i = 0; i < names.length; i++) if (hit[i]) found[i]++;
+        }
+
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        StringBuilder counted = new StringBuilder();
+        for (int i = 0; i < names.length; i++) {
+            if (found[i] == 0) missing.add(names[i]);
+            if (i > 0) counted.append(", ");
+            counted.append(names[i]).append(" ").append(found[i]);
+        }
+        check("every mechanic turns up in a generated run (" + LEVELS + " levels: " + counted + ")",
+                missing.isEmpty());
     }
 
     /**

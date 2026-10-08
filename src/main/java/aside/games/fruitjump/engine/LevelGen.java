@@ -115,6 +115,9 @@ public class LevelGen {
      */
     public static final int MOVER_EVERY = 3;
 
+    /** How often a run gets a one-way plank: every fourth level. See the placement for why it exists at all. */
+    public static final int PLANK_EVERY = 4;
+
     final int width, height;
     final Random rng;
     final int levelNum;
@@ -718,6 +721,26 @@ public class LevelGen {
         }
 
         // Assemble rows (top to bottom)
+        // A ONE-WAY PLANK OVER A GAP, every fourth level that is not already getting a ferry. A one-way platform is
+        // the thing you jump up THROUGH and then stand on, and until now the generated run never contained one: a
+        // coverage probe over levels 1 to 40 found water on 18, cracked floor on 36, bats on 36, snakes on 26,
+        // pickups on 29 - and ONE-WAYS ON NONE. Fourth time this shape has turned up in three days (the boss, the
+        // ending, the mover): the mechanic exists, the tutorial teaches it, and the run never shows it.
+        //
+        // Written straight into the grid rather than declared as a spec, because a one-way IS a cell - LevelMap
+        // parses '=' into world.oneways. One row above the walk, over a gap: the plank is a bridge you can jump
+        // onto, the water below is what it is, and the gap was already jumpable so the plank is a route rather
+        // than the route.
+        if (levelNum > 0 && levelNum % PLANK_EVERY == 0 && levelNum % MOVER_EVERY != 0) {
+            int[] gap = ferryGap(g);
+            if (gap != null) {
+                int row = gap[1] - 1;
+                for (int c = gap[0] - 1; c <= gap[0] + 1; c++) {
+                    if (c > 0 && c < width - 1 && g[row][c] == ' ') g[row][c] = '=';
+                }
+            }
+        }
+
         List<String> rows = new ArrayList<>();
         for (char[] row : g) rows.add(new String(row));
         this.lastMap = new LevelMap(rows);
