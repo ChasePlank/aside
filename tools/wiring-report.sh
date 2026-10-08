@@ -18,7 +18,20 @@
 #      the moving-platform list: `movers` is filled by `addMover`, `addMover` is never called, so the list is
 #      always empty and the physics loop over it does nothing forever. Counting `list.add(` inside its own
 #      accessor is what makes a naive check miss this.
-#   3. Setters on engine fields that nothing calls, for the same reason.
+#   3. Mutators on engine fields that nothing calls, for the same reason.
+#
+# AND THE CALLER TEST IS BY NAME, WHICH IS A KNOWN WEAKNESS. This file's own warning is that "guessing names is
+# the failure mode", and section 3 guesses: it asks whether anything anywhere calls `.<name>(`, which cannot see
+# the TYPE of the receiver. Found on 2026-10-08: `AudioSystem.toggleMute` has no caller in the game, and this
+# report does not list it, because UiManager calls `Audio.A.toggleMute()` - a different class's method that
+# happens to share the name. A name collision anywhere in the tree therefore makes a dead method look alive, and
+# that method was instead found by reading the class by hand.
+#
+# It is left name-based rather than "fixed" with a heuristic, because the obvious fix - require the calling file
+# to name the declaring class - would produce FALSE DEAD reports for every call through a variable (`body.setX()`
+# where the declaring class is never spelled out), and a false report is the failure this whole file exists to
+# avoid. So the limitation is written down instead of half-solved. Anything section 3 does NOT list is "called
+# somewhere, by something", not "called by the right thing".
 #
 # IT IS A REPORT, NOT A GATE. Dead code is a decision - wire it or delete it - and these four have been waiting
 # on that decision since 2026-10-02. A report that fails every run would be turned off. What it must not be is
@@ -73,9 +86,15 @@ done
 [ "$found" = "0" ] && echo "  none"
 
 echo
-echo "=== engine setters nothing calls ==="
+echo "=== engine mutators nothing calls ==="
+# BOTH SHAPES, and the second one is why this line changed. The scan used to be `public void set[A-Z]*` only,
+# so a method named toggleMute() was invisible to it - and AudioSystem.toggleMute had no caller at all, which
+# went unnoticed for a day and was found by reading the class by hand rather than by this report. A scan pattern
+# is a claim about what the code looks like, and the thing it cannot see is the thing it will never report.
+# Kept to two shapes rather than a general "public void <verb>" sweep, because a broad pattern turns a report
+# about dead code into a list of every method with a conventional name.
 found=0
-for m in $(grep -rhoE "public void set[A-Z][A-Za-z]*\(" "$ENGINE"/*.java | sed 's/public void //; s/($//' | tr -d '(' | sort -u); do
+for m in $(grep -rhoE "public void (set|toggle)[A-Z][A-Za-z]*\(" "$ENGINE"/*.java | sed 's/public void //; s/($//' | tr -d '(' | sort -u); do
   callers=$(grep -rn "\.$m(" "$SRC" --include=*.java 2>/dev/null | grep -vE "(Test|Suite)\.java$" | grep -vE "public void $m\(" | wc -l)
   if [ "$callers" = "0" ]; then printf '  %-22s never called\n' "$m"; found=$((found+1)); FINDINGS="$FINDINGS $m"; fi
 done
