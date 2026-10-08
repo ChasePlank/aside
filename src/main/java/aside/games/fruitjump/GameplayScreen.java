@@ -110,7 +110,7 @@ public class GameplayScreen extends UiScreen {
     }
 
     /**
-     * Tutorial mode. A SEPARATE mode rather than the first nine levels of every
+     * Tutorial mode. A SEPARATE mode rather than the first ten levels of every
      * run - a returning player should not have to sit through the explanations
      * again (Kinger, Sept 29).
      */
@@ -550,6 +550,23 @@ public class GameplayScreen extends UiScreen {
             gc.setFill(Color.web("#8B5A2B"));
             gc.fillRect(sx, sy, w, h);
             gc.setFill(Color.web("#DAA520"));
+            gc.fillRect(sx, sy, w, 8);
+        }
+        // Moving platforms. Drawn, because an engine feature the game builds and does not draw is the exact bug
+        // this project has fixed three times (bats, particles, splash) - and a platform you cannot see is worse
+        // than one that does not exist, since the player is carried by something they cannot locate.
+        //
+        // A DELIBERATELY DIFFERENT PALETTE from the one-way platform immediately above (#8B5A2B body, #DAA520
+        // rim). Those are static and these move, and the two must not read as the same object before the player
+        // has seen one move - which is the one moment the distinction has to land.
+        for (MovingPlatform m : world.movers) {
+            Physics.AABB a = m.aabb();
+            double sx = camera.worldToScreenX(a.x0), sy = camera.worldToScreenY(a.y0);
+            double w = (a.x1 - a.x0) * S, h = (a.y1 - a.y0) * S;
+            if (sx > CANVAS_W || sy > CANVAS_H || sx + w < 0 || sy + h < 0) continue;
+            gc.setFill(Color.web("#2E3A46"));
+            gc.fillRect(sx, sy, w, h);
+            gc.setFill(Color.web("#7FD4E8"));
             gc.fillRect(sx, sy, w, 8);
         }
         // Spikes: sprite (32 logical → 64 physical)

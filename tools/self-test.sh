@@ -205,51 +205,73 @@ else
   bad "find-drift reports the band between its thresholds" "a small edit to a long line was reported nowhere"
 fi
 
-# ---- check-tutorial-counts.py must notice the claim SPELLED AS A WORD ------------------------------------------
+# ---- check-tutorial-counts.py must notice a claim SPELLED AS A WORD -------------------------------------------------
 # THE INJECTION THAT WAS MISSING WHERE IT MATTERED. A check for this exact class of staleness already existed in the
-# release repository, and its self-test injected the phrase it was written for - `ends at 8` - so it passed for
+# release repository, and its self-test injected the phrasing it was written for - `ends at 8` - so it passed for
 # months while four comments across the two repositories said "eight hand-built levels". A self-test that only
 # exercises the shape the implementer was already thinking about certifies the blind spot. This injects the shape
 # that actually escaped.
-TUT_BAK=$(mktemp); cp "$TUT_FILE" "$TUT_BAK"
-sed -i 's/first nine levels/first eight levels/' "$TUT_FILE"
-if ! grep -q "first eight levels" "$TUT_FILE"; then
-  bad "check-tutorial-counts notices a word-form count" "the injection did not apply"
+#
+# NOTHING HERE NAMES A NUMBER, and that is the second version. The first hardcoded `first nine levels` and
+# `int LAST = 9`, and the moment the tutorial grew a tenth level all three blocks stopped applying - they said so,
+# because each greps for its own injection first - but a test whose fixture is a copy of the current value breaks
+# every time the value changes, which is the one occasion it exists for. The wrong value is DERIVED now: one more
+# than the code says, so it is wrong whatever the code says.
+WORD_OF=(zero one two three four five six seven eight nine ten eleven twelve)
+LAST_N=$(grep -oE "int LAST = [0-9]+" "$LAST_FILE" | grep -oE "[0-9]+" | head -1)
+WRONG_W="${WORD_OF[$((LAST_N + 1))]:-}"
+if [ -z "$WRONG_W" ]; then
+  bad "check-tutorial-counts notices a word-form count" "cannot derive a wrong count: LAST=$LAST_N is past the word table"
 else
-  out=$(python3 tools/check-tutorial-counts.py 2>&1); rc=$?
-  if [ $rc -ne 0 ] && echo "$out" | grep -q "STALE"; then
-    ok "check-tutorial-counts notices a word-form count" "$(echo "$out" | grep -m1 'STALE' | tr -s ' ')"
+  TUT_BAK=$(mktemp); cp "$TUT_FILE" "$TUT_BAK"
+  printf '\n// injection: %s hand-built levels\n' "$WRONG_W" >> "$TUT_FILE"
+  if ! grep -q "injection: $WRONG_W hand-built levels" "$TUT_FILE"; then
+    bad "check-tutorial-counts notices a word-form count" "the injection did not apply"
   else
-    bad "check-tutorial-counts notices a word-form count" "reported clean with a comment saying eight"
+    out=$(python3 tools/check-tutorial-counts.py 2>&1); rc=$?
+    if [ $rc -ne 0 ] && echo "$out" | grep -q "STALE"; then
+      ok "check-tutorial-counts notices a word-form count" "$(echo "$out" | grep -m1 'STALE' | tr -s ' ')"
+    else
+      bad "check-tutorial-counts notices a word-form count" "reported clean with a comment saying $WRONG_W"
+    fi
   fi
+  restore_tut
 fi
-restore_tut
 
 # ---- and it must stay QUIET about a claim it is only DISCUSSING ---------------------------------------------------
 # A NEGATIVE TEST, which the block above cannot be. The tool skips quoted text, because Tutorial.java's header
 # quotes the old wrong wording in order to record the mistake - so a check that could not tell a quoted claim from
-# an asserted one would fail on the correction itself. That makes "does not fire" the correct behaviour here. A rule
-# tested only in the firing direction is not tested, and if the quote-skipping breaks, nothing else here notices.
-TUT_BAK=$(mktemp); cp "$TUT_FILE" "$TUT_BAK"
-sed -i 's/first nine levels/claims to be the "first eight levels"/' "$TUT_FILE"
-if ! grep -q '"first eight levels"' "$TUT_FILE"; then
-  bad "check-tutorial-counts ignores a quoted claim" "the injection did not apply"
+# an asserted one would fail on the correction itself. That makes "does not fire" the correct behaviour here, and
+# a rule tested only in the firing direction is not tested. If the quote-skipping breaks, nothing else notices.
+#
+# THE SAME WRONG VALUE, QUOTED, so the two blocks differ in exactly one thing - whether the claim is asserted or
+# discussed - and a difference of behaviour can only come from that.
+if [ -z "$WRONG_W" ]; then
+  bad "check-tutorial-counts ignores a quoted claim" "cannot derive a wrong count: LAST=$LAST_N"
 else
-  out=$(python3 tools/check-tutorial-counts.py 2>&1); rc=$?
-  if [ $rc -eq 0 ]; then
-    ok "check-tutorial-counts ignores a quoted claim" "quoted text did not trip the tool"
+  TUT_BAK=$(mktemp); cp "$TUT_FILE" "$TUT_BAK"
+  printf '\n// injection: the header once claimed "%s hand-built levels"\n' "$WRONG_W" >> "$TUT_FILE"
+  if ! grep -q "the header once claimed \"$WRONG_W hand-built levels\"" "$TUT_FILE"; then
+    bad "check-tutorial-counts ignores a quoted claim" "the injection did not apply"
   else
-    bad "check-tutorial-counts ignores a quoted claim" "flagged quoted text: $(echo "$out" | grep -m1 'STALE' | tr -s ' ')"
+    out=$(python3 tools/check-tutorial-counts.py 2>&1); rc=$?
+    if [ $rc -eq 0 ]; then
+      ok "check-tutorial-counts ignores a quoted claim" "quoted text did not trip the tool"
+    else
+      bad "check-tutorial-counts ignores a quoted claim" "flagged quoted text: $(echo "$out" | grep -m1 'STALE' | tr -s ' ')"
+    fi
   fi
+  restore_tut
 fi
-restore_tut
 
 # ---- and it must FAIL rather than pass when it cannot read the value it compares against --------------------------
 # A TOOL THAT CANNOT RUN IS NOT A TOOL THAT PASSED. If `int LAST = ...` stops being parseable - renamed, moved, or
 # turned into a computed expression - the tool has nothing to compare a claim against, and reporting "clean" there
 # is the exact defect this project keeps finding. Exit 2, never 0.
+#
+# `[0-9]*` rather than the literal value, for the same reason as above.
 LAST_BAK=$(mktemp); cp "$LAST_FILE" "$LAST_BAK"
-sed -i 's/int LAST = 9;/int LAST = LAST;/' "$LAST_FILE"
+sed -i 's/int LAST = [0-9]*;/int LAST = LAST;/' "$LAST_FILE"
 if ! grep -q "int LAST = LAST;" "$LAST_FILE"; then
   bad "check-tutorial-counts refuses to pass without LAST" "the injection did not apply"
 else

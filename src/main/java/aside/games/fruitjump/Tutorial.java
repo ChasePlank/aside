@@ -6,18 +6,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The first nine levels are hand-built tutorials, not generated ones.
+ * The first ten levels are hand-built tutorials, not generated ones.
  *
  * Each teaches exactly one thing and shows it rather than saying it, in the
  * order the player needs it: move, fight, blast, shoot, deal with the bat,
- * know your items, know your enemies, know the ground, and know the water.
- * Level 9 ends the run back at the menu.
+ * know your items, know your enemies, know the ground, know the water, and
+ * know that the ground can move under you.
+ * Level 10 ends the run back at the menu.
  *
  * THIS HEADER SAID "eight" AND "Level 8 ends the run" LONG AFTER LEVEL 9 EXISTED. Water was added as level 9 and
  * the count and the list were not revisited, so the claim was false in the file that DEFINES `LAST` - and the
  * check written to catch exactly this class of staleness did not see it, because it greps for the phrase
  * "ends at <N>" and this file says neither "ends at" nor a digit. Two spellings of the same claim, one covered.
  * A comment naming a value is a claim; a check that matches one phrasing of it is a check with a blind spot.
+ * That check was widened on 2026-10-08 (aside/tools/check-tutorial-counts.py) and this header is one of the
+ * claims it reads, so level 10 arriving here was the first time the count propagated BECAUSE something
+ * checked it rather than because someone remembered.
  *
  * Built PROGRAMMATICALLY from a flat floor plus placed entities rather than as
  * hand-written ASCII grids. Flat rooms are exactly the shape you should
@@ -25,14 +29,14 @@ import java.util.List;
  * have to be right because they are the first thing anyone plays.
  */
 public class Tutorial {
-    public static final int LAST = 9;
+    public static final int LAST = 10;
     static final int W = 60, H = 20, FLOOR = 17;
 
     public static boolean isTutorial(int level) {
         return level >= 1 && level <= LAST;
     }
 
-    /** The last tutorial level sends the player back to the menu instead of level 10. */
+    /** The last tutorial level sends the player back to the menu instead of level 11. */
     public static boolean endsTheTutorial(int level) {
         return level == LAST;
     }
@@ -142,6 +146,34 @@ public class Tutorial {
                 // neither, because there was nothing deep enough to teach them in.
                 for (int c = 44; c <= 50; c++) { g[FLOOR - 2][c] = '~'; g[FLOOR - 1][c] = '~'; }
             }
+            case 10 -> {
+                // MOVING PLATFORM. Everything before this taught what the player CONTROLS and every hazard the
+                // world has. This one teaches something the world DOES: every other floor in the game holds
+                // still, so the difficulty is not that a player would fail to understand it - it is that there
+                // is nothing anywhere to notice.
+                //
+                // A LEDGE SIX ROWS UP with a snack on it, at the same height as level 4's - 192px, well past the
+                // 70.3px the jump actually reaches (measured, not assumed), so the lift is the way up rather than
+                // a decoration beside a step that could simply be jumped.
+                //
+                // THE LIFT HAS A BAY, and that is what makes this level pass its own gate. A platform resting on
+                // the floor anywhere along the walk is a solid obstacle in the corridor, and `SelfTest` requires
+                // a JUMP-ONLY bot to finish every tutorial level - so the level's traversability would depend on
+                // where the platform happened to be in its cycle when the bot arrived. Two cells cut out of the
+                // walk gives the lift somewhere to go: at the bottom of its travel it sits flush with the floor
+                // INSIDE the bay rather than on the path, and the bot crosses the two-cell gap by jumping it,
+                // which is well inside the four-cell gaps the generator itself produces.
+                //
+                // The bay is also the answer to falling in: it is two deep with a floor, and the lift is in it,
+                // so a player who drops in stands on the lift and rides back up. Nothing here can cost the run.
+                for (int c = 36; c <= 37; c++) { g[FLOOR][c] = ' '; g[FLOOR + 1][c] = ' '; }
+                for (int c = 38; c <= 44; c++) put(g, c, FLOOR - 6, '#');
+                put(g, 41, FLOOR - 7, 'h');   // the snack is the reason to go up
+
+                // THE PLATFORM ITSELF IS NOT IN THIS GRID. Its path is numbers - how far it travels, how long a
+                // cycle takes - and a grid holds one character per cell with no room for either. It is declared
+                // below, where the numbers can say what they are for.
+            }
             default -> { }
         }
 
@@ -152,7 +184,35 @@ public class Tutorial {
 
         StringBuilder sb = new StringBuilder();
         for (char[] row : g) sb.append(new String(row)).append('\n');
-        return LevelMap.parse(sb.toString());
+        LevelMap built = LevelMap.parse(sb.toString());
+
+        // LEVEL 10'S LIFT, and the only moving platform in the tutorial.
+        //
+        // VERTICAL, and that is a teaching decision before it is a technical one: riding is the mechanic, and a
+        // lift shows it with nothing to time. A horizontal ferry would teach it too and would make the level's
+        // one hazard a wall-clock mistake, which is the wrong lesson on the level that introduces the idea.
+        //
+        // THE NUMBERS ARE THE GEOMETRY, not taste. It rises exactly 192px, the same as level 4's ledge:
+        //   bottom - its surface at 544, the walk's own surface, so it sits flush with the floor inside its bay
+        //            and a player simply walks onto it, with no step up to judge
+        //   top    - its surface at 352, the ledge's own surface, so the step off is level
+        // Centre travel is therefore 552 down to 360: origin 456, amplitude 96.
+        //
+        // It is centred in the two-cell bay at x 1152..1216, and the ledge starts at 1216, so at the top of the
+        // travel the lift and the ledge are flush edge to edge. The lift stops BESIDE the ledge rather than
+        // under it for a reason worth keeping: a lift rising into the ledge's own tiles would carry the player
+        // up into solid stone, which is what the first draft of this level did.
+        //
+        // Period 6s over the 384px round trip: slow enough to read and to step onto, which is the only thing the
+        // timing has to be. There is no window to miss - the bay holds you if you mistime it.
+        if (level == 10) {
+            built.addMover(LevelMap.MoverSpec.vertical(
+                    37 * 32,     // x 1184: centred in the bay, right edge flush with the ledge at 1216
+                    456,         // path origin; 96px either way gives 360 (top) and 552 (bottom)
+                    64, 16,      // two cells wide, half a cell thick - exactly the bay's width
+                    96, 6.0));
+        }
+        return built;
     }
 
     /** A sealed 3x3 display box holding one enemy, for level 7. */
@@ -192,7 +252,7 @@ public class Tutorial {
                 s.add(new Sign(20 * 32, y, "ARROWS   F   -   hits what you face"));
                 s.add(new Sign(32 * 32, y, "the spiders are out of reach. shoot them"));
                 // AND THE HOOKSHOT, which the README leads with - "with hookshot, bombs, bow" - and which the
-                // tutorial never mentioned in any of its nine levels. It fires at a wall and pulls you to it, so
+                // tutorial never mentioned in any of its ten levels. It fires at a wall and pulls you to it, so
                 // it belongs on the level that is already about reaching what you cannot walk to.
                 // TWO SIGNS, AND THE SECOND IS BELOW THE FIRST'S WRAP. The first is 37 characters and wraps to a
                 // 34-character line, so its second line lands where a sign 26px below would start - which is the
@@ -238,11 +298,23 @@ public class Tutorial {
                 // controls the README documents for it - swim up and dive - are only true here.
                 s.add(new Sign(44 * 32, y - 60, "DEEP WATER"));
                 s.add(new Sign(44 * 32, y - 34, "SPACE swims up.   DOWN / S dives"));
+                s.add(new Sign(8 * 32, y + 52, "one more thing after this one"));
                 // MOVED DOWN to y + 26, from y - 8. The sign above it is 36 characters, so it WRAPS ONTO A SECOND
                 // LINE - and that line landed exactly where this one started. A sign that wraps occupies two
                 // rows, and the next sign down has to clear both.
                 s.add(new Sign(20 * 32, y + 26, "they come in groups. get out and they lose you"));
-                s.add(new Sign(44 * 32, y, "that is everything. good luck"));
+                // "that is everything. good luck" MOVED OFF THIS LEVEL when level 10 arrived. It is the
+                // tutorial's last word, and leaving it on what is now the second-to-last level would have been
+                // a small lie told just before a player met one more thing.
+            }
+            case 10 -> {
+                s.add(new Sign(24 * 32, y, "MOVING PLATFORM"));
+                s.add(new Sign(24 * 32, y + 26, "stand on it. it lifts you"));
+                s.add(new Sign(24 * 32, y + 52, "it comes back. nothing here can cost the run"));
+                // ABOVE THE LEDGE, at y - 96, not on the sign row. The ledge's own surface is at FLOOR - 6, which
+                // is ABOVE where signs are drawn by default (FLOOR - 4), so words on the usual row would have
+                // landed inside the stone - the fault level 4 records finding by rendering it.
+                s.add(new Sign(44 * 32, y - 96, "that is everything. good luck"));
             }
             default -> { }
         }

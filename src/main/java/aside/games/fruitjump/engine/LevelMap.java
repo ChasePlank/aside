@@ -41,6 +41,31 @@ public class LevelMap {
     public final List<double[]> piranhas = new ArrayList<>();  // {x, y}, always in groups
     public final List<Pickup> pickups = new ArrayList<>();
     public final List<Door> doors = new ArrayList<>();
+
+    /** Moving platforms, as SPECS rather than live objects: a map is data and the World builds the things.
+     *  <p>Not in the text grid, unlike every other entry here. A platform's path is numbers - how far it travels
+     *  and how long a cycle takes - and those have to be reasoned about against the jump height (a 70.3px apex)
+     *  rather than typed as one character carrying a hidden default. The character list above therefore does not
+     *  mention one, and this comment is here so nobody goes looking for it. See Tutorial level 10. */
+    public final List<MoverSpec> movers = new ArrayList<>();
+
+    /** One moving platform's declaration. Pixels, screen coordinates, matching World's geometry. */
+    public record MoverSpec(MovingPlatform.PathType type, double x0, double y0, double w, double h,
+                            double amplitude, double period) {
+        /** A lift: travels straight up and down from (x0, y0), by amplitude either way. */
+        public static MoverSpec vertical(double x0, double y0, double w, double h, double amplitude, double period) {
+            return new MoverSpec(MovingPlatform.PathType.VERTICAL, x0, y0, w, h, amplitude, period);
+        }
+        /** A ferry: travels left and right from (x0, y0), by amplitude either way. */
+        public static MoverSpec horizontal(double x0, double y0, double w, double h, double amplitude, double period) {
+            return new MoverSpec(MovingPlatform.PathType.HORIZONTAL, x0, y0, w, h, amplitude, period);
+        }
+    }
+
+    /** Declare a moving platform for this level. */
+    public void addMover(MoverSpec spec) {
+        movers.add(spec);
+    }
     /** Water cells as {row, col, dir}: dir 0 still, 1 right, 2 left, 3 down, 4 up. Water is not solid and
      *  never enters collision - WaterSystem applies it as forces. Ported from the Fruit-Jump release. */
     final List<int[]> waterCells = new ArrayList<>();
@@ -220,6 +245,13 @@ public class LevelMap {
         for (Door d : doors) {
             world.doors.add(d);
             world.tiles.add(d.aabb());
+        }
+
+        // Moving platforms. Kinematic: they ignore tiles and follow their own path, and World carries a body that
+        // is standing on one. Added here rather than by the screen so a level's platforms arrive with the rest of
+        // its geometry, which is also why `stale movers` on the wiring report is a map-level fact.
+        for (MoverSpec m : movers) {
+            world.addMover(new MovingPlatform(m.type(), m.x0(), m.y0(), m.w(), m.h(), m.amplitude(), m.period()));
         }
     }
 

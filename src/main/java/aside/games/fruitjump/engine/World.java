@@ -25,7 +25,11 @@ public class World {
         water.setWater(w);
     }
     public final List<Physics.AABB> oneways = new ArrayList<>(); // platforms to jump through
-    final List<MovingPlatform> movers = new ArrayList<>(); // kinematic platforms
+    // PUBLIC for the same reason the lists around it are: the screen draws this one. It was package-private,
+    // so the physics ran and the view could not render a platform - which is the shape of bug this project
+    // has already fixed three times (bats, particles, splash) but from the other end: there the game built
+    // something and did not draw it, here it could not have drawn it if it had built it.
+    public final List<MovingPlatform> movers = new ArrayList<>(); // kinematic platforms
     public final List<Projectile> projectiles = new ArrayList<>();
     public final List<Physics.AABB> cracked = new ArrayList<>(); // destroyable tiles
     public final List<Pickup> pickups = new ArrayList<>();
