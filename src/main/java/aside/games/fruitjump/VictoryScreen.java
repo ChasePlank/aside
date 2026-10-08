@@ -33,12 +33,14 @@ public class VictoryScreen extends UiScreen {
     final String enterHint;
     final java.util.function.Supplier<UiScreen> onEnter;
     final double playTime;
+    /** Coins collected, or -1 to leave them out of the line. */
+    final int coins;
 
     /** The climb: ENTER carries on from the next level. */
-    public VictoryScreen(UiManager ui, int levelsClimbed, double playTime) {
+    public VictoryScreen(UiManager ui, int levelsClimbed, double playTime, int coins) {
         this(ui, "Climbed " + levelsClimbed + " levels, and the sun went down on the way",
                 "ENTER  keep climbing",
-                () -> new GameplayScreen(ui, levelsClimbed + 1), playTime);
+                () -> new GameplayScreen(ui, levelsClimbed + 1), playTime, coins);
     }
 
     /**
@@ -49,18 +51,19 @@ public class VictoryScreen extends UiScreen {
      * so they share the horizon and differ in one line and one key. A second ending screen would have been two
      * copies of a picture that already exists twice in this project.
      */
-    public static VictoryScreen roomsOut(UiManager ui, int roomsVisited, double playTime) {
+    public static VictoryScreen roomsOut(UiManager ui, int roomsVisited, double playTime, int coins) {
         return new VictoryScreen(ui, "Found the way out, through " + roomsVisited + " rooms",
-                "ENTER  another way out", () -> new RoomsScreen(ui, 1), playTime);
+                "ENTER  another way out", () -> new RoomsScreen(ui, 1), playTime, coins);
     }
 
     private VictoryScreen(UiManager ui, String line, String enterHint,
-                          java.util.function.Supplier<UiScreen> onEnter, double playTime) {
+                          java.util.function.Supplier<UiScreen> onEnter, double playTime, int coins) {
         super(ui);
         this.line = line;
         this.enterHint = enterHint;
         this.onEnter = onEnter;
         this.playTime = playTime;
+        this.coins = coins;
         // The fourth track, and the one that most needed an ending to exist: this screen is the only place
         // `victory-theme` belongs, and until this hour there was no such screen and no such file.
         if (aside.ui.Audio.A != null) aside.ui.Audio.A.music(AudioSystem.Music.VICTORY.track());
@@ -90,7 +93,11 @@ public class VictoryScreen extends UiScreen {
         gc.setFill(Color.web("#c9c9d6"));
         gc.setFont(F_STAT);
         gc.fillText(line, 94, 290);
-        gc.fillText(String.format("Time: %.1f seconds", playTime), 94, 336);
+        // Coins on the same line as the time, so the layout does not move: they are a stat about the run, and the
+        // run's own ending is the one place the game has ever had to say what they were for.
+        gc.fillText(coins >= 0
+                ? String.format("Time: %.1f seconds   Coins: %d", playTime, coins)
+                : String.format("Time: %.1f seconds", playTime), 94, 336);
 
         gc.setFont(F_HINT);
         gc.setFill(Color.web("#f5a623"));

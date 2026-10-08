@@ -190,7 +190,7 @@ public class RoomsScreen extends UiScreen {
             // is the same screen the climb ends on, because it is the same sentence - a way home - and the two
             // modes differ in what that means rather than in what it looks like.
             if (world.isExit(screens.currentRoomId())) {
-                ui.replace(VictoryScreen.roomsOut(ui, roomsVisited, elapsed));
+                ui.replace(VictoryScreen.roomsOut(ui, roomsVisited, elapsed, inventory.coins));
                 return;
             }
             loadRoom(screens.currentRoomId());

@@ -448,7 +448,7 @@ public class GameplayScreen extends UiScreen {
             // sun the whole climb has been sinking towards. It offers to keep climbing, so the endless run is still
             // there; what changes is that the game now has somewhere to be going.
             if (!tutorial && levelNum >= LevelGen.FINAL_LEVEL) {
-                ui.replace(new VictoryScreen(ui, levelNum, playTime));
+                ui.replace(new VictoryScreen(ui, levelNum, playTime, inventory.coins));
                 return;
             }
             int nextLevel = levelNum + 1;
@@ -1092,6 +1092,13 @@ public class GameplayScreen extends UiScreen {
         // Keys
         gc.setFill(Color.GOLD);
         gc.fillText("Key x" + inventory.keys, 40, 120);
+        // COINS, which the game has been counting in secret. Pickup increments them, the save file persists them,
+        // and the field's own comment says "currency (top-down prototype; shop later)" - and the HUD has never shown
+        // them, so a player collects one, hears the cue, and has no way to know it counted. WHAT COINS ARE FOR is
+        // still the open question that comment records; that they are LEGIBLE is not a question. Below the keys
+        // line and clear of the air bar, which sits at y 138.
+        gc.setFill(Color.web("#F7C847"));
+        gc.fillText("Coins " + inventory.coins, 40, 176);
         // Air: drawn only while it is actually draining, so a climber who is not
         // swimming never sees a bar they do not need, and the bar's arrival is
         // itself the warning that they are under.

@@ -73,6 +73,7 @@ def declared_fields():
 
 
 SOURCES = None
+SOURCE_TEXT = {}
 COMMENT = re.compile(r"//.*$|/\*.*?\*/")
 
 
@@ -130,7 +131,9 @@ def sources():
         for f in sorted(glob.glob(SRC + "/**/*.java", recursive=True)):
             if is_test(f):
                 continue
-            SOURCES.append((f, open(f, encoding="utf-8", errors="replace").readlines()))
+            text = open(f, encoding="utf-8", errors="replace").read()
+            SOURCE_TEXT[f] = text
+            SOURCES.append((f, text.splitlines(keepends=True)))
     return SOURCES
 
 
@@ -161,11 +164,24 @@ def reads_and_writes(name, decl_path, decl_line):
     # two different fields with one name, and counting by name let Enemy's new reader clear Boss's field - which is
     # the same blind spot the wiring report documents for its caller check ("it cannot see the TYPE of the
     # receiver"). Same-file reads always count; cross-file reads count only when one class declares the name.
-    unique_name = len(declarers().get(name, ())) <= 1
-    reads = writes = 0
+    # SAME-FILE READS ARE ALWAYS ATTRIBUTABLE; CROSS-FILE ONES ARE NOT, WHEN TWO CLASSES DECLARE THE NAME.
+    # `Boss.deadTimer` and `Enemy.deadTimer` are different fields with one name, so Enemy's reader must not acquit
+    # Boss's field - that is how the tool under-reported in the first place. But the opposite rule is also wrong:
+    # `PlayerInventory.coins` collides with `SaveSystem.SaveState.coins`, and discarding the cross-file read
+    # reported a field as unread ON THE DAY THE HUD STARTED READING IT.
+    #
+    # So a cross-file read with a shared name is neither a read nor nothing: it is UNATTRIBUTABLE, and the field is
+    # reported as AMBIGUOUS rather than silently dropped or silently acquitted. A third version of this counted the
+    # read whenever the reading file merely MENTIONED the declaring class, which fixed `coins` and lost `Enemy.id`,
+    # `Door.id`, `Pickup.id`, `Physics.id` and `Combat.maxHP` to incidental mentions - trading a visible false
+    # positive for five invisible false negatives, which is the wrong direction for a report.
+    shared_name = len(declarers().get(name, ())) > 1
+    reads = writes = unattributable = 0
     for f, lineno, is_write in index().get(name, ()):
         if True:
-            if f != decl_path and not unique_name:
+            if f != decl_path and shared_name:
+                if not is_write:
+                    unattributable += 1
                 continue
             if f == decl_path and lineno == decl_line:
                 # ITS OWN DECLARATION IS A WRITE IF IT HAS AN INITIALISER AND NEVER A READ. Excluding the line
@@ -179,7 +195,7 @@ def reads_and_writes(name, decl_path, decl_line):
                 writes += 1
             else:
                 reads += 1
-    return reads, writes
+    return reads, writes, unattributable
 
 
 def main():
@@ -189,13 +205,14 @@ def main():
 
     seen = set()
     findings = []
+    ambiguous = []
     for cls, name, path, lineno in declared_fields():
         if (cls, name) in seen:
             continue
         seen.add((cls, name))
-        reads, writes = reads_and_writes(name, path, lineno)
+        reads, writes, unattributable = reads_and_writes(name, path, lineno)
         if writes > 0 and reads == 0:
-            findings.append((cls, name, writes))
+            (findings if unattributable == 0 else ambiguous).append((cls, name, writes))
 
     print("=== values something WRITES and nothing READS ===")
     if not findings:
@@ -203,7 +220,14 @@ def main():
     for cls, name, writes in sorted(findings):
         print("  %-22s %-24s %d write(s), 0 read(s)" % (cls, name, writes))
     print()
-    print("  %d value(s) declared; %d write-only." % (len(seen), len(findings)))
+    if ambiguous:
+        print("=== and values whose name is shared, where a read exists elsewhere that cannot be attributed ===")
+        for cls, name, writes in sorted(ambiguous):
+            print("  %-22s %-24s %d write(s), 0 read(s) HERE - but the name is declared twice and a read exists"
+                  % (cls, name, writes))
+        print("  These are not findings: check the other class with that name before acting.")
+        print()
+    print("  %d value(s) declared; %d write-only, %d ambiguous." % (len(seen), len(findings), len(ambiguous)))
     print()
     print("A finding here is a QUESTION, not a fault: a value may be kept for a test, for a debug readout, or for")
     print("something about to be written. What it cannot be is a thing the game acts on - something computes it and")

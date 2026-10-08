@@ -25,6 +25,7 @@ public class ShotVictory extends Application {
         String dir = System.getProperty("shotdir", "/root/downloads");
         new java.io.File(dir).mkdirs();
         int levels = Integer.parseInt(System.getProperty("levels", "40"));
+        int coins = Integer.parseInt(System.getProperty("coins", "12"));
         double time = Double.parseDouble(System.getProperty("time", "1284.5"));
 
         UiManager ui = new UiManager(".");
@@ -32,8 +33,8 @@ public class ShotVictory extends Application {
         // Two endings, one screen: `-Drooms=1` renders the rooms-mode variant, which differs in one line and one
         // key because the two modes differ in what "a way home" means rather than in what it looks like.
         boolean rooms = System.getProperty("rooms") != null;
-        ui.push(rooms ? VictoryScreen.roomsOut(ui, levels, time)
-                      : new VictoryScreen(ui, levels, time));
+        ui.push(rooms ? VictoryScreen.roomsOut(ui, levels, time, coins)
+                      : new VictoryScreen(ui, levels, time, coins));
         Scene scene = new Scene(new StackPane(ui.getContainer()), 1600, 1200, Color.BLACK);
         stage.setScene(scene);
         stage.show();
