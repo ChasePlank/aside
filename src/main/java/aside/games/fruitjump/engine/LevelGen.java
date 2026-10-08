@@ -69,6 +69,20 @@ public class LevelGen {
     /** Columns reserved at the right edge for the staircase + exit. */
     static final int EXIT_ZONE = STAIR_STEPS * (1 + STAIR_RUNWAY) + EXIT_PLATFORM;
 
+    /**
+     * How often a run gets a boss: every tenth level.
+     *
+     * <p>THE PACING DECISION, AND IT IS ONE CONSTANT. The boss exists in the tutorial, where it teaches the fight;
+     * without this it exists ONLY there, and a player who starts a New Game and plays a hundred levels would never
+     * meet one - a feature in a lesson and nowhere else. A boss every tenth level is the ordinary shape of that
+     * rhythm, and it is reversible by changing this number, which is why the number is here and not spread through
+     * the placement code.
+     *
+     * <p>It is placed ON the walk rather than in a side arena, and it is killable rather than avoidable - see
+     * {@link #bossColumn}, which will only use a stretch the boss can actually stand in.
+     */
+    public static final int BOSS_EVERY = 10;
+
     final int width, height;
     final Random rng;
     final int levelNum;
@@ -118,6 +132,44 @@ public class LevelGen {
     }
 
     /** Generate a level as ASCII rows. */
+    /**
+     * A column the boss can stand in, or -1 if this level has no such stretch.
+     *
+     * <p><b>IT REFUSES RATHER THAN GUESSES.</b> A generated level is a random walk, so a boss dropped at "about the
+     * middle" would sometimes be inside a wall or over a pit - the kind of fault that reads as "the boss is stuck
+     * in the floor" in play and appears in no test. So this looks for a stretch that is FLAT over four columns and
+     * CLEAR over the two cells the boss's 64x64 body occupies, and returns -1 rather than a bad spot. The middle
+     * half is searched first so the fight is not on top of the spawn or the exit.
+     *
+     * <p>The boss is two cells wide and two tall: its feet sit on the walk's surface at {@code pathFloor[col] * 32}
+     * and its centre is half its height above that, which is why the rows checked are R-1 and R-2.
+     */
+    private int bossColumn(char[][] g) {
+        int from = width / 4, to = (width * 3) / 4 - 3;
+        List<Integer> candidates = new ArrayList<>();
+        for (int col = from; col <= to; col++) {
+            if (pathFloor[col] < 3 || pathFloor[col + 1] < 3) continue;
+            int r = pathFloor[col];
+            if (pathFloor[col + 1] != r) continue;
+            // flat either side too, so the fight does not open against a step
+            if (col > 0 && pathFloor[col - 1] != r) continue;
+            if (col + 2 < width && pathFloor[col + 2] != r) continue;
+            boolean clear = true;
+            for (int c = col; c <= col + 1 && clear; c++)
+                for (int rr = r - 1; rr >= r - 2; rr--) {
+                    // ' ' is the only empty cell: everything else is terrain, a hazard, water or content.
+                    if (g[rr][c] != ' ') { clear = false; break; }
+                }
+            if (clear) candidates.add(col);
+        }
+        if (candidates.isEmpty()) return -1;
+        // AND ANY OF THEM, BY THE LEVEL'S OWN SEED. Taking the first was the first version, and every tenth level
+        // in the range put the boss at the same x - the first qualifying stretch is often the same one, so the
+        // fight always opened in the same place in the level. Seeded, so it is still the same encounter on every
+        // attempt at that level, which is what the level's seed is for.
+        return candidates.get(rng.nextInt(candidates.size()));
+    }
+
     public LevelMap generate() {
         // Every tenth level is a safe room.
         if (levelNum % 10 == 0) return generateSafeRoom();
@@ -737,6 +789,17 @@ public class LevelGen {
         // skipping - so the gate survived only because none of the checks happen to walk a safe-room level.
         // Found by writing a difficulty-curve probe that walked levels 1 to 40 and died on level 10.
         this.lastPathFloor = pathFloor.clone();
+
+        // EVERY TENTH LEVEL GETS A BOSS, placed after the map is built because it needs the finished grid to find a
+        // stretch that is flat and clear. It is SKIPPED SILENTLY when there is none: a level without a boss is a
+        // level without a boss, and the alternative - a generator that refuses - is worse.
+        if (levelNum > 0 && levelNum % BOSS_EVERY == 0) {
+            int col = bossColumn(g);
+            if (col >= 0) {
+                int surface = pathFloor[col] * 32;
+                this.lastMap.addBoss(new LevelMap.BossSpec(col * 32 + 32, surface - 32, 64, 64, levelNum));
+            }
+        }
         return this.lastMap;
     }
 }

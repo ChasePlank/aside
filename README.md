@@ -104,6 +104,11 @@ There are four families:
   form in the gaps in the walk, a body swims in them, holds its breath, and gets
   out by a breach hop at the surface. **UP or W** jumps on land and strokes
   upward in water; **DOWN or S** dives.
+  **A boss every tenth level** — a hunched, horned brute that only takes damage while the mark on its back is
+  lit, and that throws charges when the player keeps their distance. It is taught in tutorial 11 and then it is
+  part of the run, because a mechanic that lives only in a lesson is a mechanic the game does not have. The
+  generator will only place one on a stretch of walk that is flat and clear, and it picks among them by the
+  level's own seed, so the fight is in a different place each level and the same place on every attempt at one.
   **A quarter of levels roll FLOODED** (5 of the first 40 come out wet enough to read as
   one) — the walk itself under water, in runs with dry ground between them — and
   **piranhas** live in the water, in groups of three to five. A piranha takes a **heart** where a bat only knocks you down, which is the one
