@@ -324,9 +324,8 @@ be called complete while the picks line cannot. That distinction is the whole re
   asked the same question at the same waterline three nights running, and the only thing that changes between
   them is how many times he has said not yet, so the flags are the entire engine of the story. Nothing is broken,
   nobody is cruel, and the work was good for nineteen years — which is what makes it the first story here about a
-  job that is ENDING rather than one being done badly. **Its backgrounds are borrowed** from the lamp room's
-  coast rather than drawn, which is the remaining work and the reason "its own art" is not yet true of it.
-  28 scenes, 4 endings.
+  job that is ENDING rather than one being done badly. **Its four backgrounds are generated rather than drawn**,
+  unlike every other story here, from prompts describing this one's own river. 28 scenes, 4 endings.
 - **`stories/night-shift.aside`** — **a test fixture, not a story.** It contains deliberately planted
   problems (an unreachable scene, a variable typo, beats after a jump, and a fork whose choices do
   nothing) so the self-test can assert the auditor catches them. It is written to be read as well as

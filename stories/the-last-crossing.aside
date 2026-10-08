@@ -10,12 +10,13 @@
 # It is also the first story here about a job that is ENDING rather than one being done badly. The bridge opens
 # on Monday. Nothing is broken, nobody is cruel, and the work was good for nineteen years.
 #
-# THE ART IS NOT DRAWN YET, AND THAT IS STATED RATHER THAN HIDDEN. The four backgrounds this story stages itself
-# on - river_jetty, far_bank, dawn_river, dawn_bridge - have no files under art/stories/the-last-crossing/, so
-# WebExport reports "no art for: ..." for every one of them and the phone build carries the words only. That is a
-# known state in this library and not a fault in the script: WebExport's own header names two other stories in it.
-# The names are reserved so the art can be dropped in without touching the script, and drawing it is the
-# remaining work - the README's "each has its own art" is not yet true of this one.
+# FOUR BACKGROUNDS, GENERATED RATHER THAN DRAWN, and that is stated because this library's other art was made by
+# hand. river_jetty, far_bank, dawn_river and dawn_bridge were produced on 2026-10-08 from prompts describing this
+# story's own river - a jetty at night with the crane light upstream, the far bank's steps, and the dawn after the
+# bridge opens - and then downscaled by tools/vn-art.py like every other story's art. They are not the lamp room's
+# coast; an earlier draft borrowed those, and the reason that was replaced is that a reader should be looking at
+# this story's place. If they are ever redrawn, three things regenerate: art/web/ (vn-art.py),
+# web/last-crossing.html (WebExport) and web/aside.html (PhoneShelf).
 
 title: The Last Crossing
 author: Roxanne

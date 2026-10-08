@@ -24,10 +24,11 @@ import java.io.File;
  * <p>FOUR BACKGROUNDS AND NO SPRITES. There is one other person in it and she is described rather than drawn,
  * which is how the two stories about people who do not get looked at directly are both staged.
  *
- * <p><b>THE ART IS BORROWED.</b> river_jetty, far_bank, dawn_river and dawn_bridge are the lamp room's coast and
- * a dawn, copied into this story's folder so the phone build carries art rather than four blank panels. Drawing
- * this story's own river is the remaining work, and it is why the README's "each has its own art" is not yet
- * true of this one.
+ * <p><b>THE ART IS GENERATED, NOT DRAWN.</b> Every other story's backgrounds here were made by hand; these four
+ * were produced on 2026-10-08 from prompts describing this story's own river and then downscaled by
+ * {@code tools/vn-art.py} like the rest. Worth stating plainly rather than letting a reader assume the same
+ * provenance as the others, and worth knowing that replacing them means regenerating three artefacts:
+ * {@code art/web/}, {@code web/last-crossing.html} and {@code web/aside.html}.
  */
 public class LastCrossingGame implements Game {
 
