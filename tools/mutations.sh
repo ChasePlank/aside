@@ -25,6 +25,7 @@ HERE="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$HERE" || exit 2
 
 E=src/main/java/aside/games/fruitjump/engine
+G=src/main/java/aside/games/fnaf/engine
 T=src/main/java/aside/games/fruitjump
 
 # label | file | anchor | replacement | the suite that must notice
@@ -34,6 +35,9 @@ MUTATIONS=(
   "run: no one-way planks at all|$E/LevelGen.java|int PLANK_EVERY = 4;|int PLANK_EVERY = 40000;|aside.engine.SelfTest"
   "run: no bosses at all|$E/LevelGen.java|int BOSS_EVERY = 10;|int BOSS_EVERY = 40000;|aside.engine.SelfTest"
   "run: the game ends after ten levels|$E/LevelGen.java|int FINAL_LEVEL = 40;|int FINAL_LEVEL = 10;|aside.engine.SelfTest"
+  "fnaf: no grace at the start of a night|$G|GRACE_SECONDS = 8.0;|GRACE_SECONDS = 0.0;|aside.games.fnaf.engine.SelfTest"
+  "fnaf: a night is one hour, not six|$G|NIGHT_HOURS = 6;|NIGHT_HOURS = 1;|aside.games.fnaf.engine.SelfTest"
+  "fnaf: the power starts empty|$G|POWER_START = 100.0;|POWER_START = 0.0;|aside.games.fnaf.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
