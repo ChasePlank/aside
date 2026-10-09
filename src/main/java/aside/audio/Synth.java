@@ -32,6 +32,119 @@ public class Synth {
         write(new File(out, "power_down.wav"), sweep(1.6, 420, 40));
         write(new File(out, "power_up.wav"), sweep(1.1, 60, 380));
         write(new File(out, "chime_6am.wav"), chime());
+
+        // Cues the games asked for and had no file for. Generated here so the
+        // whole set comes from one place and can be regenerated or replaced
+        // wholesale - these are placeholders with the right *character*, not
+        // finished sound design.
+        // Each cue is normalised to a TARGET peak rather than trusted to whatever
+        // the formula happened to produce. The first pass clipped Chica at full
+        // scale (the noisiest tuning, so the noise burst pushed it over), and a
+        // clipped jumpscare is distortion, which reads as a bug in the speakers.
+        // Per-cue targets, because these are not meant to be equally loud: the
+        // title bed sits under a menu, the scares are the loudest thing in the game.
+        write(new File(out, "title.wav"), titleBed(10.0));                    // 0.33 as built: a bed
+        write(new File(out, "camera_down.wav"), norm(stepDown(), 0.70));
+        write(new File(out, "choice_move.wav"), norm(blip(880), 0.55));
+        write(new File(out, "scare_freddy.wav"), norm(scare(55, 170, 0.45, 1.15), 0.90));
+        write(new File(out, "scare_roxanne.wav"), norm(scare(130, 1500, 0.35, 0.95), 0.90));
+        write(new File(out, "scare_monty.wav"), norm(scare(72, 330, 0.70, 1.05), 0.90));
+        write(new File(out, "scare_chica.wav"), norm(scare(185, 950, 0.95, 0.85), 0.90));
+    }
+
+    /** Scale a cue so its loudest sample sits at the target peak. Cheap, and it
+     *  keeps a formula's output inside the format instead of relying on luck. */
+    static double[] norm(double[] s, double target) {
+        double peak = 0;
+        for (double v : s) peak = Math.max(peak, Math.abs(v));
+        if (peak < 1e-9) return s;
+        double g = target / peak;
+        for (int i = 0; i < s.length; i++) s[i] *= g;
+        return s;
+    }
+
+    /** The title bed: a slow minor drone with a breath in it, and one quiet
+     *  metallic partial over the top so it does not read as a hum. Music, so
+     *  it is long enough that a loop seam is hard to catch, and low, because
+     *  it plays under a menu rather than over it. */
+    static double[] titleBed(double seconds) {
+        int n = (int) (seconds * RATE);
+        double[] s = new double[n];
+        double[] drone = {55.0, 82.41, 110.0};          // A1, E2, A2
+        for (int i = 0; i < n; i++) {
+            double t = i / (double) RATE;
+            double breath = 0.75 + 0.25 * Math.sin(2 * Math.PI * t / 7.0);
+            double v = 0;
+            for (int d = 0; d < drone.length; d++) {
+                v += Math.sin(2 * Math.PI * drone[d] * t) / (d + 1.6);
+            }
+            // a struck partial every 5s, decaying, like something metal settling
+            double since = t % 5.0;
+            v += Math.sin(2 * Math.PI * 659.25 * t) * Math.exp(-since * 4.0) * 0.12;
+            double fade = Math.min(1.0, t * 1.5) * Math.min(1.0, (seconds - t) * 1.5);
+            s[i] = v * breath * fade * 0.30;
+        }
+        return s;
+    }
+
+    /** Switching the camera DOWN: the mechanical mirror of camera_up, so the
+     *  two read as a pair. A small hard body with the pitch falling out of it. */
+    static double[] stepDown() {
+        int n = (int) (0.45 * RATE);
+        double[] s = new double[n];
+        Random r = new Random(11);
+        for (int i = 0; i < n; i++) {
+            double t = i / (double) RATE;
+            double env = Math.exp(-t * 18.0);
+            double body = Math.sin(2 * Math.PI * (150 - 260 * t) * t);
+            double tail = Math.sin(2 * Math.PI * (420 - 700 * t) * t) * Math.exp(-t * 7.0) * 0.35;
+            s[i] = (body * 0.5 + tail + (r.nextDouble() * 2 - 1) * 0.12 * Math.exp(-t * 90)) * env * 0.7;
+        }
+        return s;
+    }
+
+    /** Moving between choices: smaller and brighter than committing to one, so
+     *  selecting still reads as the bigger event. */
+    static double[] blip(double freq) {
+        int n = (int) (0.12 * RATE);
+        double[] s = new double[n];
+        for (int i = 0; i < n; i++) {
+            double t = i / (double) RATE;
+            double env = Math.exp(-t * 42.0) * Math.min(1.0, t * 400.0);
+            s[i] = (Math.sin(2 * Math.PI * freq * t) * 0.7
+                    + Math.sin(2 * Math.PI * freq * 2 * t) * 0.18) * env * 0.45;
+        }
+        return s;
+    }
+
+    /**
+     * A jumpscare sting. One shape, four tunings, so the four read as a family
+     * while still being told apart in the half-second they have:
+     *
+     *   low       the throat-clearing body under it
+     *   high      where the shriek lands
+     *   noiseAmt  how much of it is noise rather than tone
+     *
+     * The noise burst is at the FRONT and very short: it is what makes the hit
+     * arrive before the ear has identified what it is.
+     */
+    static double[] scare(double low, double high, double noiseAmt, double seconds) {
+        int n = (int) (seconds * RATE);
+        double[] s = new double[n];
+        Random r = new Random((long) (low * 31 + high));
+        double phase = 0;
+        for (int i = 0; i < n; i++) {
+            double t = i / (double) RATE;
+            double k = t / seconds;
+            double f = low + (high - low) * Math.pow(k, 0.55);   // rises fast, then eases
+            phase += 2 * Math.PI * f / RATE;
+            double env = Math.exp(-t * (2.6 / seconds)) * Math.min(1.0, t * 900.0);
+            double tone = Math.sin(phase) * (1.0 - noiseAmt * 0.5);
+            double sub = Math.sin(phase * 0.5) * 0.45;
+            double noise = (r.nextDouble() * 2 - 1) * noiseAmt * Math.exp(-t * 26.0);
+            s[i] = (tone + sub + noise) * env * 0.62;
+        }
+        return s;
     }
 
     // ---------------- sound builders ----------------
