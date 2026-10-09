@@ -2251,8 +2251,12 @@ public class SelfTest {
         // to 999. What the stall guard is FOR is releasing in a third of a second rather than a second and a
         // half, so the assertion is about how long.
         double stalled = pullSeconds(false, 400);
+        // AND THE LOWER BOUND IS THE POINT, which `stalled > 0` did not express: a stall guard that releases on the
+        // FIRST frame is not a stall guard, it is a different weapon. Zero satisfied `> 0`, so the whole tolerance
+        // could be removed and this check passed - found by tools/tautologies.py, which tests switching a constant
+        // OFF as well as up and down. A tenth of a second is well inside any sane tolerance and far outside zero.
         check(String.format("a stalled hookshot pull releases in well under the cap (%.2fs, cap is 1.5s)", stalled),
-                stalled > 0 && stalled < 1.0);
+                stalled > 0.1 && stalled < 1.0);
 
         // AND A PULL THAT IS STILL MAKING PROGRESS STILL ENDS. The anchor has to be further than the loop can
         // walk: 500px/s for six seconds is 3000px, and the first version used 2000, which the player simply

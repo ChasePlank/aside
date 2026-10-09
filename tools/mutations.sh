@@ -50,6 +50,9 @@ MUTATIONS=(
   # zero makes EVERY pair of options count as near-identical - not caught by 644 checks until this one existed. A
   # heuristic that over-fires is how the-last-crossing's legitimate pair got reported as a fault.
   "audit: the wording heuristic over-fires|$A/Bot.java|a.length() >= 8 && b.length() >= 8|a.length() >= 0 \&\& b.length() >= 0|aside.engine.SelfTest"
+  # Found by tools/tautologies.py, not by reading: the stall guard could be removed entirely and a check that
+  # asserted only "a stalled pull releases" still passed, because the 1.5s cap ends it anyway.
+  "hookshot: the stall guard switched off|$W|STALL_TIME = 0.3;|STALL_TIME = 0.0;|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
