@@ -530,11 +530,18 @@ public class Bot {
                 Choice c = b.choices.get(j);
                 boolean sameGating = java.util.Objects.equals(a.condition, c.condition);
                 boolean sameTarget = java.util.Objects.equals(a.target, c.target);
+                // AND THE WORDING SHAPE ONLY COUNTS WHEN THE TWO CAN BE OFFERED TOGETHER, which is the same
+                // condition test. Options under DIFFERENT conditions are refused rather than guessed at: a static
+                // check cannot tell whether two conditions can both hold, and this one was flagging a legitimate
+                // pair in the-last-crossing - "Say it out loud." [if confessed] and "Say it out loud anyway."
+                // [if !confessed] - where a player NEVER sees both, so nothing is confusing them. Mutually
+                // exclusive options that read alike are a branch on state, which is a technique rather than a
+                // cheat, and the check now says what it can actually know.
                 if (sameGating && sameTarget) {
                     r.falseChoices.add(sc.id + ": line " + a.line
                             + " — two options under the same condition both go to "
                             + a.target + ", so the pick changes nothing");
-                } else if (similar(a.text, c.text)) {
+                } else if (sameGating && similar(a.text, c.text)) {
                     r.falseChoices.add(sc.id + ": line " + a.line + " and line " + c.line
                             + " — near-identical wording (\"" + trim(a.text) + "\" / \""
                             + trim(c.text) + "\"), so a player cannot tell them apart");

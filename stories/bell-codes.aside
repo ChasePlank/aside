@@ -15,6 +15,18 @@ title: Bell Codes
 author: Roxanne
 start: box
 
+== read_again ==
+You read it again, slowly, the way you would read a diagram you were being asked to check rather than
+follow. It says the same thing, in the same order, with the same dates. You put it back on the board.
+
+-> routine
+
+== coat_up ==
+The coat goes on the hook by the door, where it has gone every night for eleven years, and the hook has
+never once needed anything from you.
+
+-> routine
+
 == box ==
 bg box_interior
 music fan_hum
@@ -27,8 +39,8 @@ The notice is on the board where notices go. One week. The box closes, the lever
 regional centre takes the line, and the bells go quiet. It has been coming for eleven years. You have read it
 eleven times and it has said the same thing every time, which is a quality you can admire in a notice.
 
-* Read it again, the way you would read a diagram. -> routine
-* Hang your coat up. It is a shift like any other. -> routine
+* Read it again, the way you would read a diagram. -> read_again
+* Hang your coat up. It is a shift like any other. -> coat_up
 
 == routine ==
 sfx bell

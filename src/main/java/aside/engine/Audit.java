@@ -54,30 +54,62 @@ public class Audit {
             Bot.Report r = new Bot().run(s);
             System.out.print(r.summary());
 
-            boolean clean = r.missingTargets.isEmpty()
-                    && r.unreachableScenes().isEmpty()
-                    && r.deadEnds.isEmpty()
-                    && r.unreachableBeats.isEmpty()
-                    && r.neverOfferedChoices().isEmpty()
-                    && r.varsReadOnly.isEmpty()
-;
-            // A budget hit is not a finding. The traversal not finishing means the results are PARTIAL, which is
-            // different from them being wrong - and calling an honest "I could not check everything" ISSUES FOUND
-            // teaches the reader to distrust the verdict. Three states, not two.
-            boolean inconclusive = r.budgetHit || r.heapHit;
-            System.out.println("\n" + (inconclusive
-                    ? (r.heapHit
-                        ? "INCONCLUSIVE - ran out of heap, results partial"
-                        : "INCONCLUSIVE - budget hit, results partial")
-                    : clean ? "CLEAN" : "ISSUES FOUND"));
-            // An inconclusive run is not a failure. The verdict above already says the results are partial;
-            // counting it here as well would make the exit status contradict the verdict, which is the same
-            // mistake in a second place - a budget hit reported as a problem.
-            if (!clean && !inconclusive) failures++;
-            // `inconclusive` alone, not `inconclusive && clean`: an inconclusive run HAS unreachable scenes by
-            // definition, so requiring clean meant the counter could never fire - a condition that excludes the
-            // case it exists for.
-            if (inconclusive) inconclusiveRuns++;
+            // The verdict separates what the report KNOWS from what it merely could not finish. Missing targets,
+            // dead ends, the variable analysis and the choice check do not depend on the traversal at all;
+            // unreachable scenes, unreachable beats and never-offered choices do, so on an unfinished walk they are
+            // unproven rather than wrong.
+            //
+            // Before this, "clean" included a finished traversal, so a large story with nothing wrong with it
+            // printed ISSUES FOUND and exited 1 - Overtime, 131 scenes, did exactly that at the default budget,
+            // which reads as "your story is broken" when it means "the search did not finish".
+            boolean reliable = !r.missingTargets.isEmpty() || !r.deadEnds.isEmpty()
+                    || !r.varsReadOnly.isEmpty() || !r.varsNeverRead.isEmpty()
+                    || !r.falseChoices.isEmpty();
+
+            // A COMPLETENESS CLAIM THAT NEEDS NO SEARCH: if every DEFINED scene was reached, the unreachable-scene
+            // list cannot be missing an entry, so that finding is proven even when the budget ran out. The other
+            // two traversal findings are not covered by it - a beat can be unreachable inside a scene that was
+            // reached, and a choice can be offered only on a path not yet walked.
+            boolean unfinished = r.budgetHit || r.heapHit;   // either way: the walk did not finish
+            boolean scenesComplete = r.scenesReached.size() >= r.scenesDefined.size();
+            boolean scenesIssue = !r.unreachableScenes().isEmpty();
+            boolean otherTraversal = !r.unreachableBeats.isEmpty()
+                    || !r.neverOfferedChoices().isEmpty();
+
+            boolean provenIssue = reliable
+                    || (scenesIssue && (scenesComplete || !unfinished))
+                    || (otherTraversal && !unfinished);
+
+            if (provenIssue) {
+                System.out.println("\nISSUES FOUND");
+                failures++;
+            } else if (otherTraversal && unfinished) {
+                // AND THE MESSAGE CLAIMS ONLY WHAT THE CONDITION CHECKED. The first version of this said "every
+                // scene was accounted for" while checking nothing of the sort, and it is false on a walk that
+                // stopped at 89 of 131 scenes - caught by running that case at a small budget.
+                System.out.println("\nINCONCLUSIVE: "
+                        + (scenesComplete
+                           ? "every scene was accounted for, but unreachable beats and never-offered choices are "
+                             + "path questions, and the traversal did not finish."
+                           : "the traversed part of the story shows unreachable beats or never-offered choices, "
+                             + "and " + r.scenesReached.size() + " of " + r.scenesDefined.size()
+                             + " scene(s) were reached - so this is a path question on an unfinished walk.")
+                        + " Raise the budget:\n    java -Xmx2g -Daside.frontier.paths=true -Daside.budget="
+                        + Math.max(4_000_000, r.statesExpanded * 4) + " aside.engine.Audit <story>");
+                failures++;   // distinct from clean, and distinct from proven issues
+            } else if (unfinished) {
+                System.out.println("\nCLEAN SO FAR (traversal partial: " + r.scenesReached.size() + "/"
+                        + r.scenesDefined.size() + (r.heapHit ? " scenes, heap hit)" : " scenes, budget hit)")
+                        + (scenesComplete
+                           ? "\n  the unreachable-scene list is nonetheless COMPLETE: every scene was reached, "
+                             + "so nothing can be missing from it"
+                           : ""));
+            } else {
+                System.out.println("\nCLEAN");
+            }
+            // An unfinished run is not a failure. The verdict above already says the results are partial, and
+            // counting it here would make the exit status contradict the verdict.
+            if (unfinished) inconclusiveRuns++;
             if (r.heapHit) heapHits++;
             System.out.println();
         }
