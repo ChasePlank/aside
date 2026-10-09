@@ -138,8 +138,16 @@ public class GameScreen extends UiScreen {
             drawDoorway(1);
         }
 
-        // Whoever is standing in a lit doorway
-        drawDoorwayOccupants();
+        // Whoever is standing in a lit doorway - AND ONLY WHEN THE CAMERA IS DOWN, which is the half of the
+        // standalone edition's fix that did not come home with the rest. The guard above covers the doorway
+        // overlays and the comment there says so; the occupants were still drawn with the monitor up, where the
+        // camera view then paints over them. That HAPPENS to hide them and would stop hiding them the moment the
+        // monitor went translucent - and what it would leak is the pulsing someone-is-here sprite, which tells you
+        // where an animatronic is while you are looking at the cameras. Skipping the blit makes the rule explicit
+        // rather than accidental.
+        if (!game.cameraUp) {
+            drawDoorwayOccupants();
+        }
 
         // Camera overlay
         if (game.cameraUp) drawCameraView();
