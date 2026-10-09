@@ -60,18 +60,26 @@ java -cp out aside.engine.Audit stories/<name>.aside
 |---|---|
 | `missing targets`, `dead ends` | a jump to a scene that does not exist, or a scene that goes nowhere. Always reliable — these need no search. |
 | `vars read but never written`, `vars written but never read` | a typo'd variable name, or a flag set for no reason. Always reliable. |
-| `choices that do not matter` | two options under the same condition going to the same place, or two options a reader cannot tell apart. Always reliable — **satisfiable is not the same as meaningful.** |
+| `choices that do not matter` **(NOT IN THIS TREE — on `origin/roxanne/audit-verdict`)** | two options under the same condition going to the same place, or two options a reader cannot tell apart. Always reliable — **satisfiable is not the same as meaningful.** |
 | `unreachable scenes`, `unreachable beats`, `never-offered picks` | **path** questions. Reliable only if the traversal finished. |
 
 **The verdict tells you which.** If the walk did not complete, the report says `INCONCLUSIVE` and tells you
 the command to raise the budget, because an unfinished search cannot prove a scene is unreachable:
 
 ```bash
-java -Xmx2g -Daside.frontier.paths=true -Daside.budget=4000000 aside.engine.Audit <story>
+java -Xmx3g -Daside.budget=4000000 aside.engine.Audit <story>
 ```
 
-`-Daside.frontier.paths=true` uses the path-replay frontier, which is how the large stories stay within
-memory. It is the mode to use on anything long.
+**AND A CORRECTION, 2026-10-09: THE FRONTIER FLAG THIS SECTION USED TO PRINT IS NOT IN THIS TREE.** It read
+`-Daside.frontier.paths=true`, with a note that it is "the mode to use on anything long" - and no Java file here
+implements it. It lives on `origin/roxanne/audit-verdict`, five commits that have never been merged, and **the JVM
+SILENTLY IGNORES AN UNKNOWN `-D` PROPERTY**: so the documented command runs, prints an ordinary report, and gives
+none of the memory saving it promises. A reader following it on a large story would hit the heap wall the flag was
+written to avoid, with nothing anywhere to say why. The command above is what works today, with a bigger heap
+instead.
+
+**The same applies to one row of the table above:** `choices that do not matter` is on that branch too. The
+branch's own header says which commit adds it.
 
 **A clean report is not always a finished one.** Distinguish `CLEAN` (nothing found, search complete) from
 `INCONCLUSIVE` (nothing found so far). The report says which, on purpose.
