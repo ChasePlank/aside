@@ -35,7 +35,11 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve().parent.parent
 ENGINE = HERE / "src/main/java/aside/games/fruitjump/engine"
-CONST = re.compile(r"^\s*(?:public |private |protected )?static final (double|int) ([A-Z_0-9]+) = ([0-9.]+);")
+# THE MINUS SIGN IS PART OF THE VALUE. The first version matched only unsigned numbers, so every negative
+# constant in the engine was invisible to this sweep - Combat.KNOCKBACK_Y (-300, the upward pop of a knockback) and
+# STOMP_BOUNCE (-400) were never tested at all. That is the same shape as the branch's lesson that the old sweep
+# only mutated UPWARD: an instrument with a blind spot reports a clean result, and the clean result is the lie.
+CONST = re.compile(r"^\s*(?:public |private |protected )?static final (double|int) ([A-Z_0-9]+) = (-?[0-9.]+);")
 
 
 def constants_in(path: pathlib.Path):
