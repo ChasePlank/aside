@@ -91,6 +91,30 @@ for t in title level boss victory; do
 done
 
 echo
+echo "=== the engine class lists, both ways ==="
+# THE DIRECTION NOTHING WAS MEASURING. Every section above asks what this repository has that the release lacks.
+# Nothing asked the reverse - and the first time it was asked, by hand, the answer was RoomsProbe: a CHECK the engine
+# had and the release did not, which the curated feature markers above could never have named. A class list is not
+# curated and the fork copies the class names, so the two are directly comparable.
+here_classes=$(ls "$HERE/src/main/java/aside/games/fruitjump/engine"/*.java 2>/dev/null | xargs -n1 basename | sort)
+there_classes=$(ls "$RELEASE/src/main/java/tropical/engine"/*.java 2>/dev/null | xargs -n1 basename | sort)
+echo "  this repository: $(echo "$here_classes" | grep -c .)   release: $(echo "$there_classes" | grep -c .)"
+only_there=$(comm -13 <(echo "$here_classes") <(echo "$there_classes"))
+only_here=$(comm -23 <(echo "$here_classes") <(echo "$there_classes"))
+if [ -n "$only_there" ]; then
+  echo "  IN THE RELEASE AND NOT HERE:"
+  echo "$only_there" | sed 's/^/    /'
+else
+  echo "  nothing in the release that this repository lacks"
+fi
+if [ -n "$only_here" ]; then
+  echo "  HERE AND NOT IN THE RELEASE:"
+  echo "$only_here" | sed 's/^/    /'
+else
+  echo "  and nothing here that the release lacks"
+fi
+
+echo
 echo "=== $missing feature(s) in this repository and not in the release ==="
 echo "  A release may lag on purpose. What it must not do is lag by accident: this repo ships a packaged"
 echo "  release on a schedule, and the packaging step does not port anything - it packages what is there."
