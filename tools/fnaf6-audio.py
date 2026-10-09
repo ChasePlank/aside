@@ -99,6 +99,21 @@ def one_pole(x, cutoff):
     return out
 
 
+def stable_seed(name):
+    """A seed that is the same in every process.
+
+    THIS SEEDED FROM PYTHON'S BUILT-IN stable_seed() OF THE NAME, WHICH IS NOT STABLE. Python salts string hashing per
+    process unless PYTHONHASHSEED is set, so the same cue came out with different samples on every run - and the
+    committed files could not be reproduced by the script that claims to produce them. The same bug was found and
+    fixed in tools/fruitjump-audio.py, where its fix note is longer; it had never been propagated to this family.
+
+    A seed needs exactly one property: the same everywhere and forever. crc32 is a DIGEST of the name rather than a
+    hash of it, so it has it.
+    """
+    import zlib
+    return zlib.crc32(name.encode("utf-8"))
+
+
 def noise(n, seed):
     rng = random.Random(seed & 0xFFFF)
     return [rng.uniform(-1.0, 1.0) for _ in range(n)]
@@ -112,7 +127,7 @@ def normalise(x):
 def build_drag(name):
     secs, cutoff, decay, thud_hz, thud_level, level = DRAGS[name]
     n = int(secs * RATE)
-    scrape = normalise(one_pole(noise(n, hash(name)), cutoff))
+    scrape = normalise(one_pole(noise(n, stable_seed(name)), cutoff))
     samples = []
     phase = 0.0
     for i, v in enumerate(scrape):
@@ -129,7 +144,7 @@ def build_drag(name):
 def build_creak(name):
     secs, cutoff, bend, level = CREAKS[name]
     n = int(secs * RATE)
-    body = normalise(one_pole(noise(n, hash(name)), cutoff))
+    body = normalise(one_pole(noise(n, stable_seed(name)), cutoff))
     samples = []
     for i, v in enumerate(body):
         t = i / RATE
@@ -145,7 +160,7 @@ def build_creak(name):
 def build_lamp(name):
     secs, cutoff, ping_hz, ping_level, level = LAMPS[name]
     n = int(secs * RATE)
-    click = normalise(one_pole(noise(n, hash(name)), cutoff))
+    click = normalise(one_pole(noise(n, stable_seed(name)), cutoff))
     samples = []
     phase = 0.0
     for i, v in enumerate(click):
@@ -162,7 +177,7 @@ def build_lamp(name):
 def build_shock(name):
     secs, f0, f1, noise_level, tone_level, ring_hz, ring_level = SHOCKS[name]
     n = int(secs * RATE)
-    hiss = noise(n, hash(name))
+    hiss = noise(n, stable_seed(name))
     samples = []
     phase = 0.0
     ring = 0.0
@@ -187,7 +202,7 @@ def build_shock(name):
 def build_lunge(name):
     secs, cutoff, rise, level = LUNGES[name]
     n = int(secs * RATE)
-    body = normalise(one_pole(noise(n, hash(name)), cutoff))
+    body = normalise(one_pole(noise(n, stable_seed(name)), cutoff))
     samples = []
     for i, v in enumerate(body):
         t = i / RATE

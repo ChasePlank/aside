@@ -116,6 +116,21 @@ def envelope(i, n, rate, attack=0.18, release=0.45):
     return 1.0
 
 
+def stable_seed(name):
+    """A seed that is the same in every process.
+
+    THIS SEEDED FROM PYTHON'S BUILT-IN stable_seed() OF THE NAME, WHICH IS NOT STABLE. Python salts string hashing per
+    process unless PYTHONHASHSEED is set, so the same cue came out with different samples on every run - and the
+    committed files could not be reproduced by the script that claims to produce them. The same bug was found and
+    fixed in tools/fruitjump-audio.py, where its fix note is longer; it had never been propagated to this family.
+
+    A seed needs exactly one property: the same everywhere and forever. crc32 is a DIGEST of the name rather than a
+    hash of it, so it has it.
+    """
+    import zlib
+    return zlib.crc32(name.encode("utf-8"))
+
+
 def noise(n, seed):
     rng = random.Random(seed & 0xFFFF)
     return [rng.uniform(-1.0, 1.0) for _ in range(n)]
@@ -129,7 +144,7 @@ def normalise(x):
 def build_here(name):
     secs, cutoff, pulse, depth, rattle, level = HERES[name]
     n = int(secs * RATE)
-    filtered = normalise(one_pole(noise(n, hash(name)), cutoff))
+    filtered = normalise(one_pole(noise(n, stable_seed(name)), cutoff))
     samples = []
     for i, v in enumerate(filtered):
         t = i / RATE
@@ -143,7 +158,7 @@ def build_here(name):
 def build_step(name):
     secs, cutoff, level = STEPS[name]
     n = int(secs * RATE)
-    filtered = normalise(one_pole(noise(n, hash(name)), cutoff))
+    filtered = normalise(one_pole(noise(n, stable_seed(name)), cutoff))
     samples = []
     for i, v in enumerate(filtered):
         # A footfall is all attack: loud on the frame it lands and gone
@@ -175,7 +190,7 @@ def build_tones(name, table, decay=3.2, gap=0.0):
 def build_shock(name):
     secs, f0, f1, noise_level, tone_level = SHOCKS[name]
     n = int(secs * RATE)
-    hiss = noise(n, hash(name))
+    hiss = noise(n, stable_seed(name))
     samples = []
     phase = 0.0
     for i in range(n):

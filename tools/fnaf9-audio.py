@@ -79,6 +79,21 @@ def one_pole(x, cutoff):
     return out
 
 
+def stable_seed(name):
+    """A seed that is the same in every process.
+
+    THIS SEEDED FROM PYTHON'S BUILT-IN stable_seed() OF THE NAME, WHICH IS NOT STABLE. Python salts string hashing per
+    process unless PYTHONHASHSEED is set, so the same cue came out with different samples on every run - and the
+    committed files could not be reproduced by the script that claims to produce them. The same bug was found and
+    fixed in tools/fruitjump-audio.py, where its fix note is longer; it had never been propagated to this family.
+
+    A seed needs exactly one property: the same everywhere and forever. crc32 is a DIGEST of the name rather than a
+    hash of it, so it has it.
+    """
+    import zlib
+    return zlib.crc32(name.encode("utf-8"))
+
+
 def noise(n, seed):
     rng = random.Random(seed & 0xFFFF)
     return [rng.uniform(-1.0, 1.0) for _ in range(n)]
@@ -97,7 +112,7 @@ def build_step(name):
     # be two sounds, and two sounds would be a channel the player does not
     # have to spend a look on -- and in this game a look is the only
     # currency there is.
-    scrape = normalise(one_pole(noise(n, hash("step")), cutoff))
+    scrape = normalise(one_pole(noise(n, stable_seed("step")), cutoff))
     samples = []
     phase = 0.0
     for i, v in enumerate(scrape):
@@ -112,7 +127,7 @@ def build_step(name):
 def build_knock(name):
     secs, cutoff, decay, body_hz, body_level, level = KNOCKS[name]
     n = int(secs * RATE)
-    hit = normalise(one_pole(noise(n, hash(name)), cutoff))
+    hit = normalise(one_pole(noise(n, stable_seed(name)), cutoff))
     samples = []
     phase = 0.0
     for i, v in enumerate(hit):
@@ -135,7 +150,7 @@ def build_switch(name):
     """
     secs, cutoff, ping_hz, ping_level, level = SWITCHES[name]
     n = int(secs * RATE)
-    click = normalise(one_pole(noise(n, hash(name)), cutoff))
+    click = normalise(one_pole(noise(n, stable_seed(name)), cutoff))
     samples = []
     phase = 0.0
     for i, v in enumerate(click):
@@ -158,7 +173,7 @@ def build_jam(name):
     """
     secs, cutoff, decay, sweep_hz, sweep_level, level = JAMS[name]
     n = int(secs * RATE)
-    grind = normalise(one_pole(noise(n, hash("jam")), cutoff))
+    grind = normalise(one_pole(noise(n, stable_seed("jam")), cutoff))
     samples = []
     phase = 0.0
     for i, v in enumerate(grind):
@@ -173,7 +188,7 @@ def build_jam(name):
 def build_arrival(name):
     secs, cutoff, rise, level = ARRIVALS[name]
     n = int(secs * RATE)
-    body = normalise(one_pole(noise(n, hash(name)), cutoff))
+    body = normalise(one_pole(noise(n, stable_seed(name)), cutoff))
     samples = []
     for i, v in enumerate(body):
         t = i / RATE
