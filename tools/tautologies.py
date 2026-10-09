@@ -48,11 +48,22 @@ def constants_in(path: pathlib.Path):
 
 
 def variants(value: str):
-    """Two replacements that are certainly different from the original, whatever the original is."""
+    """Three replacements: bigger, smaller, and ABSENT.
+
+    THE THIRD ONE IS THE ONE THAT MATTERS MOST. "Nothing pins this" and "nothing tests this" are different claims,
+    and the first is usually fine: a speed, a distance and a duration are tuning values, and a project that pinned
+    every one of them would be pinning its own numbers instead of its behaviour. The question worth asking is
+    whether a check notices the thing being switched OFF - and zero is what "off" looks like for a speed, a range, a
+    duration or a cooldown.
+
+    A constant whose zero is caught and whose doubling is not is a FREE PARAMETER with its behaviour pinned, which
+    is the healthy answer, and reporting it as "unconstrained" would send the next session hunting a tautology that
+    is not there. A constant whose ZERO is not caught is a real finding.
+    """
     v = float(value)
     if v == 0:
-        return ["1.0", "-1.0"]
-    return [repr(v * 2), repr(v / 2)]
+        return ["1.0", "-1.0", "0.0"]
+    return [repr(v * 2), repr(v / 2), "0.0"]
 
 
 def main() -> int:
@@ -91,8 +102,12 @@ def main() -> int:
                 verdicts.append("unconstrained")
             else:
                 verdicts.append("caught")
+        absent_caught = verdicts[-1] == "caught"
         if all(v == "caught" for v in verdicts):
             print("  %-28s %s pinned" % (cname, cvalue))
+        elif not absent_caught:
+            print("  %-28s %s NOTHING NOTICES IT BEING SWITCHED OFF  (%s)" % (cname, cvalue, ", ".join(verdicts)))
+            unconstrained.append(cname)
         elif "not-applied" in verdicts:
             print("  %-28s %s NOT APPLIED - this proves nothing" % (cname, cvalue))
             unconstrained.append(cname)
