@@ -59,7 +59,13 @@ public class Boss {
     double idleDuration = 1.0;
     double windupDuration = 0.6;
     double executeDuration = 0.8;
-    double recoverDuration = 1.2;
+    /**
+     * How long the current recovery lasts. PUBLIC because it is the CONSEQUENCE of a stun rather than internal
+     * state: a wall-stun multiplies it, and that is what a player feels. A check cannot assert the stunned recovery
+     * is longer without reading it, and asserting a multiple of it instead would be the exact tautology
+     * tools/tautologies.py exists to find - both sides moving together.
+     */
+    public double recoverDuration = 1.2;
     double phaseEnterDuration = 1.5;
 
     // --- Wall-stun (charge into wall = big punish window) ---

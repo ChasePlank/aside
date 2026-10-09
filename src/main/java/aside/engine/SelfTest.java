@@ -1048,6 +1048,7 @@ public class SelfTest {
         theTutorialTeachesTheGame();
         theBossOnlyTakesDamageInItsWindow();
         theWordingHeuristicKnowsWhatItIsFor();
+        aStunnedBossRecoversForLonger();
         theDeathFadeIsVisible();
         anArrowHittingABossTakesItsHealth();
         roomsModeHasAWayOut();
@@ -1555,6 +1556,36 @@ public class SelfTest {
                 Bot.similar("Go left down the hallway.", "Go left down the hallway now."));
         check("and options a reader can tell apart are left alone",
                 !Bot.similar("Say it out loud.", "Think about the four minutes."));
+    }
+
+    /**
+     * A wall-stunned boss recovers for longer than a normal one.
+     *
+     * <p><b>FOUND BY SWEEPING, NOT BY READING.</b> `tools/tautologies.py` mutates every constant a file defines, in
+     * both directions, and reports what nothing pins. On Boss.java it pinned MAX_HITS_PER_WINDOW and left
+     * STUNNED_MULTIPLIER and DYING_SECONDS unconstrained - and STUNNED_MULTIPLIER's own comment is a claim:
+     * "stunned recovery lasts longer". Nothing asserted it.
+     *
+     * <p><b>RELATIONAL, so the sweep can see it:</b> longer than a NORMAL recovery, never a multiple of the
+     * constant. An assertion that the stunned recovery is `1.2 * STUNNED_MULTIPLIER` would be the exact tautology
+     * this sweep exists to find - both sides move together and it passes every mutation.
+     *
+     * <p>It also has to say WHY the stun happened, because the cause is the interesting part: the boss stuns itself
+     * when a charge fails to move it, which is what stops a charge pinning the player against a wall. A boss in a
+     * world with nothing to hit does exactly that, which is how this check provokes it.
+     */
+    static void aStunnedBossRecoversForLonger() {
+        Physics.Body player = new Physics.Body(1200, 500, 24, 44);
+        Boss b = new Boss(0, 0, 64, 64);
+        boolean stunned = false;
+        for (int i = 0; i < 60 * 60 && !stunned; i++) {
+            b.update(1.0 / 60, player);
+            // The normal recovery is 1.2 seconds; a stun multiplies it. Read the CONSEQUENCE rather than the flag,
+            // because the flag is cleared on the way through and the duration is what a player feels.
+            if (b.recoverDuration > 1.2) stunned = true;
+        }
+        check("a boss whose charge cannot move it wall-stuns, and then recovers for LONGER than a normal window",
+                stunned);
     }
 
     static void theRunHasAnEnd() {
