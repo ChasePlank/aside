@@ -20,10 +20,11 @@ package aside.games.fruitjump.engine;
  */
 public class BlastTest {
     static int failures = 0;
+    static int passes = 0;
 
     static void verdict(String what, boolean ok) {
         System.out.println((ok ? "PASS: " : "FAIL: ") + what);
-        if (!ok) failures++;
+        if (ok) passes++; else failures++;
     }
 
     public static void main(String[] args) {
@@ -33,6 +34,7 @@ public class BlastTest {
     /** Run the whole test and return the number of failures, so a gate can fold it in. */
     public static int runAll() {
         failures = 0;
+        passes = 0;
         World w = new World();
 
         Enemy near = new Enemy(300, 100, 24, 24, Enemy.KIND_SPIDER);
@@ -56,6 +58,7 @@ public class BlastTest {
         verdict("the radius that breaks tiles reaches FURTHER than the one that hurts - the documented order, so a "
                 + "wall can be opened from just outside the lethal circle",
                 Projectile.BLAST_RADIUS > Projectile.BLAST_DAMAGE_RANGE);
+        System.out.println("\n=== " + passes + " passed, " + failures + " failed ===");
         return failures;
     }
 }

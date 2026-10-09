@@ -178,7 +178,11 @@ open(p, "w").write(s.replace(f, t, 1))
   # "caught"; the second put "checks passed" before "FAILED" and read a caught
   # mutation as not caught; the third did not know "1 failed" at all and said
   # UNKNOWN. Three shapes of the same mistake in one file.
-  if printf '%s' "$OUT" | grep -qE '(^|[^0-9])[1-9][0-9]* (failed|FAILED)'; then
+  # AND ONE MORE SHAPE, found the hard way: the engine's per-check test classes (PiranhaTest, BlastTest,
+  # CrackedPocketTest) print "PASS  <what>" and "FAIL  <what>" lines with a summary now, but a run whose LAST check
+  # happens to pass used to read as NOT CAUGHT while an earlier FAIL sat right there in the output. The word PASS on
+  # the last line was enough to satisfy the second pattern. A standalone FAIL is a failure whatever else printed.
+  if printf '%s' "$OUT" | grep -qE '(^|[^0-9])[1-9][0-9]* (failed|FAILED)' || printf '%s' "$OUT" | grep -qE '^FAIL([: ]|$)'; then
     printf '%-44s caught       %s\n' "$FROM" "$OUT"
   elif printf '%s' "$OUT" | grep -qE '0 (failed|FAILED)|checks passed|ALL PASS|PASS'; then
     printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT"

@@ -1068,6 +1068,13 @@ public class SelfTest {
         check("blast: it kills what is inside it, spares what is outside, and the break reaches further ("
                 + blastFailures + " failures)", blastFailures == 0);
 
+        // THE PIRANHA, WHICH HAD THREE DOCUMENTED CLAIMS AND NO CHECKS. The sweep reported IDLE_SPEED,
+        // RECOVER_TIME and REAGGRO_DELAY as each switchable off with nothing noticing. Same shape as the blast
+        // and pocket tests: an engine-package class that can drive the real water and state machine.
+        int piranhaFailures = aside.games.fruitjump.engine.PiranhaTest.runAll();
+        check("piranha: idles when you are dry, cannot stun-lock you, and a miss leaves it open ("
+                + piranhaFailures + " failures)", piranhaFailures == 0);
+
         readmeHasNoCheckCount();
 
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
