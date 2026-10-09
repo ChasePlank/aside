@@ -128,3 +128,19 @@ monty: Fine.
 -> hallway
 
 * "One more thing." -> apologist_alt [if aff_montal >= 2]
+
+# 3. two choices that do the same thing: one pair under the same condition leading to the
+#    same place, and one pair a reader cannot tell apart. A player would call both a cheat.
+#    Reachable or not does not matter - this check is STATIC, so it sees every authored
+#    choice, which is why the scene can sit here off the path like the others.
+== pointless_fork ==
+The hallway forks. Both ways are the same way, which is the joke and also the bug.
+* Go left down the hallway. -> fork_end
+* Go left down the hallway now. -> other_end
+* Take the way on the left. -> other_end
+
+== fork_end ==
+-> END
+
+== other_end ==
+-> END

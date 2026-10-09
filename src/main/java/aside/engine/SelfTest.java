@@ -439,9 +439,13 @@ public class SelfTest {
                 r.varsReadOnly.contains("aff_montal"));
         check("traversal caught beats authored after a jump",
                 r.unreachableBeats.stream().anyMatch(d -> d.startsWith("apologist_alt")));
+        check("audit caught the two options that change nothing",
+                r.falseChoices.stream().anyMatch(d -> d.contains("changes nothing")));
+        check("audit caught the two options a reader cannot tell apart",
+                r.falseChoices.stream().anyMatch(d -> d.contains("near-identical")));
         check("traversal reported no missing targets", r.missingTargets.isEmpty());
         check("traversal reached every scene that is actually reachable",
-                r.unreachableScenes().size() == 2);
+                r.unreachableScenes().size() == 5);   // epilogue, apologist_alt, and the planted fork's three scenes
         check("choices were offered during traversal",
                 r.choiceSitesOffered.size() >= 5);
 
