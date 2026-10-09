@@ -125,11 +125,11 @@ def main() -> int:
 
     print()
     if not unconstrained:
-        # "PINNED" WOULD OVERCLAIM. Every constant here has its BEHAVIOUR pinned - switching it off is caught - and
-      # most have their magnitude free, which is what a tuning value should be. A message saying "every constant is
-      # pinned" invites exactly the wrong conclusion about a number nobody should be pinning.
-      print("  OK every constant in %s has its BEHAVIOUR pinned in %s, and magnitudes may be free"
-            % (path.name, suite))
+          # "PINNED" WOULD OVERCLAIM. Every constant here has its BEHAVIOUR pinned - switching it off is caught - and
+        # most have their magnitude free, which is what a tuning value should be. A message saying "every constant
+        # is pinned" invites exactly the wrong conclusion about a number nobody should be pinning.
+        print("  OK every constant in %s has its BEHAVIOUR pinned in %s, and magnitudes may be free"
+              % (path.name, suite))
         return 0
     print("  %d of %d constant(s) nothing pins: %s" % (len(unconstrained), len(cs), ", ".join(unconstrained)))
     print("  A tautology, a free parameter, or an unused value - the sweep flags, and that judgement is mine.")
