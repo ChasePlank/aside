@@ -58,6 +58,7 @@ SUITES=(
   aside.games.fruitjump.engine.WaterSuite
   aside.games.fruitjump.engine.WaterEnemyTest
   aside.games.fruitjump.engine.CrackedPocketTest
+  aside.games.fruitjump.engine.BlastTest          # a blast kills inside it and spares outside it
   aside.games.fruitjump.engine.DoorStressTest    # a report, not a gate - it never fails, and is listed here
 )                                                # so that its silence is deliberate rather than an oversight
 

@@ -27,6 +27,7 @@ cd "$HERE" || exit 2
 E=src/main/java/aside/games/fruitjump/engine
 G=src/main/java/aside/games/fnaf/engine
 W=src/main/java/aside/games/fruitjump/engine/WaterSystem.java
+P=src/main/java/aside/games/fruitjump/engine/Projectile.java
 A=src/main/java/aside/engine
 T=src/main/java/aside/games/fruitjump
 
@@ -53,6 +54,10 @@ MUTATIONS=(
   # Found by tools/tautologies.py, not by reading: the stall guard could be removed entirely and a check that
   # asserted only "a stalled pull releases" still passed, because the 1.5s cap ends it anyway.
   "hookshot: the stall guard switched off|$W|STALL_TIME = 0.3;|STALL_TIME = 0.0;|aside.engine.SelfTest"
+  # Both found by tools/tautologies.py as "NOTHING NOTICES IT BEING SWITCHED OFF": an arrow that flies dead
+  # straight, and a blast that hurts nobody. Neither behaviour had a check at all.
+  "weapons: arrows fly straight|$P|ARROW_GRAVITY = 250;|ARROW_GRAVITY = 0.0;|aside.engine.SelfTest"
+  "weapons: the blast hurts nobody|$P|BLAST_DAMAGE_RANGE = 100;|BLAST_DAMAGE_RANGE = 0.0;|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 

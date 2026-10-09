@@ -985,6 +985,7 @@ public class SelfTest {
 
         System.out.println("\n--- the weapons ---");
         weaponsDoWhatTheySay();
+        arrowsArc();
         batsChaseWhatIsNear();
         aGroupOfBatsDoesNotPinYou();
         piranhasBiteSwimmers();
@@ -1059,6 +1060,13 @@ public class SelfTest {
         int pocketFailures = aside.games.fruitjump.engine.CrackedPocketTest.runAll();
         check("pocket: a bomb opens the cracked floor and the player drops in ("
                 + pocketFailures + " failures)", pocketFailures == 0);
+
+        // THE BLAST, WHICH NOTHING WAS CHECKING THE DAMAGE OF. The sweep reported Projectile.BLAST_DAMAGE_RANGE
+        // could be set to zero - the blast hurting nobody - with nothing noticing. Same shape as the pocket test
+        // below it: an engine-package class that can call the package-private routing, folded in here.
+        int blastFailures = aside.games.fruitjump.engine.BlastTest.runAll();
+        check("blast: it kills what is inside it, spares what is outside, and the break reaches further ("
+                + blastFailures + " failures)", blastFailures == 0);
 
         readmeHasNoCheckCount();
 
@@ -1788,6 +1796,36 @@ public class SelfTest {
      * <p>Absolute distances again, not the constant - see rule 32. A range of 0 leaves the near bat at 99px;
      * a range of 10,000 brings the far one in. Both fail this.
      */
+    /**
+     * An arrow arcs - it does not fly straight.
+     *
+     * <p><b>FOUND BY tools/tautologies.py SAYING "NOTHING NOTICES IT BEING SWITCHED OFF".</b> ARROW_GRAVITY could be
+     * set to zero - every arrow flying dead straight - and no check in 649 noticed. The class doc says "Arrows:
+     * fast, affected by gravity", and only the first half of that sentence was tested.
+     */
+    static void arrowsArc() {
+        double dt = GameLoop.DT;
+        World w = new World();
+        Projectile arrow = Projectile.arrow(200, 100, 1);
+        w.addProjectile(arrow);
+
+        // TWO EQUAL WINDOWS, and the drop in each is the whole measurement. A body under gravity falls further in
+        // the second window than the first, because a fall accelerates; one flying straight drops the same in both,
+        // because a straight line has no curvature. RELATIONAL, so the number is never compared to the constant that
+        // produced it - the tautology rule, which is what the sweep exists to enforce.
+        double y0 = arrow.y;
+        for (double t = 0; t < 0.25; t += dt) w.update(dt);
+        double firstQuarter = arrow.y - y0;
+        double yMid = arrow.y;
+        for (double t = 0; t < 0.25; t += dt) w.update(dt);
+        double secondQuarter = arrow.y - yMid;
+
+        check("weapons: an arrow is still in flight half a second after leaving the bow, in open air", arrow.active);
+        check("weapons: an arrow arcs - it falls further in the second quarter-second than the first ("
+                        + (int) firstQuarter + "px then " + (int) secondQuarter + "px)",
+                secondQuarter > firstQuarter + 5);
+    }
+
     static void batsChaseWhatIsNear() {
         for (long seed : new long[]{7L, 11L, 42L}) {
             double near = closestApproach(100, seed);
