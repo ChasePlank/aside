@@ -29,6 +29,7 @@ G=src/main/java/aside/games/fnaf/engine
 W=src/main/java/aside/games/fruitjump/engine/WaterSystem.java
 P=src/main/java/aside/games/fruitjump/engine/Projectile.java
 R=src/main/java/aside/games/fruitjump/engine/Piranha.java
+C=src/main/java/aside/games/fruitjump/engine/Combat.java
 A=src/main/java/aside/engine
 T=src/main/java/aside/games/fruitjump
 
@@ -64,6 +65,11 @@ MUTATIONS=(
   "piranha: it never drifts when idle|\$R|IDLE_SPEED = 28;|IDLE_SPEED = 0.0;|aside.games.fruitjump.engine.PiranhaTest"
   "piranha: no punish window after a miss|\$R|RECOVER_TIME = 1.1;|RECOVER_TIME = 0.0;|aside.games.fruitjump.engine.PiranhaTest"
   "piranha: it re-engages instantly|\$R|REAGGRO_DELAY = 2.5;|REAGGRO_DELAY = 0.0;|aside.games.fruitjump.engine.PiranhaTest"
+  # The knockback, which nothing looked at: damageIsMetered covered how OFTEN a hit lands and not what it does.
+  # The direction is the one that matters - the wrong way round shoves the player INTO the spikes they were hurt by.
+  "damage: a hit does not move you|$C|KNOCKBACK_X = 250;|KNOCKBACK_X = 0.0;|aside.engine.SelfTest"
+  "damage: the knockback pushes you IN|$C|player.vx = dir * KNOCKBACK_X;|player.vx = -dir * KNOCKBACK_X;|aside.engine.SelfTest"
+  "damage: no upward pop|$C|KNOCKBACK_Y = -300;|KNOCKBACK_Y = 0.0;|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 

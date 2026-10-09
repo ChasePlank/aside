@@ -1010,6 +1010,7 @@ public class SelfTest {
 
         System.out.println("\n--- damage timing ---");
         damageIsMetered();
+        aHitKnocksYouAway();
 
         System.out.println("\n--- the hookshot ---");
         theHookshotReaches();
@@ -2646,6 +2647,48 @@ public class SelfTest {
     }
 
     /** Advance a combat clock by `seconds`, in engine steps. */
+    /**
+     * A hit throws the player away from what hit them, and up.
+     *
+     * <p><b>FOUND BY tools/tautologies.py:</b> `Combat.KNOCKBACK_X` could be set to zero - a hit that takes a heart
+     * and moves you nowhere - with nothing noticing. `damageIsMetered` covers how OFTEN a hit can land and never
+     * looked at what a hit does to you.
+     *
+     * <p><b>BOTH DIRECTIONS, because "away from the source" is the claim and a sign error is the interesting bug:</b>
+     * the wrong way round shoves the player INTO the spikes they were just hurt by, which is worse than no knockback
+     * at all. Asserted in fixed px/s rather than against the constant, and the last check steps a real world so that
+     * a velocity nobody applies still fails - the difference between a shove and a number written onto a body.
+     */
+    static void aHitKnocksYouAway() {
+        Physics.Body fromRight = new Physics.Body(200, 100, 24, 44);
+        Combat c1 = new Combat();
+        c1.playerHP = 3;
+        c1.hurtPlayer(fromRight, 400);          // the hazard is to the RIGHT of the player
+        check("damage: a hit from the right throws the player left (" + (int) fromRight.vx + "px/s)",
+                fromRight.vx < -50);
+        check("damage: and pops them upward (" + (int) fromRight.vy + "px/s)", fromRight.vy < -50);
+
+        Physics.Body fromLeft = new Physics.Body(200, 100, 24, 44);
+        Combat c2 = new Combat();
+        c2.playerHP = 3;
+        c2.hurtPlayer(fromLeft, 0);             // and now to the LEFT
+        check("damage: a hit from the left throws the player right (" + (int) fromLeft.vx + "px/s)",
+                fromLeft.vx > 50);
+
+        // AND IT IS MOVEMENT, NOT A VELOCITY NOBODY APPLIES.
+        World w = new World();
+        Physics.Body moved = new Physics.Body(200, 100, 24, 44);
+        w.addBody(moved);
+        Combat c3 = new Combat();
+        c3.playerHP = 3;
+        double x0 = moved.x, y0 = moved.y;
+        c3.hurtPlayer(moved, 400);
+        for (double t = 0; t < 0.15; t += GameLoop.DT) w.update(GameLoop.DT);
+        check("damage: and the shove really moves them - " + (int) (x0 - moved.x) + "px left and "
+                + (int) (y0 - moved.y) + "px up in a sixth of a second",
+                (x0 - moved.x) > 10 && (y0 - moved.y) > 3);
+    }
+
     static void step(Combat c, double seconds) {
         for (double t = 0; t < seconds; t += GameLoop.DT) c.update(GameLoop.DT);
     }
