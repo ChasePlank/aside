@@ -70,13 +70,17 @@ the command to raise the budget, because an unfinished search cannot prove a sce
 java -Xmx3g -Daside.budget=4000000 aside.engine.Audit <story>
 ```
 
-**AND A CORRECTION, 2026-10-09: THE FRONTIER FLAG THIS SECTION USED TO PRINT IS NOT IN THIS TREE.** It read
-`-Daside.frontier.paths=true`, with a note that it is "the mode to use on anything long" - and no Java file here
-implements it. It lives on `origin/roxanne/audit-verdict`, five commits that have never been merged, and **the JVM
-SILENTLY IGNORES AN UNKNOWN `-D` PROPERTY**: so the documented command runs, prints an ordinary report, and gives
-none of the memory saving it promises. A reader following it on a large story would hit the heap wall the flag was
-written to avoid, with nothing anywhere to say why. The command above is what works today, with a bigger heap
-instead.
+`-Daside.frontier.paths=true` uses the path-replay frontier, which is how the large stories stay within memory.
+It is the mode to use on anything long. **It is in this tree as of 2026-10-09**, ported from the branch where it
+had been sitting unmerged, and cross-checked the way the branch cross-checked it: on `stories/night-shift.aside`
+both frontiers produce **byte-identical reports**.
+
+**AND THE REASON THIS PARAGRAPH IS WORTH READING RATHER THAN SKIMMING:** for a week it advertised this flag while
+**no Java file in the tree implemented it**. It lives on `origin/roxanne/audit-verdict`, and **the JVM SILENTLY
+IGNORES AN UNKNOWN `-D` PROPERTY** - so the documented command ran, printed an ordinary report, and gave none of the
+memory saving it promised. A reader following it on a large story would have hit the heap wall the flag was written
+to avoid, with nothing anywhere to say why. If this line ever describes something that is not here again, that is
+the failure mode.
 
 **The same applies to one row of the table above:** `choices that do not matter` is on that branch too. The
 branch's own header says which commit adds it.

@@ -239,9 +239,19 @@ public class Bot {
         // options. Those then got reported as unreachable when they were
         // simply unvisited yet. Breadth-first covers the whole story
         // evenly, which is the correct order for a reachability audit.
+        // Two ways to hold the frontier. The default keeps a full Vn per pending branch: simple and fast.
+        // -Daside.frontier.paths instead keeps a PATH (the choice indices taken from the root) and rebuilds the
+        // state by replaying it. THE ENGINE HAS NO RANDOMNESS - no Random, no Math.random, no clock in Vn or Bot -
+        // so a replay is exact, and a pending branch costs an int[] instead of a whole state, which is the
+        // difference between auditing a 131-scene story and being killed by the OS.
+        //
+        // Both are kept because the replay mode trades memory for time: it re-walks the story once per expanded
+        // state, so it is slower per state and only worth it when memory is the wall.
+        final boolean pathFrontier = Boolean.getBoolean("aside.frontier.paths");
         Deque<Vn> stack = new ArrayDeque<>();
-        Vn root = new Vn(script);
-        stack.addLast(root);
+        Deque<int[]> pathStack = new ArrayDeque<>();
+        if (pathFrontier) pathStack.addLast(new int[0]);
+        else stack.addLast(new Vn(script));
 
         // Dedupe on story state, not on path. Many different routes lead
         // to the same (scene, position, variables), and re-exploring each
@@ -265,9 +275,16 @@ public class Bot {
         // and if it does the report says so rather than the process
         // printing a stack trace.
         try {
-            while (!stack.isEmpty()) {
+            while (pathFrontier ? !pathStack.isEmpty() : !stack.isEmpty()) {
                 if (r.statesExpanded >= budget) { r.budgetHit = true; break; }
-                Vn v = stack.pollFirst();
+                int[] path = null;
+                Vn v;
+                if (pathFrontier) {
+                    path = pathStack.pollFirst();
+                    v = replay(script, path);
+                } else {
+                    v = stack.pollFirst();
+                }
 
                 if (!seen.add(signatureHash(v))) continue;
                 r.statesExpanded++;
@@ -307,6 +324,14 @@ public class Bot {
                         continue;
                     }
                     for (int i = 0; i < avail.size(); i++) {
+                        if (pathFrontier) {
+                            // Extend by the choice's INDEX in the availability list, which is the ordering the
+                            // replay rebuilds.
+                            int[] child = java.util.Arrays.copyOf(path, path.length + 1);
+                            child[path.length] = i;
+                            pathStack.addLast(child);
+                            continue;
+                        }
                         Vn branch = v.copyForSearch();
                         // Re-find the same choice in the clone by site
                         List<Choice> av2 = branch.availableChoices();
@@ -450,6 +475,23 @@ public class Bot {
         }
         // Below every threshold, counts collapse to one bucket too
         return best == null ? "low" : String.valueOf(best);
+    }
+
+    /**
+     * Rebuild a state by replaying a choice-index path from the root. Exact because the engine is deterministic:
+     * choice availability depends on the variables, and the replay reproduces the variables along the way.
+     */
+    private Vn replay(Script script, int[] path) {
+        Vn v = new Vn(script);
+        for (int idx : path) {
+            int spin = 0;
+            while (v.mode == Vn.Mode.SHOWING && spin++ < 100_000) v.advance();
+            if (v.mode != Vn.Mode.CHOOSING) return v;   // an ending: nothing more to take
+            List<Choice> avail = v.availableChoices();
+            if (idx >= avail.size()) return v;          // divergent: let the caller see it
+            v.choose(idx);
+        }
+        return v;
     }
 
     static String site(String scene, int line, String text) {
