@@ -26,6 +26,7 @@ cd "$HERE" || exit 2
 
 E=src/main/java/aside/games/fruitjump/engine
 G=src/main/java/aside/games/fnaf/engine
+W=src/main/java/aside/games/fruitjump/engine/WaterSystem.java
 T=src/main/java/aside/games/fruitjump
 
 # label | file | anchor | replacement | the suite that must notice
@@ -38,6 +39,12 @@ MUTATIONS=(
   "fnaf: no grace at the start of a night|$G|GRACE_SECONDS = 8.0;|GRACE_SECONDS = 0.0;|aside.games.fnaf.engine.SelfTest"
   "fnaf: a night is one hour, not six|$G|NIGHT_HOURS = 6;|NIGHT_HOURS = 1;|aside.games.fnaf.engine.SelfTest"
   "fnaf: the power starts empty|$G|POWER_START = 100.0;|POWER_START = 0.0;|aside.games.fnaf.engine.SelfTest"
+  # THE ABSENCE SHAPE. A value chosen to mean "as if unimplemented", which is what an equality-to-the-constant
+  # check can never catch - the measurement and the constant would move together. Borrowed from the branch's
+  # mutations.py, which keeps a whole set of these for exactly this reason.
+  "water: nothing is deep enough to swim|$W|SWIM_DEPTH = 48.0;|SWIM_DEPTH = 100000.0;|aside.games.fruitjump.engine.WaterSuite"
+  "water: the water has no buoyancy|$W|BUOYANCY = 1.35;|BUOYANCY = 0.0;|aside.games.fruitjump.engine.WaterSuite"
+  "water: the water does not slow you|$W|DRAG_X = 2.5;|DRAG_X = 0.0;|aside.games.fruitjump.engine.WaterSuite"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
