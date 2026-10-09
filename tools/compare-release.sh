@@ -96,6 +96,12 @@ echo "=== the engine class lists, both ways ==="
 # Nothing asked the reverse - and the first time it was asked, by hand, the answer was RoomsProbe: a CHECK the engine
 # had and the release did not, which the curated feature markers above could never have named. A class list is not
 # curated and the fork copies the class names, so the two are directly comparable.
+#
+# ENGINE ONLY, AND THE ROOT PACKAGES ARE DELIBERATELY NOT COMPARED. They differ by eighteen files, and every one of
+# them is architecture rather than drift: the release is a standalone game with its own Main, Screen and
+# ScreenManager, while this repository embeds the same game inside a larger engine whose entry point is
+# FruitJumpGame. The two shells are SUPPOSED to differ; the engines are supposed to mirror each other, which is what
+# makes this section a check rather than a wish.
 here_classes=$(ls "$HERE/src/main/java/aside/games/fruitjump/engine"/*.java 2>/dev/null | xargs -n1 basename | sort)
 there_classes=$(ls "$RELEASE/src/main/java/tropical/engine"/*.java 2>/dev/null | xargs -n1 basename | sort)
 echo "  this repository: $(echo "$here_classes" | grep -c .)   release: $(echo "$there_classes" | grep -c .)"
