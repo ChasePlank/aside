@@ -21,6 +21,8 @@ import java.util.Set;
  * through a window is a story engine you won't test.
  */
 import aside.games.fruitjump.engine.Bat;
+import aside.games.fruitjump.engine.Boss;
+import aside.games.fruitjump.engine.Enemy;
 import aside.games.fruitjump.engine.Combat;
 import aside.games.fruitjump.engine.GameLoop;
 import aside.games.fruitjump.engine.Hookshot;
@@ -1044,6 +1046,8 @@ public class SelfTest {
         theRunHasAnEnd();
         theRunContainsTheGame();
         theTutorialTeachesTheGame();
+        theBossOnlyTakesDamageInItsWindow();
+        theDeathFadeIsVisible();
         roomsModeHasAWayOut();
         soundHonoursTheGlobalMuteAndVolume();
 
@@ -1436,6 +1440,58 @@ public class SelfTest {
      * either ends while the sun is still up or keeps climbing after it has gone down, and NOTHING ELSE WOULD
      * NOTICE. They are one number today - this is what keeps them one number.
      */
+    /**
+     * The boss is hurt only while the mark on its back is lit.
+     *
+     * <p><b>ADDED BECAUSE A MUTATION FOUND NOTHING COULD SEE IT.</b> `tools/mutate.sh` set World's ARROW_DAMAGE from
+     * 3.0 to 0.0 - damage as if unimplemented - and all 636 checks passed. The boss had been verified by a PROBE:
+     * a tool run by hand once, which proves it worked then and says nothing about whether it still works.
+     *
+     * <p><b>AND IT IS WRITTEN RELATIONALLY, ON PURPOSE.</b> "hp fell" rather than "hp fell by ARROW_DAMAGE", because
+     * the second is a measurement compared to the constant that defines it - a check that passes whatever the
+     * constant becomes, which is the exact fault the mutation harness exists to find. The damage amount itself is
+     * not this check's business; that a lit mark CONVERTS A HIT is.
+     */
+    static void theBossOnlyTakesDamageInItsWindow() {
+        // FAR ENOUGH THAT THE BOSS CHOOSES AN ATTACK, which is what opens the mark. A player 200px away -
+        // inside the charge's own reach - never sees a window at all, and this check failed that way first:
+        // 40 seconds of fighting and the mark never lit. The distance rule is the boss's, not this test's.
+        Physics.Body player = new Physics.Body(1200, 500, 24, 44);
+        Boss b = new Boss(0, 0, 64, 64);
+        double start = b.hp();
+        b.hit(1.0);
+        check("a boss with a dark mark takes no damage at all", b.hp() == start);
+
+        boolean opened = false;
+        for (int i = 0; i < 60 * 40 && !opened; i++) {
+            b.update(1.0 / 60, player);
+            if (b.weakPointOpen()) opened = true;
+        }
+        check("the boss opens its weak point inside forty seconds of fighting", opened);
+        if (opened) {
+            double before = b.hp();
+            b.hit(1.0);
+            check("and a hit while the mark is lit changes its health (fell, rather than merely changed)",
+                    b.hp() < before);
+        }
+    }
+
+    /**
+     * The death fade is a moment rather than a frame.
+     *
+     * <p>The second thing the mutation harness found unverifiable: setting Enemy's DEATH_SECONDS to 0.0 - a death
+     * with no fade at all, which is what the game looked like before the fade was written - was caught by nothing.
+     */
+    static void theDeathFadeIsVisible() {
+        Enemy e = new Enemy(0, 0, 24, 24, Enemy.KIND_SPIDER);
+        check("a live enemy is at full fade", e.deathFade() == 1.0);
+        e.dead = true;
+        check("and on the frame it dies it is still visible, which zero DEATH_SECONDS would break",
+                e.deathFade() > 0.0);
+        for (int i = 0; i < 240; i++) e.updateAI(1.0 / 60, 0, 0);
+        check("and it is gone four seconds later", e.deathFade() == 0.0);
+    }
+
     static void theRunHasAnEnd() {
         int goal = aside.games.fruitjump.engine.LevelGen.FINAL_LEVEL;
         int dusk = aside.games.fruitjump.GameplayScreen.LEVELS_TO_DUSK;
