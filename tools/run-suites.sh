@@ -54,6 +54,7 @@ SUITES=(
   aside.engine.SelfTest                          # the engine and the shelf; the auditor, on two fixtures
   aside.audio.AudioTest                          # every cue has a file, and plays
   aside.games.fruitjump.engine.WaterProbe        # every pool is the shape it was built to be
+  aside.games.fruitjump.engine.RoomsProbe        # rooms mode still generates enemies, pickups and doors
   aside.games.fruitjump.engine.WaterSuite
   aside.games.fruitjump.engine.WaterEnemyTest
   aside.games.fruitjump.engine.CrackedPocketTest
