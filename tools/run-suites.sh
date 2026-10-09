@@ -262,6 +262,24 @@ fi
 # NOT `-x`. The convention above tests for an executable tool, but this one is a Python file run through python3,
 # and a file mode lost in a copy would make the check silently not run - which is the failure this whole section
 # exists to prevent. A missing tool is a FAILURE here, not a skip: something has to be the thing that fails.
+# AND THAT THE AUDIO IS REPRODUCIBLE, which nothing in this gate was asking. Three faults in one week came out of
+# that silence: a generator seeding noise from Python's salted hash() (so re-running it MODIFIED committed assets),
+# five more generators with the same bug, and seven cue files with no generator at all. Every file-level check passed
+# throughout - the cues existed, the cue lists were complete, the gate was green - because "the file is there" and
+# "the file can be produced" are different statements.
+#
+# IT RUNS THE GENERATORS IN A SCRATCH COPY, twice, because they write to ./audio relative to themselves - so this
+# check cannot modify the repository it is checking, which is the one property a check like this must have.
+if [ -f tools/check-audio-reproducible.sh ]; then
+  echo "  --- audio reproducibility ---"
+  aud_out=$(timeout 600 tools/check-audio-reproducible.sh 2>&1); aud_rc=$?
+  echo "$aud_out" | grep -E "generators:|deterministic|NOT DETERMINISTIC|produced:|DIFFERS|PRODUCED BUT|OK every|FAIL" | sed 's/^/  /'
+  if [ $aud_rc -ne 0 ]; then fail=$((fail + 1)); failed_names+=("audio-reproducible"); fi
+else
+  echo "  --- audio reproducibility NOT CHECKED - tools/check-audio-reproducible.sh is missing ---"
+  fail=$((fail + 1)); failed_names+=("audio-reproducible-missing")
+fi
+
 if [ -f tools/check-tutorial-counts.py ]; then
   echo "  --- stated tutorial counts ---"
   tut_out=$(python3 tools/check-tutorial-counts.py 2>&1); tut_rc=$?
