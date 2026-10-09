@@ -1047,6 +1047,7 @@ public class SelfTest {
         theRunContainsTheGame();
         theTutorialTeachesTheGame();
         theBossOnlyTakesDamageInItsWindow();
+        theWordingHeuristicKnowsWhatItIsFor();
         theDeathFadeIsVisible();
         anArrowHittingABossTakesItsHealth();
         roomsModeHasAWayOut();
@@ -1531,6 +1532,29 @@ public class SelfTest {
         w.projectiles.add(Projectile.arrow(230, 430, 1));
         w.update(GameLoop.DT);
         check("an arrow overlapping a boss takes health off it (fell, rather than merely changed)", b.hp() < before);
+    }
+
+    /**
+     * The auditor's near-identical heuristic, pinned where a mutation found nothing could see it.
+     *
+     * <p><b>WHY THIS EXISTS.</b> `tools/mutate.sh` changed Bot's floor from `>= 8` to `>= 0`, which makes EVERY pair of
+     * options count as near-identical - and all 644 checks passed. A heuristic that over-fires is not a harmless
+     * mistake: it is exactly how `the-last-crossing`'s legitimate pair got flagged as a fault, and that was found by
+     * an author reading the report, not by anything automatic.
+     *
+     * <p><b>AND THE FLOOR IS DELIBERATE.</b> The branch's own note says why: a containment match on short strings
+     * would flag a legitimate "yes" / "yes please" pair. So this is not just a boundary - it is the difference
+     * between a check that reports faults and one that reports prose.
+     */
+    static void theWordingHeuristicKnowsWhatItIsFor() {
+        check("short options are not flagged as near-identical: \"yes\" / \"yes please\" is a legitimate pair",
+                !Bot.similar("Yes.", "Yes please."));
+        check("nor are two short options with no relation",
+                !Bot.similar("Go left.", "Wait here."));
+        check("but the same shape at length IS flagged, which is what the heuristic is for",
+                Bot.similar("Go left down the hallway.", "Go left down the hallway now."));
+        check("and options a reader can tell apart are left alone",
+                !Bot.similar("Say it out loud.", "Think about the four minutes."));
     }
 
     static void theRunHasAnEnd() {

@@ -27,6 +27,7 @@ cd "$HERE" || exit 2
 E=src/main/java/aside/games/fruitjump/engine
 G=src/main/java/aside/games/fnaf/engine
 W=src/main/java/aside/games/fruitjump/engine/WaterSystem.java
+A=src/main/java/aside/engine
 T=src/main/java/aside/games/fruitjump
 
 # label | file | anchor | replacement | the suite that must notice
@@ -45,6 +46,10 @@ MUTATIONS=(
   "water: nothing is deep enough to swim|$W|SWIM_DEPTH = 48.0;|SWIM_DEPTH = 100000.0;|aside.games.fruitjump.engine.WaterSuite"
   "water: the water has no buoyancy|$W|BUOYANCY = 1.35;|BUOYANCY = 0.0;|aside.games.fruitjump.engine.WaterSuite"
   "water: the water does not slow you|$W|DRAG_X = 2.5;|DRAG_X = 0.0;|aside.games.fruitjump.engine.WaterSuite"
+  # THE AUDITOR'S OWN HEURISTIC. Nothing was mutating the tool that judges the stories, and setting its floor to
+  # zero makes EVERY pair of options count as near-identical - not caught by 644 checks until this one existed. A
+  # heuristic that over-fires is how the-last-crossing's legitimate pair got reported as a fault.
+  "audit: the wording heuristic over-fires|$A/Bot.java|a.length() >= 8 && b.length() >= 8|a.length() >= 0 \&\& b.length() >= 0|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
