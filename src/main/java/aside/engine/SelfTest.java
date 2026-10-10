@@ -2007,8 +2007,13 @@ public class SelfTest {
             if (p.stunTimer > 0) stunned++;
         }
         int pct = (int) Math.round(100.0 * stunned / total);
-        check("bats: three bats do not pin you for more than a third of ten seconds (" + pct + "% stunned)",
-                pct <= 33);
+        // BOTH BOUNDS, and the lower one is the whole reason this line changed. `pct <= 33` alone is satisfied by
+        // ZERO - bats that never stun anybody pass a check about not being pinned by bats. Found by the sweep
+        // reporting STUN_SECONDS as caught when doubled and halved but not when zeroed, which is the signature of a
+        // bound that only looks one way; the same shape as Hookshot's stall guard, where `stalled > 0` accepted the
+        // mutation that removed it.
+        check("bats: three bats stun you some of the time (" + pct + "% of ten seconds) and do not pin you"
+                + " (under a third)", pct >= 5 && pct <= 33);
     }
 
     /**

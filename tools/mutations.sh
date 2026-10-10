@@ -90,6 +90,9 @@ MUTATIONS=(
   # The 'A' water cell - an upwelling - which the generator never places and nothing was checking. Only the zero is
   # listed: a stronger current still lifts you higher, so the magnitude is the designer's, which is the healthy state.
   "water: the up-current does nothing|$E/LevelMap.java|CURRENT_UP_SPEED = 70.0;|CURRENT_UP_SPEED = 0.0;|aside.engine.SelfTest"
+  # The bat's stun, which had an upper bound only: 'the bats do not pin you' is satisfied by bats that never stun
+  # anybody. The same one-directional-bound shape as the hookshot's stall guard.
+  "bats: the stun does nothing|$E/Bat.java|STUN_SECONDS = 1.0;|STUN_SECONDS = 0.0;|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
