@@ -142,8 +142,17 @@ def main() -> int:
           # "PINNED" WOULD OVERCLAIM. Every constant here has its BEHAVIOUR pinned - switching it off is caught - and
         # most have their magnitude free, which is what a tuning value should be. A message saying "every constant
         # is pinned" invites exactly the wrong conclusion about a number nobody should be pinning.
-        print("  OK every constant in %s has its BEHAVIOUR pinned in %s, and magnitudes may be free"
-              % (path.name, suite))
+        # UNLESS IT WAS FILTERED, in which case "every constant" is a lie by omission - it means every constant
+        # TESTED. Found by running this with a single constant named and reading the summary: it said Bat.java was
+        # fully covered while four of its twelve constants were unwatched. A summary that cannot tell a filtered run
+        # from a whole one is the same fault as every other clean result in this project's collection: true of what
+        # it looked at, read as true of everything.
+        if only:
+            print("  OK %s.%s has its BEHAVIOUR pinned in %s (one constant asked for; %d in the file, the rest not tested here)"
+                  % (path.name, only, suite, len(constants_in(path))))
+        else:
+            print("  OK every constant in %s has its BEHAVIOUR pinned in %s, and magnitudes may be free"
+                  % (path.name, suite))
         return 0
     print("  %d of %d constant(s) nothing pins: %s" % (len(unconstrained), len(cs), ", ".join(unconstrained)))
     print("  A tautology, a free parameter, or an unused value - the sweep flags, and that judgement is mine.")
