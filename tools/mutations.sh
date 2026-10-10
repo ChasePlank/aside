@@ -121,6 +121,8 @@ MUTATIONS=(
   # The FNAF engine, which had no entry in this list until the day it got one: $G was declared at the top and used
   # by nothing, so one of the two games in this repository had never been fault-injected at all.
   "fnaf: the deal is not determined by the seed|$G/Game.java|this.rng = new Random(seed);|this.rng = new Random();|aside.games.fnaf.engine.SelfTest"
+  # The armour: the whole shape of the fight, and nothing asserted it until 10 October.
+  "boss: the window takes unlimited hits|$E/Boss.java|MAX_HITS_PER_WINDOW = 2;|MAX_HITS_PER_WINDOW = 99;|aside.games.fruitjump.engine.BlastTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
