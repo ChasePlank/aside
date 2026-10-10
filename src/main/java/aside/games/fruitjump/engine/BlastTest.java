@@ -58,6 +58,32 @@ public class BlastTest {
         verdict("the radius that breaks tiles reaches FURTHER than the one that hurts - the documented order, so a "
                 + "wall can be opened from just outside the lethal circle",
                 Projectile.BLAST_RADIUS > Projectile.BLAST_DAMAGE_RANGE);
+
+        // AND A BLAST IS WORTH THREE ARROWS, which the constant's own comment claims and nothing asserted:
+        // "A blast is worth three arrows because a bomb costs the player something - it has a fuse, and it hurts
+        // them at their own feet." Measured THROUGH THE ROUTING - handleExplosion, not Boss.hit - because calling
+        // hit() directly would test the weak-point window rather than the damage the game deals, which is the
+        // mistake the arrow-versus-boss check made first.
+        World bossWorld = new World();
+        Boss boss = new Boss(300, 100, 64, 64);
+        bossWorld.boss = boss;
+        Physics.Body bait = new Physics.Body(1500, 100, 24, 44);
+        bossWorld.addBody(bait);
+        bossWorld.playerBody = bait;
+        boolean window = false;
+        for (int i = 0; i < 60 * 60 && !window; i++) {
+            bossWorld.update(1.0 / 60);
+            window = boss.weakPointOpen();
+        }
+        verdict("a boss in a real world opens a window to measure against", window);
+        double beforeBlast = boss.hp();
+        bossWorld.handleExplosion(boss.body.x, boss.body.y);
+        double took = beforeBlast - boss.hp();
+        // Three arrows of three is nine; a band rather than the number, so the magnitude stays the designer's and
+        // the CLAIM - a bomb hits harder than a single shot, and not absurdly harder - is what is pinned.
+        verdict("a blast is worth about three arrows off a boss - it took " + (int) took
+                + " against one arrow's 3", took > 6 && took < 15);
+
         System.out.println("\n=== " + passes + " passed, " + failures + " failed ===");
         return failures;
     }

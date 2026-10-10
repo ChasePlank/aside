@@ -78,6 +78,10 @@ MUTATIONS=(
   # The stomp, found only after the sweep learned to read negative numbers.
   "stomp: no bounce off an enemy|$C|STOMP_BOUNCE = -400;|STOMP_BOUNCE = 0.0;|aside.engine.SelfTest"
   "stomp: the positional rule flipped|$C|return (player.y + player.hh) < enemy.y;|return (player.y + player.hh) > enemy.y;|aside.engine.SelfTest"
+  # The blast's damage to a boss, claimed in a comment as "worth three arrows" and asserted nowhere. Measured
+  # through handleExplosion rather than Boss.hit, so it tests the damage the game deals and not the weak-point window.
+  "blast: a bomb does not hurt the boss|\$E/World.java|BLAST_DAMAGE = 9.0;|BLAST_DAMAGE = 0.0;|aside.games.fruitjump.engine.BlastTest"
+  "blast: a bomb is worth thirteen arrows|\$E/World.java|BLAST_DAMAGE = 9.0;|BLAST_DAMAGE = 40.0;|aside.games.fruitjump.engine.BlastTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
