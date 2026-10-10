@@ -30,6 +30,7 @@ W=src/main/java/aside/games/fruitjump/engine/WaterSystem.java
 P=src/main/java/aside/games/fruitjump/engine/Projectile.java
 R=src/main/java/aside/games/fruitjump/engine/Piranha.java
 C=src/main/java/aside/games/fruitjump/engine/Combat.java
+AU=src/main/java/aside/games/fruitjump/engine/AudioSystem.java
 A=src/main/java/aside/engine
 T=src/main/java/aside/games/fruitjump
 
@@ -106,6 +107,11 @@ MUTATIONS=(
   "bats: the dive is not faster than pursuit|$E/Bat.java|SWOOP_SPEED = 330;|SWOOP_SPEED = 0.0;|aside.engine.SelfTest"
   "bats: the dive never ends|$E/Bat.java|SWOOP_TIME = 0.5;|SWOOP_TIME = 0.0;|aside.engine.SelfTest"
   "bats: it cannot dive again for twenty seconds|$E/Bat.java|SWOOP_RECOVER = 0.85;|SWOOP_RECOVER = 20.0;|aside.engine.SelfTest"
+  # The landing sound's rate limit, which did not reach the sound: the cue was queued before the cooldown was
+  # checked, and Sound.drain plays everything queued. The third mutation restores that ordering, so the bug itself
+  # is now something the suite catches.
+  "audio: landing sounds are not rate-limited|\$AU/AudioSystem.java|LAND_COOLDOWN_TIME = 0.1;|LAND_COOLDOWN_TIME = 0.0;|aside.games.fruitjump.engine.AudioRateTest"
+  "audio: the rate limit mutes landings|\$AU/AudioSystem.java|LAND_COOLDOWN_TIME = 0.1;|LAND_COOLDOWN_TIME = 10.0;|aside.games.fruitjump.engine.AudioRateTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 

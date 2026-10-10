@@ -1089,6 +1089,13 @@ public class SelfTest {
         check("player model: the validator's speed and jump match the game's (" + modelFailures + " failures)",
                 modelFailures == 0);
 
+        // THE LANDING SOUND'S RATE LIMIT, which did not reach the sound at all until this hour: the cue was
+        // queued before the cooldown was checked, so the game played every landing while the log said one. Same
+        // shape as the blast and pocket tests - an engine-package class, because Sfx is package-private.
+        int audioRateFailures = aside.games.fruitjump.engine.AudioRateTest.runAll();
+        check("audio: ten landings in one instant reach the backend as one sound (" + audioRateFailures
+                + " failures)", audioRateFailures == 0);
+
         readmeHasNoCheckCount();
 
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");

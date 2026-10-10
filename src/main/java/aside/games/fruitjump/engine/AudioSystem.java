@@ -129,10 +129,16 @@ public class AudioSystem {
     }
 
     public void playSfx(Sfx sfx) {
-        post(sfx.name);
-        if (muted) return;
+        // THE COOLDOWN COMES BEFORE THE QUEUE, and it did not. `post` was the first line, so every landing was
+        // already queued for the backend - Sound.drain plays everything in that queue - and the cooldown below it
+        // suppressed exactly one thing: the log line. The game played ten landing sounds for ten landings in one
+        // instant while a headless run's log said "SFX land" once, which is a log line making a claim about the
+        // sound that the sound was not making. Found by tools/tautologies.py reporting LAND_COOLDOWN_TIME as
+        // switchable off with nothing noticing, and the reason nothing noticed is that it was already off.
         if (sfx == Sfx.LAND && landCooldown > 0) return;
         if (sfx == Sfx.LAND) landCooldown = LAND_COOLDOWN_TIME;
+        post(sfx.name);
+        if (muted) return;
         
         // NO VOLUME IN THIS LINE, and it used to print one. The field it named was read nowhere else, so the
         // log said "vol=0.80" whatever the player had actually set: the real level lives on aside.ui.Audio and
