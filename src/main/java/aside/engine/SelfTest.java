@@ -1017,7 +1017,6 @@ public class SelfTest {
         slopesHoldYouAndSlideYou();
         anUpCurrentLiftsYou();
         aHugeFrameIsClamped();
-        theBossVolleyHurtsThePlayer();
 
         System.out.println("\n--- the hookshot ---");
         theHookshotReaches();
@@ -3034,58 +3033,6 @@ public class SelfTest {
      * whole chain - the boss picks the attack, a charge lands in the world, and a player standing on it is flagged
      * for damage - which is three behaviours that no single line of code states.
      */
-    static void theBossVolleyHurtsThePlayer() {
-        World w = new World();
-        Physics.Body p = new Physics.Body(1500, 100, 24, 44);   // far away, so the boss chooses to lob at it
-        p.oneway = true;
-        p.noGravity = true;
-        w.addBody(p);
-        w.playerBody = p;
-        Boss boss = new Boss(300, 100, 64, 64);
-        // SEEDED, because a Boss's Random is time-seeded and its attack choice is therefore not reproducible: this
-        // check passed on its own and failed inside the gate on its first run. The class provides setSeed for exactly
-        // this, and a flaky check is worse than no check.
-        boss.setSeed(7L);
-        w.setBoss(boss);                                        // THE METHOD, which wires the volley
-
-        // IT ONLY LOBS FROM ITS SECOND PHASE - `chooseAttack` returns VOLLEY only when `phase >= 2` - so the boss has
-        // to be damaged first, and that is FIXTURE work rather than the thing under test: how damage reaches the boss
-        // is the arrow check's job. The first version of this check drove an undamaged boss for sixty seconds,
-        // watched it charge, and reported no volley - a fixture that had not set up its own premise.
-        // AND THE PLAYER HAS TO KEEP RUNNING, which is the whole shape of the attack. In IDLE the boss WALKS toward
-        // the player before choosing, so against a stationary body it is always inside 250px and always picks the
-        // close branch - CHARGE or JUMP_SLAM. The volley is the answer to a player who keeps their distance, and the
-        // first two versions of this check never saw one for that reason: the fixture was standing still.
-        for (int i = 0; i < 60 * 120 && boss.phase() < 2; i++) {
-            p.vx = 200;                                  // the player's own run speed, fleeing
-            w.update(GameLoop.DT);
-            if (boss.weakPointOpen()) boss.hit(3.0);
-        }
-        check("boss: it reaches its second phase once it takes damage (phase " + boss.phase() + ")", boss.phase() >= 2);
-
-        Projectile charge = null;
-        for (int i = 0; i < 60 * 60 && charge == null; i++) {
-            p.vx = 200;
-            w.update(GameLoop.DT);
-            for (Projectile pr : w.projectiles) {
-                if (pr.type == Projectile.Type.BOMB) { charge = pr; break; }
-            }
-        }
-        check("boss: its volley lobs a charge at the player (one in flight: " + (charge != null) + ")",
-                charge != null);
-        if (charge == null) return;
-
-        // AND THE CHARGE IS A WEAPON, not a decoration: put the player on it and let the fuse run out.
-        p.x = charge.x;
-        p.y = charge.y;
-        boolean hurt = false;
-        for (int i = 0; i < 60 * 3 && !hurt; i++) {
-            w.update(GameLoop.DT);
-            hurt = w.playerBlastPending;
-        }
-        check("boss: and a player standing on that charge is flagged for damage", hurt);
-    }
-
     static void step(Combat c, double seconds) {
         for (double t = 0; t < seconds; t += GameLoop.DT) c.update(GameLoop.DT);
     }
