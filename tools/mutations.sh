@@ -136,7 +136,9 @@ for m in "${MUTATIONS[@]}"; do
   if [ -n "$filter" ] && [[ "$label" != *"$filter"* ]]; then continue; fi
   printf '  %-40s ' "$label"
   out=$(timeout 600 tools/mutate.sh "$suite" "$file" "$anchor" "$repl" 2>&1)
-  if echo "$out" | grep -q "ANCHOR MISSING"; then
+  if echo "$out" | grep -q "AMBIGUOUS ANCHOR"; then
+    echo "AMBIGUOUS ANCHOR - it fits more than one place, so this proves nothing"; broken=$((broken + 1))
+  elif echo "$out" | grep -q "ANCHOR MISSING"; then
     echo "ANCHOR MISSING - the mutation never applied, so this proves nothing"; broken=$((broken + 1))
   elif echo "$out" | grep -q "NOT CAUGHT"; then
     echo "NOT CAUGHT - no check covers this"; missed=$((missed + 1))
@@ -146,7 +148,7 @@ for m in "${MUTATIONS[@]}"; do
 done
 
 echo
-echo "  caught: $caught   not caught: $missed   never applied: $broken"
+echo "  caught: $caught   not caught: $missed   never applied or ambiguous: $broken"
 if [ "$missed" -eq 0 ] && [ "$broken" -eq 0 ]; then
   echo "  OK every invariant listed here is one a suite would notice breaking"
   exit 0

@@ -133,8 +133,20 @@ fail=0
 while [ $# -gt 0 ]; do
   FROM="$1"; TO="$2"; shift 2
   cp "$BAK" "$FILE"
-  if ! grep -qF "$FROM" "$FILE"; then
+  hits=$(grep -cF "$FROM" "$FILE")
+  if [ "$hits" -eq 0 ]; then
     printf '%-44s ANCHOR MISSING\n' "$FROM"
+    fail=1
+    continue
+  fi
+  # MORE THAN ONE MATCH IS REFUSED, NOT RESOLVED. The replacement takes the first, which may be a different place
+  # from the one the entry meant - and a mutation that lands somewhere harmless changes nothing observable, so it
+  # reports exactly like a claim nothing checks. Found in the sibling game's list on 10 October: its trigger-reset
+  # entry fitted clearSave() as well as startFreshAfterReset(), and the run said "no test covers this" about a claim
+  # that is covered. A false positive is the quiet one; every entry in this file has said "caught" for a week and
+  # nothing here had ever asked whether the anchor was where the entry thought it was.
+  if [ "$hits" -gt 1 ]; then
+    printf '%-44s AMBIGUOUS ANCHOR (%d matches) - say which occurrence\n' "$FROM" "$hits"
     fail=1
     continue
   fi
