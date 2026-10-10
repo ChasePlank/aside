@@ -156,7 +156,16 @@ for m in "${MUTATIONS[@]}"; do
   elif echo "$out" | grep -q "NOT CAUGHT"; then
     echo "NOT CAUGHT - no check covers this"; missed=$((missed + 1))
   else
-    echo "caught"; caught=$((caught + 1))
+    # EVERY NOTICER IS VERIFIED, the same guard the release's list got, for the same three false verdicts: a dead
+    # display failed fourteen suites at once and a mutation looked "caught by fourteen"; a mutated build that would
+    # not start was reported as a detection; and a flaky Robot test aborting was counted as one, WHICH HID A REAL
+    # GAP. mutate.sh has restored the source by now; run-one-suite.sh rebuilds from it and runs the suite, so a
+    # suite that fails WITHOUT the mutation is reported as what it is rather than as evidence.
+    if timeout 300 tools/run-one-suite.sh "$suite" >/dev/null 2>&1; then
+      echo "caught"; caught=$((caught + 1))
+    else
+      echo "NOT EVIDENCE - $suite fails without the mutation too"; missed=$((missed + 1))
+    fi
   fi
 done
 
