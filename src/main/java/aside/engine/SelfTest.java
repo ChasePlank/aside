@@ -987,6 +987,7 @@ public class SelfTest {
         weaponsDoWhatTheySay();
         arrowsArc();
         batsChaseWhatIsNear();
+        aBatPursuesWhatItCannotSwoop();
         aGroupOfBatsDoesNotPinYou();
         piranhasBiteSwimmers();
         aGroupOfPiranhasDoesNotMachineGun();
@@ -2880,6 +2881,54 @@ public class SelfTest {
      * unclamped, five seconds is fifteen thousand pixels and three hundred steps. And zero - a clamp of nothing -
      * stops the world instead, which the lower bound catches.
      */
+    /**
+     * A bat closes on a player it cannot dive at, and cannot outrun them.
+     *
+     * <p><b>FOUND BY tools/tautologies.py:</b> `Bat.PURSUE_SPEED` could be set to zero with nothing noticing, and
+     * the reason is in the existing check rather than in the constant. `batsChaseWhatIsNear` starts its bats 100px
+     * away - INSIDE `SWOOP_RANGE` (150) - so they close by diving, and a bat that cannot pursue still gets there.
+     * Between `SWOOP_RANGE` and `AGGRO_RANGE` (260) pursuit is the only thing moving it, and that band is what this
+     * measures.
+     *
+     * <p><b>AND THE CLASS DOC'S OWN CLAIM, which nothing asserted either:</b> "PURSUE_SPEED must stay BELOW the
+     * player's run speed (200). A bat that can outrun the player is a chase, not a tool - you cannot lead something
+     * that simply catches you." That is a design rule with a reason attached, and it became checkable only
+     * yesterday, when GameplayScreen.RUN_SPEED was made public for the player-model check.
+     */
+    static void aBatPursuesWhatItCannotSwoop() {
+        // THE PLAYER IS ABOVE THE BAT, so the dive condition - which needs the player below - can never fire, and
+        // pursuit is the only thing moving it. Measured: 199px at the start, 56px half a second later.
+        World w = new World();
+        Physics.Body p = new Physics.Body(200, 100, 24, 44);
+        p.oneway = true;
+        // THE PLAYER MUST NOT FALL, or the gap closes because the player descends onto the bat rather than because
+        // the bat pursued - which is exactly how the first version of this check passed with PURSUE_SPEED set to
+        // zero. The measurement has to be attached to the thing the constant moves.
+        p.noGravity = true;
+        w.addBody(p);
+        w.playerBody = p;
+        Bat b = new Bat(200, 300, 5L);
+        w.addBat(b);
+        w.update(GameLoop.DT);
+        double start = Math.hypot(p.x - b.body.x, p.y - b.body.y);
+        check("bats: one starts between its swoop range and its aggro range (" + (int) start + "px, swoop at "
+                + (int) Bat.SWOOP_RANGE + ", aggro at " + (int) Bat.AGGRO_RANGE + ")",
+                start > Bat.SWOOP_RANGE && start < Bat.AGGRO_RANGE);
+
+        for (int i = 0; i < 30; i++) w.update(GameLoop.DT);
+        double after = Math.hypot(p.x - b.body.x, p.y - b.body.y);
+        // THE CLOSING AMOUNT, not the remaining distance: that is what the constant controls. Half a second at 130px/s
+        // is 65px, and the measured value is 65 - which is also how the first version of this was caught being wrong,
+        // when a falling player made the gap close for a reason that had nothing to do with the bat.
+        check("bats: and pursuit closes the gap by " + (int) (start - after) + "px in half a second",
+                start - after > 40);
+
+        check("bats: and it cannot outrun the player, which is what makes it a tool rather than a chase ("
+                        + (int) Bat.PURSUE_SPEED + " vs "
+                        + (int) aside.games.fruitjump.GameplayScreen.RUN_SPEED + " px/s)",
+                Bat.PURSUE_SPEED < aside.games.fruitjump.GameplayScreen.RUN_SPEED);
+    }
+
     static void aHugeFrameIsClamped() {
         World w = new World();
         Physics.Body p = new Physics.Body(200, 100, 24, 44);

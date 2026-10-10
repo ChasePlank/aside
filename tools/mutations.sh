@@ -97,6 +97,10 @@ MUTATIONS=(
   # only by run(), where the frame time is always DT, and the live clamp was a hard-coded 0.25 in GameplayScreen.
   "loop: the frame clamp stops the world|$E/GameLoop.java|MAX_FRAME = 0.25;|MAX_FRAME = 0.0;|aside.engine.SelfTest"
   "loop: the frame clamp protects nothing|$E/GameLoop.java|MAX_FRAME = 0.25;|MAX_FRAME = 5.0;|aside.engine.SelfTest"
+  # The bat's pursuit. The existing bat check starts its bats INSIDE swoop range, so they close by diving and a bat
+  # that cannot pursue still gets there; between SWOOP_RANGE and AGGRO_RANGE pursuit is the only thing moving it.
+  "bats: the pursuit does nothing|$E/Bat.java|PURSUE_SPEED = 130;|PURSUE_SPEED = 0.0;|aside.engine.SelfTest"
+  "bats: it outruns the player it is meant to lure|$E/Bat.java|PURSUE_SPEED = 130;|PURSUE_SPEED = 240.0;|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
