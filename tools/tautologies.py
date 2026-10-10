@@ -86,7 +86,17 @@ def main() -> int:
         suite = None
     suite = suite or "aside.games.fruitjump.engine.WaterSuite"
 
-    path = ENGINE / (name if name.endswith(".java") else name + ".java")
+    # THE ENGINE IS THE DEFAULT, NOT THE BOUNDARY. Ten constants live in the game layer - GameplayScreen's five
+    # (the jump, the run, the feel), Tutorial's, RoomsScreen's, CustomizeScreen's, Sprites' - and this tool looked at
+    # none of them, because its scope was a directory rather than a question. A name with a slash in it is a path
+    # from the repository root; a bare name is looked for in the engine, then in the game layer beside it.
+    if "/" in name:
+        path = HERE / name
+    else:
+        fname = name if name.endswith(".java") else name + ".java"
+        path = ENGINE / fname
+        if not path.exists():
+            path = HERE / "src/main/java/aside/games/fruitjump" / fname
     if not path.exists():
         print("no such file: %s" % path, file=sys.stderr)
         return 2
