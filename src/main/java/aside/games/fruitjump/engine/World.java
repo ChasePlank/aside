@@ -127,7 +127,13 @@ public class World {
     AudioSystem audio = null;  // optional
 
     // Slope tuning
-    static final double SLOPE_SNAP_UP = 12.0;    // max px/frame feet can snap up (walking up)
+    // NO SLOPE_SNAP_UP. It was declared here as "max px/frame feet can snap up (walking up)" and NOTHING EVER READ
+    // IT: the up-snap in resolveSlopes is guarded by velocity (`b.vy >= -60`), and the comment there explains why a
+    // depth cap is the wrong guard - it breaks at flat-to-slope seams, where the leading foot enters the rising
+    // surface by up to span*ratio. So the constant described a rule the code deliberately does not implement.
+    // tools/tautologies.py reported it as switchable off with nothing noticing, which for an unread constant is not
+    // a missing check but a description of dead code. Removed, like Piranha.DAMAGE before it: a knob that looks
+    // load-bearing and does nothing is worse than an obvious gap.
     static final double SLOPE_SNAP_DOWN = 14.0;  // max px/frame feet can snap down (walking down)
     static final double SLOPE_SLIDE_ACC = 900.0; // slide acceleration on steep slopes
     

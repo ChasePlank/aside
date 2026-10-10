@@ -70,6 +70,14 @@ MUTATIONS=(
   "damage: a hit does not move you|$C|KNOCKBACK_X = 250;|KNOCKBACK_X = 0.0;|aside.engine.SelfTest"
   "damage: the knockback pushes you IN|$C|player.vx = dir * KNOCKBACK_X;|player.vx = -dir * KNOCKBACK_X;|aside.engine.SelfTest"
   "damage: no upward pop|$C|KNOCKBACK_Y = -300;|KNOCKBACK_Y = 0.0;|aside.engine.SelfTest"
+  # Slopes, which had no checks at all until Oct 10. The snap-down one is the seam case: walking off a flat ledge
+  # onto a ramp that starts slightly lower. On a ramp walked at speed the PENETRATION branch holds you and this
+  # constant changes the result by three tenths of a pixel.
+  "slopes: no snap onto a ramp from a ledge|$E/World.java|SLOPE_SNAP_DOWN = 14.0;|SLOPE_SNAP_DOWN = 0.0;|aside.engine.SelfTest"
+  "slopes: a steep slope does not slide you|$E/World.java|SLOPE_SLIDE_ACC = 900.0;|SLOPE_SLIDE_ACC = 0.0;|aside.engine.SelfTest"
+  # The stomp, found only after the sweep learned to read negative numbers.
+  "stomp: no bounce off an enemy|$C|STOMP_BOUNCE = -400;|STOMP_BOUNCE = 0.0;|aside.engine.SelfTest"
+  "stomp: the positional rule flipped|$C|return (player.y + player.hh) < enemy.y;|return (player.y + player.hh) > enemy.y;|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
