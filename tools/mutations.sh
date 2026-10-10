@@ -123,6 +123,10 @@ MUTATIONS=(
   "fnaf: the deal is not determined by the seed|$G/Game.java|this.rng = new Random(seed);|this.rng = new Random();|aside.games.fnaf.engine.SelfTest"
   # The armour: the whole shape of the fight, and nothing asserted it until 10 October.
   "boss: the window takes unlimited hits|$E/Boss.java|MAX_HITS_PER_WINDOW = 2;|MAX_HITS_PER_WINDOW = 99;|aside.games.fruitjump.engine.BlastTest"
+  # The fair version of a mutation the release's list got wrong for a week: the tutorial's SIGNS are not the
+  # mechanism, so deleting one proves nothing. Take the mechanic away instead - the lesson lives in the level,
+  # not the text, which Tutorial's own comment says: "No sign: this level shows rather than says."
+  "the tutorial stops introducing moving platforms|\$T/Tutorial.java|built.addMover(LevelMap.MoverSpec.vertical(|if (false) built.addMover(LevelMap.MoverSpec.vertical(|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
