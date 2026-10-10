@@ -68,6 +68,11 @@ public class BlastTest {
         Boss boss = new Boss(300, 100, 64, 64);
         bossWorld.boss = boss;
         Physics.Body bait = new Physics.Body(1500, 100, 24, 44);
+        // MARKED AS THE PLAYER, because that is how a World finds one - the release's World looks for a body flagged
+        // `oneway` and this fixture did not carry the flag, so the boss sat with no player to attack, never opened a
+        // window, and the blast measured zero. Found by porting this test to the release, where it failed and the
+        // sibling passed: the same fixture behaving differently in two engines is a fixture fault, not an engine one.
+        bait.oneway = true;
         bossWorld.addBody(bait);
         bossWorld.playerBody = bait;
         boolean window = false;
