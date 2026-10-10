@@ -1096,6 +1096,12 @@ public class SelfTest {
         check("audio: ten landings in one instant reach the backend as one sound (" + audioRateFailures
                 + " failures)", audioRateFailures == 0);
 
+        // THE ROOM TRANSITION, the last constant the sweep could reach. Rooms mode is the architecture the real
+        // game is heading for, so a transition that never ends - or that never happens - matters.
+        int transitionFailures = aside.games.fruitjump.engine.TransitionTest.runAll();
+        check("rooms: a transition between rooms finishes in about a third of a second (" + transitionFailures
+                + " failures)", transitionFailures == 0);
+
         readmeHasNoCheckCount();
 
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");

@@ -112,6 +112,9 @@ MUTATIONS=(
   # is now something the suite catches.
   "audio: landing sounds are not rate-limited|\$AU/AudioSystem.java|LAND_COOLDOWN_TIME = 0.1;|LAND_COOLDOWN_TIME = 0.0;|aside.games.fruitjump.engine.AudioRateTest"
   "audio: the rate limit mutes landings|\$AU/AudioSystem.java|LAND_COOLDOWN_TIME = 0.1;|LAND_COOLDOWN_TIME = 10.0;|aside.games.fruitjump.engine.AudioRateTest"
+  # The room transition - the last constant the sweep could reach, in the architecture the real game is heading for.
+  "rooms: no transition at all|\$E/ScreenManager.java|TRANSITION_TIME = 0.3;|TRANSITION_TIME = 0.0;|aside.games.fruitjump.engine.TransitionTest"
+  "rooms: a transition that never ends|\$E/ScreenManager.java|TRANSITION_TIME = 0.3;|TRANSITION_TIME = 5.0;|aside.games.fruitjump.engine.TransitionTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 

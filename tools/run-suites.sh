@@ -62,6 +62,7 @@ SUITES=(
   aside.games.fruitjump.engine.PiranhaTest        # a fish that idles, bites once, then waits
   aside.games.fruitjump.engine.PlayerModelTest     # the bot models the player it certifies levels for
   aside.games.fruitjump.engine.AudioRateTest       # landing sounds are rate-limited, not just logged
+  aside.games.fruitjump.engine.TransitionTest      # a room transition finishes, and takes about a third of a second
   aside.games.fruitjump.engine.DoorStressTest    # a report, not a gate - it never fails, and is listed here
 )                                                # so that its silence is deliberate rather than an oversight
 
