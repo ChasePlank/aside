@@ -118,6 +118,9 @@ MUTATIONS=(
   # The boss's OFFENCE, which had no check: what it does when it is hit was covered, what it does to you was not.
   "boss: it never lobs a volley|$E/Boss.java|return phase >= 2 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|return phase >= 99 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|aside.engine.SelfTest"
   "boss: the volley is not wired|$E/World.java|b.setVolleyCallback((x, y, dirX) -> addProjectile(Projectile.bomb(x, y, dirX < 0 ? -1 : 1)));|// volley not wired|aside.engine.SelfTest"
+  # The FNAF engine, which had no entry in this list until the day it got one: $G was declared at the top and used
+  # by nothing, so one of the two games in this repository had never been fault-injected at all.
+  "fnaf: the deal is not determined by the seed|$G/Game.java|this.rng = new Random(seed);|this.rng = new Random();|aside.games.fnaf.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 

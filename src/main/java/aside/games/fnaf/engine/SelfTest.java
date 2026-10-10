@@ -21,17 +21,41 @@ public class SelfTest {
         if (!ok) { failed++; System.out.println("FAIL  " + what); }
     }
 
+    /**
+     * What the seed decides: where each animatronic is, how far it has got, and how much power is left.
+     *
+     * <p>A String rather than a comparison operator, because the failure has to be readable: when two deals differ,
+     * the line says which animatronic moved and by how much.
+     */
+    static String deal(Game g) {
+        return "hour=" + g.hour
+                + " monty=" + g.monty.pathIndex + "/" + g.monty.stages
+                + " roxanne=" + g.roxanne.pathIndex + "/" + g.roxanne.stages
+                + " chica=" + g.chica.pathIndex + "/" + g.chica.stages
+                + " freddy=" + g.freddy.pathIndex + "/" + g.freddy.stages
+                + " power=" + (int) g.power;
+    }
+
     public static void main(String[] args) {
         System.out.println("=== FNAF-Glamrock self-test ===\n");
 
-        // 1. Determinism check: same seed = same game
+        // 1. Determinism check: same seed = same night. THE NIGHT, NOT THE CLOCK.
+        //
+        // <p>This compared a.hour to b.hour, and the clock is not dealt: it advances on elapsed time, so ANY
+        // implementation passes that. What the seed actually decides is which animatronic moves
+        // (`game.rng.nextInt(20) < aiLevel`) and when the blackout arrives, and none of it was compared -
+        // replacing `new Random(seed)` with `new Random()` left this check green for as long as it has existed.
+        // Found by tools/mutations.sh on its first run here, which is what that list is for.
+        //
+        // <p>Night 5 rather than night 1, because a quiet night deals almost nothing and two identical deals are a
+        // comparison with no content.
         {
-            Game a = new Game(1, 42L);
-            Game b = new Game(1, 42L);
-            for (int i = 0; i < 3600; i++) { a.update(1.0/60); b.update(1.0/60); }
-            System.out.println("Determinism: a.hour=" + a.hour + " b.hour=" + b.hour
-                    + " (equal=" + (a.hour == b.hour) + ")");
-            check("the same seed deals the same night", a.hour == b.hour);
+            Game a = new Game(5, 42L);
+            Game b = new Game(5, 42L);
+            for (int i = 0; i < (int) (270 * 60); i++) { a.update(1.0/60); b.update(1.0/60); }
+            String sa = deal(a), sb = deal(b);
+            System.out.println("Determinism: a=" + sa + " b=" + sb + " (equal=" + sa.equals(sb) + ")");
+            check("the same seed deals the same night, animatronics and all (" + sa + ")", sa.equals(sb));
         }
 
         // 2. Hour pacing: 6 hours * 45s = 270s per night
