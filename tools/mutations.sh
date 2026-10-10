@@ -101,6 +101,11 @@ MUTATIONS=(
   # that cannot pursue still gets there; between SWOOP_RANGE and AGGRO_RANGE pursuit is the only thing moving it.
   "bats: the pursuit does nothing|$E/Bat.java|PURSUE_SPEED = 130;|PURSUE_SPEED = 0.0;|aside.engine.SelfTest"
   "bats: it outruns the player it is meant to lure|$E/Bat.java|PURSUE_SPEED = 130;|PURSUE_SPEED = 240.0;|aside.engine.SelfTest"
+  # The bat's dive - the one mechanic no check observed until Oct 10, and the reason SWOOP_RECOVER = 20 was
+  # invisible: the bat stuns on CONTACT, so bats that cannot dive at all still reach the player by pursuing.
+  "bats: the dive is not faster than pursuit|$E/Bat.java|SWOOP_SPEED = 330;|SWOOP_SPEED = 0.0;|aside.engine.SelfTest"
+  "bats: the dive never ends|$E/Bat.java|SWOOP_TIME = 0.5;|SWOOP_TIME = 0.0;|aside.engine.SelfTest"
+  "bats: it cannot dive again for twenty seconds|$E/Bat.java|SWOOP_RECOVER = 0.85;|SWOOP_RECOVER = 20.0;|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 

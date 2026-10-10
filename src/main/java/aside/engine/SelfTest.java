@@ -988,6 +988,7 @@ public class SelfTest {
         arrowsArc();
         batsChaseWhatIsNear();
         aBatPursuesWhatItCannotSwoop();
+        aBatDivesAndThenCannotDiveAgainImmediately();
         aGroupOfBatsDoesNotPinYou();
         piranhasBiteSwimmers();
         aGroupOfPiranhasDoesNotMachineGun();
@@ -2927,6 +2928,64 @@ public class SelfTest {
                         + (int) Bat.PURSUE_SPEED + " vs "
                         + (int) aside.games.fruitjump.GameplayScreen.RUN_SPEED + " px/s)",
                 Bat.PURSUE_SPEED < aside.games.fruitjump.GameplayScreen.RUN_SPEED);
+    }
+
+    /**
+     * A bat dives at a player below it, and then has to wait before diving again.
+     *
+     * <p><b>THE SWOOP WAS THE ONE MECHANIC NO CHECK OBSERVED.</b> `tools/tautologies.py` reported SWOOP_RECOVER and
+     * HIT_COOLDOWN as unwatched, and setting either to TWENTY changed nothing - which is not "these do not matter"
+     * but "nothing here has ever seen a dive". The reason the stun checks could not see it is that the bat stuns on
+     * CONTACT: World sets the stun in its `else if (connected)` branch, so bats that cannot swoop at all still
+     * pursue at 130px/s and touch the player, and the stun fraction reads the same.
+     *
+     * <p><b>AND THE FIXTURE IS THE BAIT WINDOW ITSELF.</b> A dive commits to a FIXED vector - the comment in Bat
+     * calls it "the bait window" - so moving the player sideways immediately after the commit makes the dive miss,
+     * which is the only path that sets `recover` and therefore the only way to reach SWOOP_RECOVER at all. Measured:
+     * dive speed 330px/s, duration 0.52s, and the second dive 0.87s after the first ended.
+     *
+     * <p>All three are bounded in both directions, because a dive that never happens and a dive that lasts forever
+     * are different bugs with the same "nothing noticed" signature.
+     */
+    static void aBatDivesAndThenCannotDiveAgainImmediately() {
+        World w = new World();
+        Physics.Body p = new Physics.Body(200, 220, 24, 44);   // below the bat: a dive needs the player lower
+        p.oneway = true;
+        p.noGravity = true;
+        w.addBody(p);
+        w.playerBody = p;
+        Bat b = new Bat(200, 100, 5L);                          // 120px above, inside SWOOP_RANGE
+        w.addBat(b);
+        w.update(GameLoop.DT);
+
+        Bat.State prev = b.state;
+        double diveStart = -1, diveEnd = -1, secondDive = -1, fastest = 0;
+        boolean baited = false;
+        for (int i = 0; i < 60 * 8; i++) {
+            double t = i * GameLoop.DT;
+            // ONCE, and the flag is why: keying this on "diveStart is unset" moved the player EVERY FRAME of the
+            // dive, because diveStart is only assigned when the transition is observed - so the player flew away at
+            // 70px a frame and the bat never came back. The first version of this check failed for that reason and
+            // not because anything was wrong with the bat.
+            if (b.state == Bat.State.SWOOP && !baited) { p.x += 70; baited = true; }
+            w.update(GameLoop.DT);
+            if (b.state == Bat.State.SWOOP) fastest = Math.max(fastest, Math.hypot(b.body.vx, b.body.vy));
+            if (b.state != prev) {
+                if (b.state == Bat.State.SWOOP) {
+                    if (diveStart < 0) diveStart = t;
+                    else if (secondDive < 0) secondDive = t;
+                }
+                if (prev == Bat.State.SWOOP && diveEnd < 0) diveEnd = t;
+                prev = b.state;
+            }
+        }
+
+        check("bats: a dive commits at swoop speed, not at pursuit speed (" + (int) fastest + "px/s)", fastest > 250);
+        double lasted = diveEnd - diveStart;
+        check("bats: and the dive lasts about half a second (" + String.format("%.2fs", lasted) + ")", lasted > 0.3 && lasted < 0.8);
+        double waited = secondDive - diveEnd;
+        check("bats: and it dives again about a second later, not immediately and not never ("
+                + String.format("%.2fs", waited) + ")", secondDive > 0 && waited > 0.4 && waited < 2.0);
     }
 
     static void aHugeFrameIsClamped() {
