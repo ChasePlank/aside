@@ -115,6 +115,9 @@ MUTATIONS=(
   # The room transition - the last constant the sweep could reach, in the architecture the real game is heading for.
   "rooms: no transition at all|\$E/ScreenManager.java|TRANSITION_TIME = 0.3;|TRANSITION_TIME = 0.0;|aside.games.fruitjump.engine.TransitionTest"
   "rooms: a transition that never ends|\$E/ScreenManager.java|TRANSITION_TIME = 0.3;|TRANSITION_TIME = 5.0;|aside.games.fruitjump.engine.TransitionTest"
+  # The boss's OFFENCE, which had no check: what it does when it is hit was covered, what it does to you was not.
+  "boss: it never lobs a volley|$E/Boss.java|return phase >= 2 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|return phase >= 99 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|aside.engine.SelfTest"
+  "boss: the volley is not wired|$E/World.java|b.setVolleyCallback((x, y, dirX) -> addProjectile(Projectile.bomb(x, y, dirX < 0 ? -1 : 1)));|// volley not wired|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
