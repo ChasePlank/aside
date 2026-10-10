@@ -87,6 +87,9 @@ MUTATIONS=(
   # velocities the game no longer has. Paths here are the game layer, not the engine.
   "model: the player's jump drifts|src/main/java/aside/games/fruitjump/GameplayScreen.java|JUMP_V = -420;|JUMP_V = -380;|aside.games.fruitjump.engine.PlayerModelTest"
   "model: the player's run speed drifts|src/main/java/aside/games/fruitjump/GameplayScreen.java|RUN_SPEED = 200;|RUN_SPEED = 240;|aside.games.fruitjump.engine.PlayerModelTest"
+  # The 'A' water cell - an upwelling - which the generator never places and nothing was checking. Only the zero is
+  # listed: a stronger current still lifts you higher, so the magnitude is the designer's, which is the healthy state.
+  "water: the up-current does nothing|$E/LevelMap.java|CURRENT_UP_SPEED = 70.0;|CURRENT_UP_SPEED = 0.0;|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 

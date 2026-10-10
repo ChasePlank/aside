@@ -1013,6 +1013,7 @@ public class SelfTest {
         aHitKnocksYouAway();
         stompingBouncesYouOff();
         slopesHoldYouAndSlideYou();
+        anUpCurrentLiftsYou();
 
         System.out.println("\n--- the hookshot ---");
         theHookshotReaches();
@@ -2810,6 +2811,49 @@ public class SelfTest {
     /** The slope's surface height at x, from its endpoints. The test's own arithmetic, not the engine's. */
     static double slopeY(double x, double x0, double y0, double x1, double y1) {
         return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+    }
+
+    /**
+     * An up-current lifts you further than still water does.
+     *
+     * <p><b>FOUND BY tools/tautologies.py:</b> `LevelMap.CURRENT_UP_SPEED` could be set to zero with nothing
+     * noticing. It is the 'A' water cell - an upwelling that pushes a body upward - and the honest way to check it
+     * is as a DIFFERENTIAL against still water, because water lifts a body on its own: buoyancy is not the current,
+     * which is the lesson the piranha drift check learned the hard way.
+     *
+     * <p><b>Measured: 78px of rise in still water over two seconds, 91px in the up-current.</b> The threshold sits
+     * between them, so the check fails if the current is switched off and passes if it is merely retuned.
+     *
+     * <p><b>And a finding that is not a check, recorded here because this is where the numbers are:</b> THE
+     * GENERATOR WRITES ONLY STILL WATER. Its four current symbols - '&gt;' right, '&lt;' left, 'V' down, 'A' up - are
+     * parsed, implemented, and placed by nothing, in generated levels or in the tutorial's hand-built ones. So this
+     * check pins behaviour no player can currently reach, which is worth knowing rather than assuming.
+     */
+    static void anUpCurrentLiftsYou() {
+        double still = riseInWater('~');
+        double up = riseInWater('A');
+        check("water: an up-current lifts a body higher than still water does (" + (int) still
+                        + "px still, " + (int) up + "px in the current, over two seconds)",
+                up > still + 5);
+    }
+
+    /** How far a body rises in two seconds of a 4-deep pool filled with `fill`. */
+    static double riseInWater(char fill) {
+        StringBuilder sb = new StringBuilder();
+        String water = String.valueOf(fill).repeat(10);
+        sb.append("########################\n");
+        sb.append("#                      #\n");
+        sb.append("#                      #\n");
+        sb.append("#####          #########\n");
+        for (int r = 0; r < 4; r++) sb.append("#####").append(water).append("#########\n");
+        sb.append("########################\n");
+        World w = new World();
+        LevelMap.parse(sb.toString()).buildWorld(w);
+        Physics.Body p = new Physics.Body(384, 220, 24, 44);
+        w.addBody(p);
+        double y0 = p.y;
+        for (int i = 0; i < 120; i++) w.update(GameLoop.DT);
+        return y0 - p.y;
     }
 
     static void step(Combat c, double seconds) {
