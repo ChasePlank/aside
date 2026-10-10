@@ -150,6 +150,38 @@ marker "the door key letter"       'doorKey'                         GameScreen.
 # AND THE BINDING, which is the half a marker cannot see.
 ordered "LIGHT is filled from the light"  GameScreen.java  'lit \? Color'  'closed \? Color' 
 
+# === audio ===
+#
+# THE ENGINE FILES WERE IDENTICAL AND ONE OF THE TWO GAMES WAS SILENT. fnaf2/audio held twelve files and this
+# repository's audio/ held a hundred and seven; every cue the standalone game declares - the six jumpscares, the
+# music box, the room tone, the title - existed only here. Nothing compared the two directories, because this tool's
+# scope was five java files and a set of markers in the screens. Found on 10 October 2026 by asking where this
+# repository's audio was, after the other repository's own suite reported fourteen cues playing into silence.
+#
+# PRESENCE, NOT BYTES: audio/ here is shared with the platformer and holds files this game never plays, so what has
+# to match is that every cue the game DECLARES has a file in BOTH editions.
+afail=0; achecked=0; amissing=()
+if [ -n "${1:-}" ] && [ -d "$1/audio" ]; then
+  # NAMES THAT END IN AN UNDERSCORE ARE PREFIXES, not cues: the game builds "scare_" + who at runtime, and the
+  # first version of this counted that fragment as a cue and reported it missing from both editions.
+  cues=$(grep -hoE '"[a-z0-9_]+[a-z0-9]"' "$1/src/main/java/fnaf/Audio.java" 2>/dev/null | tr -d '"' | sort -u)
+  for cue in $cues; do
+    case "$cue" in fan_hum|music_box|room_tone|title|door_open|door_close|light_click|camera_up|camera_down|static|footstep|pot_clank|power_down|power_up|chime_6am|text_blip|choice_move|choice_select|scare_*) ;; *) continue ;; esac
+    achecked=$((achecked + 1))
+    here=$(ls audio/$cue.* 2>/dev/null | head -1)
+    there=$(ls "$1"/audio/$cue.* 2>/dev/null | head -1)
+    if [ -z "$here" ] || [ -z "$there" ]; then
+      afail=$((afail + 1))
+      amissing+=("$cue$( [ -z "$here" ] && echo ' (not here)' )$( [ -z "$there" ] && echo ' (not there)' )")
+    fi
+  done
+  echo "=== audio: $achecked cue(s) the game declares, $afail missing from an edition ==="
+  if [ $afail -gt 0 ]; then
+    echo "missing: ${amissing[*]}"
+    differ=$((differ + afail))
+  fi
+fi
+
 echo
 echo "=== $pass engine file(s) identical, $differ differing; $mpass marker(s) agree, $mdiffer not ==="
 if [ $mdiffer -gt 0 ]; then
