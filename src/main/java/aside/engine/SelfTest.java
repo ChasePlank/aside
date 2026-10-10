@@ -1014,6 +1014,7 @@ public class SelfTest {
         stompingBouncesYouOff();
         slopesHoldYouAndSlideYou();
         anUpCurrentLiftsYou();
+        aHugeFrameIsClamped();
 
         System.out.println("\n--- the hookshot ---");
         theHookshotReaches();
@@ -2859,6 +2860,40 @@ public class SelfTest {
         double y0 = p.y;
         for (int i = 0; i < 120; i++) w.update(GameLoop.DT);
         return y0 - p.y;
+    }
+
+    /**
+     * A five-second hitch advances the world by a quarter of a second, not by five.
+     *
+     * <p><b>FOUND BY tools/tautologies.py:</b> `GameLoop.MAX_FRAME` could be set to anything with nothing noticing -
+     * and the reason was structural rather than a missing assertion. The constant was used only by `run()`, where
+     * the frame time is always DT and the clamp can never fire. The clamp that actually runs in the game was a
+     * hard-coded `Math.min(dt, 0.25)` in GameplayScreen, carrying the same number with none of the explanation. So
+     * the documented copy was unreachable and the live copy was unexplained.
+     *
+     * <p><b>THE FIX WAS TWO THINGS, and this check is the second half of it.</b> The screen uses the named constant
+     * now, so the two cannot disagree; and `GameLoop.advance(frameTime)` factors out the loop so the clamp is
+     * reachable from a test at all. There was nothing to assert before, which is why nothing did.
+     *
+     * <p>BOTH BOUNDS, on the physics rather than only on a step count, because the failure this protects against is
+     * a body moving too far in one frame: clamped, a quarter second of free fall is about 37px and fifteen steps;
+     * unclamped, five seconds is fifteen thousand pixels and three hundred steps. And zero - a clamp of nothing -
+     * stops the world instead, which the lower bound catches.
+     */
+    static void aHugeFrameIsClamped() {
+        World w = new World();
+        Physics.Body p = new Physics.Body(200, 100, 24, 44);
+        w.addBody(p);
+        GameLoop loop = new GameLoop(w);
+        double y0 = p.y;
+        int steps = loop.advance(5.0);          // a five-second hitch
+        double fell = p.y - y0;
+        check("a five-second hitch advances the world a quarter second, not five (" + steps + " steps, "
+                        + (int) fell + "px of fall)",
+                steps >= 1 && steps <= 20 && fell > 5 && fell < 120);
+
+        int one = loop.advance(GameLoop.DT);
+        check("and an ordinary frame is one step (" + one + ")", one == 1);
     }
 
     static void step(Combat c, double seconds) {

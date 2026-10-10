@@ -289,7 +289,10 @@ public class GameplayScreen extends UiScreen {
     public void tick(double dt) {
         // The host ticks only the top screen, so a pushed pause overlay
         // freezes this one automatically -- no timer to stop and start.
-        accumulator += Math.min(dt, 0.25);
+        // THE CLAMP IS NAMED, NOT TYPED. This was `Math.min(dt, 0.25)` - the same value as GameLoop.MAX_FRAME with
+        // neither the name nor the comment, in the file that actually runs the loop. The constant explained itself
+        // and sat where it could never fire; this line did the work and explained nothing.
+        accumulator += Math.min(dt, aside.games.fruitjump.engine.GameLoop.MAX_FRAME);
         while (accumulator >= GameLoop.DT) {
             engineUpdate(GameLoop.DT);
             accumulator -= GameLoop.DT;

@@ -93,6 +93,10 @@ MUTATIONS=(
   # The bat's stun, which had an upper bound only: 'the bats do not pin you' is satisfied by bats that never stun
   # anybody. The same one-directional-bound shape as the hookshot's stall guard.
   "bats: the stun does nothing|$E/Bat.java|STUN_SECONDS = 1.0;|STUN_SECONDS = 0.0;|aside.engine.SelfTest"
+  # The spiral-of-death clamp, which could not be exercised before GameLoop.advance existed: the constant was used
+  # only by run(), where the frame time is always DT, and the live clamp was a hard-coded 0.25 in GameplayScreen.
+  "loop: the frame clamp stops the world|$E/GameLoop.java|MAX_FRAME = 0.25;|MAX_FRAME = 0.0;|aside.engine.SelfTest"
+  "loop: the frame clamp protects nothing|$E/GameLoop.java|MAX_FRAME = 0.25;|MAX_FRAME = 5.0;|aside.engine.SelfTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
