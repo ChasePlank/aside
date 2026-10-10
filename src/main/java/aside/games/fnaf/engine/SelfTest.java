@@ -233,6 +233,70 @@ public class SelfTest {
             check("audio/" + cue + " has a file", hasCue(cue));
         }
 
+        // AND THE CUES THE GAME ACTUALLY PLAYS, which the list above cannot see. That list is hard-coded here and
+        // asks whether a FILE exists for each name in it; nothing asked whether a name the game PLAYS has a file.
+        // tools/mutations.sh found it: replacing `a.sfx("at_door")` with a name that has no file was NOT CAUGHT,
+        // because the suite was reading its own list rather than the game. A cue that does not load is silent, and a
+        // silent cue is indistinguishable from a quiet moment - which is the whole reason a night is frightening.
+        //
+        // The names are read out of the SOURCE, and that is deliberate - and the walk starts at src/main/java
+            // and filters on "/fnaf/", because this file is identical in two repositories whose FNAF code lives at
+            // different paths. A hard-coded path made the copy in the engine find nothing and report zero named. the source is where a new call would be
+        // written, so a cue added tomorrow is covered tomorrow.
+        {
+            java.util.Set<String> played = new java.util.TreeSet<>();
+            java.util.regex.Pattern call = java.util.regex.Pattern.compile(
+                    "\\.(?:sfx|music)\\(\\s*\"([a-z0-9_]+)\"");
+            java.util.regex.Pattern array = java.util.regex.Pattern.compile(
+                    "CUES\\s*=\\s*\\{([^}]*)\\}");
+            java.util.regex.Pattern quoted = java.util.regex.Pattern.compile("\"([a-z0-9_]+)\"");
+            try (java.util.stream.Stream<java.nio.file.Path> walk =
+                         java.nio.file.Files.walk(java.nio.file.Paths.get("src/main/java"))) {
+                for (java.nio.file.Path f : walk.filter(x -> x.toString().endsWith(".java") && x.toString().contains("/fnaf/")).toArray(java.nio.file.Path[]::new)) {
+                    String src = new String(java.nio.file.Files.readAllBytes(f));
+                    java.util.regex.Matcher m = call.matcher(src);
+                    while (m.find()) played.add(m.group(1));
+                    java.util.regex.Matcher a = array.matcher(src);
+                    while (a.find()) {
+                        java.util.regex.Matcher q2 = quoted.matcher(a.group(1));
+                        while (q2.find()) played.add(q2.group(1));
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("  (could not read the sources: " + e.getMessage() + ")");
+            }
+            // THE ONES THAT ARE MISSING ARE NAMED, so the check is a claim about a set rather than a wish. Fourteen
+            // of the twenty-six names the game plays or loads have no file, and the jumpscares are among them:
+            // scare_freddy, scare_monty, scare_sprint, scare_chica, scare_roxanne, scare_door. A silent jumpscare
+            // is not less frightening, it is broken - and nothing said so until this check existed.
+            //
+            // Written down rather than fixed, because the sounds are a design decision and not a bug: what this
+            // buys is that a FIFTEENTH missing cue fails the suite, and that the number is in the repository instead
+            // of in somebody's memory.
+            // THE LIST IS DATA, NOT CODE, because this file is kept byte-identical to the copy that lives inside the
+            // engine while the AUDIO DIRECTORY IS NOT: the standalone repository has twelve files there and the
+            // engine has a hundred and seven, shared with the platformer. So the check reads which cues are known to
+            // be missing from `tools/known-missing-cues.txt`, and that file is the only thing that differs.
+            java.util.Set<String> knownMissing = new java.util.TreeSet<>();
+            try (java.util.stream.Stream<String> lines =
+                         java.nio.file.Files.lines(java.nio.file.Paths.get("tools/known-missing-cues.txt"))) {
+                lines.map(String::trim).filter(x -> !x.isEmpty() && !x.startsWith("#")).forEach(knownMissing::add);
+            } catch (Exception e) {
+                System.out.println("  (no tools/known-missing-cues.txt: every missing cue counts as unexpected)");
+            }
+            java.util.Set<String> missing = new java.util.TreeSet<>(played);
+            missing.removeIf(SelfTest::hasCue);
+            java.util.Set<String> unexpected = new java.util.TreeSet<>(missing);
+            unexpected.removeAll(knownMissing);
+            java.util.Set<String> found = new java.util.TreeSet<>(knownMissing);
+            found.removeAll(missing);
+            check("the cues the game plays or loads are the ones with files, plus " + knownMissing.size()
+                            + " known missing (" + played.size() + " named, " + missing.size() + " missing)"
+                            + (unexpected.isEmpty() ? "" : ", NEW: " + unexpected)
+                            + (found.isEmpty() ? "" : ", NOW PRESENT: " + found),
+                    played.size() > 0 && unexpected.isEmpty() && found.isEmpty());
+        }
+
         System.out.println("\n=== " + (checks - failed) + " passed, " + failed + " failed ===");
         if (failed > 0) System.exit(1);
     }

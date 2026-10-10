@@ -1,0 +1,5 @@
+# Cues the game plays or loads that have no file in audio/, checked by the FNAF self-test.
+#
+# THE SAME CHECK AS THE STANDALONE REPOSITORY'S, against a different audio directory: that one holds twelve
+# files and this one a hundred and seven, because it is shared with the platformer. The test is identical in
+# both and this list is the only thing that differs, which is why it is a file.
