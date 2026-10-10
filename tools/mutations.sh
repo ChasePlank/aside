@@ -82,6 +82,11 @@ MUTATIONS=(
   # through handleExplosion rather than Boss.hit, so it tests the damage the game deals and not the weak-point window.
   "blast: a bomb does not hurt the boss|\$E/World.java|BLAST_DAMAGE = 9.0;|BLAST_DAMAGE = 0.0;|aside.games.fruitjump.engine.BlastTest"
   "blast: a bomb is worth thirteen arrows|\$E/World.java|BLAST_DAMAGE = 9.0;|BLAST_DAMAGE = 40.0;|aside.games.fruitjump.engine.BlastTest"
+  # THE BOT'S MODEL OF THE PLAYER. GameplayScreen's comment claimed its tuned constants "match the validator's
+  # verified values" and nothing checked it: a drift is silent, and the gate goes on certifying levels with
+  # velocities the game no longer has. Paths here are the game layer, not the engine.
+  "model: the player's jump drifts|src/main/java/aside/games/fruitjump/GameplayScreen.java|JUMP_V = -420;|JUMP_V = -380;|aside.games.fruitjump.engine.PlayerModelTest"
+  "model: the player's run speed drifts|src/main/java/aside/games/fruitjump/GameplayScreen.java|RUN_SPEED = 200;|RUN_SPEED = 240;|aside.games.fruitjump.engine.PlayerModelTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 

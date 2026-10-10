@@ -60,6 +60,7 @@ SUITES=(
   aside.games.fruitjump.engine.CrackedPocketTest
   aside.games.fruitjump.engine.BlastTest          # a blast kills inside it and spares outside it
   aside.games.fruitjump.engine.PiranhaTest        # a fish that idles, bites once, then waits
+  aside.games.fruitjump.engine.PlayerModelTest     # the bot models the player it certifies levels for
   aside.games.fruitjump.engine.DoorStressTest    # a report, not a gate - it never fails, and is listed here
 )                                                # so that its silence is deliberate rather than an oversight
 

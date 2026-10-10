@@ -1078,6 +1078,13 @@ public class SelfTest {
         check("piranha: idles when you are dry, cannot stun-lock you, and a miss leaves it open ("
                 + piranhaFailures + " failures)", piranhaFailures == 0);
 
+        // THE BOT MUST MODEL THE PLAYER. GameplayScreen's comment claimed its tuned constants "match the
+        // validator's verified values" and nothing checked it; a drift there is silent and makes the game
+        // unclearable while every level stays valid.
+        int modelFailures = aside.games.fruitjump.engine.PlayerModelTest.runAll();
+        check("player model: the validator's speed and jump match the game's (" + modelFailures + " failures)",
+                modelFailures == 0);
+
         readmeHasNoCheckCount();
 
         System.out.println("\n=== " + pass + " passed, " + fail + " failed ===");
