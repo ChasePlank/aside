@@ -102,6 +102,13 @@ def main() -> int:
         return 2
 
     cs = [c for c in constants_in(path) if not only or c[0] == only]
+    # A FILTER THAT MATCHES NOTHING IS A FAILURE, NOT A SUCCESS. Asking for a constant that does not exist - which
+    # is what a typo looks like - printed "OK ... has its BEHAVIOUR pinned" with nothing tested at all, and the
+    # summary is the line a reader keeps. Same rule as the gate's: a missing tool is a failure there, not a skip,
+    # because "I checked nothing" and "everything is fine" must not print the same sentence.
+    if not cs:
+        print("  %s has no constant matching %r - nothing was tested" % (path.name, only), file=sys.stderr)
+        return 2
     print("  %s: %d constant(s), suite %s" % (path.name, len(cs), suite))
     unconstrained = []
     for cname, cvalue, cline in cs:
