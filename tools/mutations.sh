@@ -129,6 +129,16 @@ if [ "${1:-}" = "--list" ]; then
   exit 0
 fi
 
+# THE TREE HAS TO BE CLEAN BEFORE THIS RUNS, the same guard the release's list has and for the same reason: a trap
+# restores on a clean exit and NOTHING restores on a SIGKILL, so an interrupted run leaves a mutation behind. Two
+# interrupted runs in the release's list left four mutated files there in one hour, and `git status` was the only
+# thing that said so. A tool whose whole job is to change files has to be able to say whether it left them changed.
+if [ -n "$(git status --porcelain -- src/main/java)" ]; then
+  echo "mutations: src/main/java is already modified - commit or discard first, so a leftover from this run can be" >&2
+  echo "           told apart from a change that was already here." >&2
+  exit 2
+fi
+
 filter="${1:-}"
 caught=0; missed=0; broken=0
 for m in "${MUTATIONS[@]}"; do
@@ -149,6 +159,13 @@ for m in "${MUTATIONS[@]}"; do
     echo "caught"; caught=$((caught + 1))
   fi
 done
+
+# and the postcheck: the state it leaves has to be the state it found
+if [ -n "$(git status --porcelain -- src/main/java)" ]; then
+  echo "  THIS RUN LEFT THE TREE MODIFIED - a restore did not happen:" >&2
+  git status --porcelain -- src/main/java >&2
+  broken=$((broken + 1))
+fi
 
 echo
 echo "  caught: $caught   not caught: $missed   never applied or ambiguous: $broken"
