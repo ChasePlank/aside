@@ -35,6 +35,24 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve().parent.parent
 ENGINE = HERE / "src/main/java/aside/games/fruitjump/engine"
+
+# DELIBERATE EXCLUSIONS, WITH THE REASON, BECAUSE "UNWATCHED" WAS DOING TWO JOBS.
+#
+# A constant nobody can exercise and a constant nobody has got to yet both printed "NOTHING NOTICES IT BEING
+# SWITCHED OFF", and only one of those is a gap. The view-layer entries cannot be tested from the engine's suites at
+# all: they are scale factors and a parallax period, and the engine does not render. The honest options there are a
+# rendering check like the release's Robot tests or an exclusion - not an assertion invented in the engine to make a
+# number green.
+#
+# THE LIST IS CHECKED FOR STALENESS, the same way the gate checks its tool list: every exclusion that never matched a
+# constant is reported, so a rename or a deletion shows up as a line in the output rather than as silence.
+EXCLUDED = {
+    ("RoomsScreen.java", "S"): "view layer - the engine's suites cannot test rendering",
+    ("GameplayScreen.java", "SCALE"): "view layer - the engine's suites cannot test rendering",
+    ("GameplayScreen.java", "RIDGE_PERIOD"): "view layer - parallax; the ridge GEOMETRY is checked, the period is drawing",
+    ("Piranha.java", "HIT_COOLDOWN"): "inert at its shipped value - it sits below REAGGRO_DELAY (2.5), so it cannot bind; measured, not assumed",
+    ("Bat.java", "HIT_COOLDOWN"): "inert at its shipped value - it sits below RETREAT_TIME (1.5), so it cannot bind; measured, not assumed",
+}
 # THE MINUS SIGN IS PART OF THE VALUE. The first version matched only unsigned numbers, so every negative
 # constant in the engine was invisible to this sweep - Combat.KNOCKBACK_Y (-300, the upward pop of a knockback) and
 # STOMP_BOUNCE (-400) were never tested at all. That is the same shape as the branch's lesson that the old sweep
@@ -101,6 +119,7 @@ def main() -> int:
         print("no such file: %s" % path, file=sys.stderr)
         return 2
 
+    excluded_used = set()
     cs = [c for c in constants_in(path) if not only or c[0] == only]
     # A FILTER THAT MATCHES NOTHING IS A FAILURE, NOT A SUCCESS. Asking for a constant that does not exist - which
     # is what a typo looks like - printed "OK ... has its BEHAVIOUR pinned" with nothing tested at all, and the
@@ -126,6 +145,9 @@ def main() -> int:
         absent_caught = verdicts[-1] == "caught"
         if all(v == "caught" for v in verdicts):
             print("  %-28s %s pinned" % (cname, cvalue))
+        elif (path.name, cname) in EXCLUDED:
+            print("  %-28s %s excluded: %s" % (cname, cvalue, EXCLUDED[(path.name, cname)]))
+            excluded_used.add((path.name, cname))
         elif not absent_caught:
             print("  %-28s %s NOTHING NOTICES IT BEING SWITCHED OFF  (%s)" % (cname, cvalue, ", ".join(verdicts)))
             unconstrained.append(cname)
@@ -158,8 +180,23 @@ def main() -> int:
             print("  OK %s.%s has its BEHAVIOUR pinned in %s (one constant asked for; %d in the file, the rest not tested here)"
                   % (path.name, only, suite, len(constants_in(path))))
         else:
-            print("  OK every constant in %s has its BEHAVIOUR pinned in %s, and magnitudes may be free"
-                  % (path.name, suite))
+            if excluded_used:
+                # AN EXCLUDED CONSTANT IS NOT A PINNED ONE, and the first version of this line said it was.
+                print("  OK every constant in %s is either pinned in %s or a NAMED EXCLUSION (%d excluded; see the "
+                      "table at the top of this file for the reason on each)"
+                      % (path.name, suite, len(excluded_used)))
+            else:
+                print("  OK every constant in %s has its BEHAVIOUR pinned in %s, and magnitudes may be free"
+                      % (path.name, suite))
+        # ONLY ON A WHOLE-FILE RUN. A filtered run tests one constant and would report the file's OTHER exclusions as
+        # stale, which is a false alarm of exactly the kind this file keeps finding in other tools.
+        stale = [k for k in EXCLUDED if k[0] == path.name and k not in excluded_used] if not only else []
+        if stale:
+            print("  AND %d EXCLUSION(S) FOR THIS FILE MATCHED NOTHING - a constant was renamed or removed:"
+                  % len(stale), file=sys.stderr)
+            for k in stale:
+                print("    %s.%s (%s)" % (k[0], k[1], EXCLUDED[k]), file=sys.stderr)
+            return 2
         return 0
     print("  %d of %d constant(s) nothing pins: %s" % (len(unconstrained), len(cs), ", ".join(unconstrained)))
     print("  A tautology, a free parameter, or an unused value - the sweep flags, and that judgement is mine.")
