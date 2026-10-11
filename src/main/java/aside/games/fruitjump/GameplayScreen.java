@@ -57,6 +57,21 @@ public class GameplayScreen extends UiScreen {
      * they keep the canonical sky. This is progression for the generated run, which is the part that has none.
      */
     public static final int LEVELS_TO_DUSK = LevelGen.FINAL_LEVEL;
+
+    /**
+     * How far the sun has gone down by a level, from 0 at the first to 1 at the last.
+     *
+     * <p><b>PUBLIC AND NAMED SO A CHECK CAN READ IT.</b> It was an expression inline in the drawing method, and the
+     * only way to see it was to look at the sky - which is how a comment beside the constant came to claim "its sun
+     * is NEARLY down at the level that ends the game" - 0.975 there, 1.0 one level later,
+     * "and the ending screen in full night. "fully down" was the first version of this line and it was off by one;
+     * "DuskTest pins the real shape while the arithmetic gives 0.975 there and 1.0 one level
+     * later. Nearly true is the same as not true in a comment, and the fix is to make the number readable rather than
+     * to argue about it.
+     */
+    public static double duskFor(int levelNum) {
+        return Math.max(0.0, Math.min(1.0, (levelNum - 1) / (double) LEVELS_TO_DUSK));
+    }
     private static final int VIEW_W = 800, VIEW_H = 600;
     private static final int CANVAS_W = (int) (VIEW_W * SCALE), CANVAS_H = (int) (VIEW_H * SCALE);
 
@@ -497,7 +512,7 @@ public class GameplayScreen extends UiScreen {
         // How far into the evening this level is. 0 for every tutorial level, so the hand-built ones keep the
         // canonical sunset; otherwise it climbs to 1 by LEVELS_TO_DUSK.
         double dusk = tutorial ? 0.0
-                : Math.max(0.0, Math.min(1.0, (levelNum - 1) / (double) LEVELS_TO_DUSK));
+                : duskFor(levelNum);
 
         gc.setFill(Color.web("#E8763A").interpolate(Color.web("#B4482C"), dusk));
         gc.fillRect(0, 0, CANVAS_W, CANVAS_H);
