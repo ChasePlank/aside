@@ -64,7 +64,8 @@ SUITES=(
   aside.games.fruitjump.engine.DuskTest
   aside.games.fruitjump.engine.CombatTest
   aside.games.fruitjump.engine.SlopeTest
-  aside.games.fruitjump.engine.BatTest           # the bat: pursuit, the dive, the stun, the group break-off         # a ramp holds you, a steep one slides you        # what a hit does to you, and what a stomp does to them         # the sun reaches night by the level that ends the run     # the bot models the player it certifies levels for
+  aside.games.fruitjump.engine.BatTest
+  aside.games.fruitjump.engine.ArrowTest         # the bow: flight, arc, and what it hits           # the bat: pursuit, the dive, the stun, the group break-off         # a ramp holds you, a steep one slides you        # what a hit does to you, and what a stomp does to them         # the sun reaches night by the level that ends the run     # the bot models the player it certifies levels for
   aside.games.fruitjump.engine.AudioRateTest       # landing sounds are rate-limited, not just logged
   aside.games.fruitjump.engine.TransitionTest      # a room transition finishes, and takes about a third of a second
   aside.games.fruitjump.engine.DoorStressTest    # a report, not a gate - it never fails, and is listed here
