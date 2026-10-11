@@ -91,10 +91,11 @@ total_stories=$(ls stories/*.aside 2>/dev/null | wc -l)
 highest=0
 for f in stories/*.aside; do
   [ -f "$f" ] || continue
-  word=$(grep -oE "\b(FIRST|SECOND|THIRD|FOURTH|FIFTH|SIXTH|SEVENTH|EIGHTH|NINTH|TENTH|ELEVENTH|TWELFTH)\b" "$f" | head -1)
+  word=$(grep -oE "\b(FIRST|SECOND|THIRD|FOURTH|FIFTH|SIXTH|SEVENTH|EIGHTH|NINTH|TENTH|ELEVENTH|TWELFTH|THIRTEENTH|FOURTEENTH|FIFTEENTH|SIXTEENTH)\b" "$f" | head -1)
   case "$word" in
     FIRST) n=1;; SECOND) n=2;; THIRD) n=3;; FOURTH) n=4;; FIFTH) n=5;; SIXTH) n=6;;
-    SEVENTH) n=7;; EIGHTH) n=8;; NINTH) n=9;; TENTH) n=10;; ELEVENTH) n=11;; TWELFTH) n=12;; *) n=0;;
+    SEVENTH) n=7;; EIGHTH) n=8;; NINTH) n=9;; TENTH) n=10;; ELEVENTH) n=11;; TWELFTH) n=12;;
+    THIRTEENTH) n=13;; FOURTEENTH) n=14;; FIFTEENTH) n=15;; SIXTEENTH) n=16;; *) n=0;;
   esac
   if [ "$n" -gt "$highest" ]; then highest=$n; highest_name=$(basename "$f" .aside); fi
 done
