@@ -88,15 +88,25 @@ done
 # story that says nothing at all is not wrong, just quiet - and that is fine, because the fault was a number that
 # had run ahead of the thing it counted.
 total_stories=$(ls stories/*.aside 2>/dev/null | wc -l)
+
+# ONE LIST, BECAUSE TWO LISTS THAT MUST AGREE WILL NOT.
+#
+# This scan used to hold its vocabulary twice: a regex of ordinal words and a case statement of their numbers. The
+# regex knew twelve words, the case knew twelve numbers, and a story claiming to be THIRTEENTH matched neither - so it
+# fell through the `*)` arm to n=0, which sorts BELOW every real value and made an over-claim invisible. The fixture
+# that should have caught that was injecting the thirteenth ordinal, and the tool could not read it.
+#
+# Built from one array the two cannot disagree, and there is no fallback to fall through: the regex is made from the
+# same words the lookup uses, so a word it matches is a word it can number.
+ORDINALS=(ZERO FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH EIGHTH NINTH TENTH ELEVENTH TWELFTH THIRTEENTH
+          FOURTEENTH FIFTEENTH SIXTEENTH)
+ORD_RE=$(IFS='|'; echo "${ORDINALS[*]:1}")
 highest=0
 for f in stories/*.aside; do
   [ -f "$f" ] || continue
-  word=$(grep -oE "\b(FIRST|SECOND|THIRD|FOURTH|FIFTH|SIXTH|SEVENTH|EIGHTH|NINTH|TENTH|ELEVENTH|TWELFTH|THIRTEENTH|FOURTEENTH|FIFTEENTH|SIXTEENTH)\b" "$f" | head -1)
-  case "$word" in
-    FIRST) n=1;; SECOND) n=2;; THIRD) n=3;; FOURTH) n=4;; FIFTH) n=5;; SIXTH) n=6;;
-    SEVENTH) n=7;; EIGHTH) n=8;; NINTH) n=9;; TENTH) n=10;; ELEVENTH) n=11;; TWELFTH) n=12;;
-    THIRTEENTH) n=13;; FOURTEENTH) n=14;; FIFTEENTH) n=15;; SIXTEENTH) n=16;; *) n=0;;
-  esac
+  word=$(grep -oE "\\b($ORD_RE)\\b" "$f" | head -1)
+  n=0
+  for i in "${!ORDINALS[@]}"; do [ "${ORDINALS[$i]}" = "$word" ] && n=$i; done
   if [ "$n" -gt "$highest" ]; then highest=$n; highest_name=$(basename "$f" .aside); fi
 done
 echo "  highest ordinal claimed: $highest ($highest_name)   stories: $total_stories"
