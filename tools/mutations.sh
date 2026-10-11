@@ -56,7 +56,7 @@ MUTATIONS=(
   "audit: the wording heuristic over-fires|$A/Bot.java|a.length() >= 8 && b.length() >= 8|a.length() >= 0 \&\& b.length() >= 0|aside.engine.SelfTest"
   # Found by tools/tautologies.py, not by reading: the stall guard could be removed entirely and a check that
   # asserted only "a stalled pull releases" still passed, because the 1.5s cap ends it anyway.
-  "hookshot: the stall guard switched off|$W|STALL_TIME = 0.3;|STALL_TIME = 0.0;|aside.engine.SelfTest"
+  "hookshot: the stall guard switched off|$E/Hookshot.java|STALL_TIME = 0.3;|STALL_TIME = 0.0;|aside.engine.SelfTest"
   # Both found by tools/tautologies.py as "NOTHING NOTICES IT BEING SWITCHED OFF": an arrow that flies dead
   # straight, and a blast that hurts nobody. Neither behaviour had a check at all.
   "weapons: arrows fly straight|$P|ARROW_GRAVITY = 250;|ARROW_GRAVITY = 0.0;|aside.engine.SelfTest"
