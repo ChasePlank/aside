@@ -1,0 +1,161 @@
+title: The Lookout
+start: start
+
+== start ==
+bg west_hall
+music room_tone
+The tower is thirty feet of timber on a ridge, and the stairs are open, and the
+wind comes through them whatever the season. There is a bed, a stove, a radio
+that works, and a map on the wall under a sheet of plastic with the whole
+forest on it in green.
+You have sat in this chair for eleven summers and you have called in four fires.
+Four is a lot. Most lookouts go a career and call in none.
+The log is a ruled book. Every half hour you write the time, the temperature,
+the wind, and what you can see. What you can see is usually nothing.
+-> the_first_hour
+
+== the_first_hour ==
+At 16:40 the radio does its half-hour check.
+base: Lookout, base. Anything for us?
+you: Nothing. Wind's up to twelve, gusting eighteen.
+base: Copy. Out.
+You write it down. Wind twelve, gusting eighteen, nothing to report.
+At 17:20 there is smoke in the north-east quadrant, about four miles out, thin
+and grey and going straight up, which is not what a campfire does.
+-> decide
+
+== decide ==
+You know that quadrant. It is a stand of beetle-killed pine that the district
+has been arguing about for three years, and it is exactly the kind of place
+that burns hot and fast and cannot be walked into.
+Four miles is under an hour for a ground crew and about eleven minutes for the
+helicopter, which is at the airstrip with nobody in it until Friday.
+* Call it in now, before you have talked yourself out of it. -> call_it
+* Take the glass and look properly first. -> watch_it
+
+== watch_it ==
+You take the glass and you find it again and you hold it, and you do the
+arithmetic you have done four times before: how much smoke, how fast, how much
+of the day is left, how far the nearest water is.
+It is going straight up, which is what it does when there is no wind on it yet,
+and it is getting thicker at the base, which is what it does when it is
+working its way down into the duff.
+Nine minutes of watching tells you everything that four minutes would have,
+which is the whole of what a lookout is for and also the whole of the risk.
+* Radio it in with the column height and the drift. -> call_it
+* Sit on it until the half-hour check. -> wait_for_check
+
+== wait_for_check ==
+The 17:50 check comes at 17:50.
+base: Lookout, base.
+you: Smoke in the north-east quadrant, four miles, beetle-kill stand. It is
+going up and it is getting wider at the base.
+base: Copy. We'll have somebody look at it in the morning.
+you: In the morning it will be a hundred acres.
+base: It'll be whatever it is. There's nobody to send tonight.
+You put the radio down. You have done your job and you have written it down,
+and the district will have a line in a file that says the lookout reported
+smoke at 17:50 on the day it started.
+~ called_late true
+-> the_night
+
+== call_it ==
+you: Base, Lookout. I have smoke in the north-east quadrant, approximately four
+miles, in the beetle-kill stand. Column is going vertical and widening at the
+base. Requesting a ground crew and the helicopter.
+There is a pause that is longer than the radio needs.
+base: Lookout, that's the fourth time you've called one of those in from that
+chair.
+you: It is.
+base: Copy. Ground crew rolling, ETA fifty minutes.
+~ called_early true
+-> the_night
+
+== the_night ==
+bg west_hall
+The light goes at 20:10 and you do the last sweep by torch, which is not
+required and which you have never missed.
+The smoke is still there. It is not bigger, which means the crew found it, and
+it is not gone, which means they are still on it.
+At 21:30 the radio brings a voice you do not know, from the crew, which is not
+how it usually goes - the district passes things on and the lookout hears about
+it a week later in a summary.
+crew: Lookout. We've got it at about two acres. We're going to be here all
+night.
+you: Copy.
+crew: They said to say thanks. They said you're the one who calls them in from
+that chair.
+* "It was going up and widening. That's all." -> modesty
+* "Somebody has to be up here when it starts." -> plainly
+
+== modesty ==
+you: It was going up and widening. That's all.
+crew: That's all it ever is.
+You write the time down. Temperature nine, wind dropping, smoke visible,
+crews on scene. You write it in the same handwriting you have used for eleven
+summers, and you close the book, and you sit in the chair for another hour
+because the tower is the only place you can see the glow.
+-> the_morning
+
+== plainly ==
+you: Somebody has to be up here when it starts.
+crew: Yes. Somebody does.
+You write the time down. Temperature nine, wind dropping, smoke visible, crews
+on scene. It is the fourth line like it in eleven years and it is the first one
+you have ever written knowing the names of the people on the other end.
+-> the_morning
+
+== the_morning ==
+bg west_hall
+music fan_hum
+At 06:00 base does the morning check, which is the district supervisor, which
+means it is a Thursday.
+base: Lookout. Status?
+* Give the numbers. -> numbers
+* Say what it was like. -> say_what [if called_early]
+* Say what it cost. -> say_cost [if called_late]
+
+== numbers ==
+you: Temperature four, wind calm, visibility twenty miles. Two acres, crews on
+scene, no structures. Nothing else to report.
+base: Copy. Good work.
+You write it down, which makes it true in the way that only a written thing is.
+-> close_early
+
+== say_what ==
+you: It was going straight up when I found it, and by the time I had the glass
+on it, it was widening at the base. It took nine minutes to be sure.
+base: And you called it in at 17:29.
+you: I did.
+base: That's the earliest call from that chair in nine years. I looked it up.
+You do not tell him you nearly waited. There is nothing in the log about the
+nine minutes, and the log is the record.
+-> close_early
+
+== say_cost ==
+you: It was four miles out at 17:20 and I called it at 17:50. In the morning it
+is going to be whatever it is.
+base: It's two acres. It stayed small.
+you: It stayed small because somebody got lucky with the wind, not because
+somebody got up here fast.
+base: That's not what the file says.
+you: I know what the file says. I wrote it.
+-> close_late
+
+== close_early ==
+You close the book at the end of the shift and you put it on the shelf with the
+others, and the shelf is eleven books long, and the newest one has a line in it
+that says smoke reported 17:29.
+The helicopter comes on Friday and does not get used.
+You are back in the chair on Saturday.
+-> END
+
+== close_late ==
+You close the book at the end of the shift and you put it on the shelf with the
+others, and the shelf is eleven books long, and the newest one has a line in it
+that says smoke reported 17:50.
+The helicopter comes on Friday and does not get used, and the crew goes home,
+and the district writes a summary that says the fire was held at two acres.
+You are back in the chair on Saturday, because somebody has to be up here when
+it starts, and because you have never once been sure that it was you.
+-> END

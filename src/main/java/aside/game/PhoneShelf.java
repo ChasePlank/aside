@@ -73,6 +73,9 @@ public final class PhoneShelf {
             new Entry("web/exchange.html", "The Exchange",
                     "A manual telephone exchange on its last night, and a call for a number that is not on it.",
                     "Roxanne's. The first one about handing the work to a machine."),
+            new Entry("web/lookout.html", "The Lookout",
+                    "A fire lookout in the last hour of a shift, a column of smoke, and the question of when.",
+                    "Roxanne's. The first one where the choice changes the ending."),
             new Entry("web/dispensary.html", "The Dispensary",
                     "A night pharmacy, one phone call after hours, and a box of tablets nobody collected.",
                     "Roxanne's. The first two-hander: one room, two people, one night.")
