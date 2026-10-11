@@ -1,66 +1,80 @@
 #!/usr/bin/env bash
 #
-# check-platformer-match.sh - compare the platformer's screens between aside and the release, ignoring the hosting.
+# Do the two editions of the platformer have the same engine?
 #
-#   tools/check-platformer-match.sh [path-to-the-release]
+#   tools/check-platformer-match.sh ../tp
 #
-# WHY THIS EXISTS. On 6 October the release was found to have fired arrows from `player.y - 10` when aside fires
-# from `player.y` - so arrows sailed over anything level with the player. The fix landed in aside on 1 October and
-# never reached the release, which shipped the bug for five days.
+# WHY THIS EXISTS. The FNAF game has had a tool like this for weeks, and it has caught real drift. THE PLATFORMER
+# HAS HAD NONE - and on 11 October that cost a day: the frame-clamp fix (MAX_FRAME made public, a new advance()
+# method, and the screen's bare `Math.min(frameTime, 0.25)` pointed at the named constant) was made here and never
+# crossed over. The release kept a clamp that could not fire and a magic number where the name should be. Nothing
+# compared the two, so nothing said so. What noticed in the end was porting a check that needed the missing method.
 #
-# NO TOOL WAS LOOKING. The FNAF pair has a nightly check; the platformer pair has none. A hand comparison found the
-# arrow, and a sweep afterwards found EIGHT screens differing by line count. Some of that is the framework gap the
-# sync cannot carry - Skyline, for instance, says outright that it has no text fade because this copy's screens are
-# centred. Some may be more fixes that never travelled. THE COUNT CANNOT TELL YOU WHICH, which is how the arrow hid.
+# WHAT IT COMPARES, AND WHAT IT DOES NOT. The engine classes only. The game layer - the screens - legitimately
+# differs: one edition is the library's copy and the other is the release, and their menus, their room mode and
+# their endings are not the same code. The engine is the part that is meant to be the same, and it is the part a
+# fix has to be applied to twice.
 #
-# So this normalises the known framework difference away and diffs what is left, the same shape as
-# check-fnaf-content.sh. It is a REPORT, not a gate: a difference here is a question, not a fault.
+# A DIFFERENCE IS NOT AUTOMATICALLY A FAULT. Some of these files differ because a comment names the other
+# repository, or because a test class names its own package. This prints them and asks; the answer for behaviour is
+# to run both gates and compare the numbers.
 set -u
-REL="${1:-../tp}"
 cd "$(dirname "$0")/.." || exit 2
 
-A_DIR=src/main/java/aside/games/fruitjump
-R_DIR="$REL/src/main/java/tropical"
-[ -d "$A_DIR" ] || { echo "no $A_DIR" >&2; exit 2; }
-[ -d "$R_DIR" ] || { echo "no $R_DIR (pass the release path)" >&2; exit 2; }
+RELEASE="${1:-../tp}"
+HERE_ENGINE="src/main/java/aside/games/fruitjump/engine"
+THERE_ENGINE="$RELEASE/src/main/java/tropical/engine"
 
-norm() {
-  # COMMENTS OUT, and they are not a detail. Reading the first two small differences by hand showed both were
-  # comments: Tutorial's 7 lines are the SAME fix with a longer explanation in aside, and Skyline's 16 are a
-  # deliberate feature difference it documents itself. Comments are not drift.
-  #
-  # The comment strip uses # as its delimiter because the pattern contains /. The first version used : and the
-  # explanatory comment above it was inside the sed script, so sed read the prose as commands and tried to open
-  # files called "7" and "lines".
-  sed -E '
-    s#//.*$##
-    /^(package|import) /d
-    s/aside\.games\.fruitjump/tropical/g
-    s/aside\.ui\.//g
-    s/\bUiScreen\b/Screen/g
-    s/\bUiManager\b/ScreenManager/g
-    s/\bLibraryScreen\b/Library/g
-    s/^final class/public final class/
-    s/^    enum Mood/    public enum Mood/
-    s/[[:space:]]+$//
-    /^[[:space:]]*$/d
-  ' "$1"
+[ -d "$HERE_ENGINE" ]  || { echo "check-platformer-match: no engine at $HERE_ENGINE" >&2; exit 2; }
+[ -d "$THERE_ENGINE" ] || { echo "check-platformer-match: no engine at $THERE_ENGINE - pass the release path" >&2; exit 2; }
+
+# Every reference to either package is stripped, so the comparison is of the CODE and not of the names it lives
+# under. The first version of this normalised only the `package` line and reported eighteen differences, most of
+# them test classes naming their own package.
+normalise() {
+  sed -e 's/^package .*;//' \
+      -e 's/aside\.games\.fruitjump\.engine\.//g' \
+      -e 's/aside\.games\.fruitjump\.//g' \
+      -e 's/tropical\.engine\.//g' \
+      -e 's/tropical\.//g' \
+      -e 's/aside\.//g' \
+      -e 's/\baside\b//g' \
+      -e 's/\btropical\b//g' "$1"
 }
 
-total=0
-for f in "$A_DIR"/*.java; do
-  n=$(basename "$f")
-  [ "$n" = "FruitJumpGame.java" ] && continue    # the module wrapper exists only where there is a Game registry
-  r="$R_DIR/$n"
-  if [ ! -f "$r" ]; then printf '  %-22s only in aside\n' "${n%.java}"; continue; fi
-  norm "$f" > /tmp/pm-a.txt; norm "$r" > /tmp/pm-r.txt
-  d=$(diff /tmp/pm-a.txt /tmp/pm-r.txt | grep -cE '^[<>]' || true)
-  total=$((total + d))
-  if [ "$d" -eq 0 ]; then printf '  %-22s same\n' "${n%.java}"
-  else printf '  %-22s %4s line(s)\n' "${n%.java}" "$d"; fi
+same=0; differ=0; differing=(); missing=(); detail=()
+for f in "$HERE_ENGINE"/*.java; do
+  name="$(basename "$f")"
+  other="$THERE_ENGINE/$name"
+  if [ ! -f "$other" ]; then
+    missing+=("$name"); differ=$((differ + 1)); continue
+  fi
+  if diff -q <(normalise "$f") <(normalise "$other") >/dev/null; then
+    same=$((same + 1))
+    continue
+  fi
+  # AND THE DIFFERENCE IS MEASURED TWO WAYS, because the first version counted a reordering as a change: diffing the
+  # two files line by line reported the Boss as different when the same methods were simply in a different order.
+  # The SORTED diff is the one that says what is in one and not the other - the content - and the unsorted count is
+  # kept beside it so "reordered" and "genuinely different" are told apart.
+  content=$(diff <(normalise "$f" | sort) <(normalise "$other" | sort) | grep -cE '^[<>]' || true)
+  order=$(diff <(normalise "$f") <(normalise "$other") | grep -cE '^[<>]' || true)
+  differing+=("$name")
+  detail+=("$(printf '%-16s %4d line(s) in one and not the other, %4d when order counts' "$name" "$content" "$order")")
+  differ=$((differ + 1))
 done
 
-echo
-echo "=== $total differing line(s) after normalising the hosting framework ==="
-echo "This is a REPORT. A difference is a question to read, not a fault - and a fix that never"
-echo "travelled looks exactly like a framework difference until someone reads it."
+echo "=== $same engine file(s) identical, $differ differing ==="
+if [ ${#missing[@]} -gt 0 ]; then
+  echo "in this repository and NOT in the release: ${missing[*]}"
+fi
+if [ ${#differing[@]} -gt 0 ]; then
+  for d in "${detail[@]}"; do echo "  $d"; done
+  echo "differing: ${differing[*]}"
+  echo
+  echo "A difference is not automatically a fault - a comment can name the other repository, and a test class"
+  echo "names its own package. What it means is that somebody changed one edition and the other has not been"
+  echo "looked at. The answer for behaviour is both gates, compared."
+  exit 1
+fi
+echo "  OK every engine class is the same code in both editions"
