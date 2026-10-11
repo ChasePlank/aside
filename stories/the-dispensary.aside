@@ -1,0 +1,163 @@
+title: The Dispensary
+start: start
+
+== start ==
+bg office_night
+music room_tone
+The dispensary is the back half of a shop that shut at six. The front half is
+dark and full of shelves, and the shutters are down, and the only light is the
+one over the counter because the shop's lights are on a timer you do not control.
+The phone on the counter is for the answerphone, which is for people who ring
+when you are closed. Tonight it rings anyway, which it is not supposed to do,
+because you are here and the machine knows when somebody is here.
+-> pick_up
+
+== pick_up ==
+You have been a pharmacist for twenty-six years and you have never once
+answered this phone after ten.
+It is ten past one.
+* Answer it. -> answer
+* Let it ring. -> let_ring
+
+== let_ring ==
+It rings eleven times and stops.
+You stand with your hands on the bench and you count them, which is a thing you
+have done since you were a boy and could not sleep: counting is the only
+treatment for waiting that never needs a prescription.
+At 01:14 it rings again.
+* Answer it. -> answer
+* Let it ring a second time. -> let_ring_twice
+
+== let_ring_twice ==
+Eleven times again. Then nothing until 01:31, when it rings and does not stop
+ringing, and by the fortieth ring you have decided that a man who counts to
+forty and does nothing is a man who has stopped being any use to anybody.
+-> answer
+
+== answer ==
+you: Dispensary.
+voice: I'm sorry. I know what time it is.
+you: The shop's shut.
+voice: I know. I saw the light.
+You look at the window in the door that separates the front of the shop from
+the back, and there is nobody at it, and the shutters are down.
+you: Where are you ringing from?
+voice: The car park.
+-> the_car_park
+
+== the_car_park ==
+You go to the door. You do not open it. Through the glass and the shutters
+there is a car with its lights off, and somebody in the driver's seat with a
+phone against their ear, and they raise one hand when they see you.
+voice: My daughter's prescription. It was meant to be collected on Tuesday.
+We couldn't. My wife's been in the hospital since Tuesday.
+you: I can't dispense through a door.
+voice: I know. I don't want you to. I want to know if it's still there.
+-> the_question
+
+== the_question ==
+The prescription is in the drawer behind you, in the plastic tray with the
+others nobody came for. You know it is there. You put it there yourself on
+Tuesday and you wrote the date on the bag in your own hand.
+* "It's here." -> its_here
+* Go and look, and take your time. -> go_and_look
+* "I can't tell you that over the phone." -> cant_tell
+
+== cant_tell ==
+you: I can't tell you that over the phone.
+voice: It's a box of tablets. It's not a bank.
+you: It's a record, and I'm not allowed to read a record out to a voice.
+There is a pause long enough that you think the call has dropped.
+voice: Then I'll come in the morning.
+you: We open at nine.
+voice: I know what time you open.
+-> the_window
+
+== its_here ==
+you: It's here.
+voice: Thank you.
+That is all. Not a question, not an arrangement, just the two words, and then
+the line goes quiet in the way that means the other person has not hung up but
+has stopped knowing what to say.
+~ told_them true
+-> the_window
+
+== go_and_look ==
+You go and look, which takes eleven seconds, and you stand at the drawer for
+another twenty, because you are buying time for a decision you have not made.
+The bag has her name on it and Tuesday's date on it and your handwriting on it,
+and it is going to be thrown away at the end of the month if nobody comes.
+You come back to the phone.
+you: It's here.
+~ told_them true
+-> the_window
+
+== the_window ==
+voice: I'll wait. If that's all right. I'll wait in the car.
+you: All night?
+voice: Until nine.
+You put the phone down. The shop is quiet, and the front is dark, and there is
+a car in the car park with a man in it who has decided to spend the night
+somewhere he can see a window.
+* Put the light out and go home. -> light_out
+* Leave the light on. -> leave_it_on
+* Make two cups of tea and take one out. -> two_cups
+
+== light_out ==
+You put the light out, because the light is not yours and the timer will take
+it anyway at half past two, and because a man who sits in a car park all night
+looking at a window is a man who has decided something already.
+In the morning you find him asleep with the seat back, and you open up at nine,
+and the bag is on the counter before he is properly awake.
+You do not mention the phone. He does not mention it either.
+-> END
+
+== leave_it_on ==
+You leave the light on. It costs nothing, it is not yours, and the timer will
+take it at half past two whether you leave it or not, which you know and he
+does not.
+At 02:31 the window over the counter goes dark.
+You are still there. You are not sure when you stopped being at work and
+started being somewhere else, but the light goes and you are still there, and
+so is the car.
+-> the_morning
+
+== two_cups ==
+You make two cups of tea, because you have been making tea at night for
+twenty-six years and your hands do it without being asked.
+You take one out to the car park, and he gets out of the car, and neither of you
+says anything about the shutters or the light or the prescription. You stand in
+the dark and drink tea with a stranger and it is the most ordinary thing that
+has happened all night.
+~ went_out true
+-> the_morning
+
+== the_morning ==
+bg office_night
+music fan_hum
+At twenty past eight he knocks on the back door, which is the door for
+deliveries and which nobody knocks on.
+He has the same sentence ready that he had on the phone, and you have the bag
+ready, and neither of you uses either.
+He says his wife is doing better. You say that is good. He asks what he owes and
+you say nothing, because it was paid on Tuesday and the shop has already taken
+the money, and the only thing that was missing was the handover.
+* "Did you tell her it was still here?" -> told_her [if told_them]
+* Say nothing more. -> the_close
+
+== told_her ==
+He thinks about it properly, which you did not expect at half past eight in the
+morning.
+He says he told her you said it was still there. He says it was the first thing
+he had been able to tell her since Tuesday that was not a date or a form.
+You do not say that you broke a rule to say it. He does not ask.
+-> the_close
+
+== the_close ==
+He goes. You open up at nine. The light over the counter goes off, as it does,
+and the machine takes the next call, as it does.
+You have worked behind this counter for twenty-six years and you have handed
+over thousands of bags, and you have never once thought about what a handover
+is for.
+* Make the tea and sit down with it. -> END [if went_out]
+* Put the kettle on anyway. -> END
