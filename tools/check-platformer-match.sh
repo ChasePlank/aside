@@ -31,15 +31,29 @@ THERE_ENGINE="$RELEASE/src/main/java/tropical/engine"
 # Every reference to either package is stripped, so the comparison is of the CODE and not of the names it lives
 # under. The first version of this normalised only the `package` line and reported eighteen differences, most of
 # them test classes naming their own package.
+# COMMENTS ARE STRIPPED BEFORE COMPARING, because they are the single biggest source of false differences: the
+# release's copies carry their own porting notes ("PORTED FROM THE ENGINE, 6 October 2026") and this repository's
+# carry docs that name classes the other one does not have. Both are worth having and neither is a divergence in
+# behaviour. The first version of this counted them as content and reported Enemy as 36 differing lines, all prose.
+strip_comments() {
+  python3 -c '
+import re, sys
+src = open(sys.argv[1]).read()
+src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)     # block comments and javadoc
+src = re.sub(r"//[^\n]*", "", src)                    # line comments
+print("\n".join(l.rstrip() for l in src.split("\n") if l.strip()))
+' "$1"
+}
+
 normalise() {
-  sed -e 's/^package .*;//' \
+  strip_comments "$1" | sed -e 's/^package .*;//' \
       -e 's/aside\.games\.fruitjump\.engine\.//g' \
       -e 's/aside\.games\.fruitjump\.//g' \
       -e 's/tropical\.engine\.//g' \
       -e 's/tropical\.//g' \
       -e 's/aside\.//g' \
       -e 's/\baside\b//g' \
-      -e 's/\btropical\b//g' "$1"
+      -e 's/\btropical\b//g'
 }
 
 same=0; differ=0; differing=(); missing=(); detail=()
