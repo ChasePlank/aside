@@ -182,6 +182,31 @@ if [ -n "${1:-}" ] && [ -d "$1/audio" ]; then
   fi
 fi
 
+# ---- the cue lists, which must agree -------------------------------------------------------------------------
+# THE ONE PAIR THE ENGINE COMPARISON CANNOT REACH. aside/ui/Audio.java and the standalone's fnaf/Audio.java are not
+# copies of each other and are not meant to be - the library's carries the settings file and the visual novel's blip
+# throttle, which the standalone has no use for. What they DO share is the SFX cue list, because both games play the
+# same cues out of the same audio folder.
+#
+# Found by a sweep for word lists appearing more than once, and it was right: the standalone played "at_door" in
+# GameScreen and did not declare it, while the library's copy did. A cue that is played and not declared is the same
+# shape as the fourteen cues that were playing into silence in the other repository.
+cue_list() {
+  sed -n '/SFX_CUES/,/};/p' "$1" | grep -oE '"[a-z0-9_]+"' | tr -d '"' | sort -u
+}
+AUDIO_HERE="$HERE/src/main/java/aside/ui/Audio.java"
+AUDIO_THEIRS="$THEIRS/src/main/java/fnaf/Audio.java"
+if [ -f "$AUDIO_HERE" ] && [ -f "$AUDIO_THEIRS" ]; then
+  miss_here=$(comm -23 <(cue_list "$AUDIO_THEIRS") <(cue_list "$AUDIO_HERE") | tr '\n' ' ')
+  miss_theirs=$(comm -13 <(cue_list "$AUDIO_THEIRS") <(cue_list "$AUDIO_HERE") | tr '\n' ' ')
+  if [ -n "$miss_here$miss_theirs" ]; then
+    echo "cue(s) the library declares and the standalone does not: ${miss_here:-none}"
+    echo "cue(s) the standalone declares and the library does not: ${miss_theirs:-none}"
+    differ=$((differ + 1))
+    differing+=("Audio cue list")
+  fi
+fi
+
 echo
 echo "=== $pass engine file(s) identical, $differ differing; $mpass marker(s) agree, $mdiffer not ==="
 if [ $mdiffer -gt 0 ]; then
