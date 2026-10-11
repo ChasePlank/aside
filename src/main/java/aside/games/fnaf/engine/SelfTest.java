@@ -225,6 +225,8 @@ public class SelfTest {
                     measured == 0 || shortest >= 2.0);
         }
 
+        theBotUsesItsDoors();
+
         System.out.println("\n--- the cues ---");
         // Every cue this game asks for has a file. Four of the FNAF games
         // had no such check, so a deleted cue would have been silent: the
@@ -300,6 +302,46 @@ public class SelfTest {
         System.out.println("\n=== " + (checks - failed) + " passed, " + failed + " failed ===");
         if (failed > 0) System.exit(1);
     }
+    /**
+     * The bot USES its doors: they open and close over a night rather than staying where they are.
+     *
+     * <p><b>FOUND BY A MUTATION NOTHING NOTICED.</b> `if (!threat) game.leftDoorClosed = false;` is the main path that
+     * reopens the left door, and disabling it leaves the bot holding a shut door for the whole night - burning power
+     * and playing a different game - while every check here stayed green. They all assert the OUTCOME, and the bot is
+     * the thing that produces it: **a bot stuck in a bad strategy makes every survival check pass more easily.** The
+     * instrument needs its own check.
+     *
+     * <p>What is asserted is that the door CHANGES STATE, which a held door never does, rather than how often it
+     * should - the number is the designer's and the counts are printed so a failure says what happened.
+     */
+    static void theBotUsesItsDoors() {
+        int nights = 0, motionless = 0, totalChanges = 0;
+        StringBuilder perNight = new StringBuilder();
+        for (int seed = 1; seed <= 8; seed++) {
+            Game g = new Game(5, seed * 7919L);
+            Bot bot = new Bot(g, seed * 104729L);
+            double dt = 1.0 / 60;
+            int changes = 0;
+            boolean was = g.leftDoorClosed;
+            int steps = 0;
+            while (g.status == Game.Status.PLAYING || g.status == Game.Status.POWER_OUT) {
+                bot.play(dt);
+                g.update(dt);
+                if (g.leftDoorClosed != was) { was = g.leftDoorClosed; changes++; }
+                if (++steps > 60 * 300) break;  // the same 5-min safety the win-rate checks use
+            }
+            nights++;
+            totalChanges += changes;
+            perNight.append(' ').append(changes);
+            // TEN, against a measured 24 to 36 across eight nights: low enough that the number is the designer's and
+            // not this check's, high enough that a bot which barely touches its doors is a finding rather than a
+            // quiet night. The counts print, so a failure says which night and how many.
+            if (changes < 10) motionless++;
+        }
+        System.out.println("  door changes per night:" + perNight + "   (nights with fewer than ten: " + motionless + ")");
+        check("the bot opens and closes its left door over a night, rather than holding it", motionless == 0);
+    }
+
     /** Does `audio/<name>.<ext>` exist for any extension the loader reads? */
     static boolean hasCue(String name) {
         java.io.File dir = new java.io.File("audio");
