@@ -69,7 +69,10 @@ public final class PhoneShelf {
     static final List<Entry> STORIES = List.of(
             new Entry("web/night-shift.html", "Night Shift",
                     "A night shift at the pizzeria, and the first thing the engine could do.",
-                    "Roxanne's. Also the audit bot's test fixture \u2014 two of its bugs are planted.")
+                    "Roxanne's. Also the audit bot's test fixture \u2014 two of its bugs are planted."),
+            new Entry("web/exchange.html", "The Exchange",
+                    "A manual telephone exchange on its last night, and a call for a number that is not on it.",
+                    "Roxanne's. The first one about handing the work to a machine.")
     );
 
     /** A line about how this one plays, for the games that need one. */

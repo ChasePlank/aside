@@ -1,0 +1,145 @@
+title: The Exchange
+start: start
+
+== start ==
+bg booth_desk
+music room_tone
+The exchange is one room with two walls of it, and both walls are sockets.
+Forty lines to the north side of town, thirty to the south, and a board of
+little brass shutters that drop when somebody lifts a receiver somewhere
+out there in the dark.
+You have worked it for eleven years. On Friday it is being replaced.
+The card on the desk says SHIFT: 22:00 - 06:00. Under it, in your own hand,
+the same thing it says every night: *logged*.
+-> first_call
+
+== first_call ==
+A shutter drops. Line 12.
+You take the plug, you take the jack, you put one in and one in, and you say
+the thing you say.
+you: Number, please.
+voice_12: It's only me. I wanted to hear somebody say it.
+You know the voice. You are not supposed to say that you know it.
+* "Go ahead, caller." -> put_through
+* Say nothing and wait. -> wait_a_moment
+* "It's late, Margaret." -> name_her
+
+== wait_a_moment ==
+You wait. The line hums, which is not silence but is the closest the exchange
+gets to it. On the board, the brass shutter for line 12 stays down.
+voice_12: All right. All right.
+-> put_through
+
+== name_her ==
+you: It's late, Margaret.
+voice_12: You're not meant to know my voice.
+you: Eleven years.
+voice_12: Then you'll know why I'm ringing.
+~ knows_margaret true
+-> put_through
+
+== put_through ==
+you: Go ahead, caller.
+You put her through to the number she gives, which is her own house, and
+which has been her own house for forty years, and which she is ringing from.
+The line clicks. The shutter rises. You write it in the log, because that is
+the job: time, line, duration, and nothing else.
+The log is a ruled book and it is the only record that the night happened.
+-> the_pattern
+
+== the_pattern ==
+Three more calls, all ordinary, all logged.
+At 01:20 a call comes in on line 29. The south board.
+The number she asks for is 0041.
+There is no 0041. There has never been a 0041. The north side runs to 0040
+and the south side starts at 0042, and that gap is not a number, it is
+where the two boards are wired apart.
+you: I'm sorry, caller. That number's not on this exchange.
+voice_29: It was on Tuesday.
+* "Margaret, was that you on twelve?" -> margaret_yes [if knows_margaret]
+* "It was on Tuesday." -> check_the_log
+
+== margaret_yes ==
+you: Margaret, was that you on twelve?
+voice_29: It was.
+you: And this is you as well.
+voice_29: There's only been the one of me on this board, and after Friday
+there won't be any of me on it. I rang the number that isn't there because
+somebody ought to have used it before they take the board down.
+~ told_the_truth true
+-> check_the_log
+
+== check_the_log ==
+You look at Tuesday. You keep the logs in a stack and you have kept them
+because nobody has ever asked you to throw them away.
+Tuesday, 01:20, line 29, and in the duration column, in your own hand: 0041.
+You do not remember writing it. You remember every number you have written
+down for eleven years, and you do not remember this one.
+-> tuesday_call
+
+== tuesday_call ==
+The Tuesday log says the call lasted four minutes.
+Four minutes is a long time to connect somebody to nothing.
+There is one other thing in the margin of that page, in pencil, which is not
+something you use, and it says: DO NOT REOPEN.
+* Ask the caller who they are. -> ask_who
+* Ring 0041 yourself. -> ring_it
+* Close the log and go back to the board. -> close_it
+
+== ask_who ==
+you: Who am I speaking to?
+voice_29: You're the last one on this board. I'm the first one on the next.
+you: There isn't a next.
+voice_29: There's a room in the building across the yard with no plugs in it
+and a machine that does this in a quarter of a second, and on Friday you
+are going to teach it what a number is.
+~ told_the_truth true
+-> friday
+
+== ring_it ==
+You take a plug and you put it in a socket that is not there.
+Nothing happens, which is what should happen, and then the shutter for line 29
+drops again, by itself, with no receiver lifted anywhere in the town.
+voice_29: That's the one. Hold it.
+-> friday
+
+== close_it ==
+You close the log. You go back to the board. There are four hours left and
+you work them, and eleven calls come in and go out, and every one of them
+goes where it says it goes.
+At 05:40 you open the log to Tuesday again. The margin is blank.
+-> friday
+
+== friday ==
+The room across the yard has a desk and a chair and a terminal, and the
+terminal has one instruction on it, which is to describe, in your own words,
+what a number is for.
+You sit down. You have until six.
+-> ending
+
+== ending ==
+bg office_night
+music fan_hum
+You write it out. Not the wiring and not the boards, because the machine has
+those. What you write is that a number is a way of agreeing to meet, and that
+somebody has to be at the other end, and that when you put a plug in a socket
+you are promising that the other end is a person.
+You do not mention 0041. You have thought about it since Tuesday and you have
+decided it is not a fault in the exchange. It is a gap in the numbering, and
+gaps are where the two boards are wired apart, and the machine will have one
+too.
+* Hand over the log and say nothing else. -> ending
+* Tell him about 0041. -> ending_told [if told_the_truth]
+
+== ending_told ==
+At six the day man comes in and you hand him the log, and then you tell him
+about 0041, and about Tuesday, and about the pencil, and he listens the way
+people listen to a man on his last shift, which is politely.
+He says he will put it in the notes.
+The machine across the yard will have the notes, and the notes will have 0041
+in them, and the gap in the numbering will be a line in a file, which is
+what happens to gaps now.
+You go home. The board goes on Friday. Somebody, somewhere, is still ringing
+0041, and there is nobody at the other end, and there is nobody at this one
+either.
+-> END
