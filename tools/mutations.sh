@@ -130,6 +130,7 @@ MUTATIONS=(
   # The run's length: load-bearing (the code comment says "AND THIS IS THE WAY HOME") and noticed by nothing until
   # DuskTest existed. Caught by the release's copy of the same check within the hour.
   "the run is two levels long|$E/LevelGen.java|FINAL_LEVEL = 40;|FINAL_LEVEL = 2;|aside.games.fruitjump.engine.DuskTest"
+  "parallax: the distant ridge moves the most|$E/Camera.java|return x * scrollFactor;|return x * (1 - scrollFactor);|aside.games.fruitjump.engine.ParallaxTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
