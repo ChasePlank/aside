@@ -1,0 +1,142 @@
+title: The Harbour
+start: start
+
+== start ==
+bg river_jetty
+music room_tone
+The pilot boat is eighteen feet of fibreglass with a wheel, a radio, and a bench
+that is wet whatever you do. You have taken it out four thousand times and you
+have never once been out in it for pleasure.
+The job is to meet ships at the bar and bring them in, because a ship's master
+does not know this river and you do, and the river is not the same river twice.
+There is a book in the wheelhouse. Every job goes in it: the ship, the draft,
+the tide, the time you went alongside and the time you came off. Eleven years
+of it.
+-> the_call
+
+== the_call ==
+At 03:40 the radio brings the night voice, which is a person you have never met
+and have spoken to four hundred times.
+voice: Pilot, this is the harbour. The Kestrel is at the bar, inbound.
+you: Draft?
+voice: Six point one.
+You know the river at six point one on a falling tide. You know it the way you
+know your own stairs in the dark, and you know that six point one on this tide
+is not a job, it is a calculation with a margin of about forty minutes.
+you: What is she carrying?
+voice: Timber.
+* Ask what the weather is doing out there. -> ask_weather
+* Say you will take her. -> take_her
+
+== ask_weather ==
+voice: Force seven, west, building. She has been hove to since two.
+you: And they want to come in tonight.
+voice: They want to come in tonight.
+You look at the glass, which is dropping, and you do the thing you have done
+four thousand times, which is arithmetic that has somebody else's ship at one
+end of it.
+-> the_decision
+
+== take_her ==
+you: I'll take her.
+voice: She's at the fairway buoy.
+You put the radio down and you put your coat on, and you do not do any
+arithmetic at all, because you have done it before and you know what it says.
+-> the_decision
+
+== the_decision ==
+The margin is forty minutes. The weather is building. Timber on a six-point-one
+draft in a force seven on a falling tide is a calculation you have run in your
+head in the dark more times than you can count, and the answer is usually yes,
+because the answer is usually yes.
+But it is not always yes. Twice in eleven years it has been no, and both times
+you said no on the radio and both times the ship stood off and both times you
+wrote it in the book and both times nobody thanked you and nobody had to.
+* Take her in. -> take_her_in
+* Refuse. -> refuse
+
+== take_her_in ==
+You go out. It takes eleven minutes to the fairway and the sea outside the bar
+is doing what the glass said it would.
+The Kestrel is a grey ship with a green funnel and she is rolling like something
+that would rather not be here, and you come alongside and you climb a ladder
+that has been wet since before you were born, and you stand on her bridge and
+you say the first thing you always say.
+you: I have her.
+master: She's yours.
+You bring her in. It takes an hour and ten minutes and you do not think about
+the margin once, because thinking about it while you are inside it is a way of
+losing it.
+~ brought_her_in true
+-> the_book
+
+== refuse ==
+you: Harbour, Pilot. I'm not taking her tonight.
+voice: Say again?
+you: Six point one on a falling tide with force seven building. Tell her master
+to stand off until the tide. I'll take her at eight.
+There is a silence with a person in it.
+voice: He won't like it.
+you: He'll like it less at the bar.
+~ refused true
+-> the_book
+
+== the_book ==
+bg river_jetty
+You write it in the book, because the book is the job. Ship, draft, tide, time
+alongside, time off. And in the last column, which is not ruled and which nobody
+has ever asked you about, a word.
+Tonight the word is one of two things and you have not written it yet.
+* "Took her." -> wrote_took
+* "Stood her off." -> wrote_stood
+* Write nothing in the last column. -> wrote_nothing
+
+== wrote_took ==
+You write *took her* and you close the book, and in the morning the harbour
+office rings to ask how she came in, and you say she came in fine, which is
+true, and you do not say that you had forty minutes and used all of them.
+-> the_morning
+
+== wrote_stood ==
+You write *stood her off* and you close the book, and in the morning the harbour
+office rings to ask why, and you say because six point one on that tide with
+force seven is a job for daylight, and they say the master is complaining, and
+you say he is welcome to.
+-> the_morning
+
+== wrote_nothing ==
+You leave the last column empty, which you have never done, and you close the
+book, and you sit in the boat with the engine off and the rain on the wheelhouse
+roof, and you think about the fact that the column exists because you made it
+and that the only person who has ever read it is you.
+~ wrote_nothing true
+-> the_morning
+
+== the_morning ==
+bg river_jetty
+music fan_hum
+At 07:00 the day voice comes on the radio and it is somebody young, and the
+first thing they say is that the Kestrel is still at the bar and asking for a
+pilot at eight.
+* Take her at eight, like you said. -> took_at_eight [if refused]
+* Take her at eight, and say nothing about last night. -> took_at_eight [if brought_her_in]
+* Take her at eight and tell them what the column is for. -> tell_them [if wrote_nothing]
+* Take her at eight and say nothing. -> took_at_eight
+
+== tell_them ==
+you: There's a column in the book nobody asked for. I've been writing in it for
+eleven years. It says whether I took her or stood her off, and nothing else, and
+it is the only record of the two times I said no.
+There is a pause on the radio that is not a radio pause.
+voice: What did you write last night?
+you: Nothing. That's the first time.
+voice: Then write it now. I'll wait.
+-> took_at_eight
+
+== took_at_eight ==
+You take her at eight. The tide is making and the wind has dropped and it is the
+most ordinary job you have done all week.
+Afterwards you write it in the book: the ship, the draft, the tide, the time
+alongside and the time off.
+And in the last column, in your own hand, a word.
+-> END

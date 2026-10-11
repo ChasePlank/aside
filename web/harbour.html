@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0a09">
+<title>The Harbour</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; background: #0d0a09; color: #e8e4dc;
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  #bar { position: fixed; top: 0; left: 0; height: 3px; background: #c4622b; width: 0;
+         transition: width .25s; z-index: 5; }
+  /* A phone VN is a fixed frame with a scrolling script under it, not a
+     document with a picture in it. So the page itself does not scroll: the
+     stage holds the top, the log is the only thing that moves, and the choices
+     sit at the bottom where a thumb already is. The stage is the desktop's
+     1280x720 frame at 16:9 -- the same frame, so the same three zones and the
+     same floor line, and a room that is framed the way the room was drawn
+     rather than cropped to a phone's idea of a picture. */
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+  #stage, #place, #log, #choices, #hint { width: 100%; max-width: 760px; margin: 0 auto; }
+  #stage { flex: 0 0 auto; position: relative; overflow: hidden; background: #101018;
+           aspect-ratio: 16 / 9; max-height: 46dvh; border-bottom: 1px solid #241d19; }
+  /* contain, not cover, and anchored to the bottom. On a phone the stage is
+     exactly 16:9 so the two are the same thing; on a laptop the height cap
+     makes the stage wider than the room, and cover would answer that by
+     cropping the top and bottom off the room. A letterbox keeps the whole
+     frame and keeps the figures standing on the image's floor line. */
+  #bg { position: absolute; inset: 0; background-size: contain;
+        background-position: center bottom; background-repeat: no-repeat; }
+  #cast { position: absolute; inset: 0; }
+  #cast img { position: absolute; bottom: 1.9%; height: 91.7%; width: auto;
+              transform: translateX(-50%); transition: opacity .18s; }
+  #place { flex: 0 0 auto; padding: 11px 20px 0; font-size: 12px; letter-spacing: .14em;
+           text-transform: uppercase; color: #8a7f70; min-height: 15px; }
+  #log { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain;
+         padding: 8px 20px 0; -webkit-overflow-scrolling: touch; }
+  #log p { margin: 0 0 14px; }
+  #log .say { color: #e8e4dc; }
+  #log .who { display: block; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+              color: #c4622b; margin-bottom: 3px; }
+  #log .narrate { color: #b3aa9c; font-style: italic; }
+  #log .old { opacity: .38; }
+  #choices { flex: 0 0 auto; padding: 0 20px 6px; max-height: 42dvh; overflow-y: auto; }
+  button {
+    display: block; width: 100%; margin: 0 0 10px; padding: 15px 16px;
+    background: #1c1614; color: #e8e4dc; border: 1px solid #3a2f28; border-radius: 10px;
+    font: inherit; text-align: left; cursor: pointer;
+  }
+  button:hover { border-color: #c4622b; }
+  #hint { flex: 0 0 auto; padding: 0 20px 16px; color: #6e655a; font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) { #bar, #cast img { transition: none; } }
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="stage"><div id="bg"></div><div id="cast"></div></div>
+<div id="place"></div>
+<div id="log"></div>
+<div id="choices"></div>
+<div id="hint">tap anywhere to continue</div>
+<script>
+// --------------------------------------------------------------- the sound
+//
+// Synthesised, so the page stays one file with no audio in it. The palette is
+// shared by every phone build -- see aside.game.WebAudio -- and what each game
+// does with it is its own business: the cue names below are mapped to these
+// voices in the page, because the mapping is the game.
+//
+// A browser will not start audio until the player has touched the page, so the
+// context is created on the first cue and resumed on every one after that. The
+// first tap of a night is what turns the sound on, which is the same gesture
+// that starts the night.
+
+let AC = null;
+
+function ac() {
+  if (!AC) {
+    const K = window.AudioContext || window.webkitAudioContext;
+    if (!K) return null;
+    try { AC = new K(); } catch (e) { return null; }
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+
+function noiseBuf(a, dur) {
+  const n = Math.max(1, Math.floor(a.sampleRate * dur));
+  const b = a.createBuffer(1, n, a.sampleRate);
+  const d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+
+function tone(a, t, f0, f1, dur, type, gain) {
+  const o = a.createOscillator();
+  o.type = type;
+  o.frequency.setValueAtTime(f0, t);
+  if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+
+function hiss(a, t, dur, type, freq, q, gain, bendTo) {
+  const s = a.createBufferSource();
+  s.buffer = noiseBuf(a, dur);
+  const f = a.createBiquadFilter();
+  f.type = type;
+  f.frequency.setValueAtTime(freq, t);
+  if (bendTo) f.frequency.linearRampToValueAtTime(bendTo, t + dur);
+  f.Q.value = q;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(gain, t + Math.min(0.04, dur / 3));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f).connect(g).connect(a.destination);
+  s.start(t); s.stop(t + dur + 0.02);
+}
+
+/**
+ * One voice. Every game's cues land on one of these, and the palette is
+ * deliberately small: a footstep, a knock, a breath, a clank, static, a click,
+ * a chime, a scream, and a system going down or coming back.
+ */
+function voice(name) {
+  const a = ac();
+  if (!a) return;
+  const t = a.currentTime;
+  switch (name) {
+    case 'footstep':
+      // A footfall somewhere in the building. Low, and not close.
+      hiss(a, t, 0.30, 'lowpass', 1500, 1, 0.34);
+      tone(a, t, 92, 74, 0.26, 'sine', 0.30);
+      break;
+    case 'step':
+      // The same footfall, one room away. Louder and drier, so the distance
+      // is audible rather than only readable.
+      hiss(a, t, 0.24, 'lowpass', 2100, 1, 0.52);
+      tone(a, t, 108, 84, 0.22, 'sine', 0.44);
+      break;
+    case 'knock':
+      // Something arriving at the door. Heavier than a step and shorter.
+      hiss(a, t, 0.42, 'bandpass', 2600, 1, 0.72, 900);
+      tone(a, t, 118, 82, 0.36, 'sine', 0.56);
+      break;
+    case 'breath':
+      // Something standing there. A soft swell, not a hit -- it has to be
+      // recognisable while it is repeating every second and a half.
+      hiss(a, t, 0.55, 'bandpass', 700, 0.8, 0.30, 480);
+      break;
+    case 'clank':
+      // The lure: a metal thing struck in an empty room.
+      hiss(a, t, 0.10, 'highpass', 4200, 1, 0.46);
+      tone(a, t, 620, 300, 0.30, 'square', 0.20);
+      tone(a, t + 0.02, 940, 520, 0.22, 'sine', 0.16);
+      break;
+    case 'static':
+      // A feed, or a phantom. Short and bright.
+      hiss(a, t, 0.34, 'highpass', 2400, 1, 0.40);
+      break;
+    case 'click':
+      // A switch, a light, a panel.
+      hiss(a, t, 0.05, 'highpass', 5200, 1, 0.44);
+      tone(a, t + 0.005, 1150, 1150, 0.10, 'sine', 0.16);
+      break;
+    case 'chime':
+      // Six AM.
+      tone(a, t, 880, 880, 0.55, 'sine', 0.22);
+      tone(a, t + 0.16, 1320, 1320, 0.60, 'sine', 0.18);
+      break;
+    case 'down':
+      // A system failing. It falls.
+      tone(a, t, 320, 52, 0.85, 'sawtooth', 0.30);
+      hiss(a, t, 0.70, 'lowpass', 900, 1, 0.30);
+      break;
+    case 'up':
+      // And coming back.
+      tone(a, t, 180, 620, 0.42, 'sine', 0.24);
+      break;
+    case 'laugh':
+      // Something laughing in the dark. Three short falling tones, which is
+      // as close as a palette this small gets to a voice.
+      tone(a, t, 520, 380, 0.16, 'triangle', 0.20);
+      tone(a, t + 0.18, 470, 330, 0.16, 'triangle', 0.18);
+      tone(a, t + 0.36, 430, 290, 0.20, 'triangle', 0.16);
+      break;
+    case 'scream':
+      // The one cue nobody chose.
+      tone(a, t, 2200, 90, 1.10, 'sawtooth', 0.34);
+      hiss(a, t, 1.10, 'highpass', 900, 1, 0.30);
+      break;
+    default:
+      break;
+  }
+}
+
+
+// A tap makes a click. The stories are the two builds whose desktop versions
+// carry music rather than cues, so this is not a mechanic -- but the page is a
+// still frame with a script under it, and a tap that makes no sound reads as a
+// tap that did not land. The same one line the ten verb games carry.
+document.body.addEventListener('pointerdown', () => voice('click'));
+
+const STORY = {"title":"The Harbour","author":"","start":"start","assets":{},"missing":["bg river_jetty"],"passages":{"start":[{"type":"bg","name":"river_jetty"},{"type":"narrate","text":"The pilot boat is eighteen feet of fibreglass with a wheel, a radio, and a bench"},{"type":"narrate","text":"that is wet whatever you do. You have taken it out four thousand times and you"},{"type":"narrate","text":"have never once been out in it for pleasure."},{"type":"narrate","text":"The job is to meet ships at the bar and bring them in, because a ship's master"},{"type":"narrate","text":"does not know this river and you do, and the river is not the same river twice."},{"type":"narrate","text":"There is a book in the wheelhouse. Every job goes in it: the ship, the draft,"},{"type":"narrate","text":"the tide, the time you went alongside and the time you came off. Eleven years"},{"type":"narrate","text":"of it."},{"type":"jump","to":"the_call"}],"the_call":[{"type":"say","who":"At 03","text":"40 the radio brings the night voice, which is a person you have never met"},{"type":"narrate","text":"and have spoken to four hundred times."},{"type":"say","who":"voice","text":"Pilot, this is the harbour. The Kestrel is at the bar, inbound."},{"type":"say","who":"you","text":"Draft?"},{"type":"say","who":"voice","text":"Six point one."},{"type":"narrate","text":"You know the river at six point one on a falling tide. You know it the way you"},{"type":"narrate","text":"know your own stairs in the dark, and you know that six point one on this tide"},{"type":"narrate","text":"is not a job, it is a calculation with a margin of about forty minutes."},{"type":"say","who":"you","text":"What is she carrying?"},{"type":"say","who":"voice","text":"Timber."},{"type":"choice","text":"Ask what the weather is doing out there.","to":"ask_weather"},{"type":"choice","text":"Say you will take her.","to":"take_her"}],"ask_weather":[{"type":"say","who":"voice","text":"Force seven, west, building. She has been hove to since two."},{"type":"say","who":"you","text":"And they want to come in tonight."},{"type":"say","who":"voice","text":"They want to come in tonight."},{"type":"narrate","text":"You look at the glass, which is dropping, and you do the thing you have done"},{"type":"narrate","text":"four thousand times, which is arithmetic that has somebody else's ship at one"},{"type":"narrate","text":"end of it."},{"type":"jump","to":"the_decision"}],"take_her":[{"type":"say","who":"you","text":"I'll take her."},{"type":"say","who":"voice","text":"She's at the fairway buoy."},{"type":"narrate","text":"You put the radio down and you put your coat on, and you do not do any"},{"type":"narrate","text":"arithmetic at all, because you have done it before and you know what it says."},{"type":"jump","to":"the_decision"}],"the_decision":[{"type":"narrate","text":"The margin is forty minutes. The weather is building. Timber on a six-point-one"},{"type":"narrate","text":"draft in a force seven on a falling tide is a calculation you have run in your"},{"type":"narrate","text":"head in the dark more times than you can count, and the answer is usually yes,"},{"type":"narrate","text":"because the answer is usually yes."},{"type":"narrate","text":"But it is not always yes. Twice in eleven years it has been no, and both times"},{"type":"narrate","text":"you said no on the radio and both times the ship stood off and both times you"},{"type":"narrate","text":"wrote it in the book and both times nobody thanked you and nobody had to."},{"type":"choice","text":"Take her in.","to":"take_her_in"},{"type":"choice","text":"Refuse.","to":"refuse"}],"take_her_in":[{"type":"narrate","text":"You go out. It takes eleven minutes to the fairway and the sea outside the bar"},{"type":"narrate","text":"is doing what the glass said it would."},{"type":"narrate","text":"The Kestrel is a grey ship with a green funnel and she is rolling like something"},{"type":"narrate","text":"that would rather not be here, and you come alongside and you climb a ladder"},{"type":"narrate","text":"that has been wet since before you were born, and you stand on her bridge and"},{"type":"narrate","text":"you say the first thing you always say."},{"type":"say","who":"you","text":"I have her."},{"type":"say","who":"master","text":"She's yours."},{"type":"narrate","text":"You bring her in. It takes an hour and ten minutes and you do not think about"},{"type":"narrate","text":"the margin once, because thinking about it while you are inside it is a way of"},{"type":"narrate","text":"losing it."},{"type":"flag","name":"brought_her_in","delta":"true"},{"type":"jump","to":"the_book"}],"refuse":[{"type":"say","who":"you","text":"Harbour, Pilot. I'm not taking her tonight."},{"type":"say","who":"voice","text":"Say again?"},{"type":"say","who":"you","text":"Six point one on a falling tide with force seven building. Tell her master"},{"type":"narrate","text":"to stand off until the tide. I'll take her at eight."},{"type":"narrate","text":"There is a silence with a person in it."},{"type":"say","who":"voice","text":"He won't like it."},{"type":"say","who":"you","text":"He'll like it less at the bar."},{"type":"flag","name":"refused","delta":"true"},{"type":"jump","to":"the_book"}],"the_book":[{"type":"bg","name":"river_jetty"},{"type":"narrate","text":"You write it in the book, because the book is the job. Ship, draft, tide, time"},{"type":"narrate","text":"alongside, time off. And in the last column, which is not ruled and which nobody"},{"type":"narrate","text":"has ever asked you about, a word."},{"type":"narrate","text":"Tonight the word is one of two things and you have not written it yet."},{"type":"choice","text":"Took her.","to":"wrote_took"},{"type":"choice","text":"Stood her off.","to":"wrote_stood"},{"type":"choice","text":"Write nothing in the last column.","to":"wrote_nothing"}],"wrote_took":[{"type":"narrate","text":"You write *took her* and you close the book, and in the morning the harbour"},{"type":"narrate","text":"office rings to ask how she came in, and you say she came in fine, which is"},{"type":"narrate","text":"true, and you do not say that you had forty minutes and used all of them."},{"type":"jump","to":"the_morning"}],"wrote_stood":[{"type":"narrate","text":"You write *stood her off* and you close the book, and in the morning the harbour"},{"type":"narrate","text":"office rings to ask why, and you say because six point one on that tide with"},{"type":"narrate","text":"force seven is a job for daylight, and they say the master is complaining, and"},{"type":"narrate","text":"you say he is welcome to."},{"type":"jump","to":"the_morning"}],"wrote_nothing":[{"type":"narrate","text":"You leave the last column empty, which you have never done, and you close the"},{"type":"narrate","text":"book, and you sit in the boat with the engine off and the rain on the wheelhouse"},{"type":"narrate","text":"roof, and you think about the fact that the column exists because you made it"},{"type":"narrate","text":"and that the only person who has ever read it is you."},{"type":"flag","name":"wrote_nothing","delta":"true"},{"type":"jump","to":"the_morning"}],"the_morning":[{"type":"bg","name":"river_jetty"},{"type":"say","who":"At 07","text":"00 the day voice comes on the radio and it is somebody young, and the"},{"type":"narrate","text":"first thing they say is that the Kestrel is still at the bar and asking for a"},{"type":"narrate","text":"pilot at eight."},{"type":"choice","text":"Take her at eight, like you said.","to":"took_at_eight","cond":"refused"},{"type":"choice","text":"Take her at eight, and say nothing about last night.","to":"took_at_eight","cond":"brought_her_in"},{"type":"choice","text":"Take her at eight and tell them what the column is for.","to":"tell_them","cond":"wrote_nothing"},{"type":"choice","text":"Take her at eight and say nothing.","to":"took_at_eight"}],"tell_them":[{"type":"say","who":"you","text":"There's a column in the book nobody asked for. I've been writing in it for"},{"type":"narrate","text":"eleven years. It says whether I took her or stood her off, and nothing else, and"},{"type":"narrate","text":"it is the only record of the two times I said no."},{"type":"narrate","text":"There is a pause on the radio that is not a radio pause."},{"type":"say","who":"voice","text":"What did you write last night?"},{"type":"say","who":"you","text":"Nothing. That's the first time."},{"type":"say","who":"voice","text":"Then write it now. I'll wait."},{"type":"jump","to":"took_at_eight"}],"took_at_eight":[{"type":"narrate","text":"You take her at eight. The tide is making and the wind has dropped and it is the"},{"type":"narrate","text":"most ordinary job you have done all week."},{"type":"narrate","text":"Afterwards you write it in the book: the ship, the draft, the tide, the time"},{"type":"narrate","text":"alongside and the time off."},{"type":"narrate","text":"And in the last column, in your own hand, a word."}]}};
+const ASSETS = STORY.assets || {};
+let here = STORY.start, step = 0, lines = [], lastSpeaker = null;
+const vars = {};   // affection and anything else set by "~ name +1"
+const log = document.getElementById('log');
+const choices = document.getElementById('choices');
+const place = document.getElementById('place');
+const hint = document.getElementById('hint');
+const bar = document.getElementById('bar');
+const bgEl = document.getElementById('bg');
+const castEl = document.getElementById('cast');
+const castEls = {};   // character -> <img>, so a pose change does not flash
+
+function applyFlag(it) {
+  const d = parseFloat(it.delta);
+  vars[it.name] = (vars[it.name] || 0) + (isNaN(d) ? 0 : d);
+}
+
+// A condition arrives as a raw expression ("listened >= 1 and aff_chica >= 2").
+// It is rewritten into JavaScript and run against the flags. Without this the
+// web build would take the FIRST branch every time, which does not simplify the
+// story - it tells a different one, and most of the later scenes would never be
+// reached at all.
+//
+// The word boundaries below are written with a DOUBLE backslash, and that is
+// not cosmetic: this template is a Java text block, where a single backslash-b
+// is the backspace character. Spelled with one backslash it compiled, exported,
+// and shipped a regex that matched nothing, so "and" survived into the
+// expression, the Function() threw, and condOK's catch returned true -- every
+// compound condition silently taking its first branch. No story here uses
+// and/or yet, which is the only reason it was never seen. SelfTest now asserts
+// the boundary is a boundary, and that the page holds no control characters.
+function condOK(it) {
+  if (!it.cond) return true;
+  const js = it.cond
+    .replace(/\band\b/g, '&&')
+    .replace(/\bor\b/g, '||')
+    .replace(/\bnot\b/g, '!')
+    .replace(/[A-Za-z_][A-Za-z0-9_]*/g, m => 'vars.' + m);
+  try { return !!Function('vars', 'return (' + js + ')')(vars); }
+  catch (e) { return true; }   // an expression this build cannot read: do not block the story
+}
+
+function esc(s) { return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+// ---- staging, drawn the way VnScreen draws it ----
+// Zones are 292 / 640 / 988 of 1280, the floor is 706 of 720 and a figure is
+// 660 of 720 tall, so the phone frame is the desktop frame in percentages and
+// the two cannot drift apart by a pixel count.
+function zoneLeft(where) {
+  return where === 'left' ? '22.8%' : where === 'right' ? '77.2%' : '50%';
+}
+function showChar(it) {
+  const src = ASSETS['sp:' + it.key];
+  let el = castEls[it.who];
+  if (!el) { el = document.createElement('img'); el.alt = it.who; castEls[it.who] = el; castEl.appendChild(el); }
+  if (src) { if (el.getAttribute('src') !== src) el.setAttribute('src', src); el.style.display = ''; }
+  else el.style.display = 'none';
+  el.style.left = zoneLeft(it.where);
+}
+function hideChar(it) {
+  const el = castEls[it.who];
+  if (el) { el.remove(); delete castEls[it.who]; }
+}
+// Whoever is not talking is dimmed, exactly as the desktop dims them; during
+// narration nobody is talking and everybody is lit.
+function dimCast() {
+  for (const ch in castEls) {
+    castEls[ch].style.opacity = (lastSpeaker === null || lastSpeaker === ch) ? '1' : '0.72';
+  }
+}
+
+// A jump changes the scene and NOTHING ELSE. The room and whoever is standing
+// in it are state, not scenery: Vn.enter() moves sceneId and index and leaves
+// background/shown/stagePos alone, so a scene that opens without a "bg" line
+// carries on in the room the last one set up. Clearing them here looked
+// harmless and was not -- the first jump out of the opening scene wiped the
+// office off the screen, and every scene after it that did not restate its
+// background played against black. Only a restart clears the stage.
+function enter(label) {
+  here = label; step = 0; lines = STORY.passages[label] || [];
+  log.innerHTML = ''; choices.innerHTML = '';
+  lastSpeaker = null;
+  advance();
+}
+
+function advance() {
+  // consume non-visual items, then show one line
+  while (step < lines.length) {
+    const it = lines[step++];
+    if (it.type === "bg") {
+      place.textContent = it.name.replace(/_/g, " ");
+      const src = ASSETS['bg:' + it.name];
+      bgEl.style.backgroundImage = src ? 'url("' + src + '")' : '';
+      continue;
+    }
+    if (it.type === "show") { showChar(it); dimCast(); continue; }
+    if (it.type === "hide") { hideChar(it); dimCast(); continue; }
+    if (it.type === "flag") { applyFlag(it); continue; }
+    if (it.type === "jump") { if (condOK(it)) { enter(it.to); return; } continue; }
+    if (it.type === "choice") { step--; offer(); return; }
+    render(it);
+    progress();
+    return;
+  }
+  // passage ran out with no jump: nothing more to say
+  hint.textContent = 'the end';
+}
+
+function render(it) {
+  for (const p of log.children) p.classList.add('old');
+  const p = document.createElement('p');
+  if (it.type === "say") {
+    p.className = 'say';
+    p.innerHTML = '<span class="who">' + esc(it.who) + '</span>' + esc(it.text);
+    lastSpeaker = it.who;
+  } else {
+    p.className = 'narrate';
+    p.textContent = it.text;
+    lastSpeaker = null;
+  }
+  dimCast();
+  log.appendChild(p);
+  p.scrollIntoView({ block: 'nearest' });
+  hint.textContent = 'tap anywhere to continue';
+}
+
+function offer() {
+  const opts = [];
+  while (step < lines.length && lines[step].type === "choice") {
+    const c = lines[step++];
+    if (condOK(c)) opts.push(c);
+  }
+  for (const o of opts) {
+    const b = document.createElement('button');
+    b.textContent = o.text;
+    b.onclick = ev => { ev.stopPropagation(); enter(o.to); };
+    choices.appendChild(b);
+  }
+  hint.textContent = 'choose';
+  progress();
+}
+
+function progress() {
+  const pct = lines.length ? Math.min(100, Math.round(100 * step / lines.length)) : 0;
+  bar.style.width = pct + '%';
+}
+
+document.body.addEventListener('click', () => { if (!choices.children.length) advance(); });
+document.addEventListener('keydown', e => {
+  if ((e.key === ' ' || e.key === 'Enter') && !choices.children.length) advance();
+});
+enter(STORY.start);
+</script>
+</body>
+</html>

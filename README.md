@@ -104,7 +104,7 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirteen stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Fourteen stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line` and `the-last-crossing`, plus `night-shift` (a test
   fixture). Ten are stories you can play, each with its own register, and each is audited rather than asserted —
   `tools/audit-stories.sh` prints every one with its scene and ending counts. This bullet said "five" and named
@@ -347,6 +347,9 @@ be called complete while the picks line cannot. That distinction is the whole re
   building, and **the first story here with two narrators**: every scene is a letter, and the reader sees both
   sides while neither of them does. A letter cannot be unsent, so a choice in one scene becomes a fact the other
   person has to answer in the next. 13 scenes, 3 endings.
+- **`stories/the-harbour.aside`** — a river pilot at three in the morning. A ship at the bar on a six-point-one
+  draft with force seven building, a margin of about forty minutes, and a book that records every job. 14 scenes,
+  1 ending.
 - **`stories/the-exchange.aside`** — a manual telephone exchange on its last night before automation. One
   operator, two boards of brass shutters, a ruled log, and a call for a number that is not on it. 15 scenes, 1 ending.
 - **`stories/the-dispensary.aside`** — a night pharmacy. The shop shut at six, the shutters are down, and the
