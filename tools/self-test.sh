@@ -306,6 +306,30 @@ else
 fi
 restore_tut
 
+# ---- check-readme-stories.py must notice a README that disagrees with a story ----------------------------------
+# The plainest thing it is for: a count in prose that the stories do not support. The fault is one scene added to
+# bell-codes' claim, which is the shape of the two real stale claims it found on its first run.
+if [ -x tools/check-readme-stories.py ] && [ -f README.md ]; then
+  README_BAK=$(mktemp); cp README.md "$README_BAK"
+  python3 - <<'PY'
+import pathlib, re
+p = pathlib.Path('README.md'); s = p.read_text()
+i = s.index('`stories/bell-codes.aside`**')
+seg = s[i:i + 1400]
+m = re.search(r'(\d+) scenes?', seg)
+assert m, 'no scene count on the bell-codes line to change'
+bigger = seg.replace(m.group(0), str(int(m.group(1)) + 1) + ' scenes', 1)
+p.write_text(s[:i] + bigger + s[i + 1400:])
+PY
+  out=$(timeout 600 tools/check-readme-stories.py 2>&1); rc=$?
+  cp "$README_BAK" README.md
+  if [ $rc -ne 0 ] && grep -q "bell-codes" <<<"$out"; then
+    ok "check-readme-stories notices a count that disagrees" "$(echo "$out" | grep STALE | head -1 | tr -s ' ')"
+  else
+    bad "check-readme-stories notices a count that disagrees" "exit $rc, and nothing about bell-codes"
+  fi
+fi
+
 echo
 echo "=== $pass tool self-test(s) passed, $fail failed ==="
 [ "$fail" = 0 ] || exit 1
