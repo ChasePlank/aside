@@ -293,6 +293,20 @@ else
   fail=$((fail + 1)); failed_names+=("audio-reproducible-missing")
 fi
 
+# The README describes every story with its scene count, and nothing re-ran those numbers. Three stories were
+# added in three hours and the README did not know about any of them - nor that bell-codes had grown from 9 scenes
+# to 11. Ported from the release, which has had readme-counts.sh for weeks and caught its own wrong numbers twice.
+if [ -f tools/check-readme-stories.py ]; then
+  printf '  %-20s ' "readme-stories"
+  if out=$(timeout 600 tools/check-readme-stories.py 2>&1); then
+    echo "ok     $(echo "$out" | grep -E '^=== [0-9]+ story' | head -1)"
+  else
+    echo "FAIL   $(echo "$out" | grep -E '^=== [0-9]+ claim' | head -1)"
+    echo "$out" | grep 'STALE' | head -6
+    gate_failed=1
+  fi
+fi
+
 if [ -f tools/check-tutorial-counts.py ]; then
   echo "  --- stated tutorial counts ---"
   tut_out=$(python3 tools/check-tutorial-counts.py 2>&1); tut_rc=$?

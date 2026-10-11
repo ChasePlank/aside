@@ -104,7 +104,7 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Eleven stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirteen stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line` and `the-last-crossing`, plus `night-shift` (a test
   fixture). Ten are stories you can play, each with its own register, and each is audited rather than asserted —
   `tools/audit-stories.sh` prints every one with its scene and ending counts. This bullet said "five" and named
@@ -334,7 +334,7 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`stories/bell-codes.aside`** — a signalman works the last night in a mechanical signal box before the panel at
   the regional centre takes the line. **The first story here that insists on nothing supernatural at all.** What
   goes when the box closes is not the labour — it is the courtesy: the five beats the book does not list, because
-  the book records codes and the men had manners. 9 scenes, 3 endings.
+  the book records codes and the men had manners. 11 scenes, 3 endings.
 - **`stories/ninety-days.aside`** — a lost-property office on disposal day, and **the first story here with a
   different shape**: a hub rather than a chain. You stand in one room with a shelf, choose what to look at, and
   come back; the ending depends not on WHICH item you chose but on HOW MANY you bothered to, which is a different
@@ -347,6 +347,14 @@ be called complete while the picks line cannot. That distinction is the whole re
   building, and **the first story here with two narrators**: every scene is a letter, and the reader sees both
   sides while neither of them does. A letter cannot be unsent, so a choice in one scene becomes a fact the other
   person has to answer in the next. 13 scenes, 3 endings.
+- **`stories/the-exchange.aside`** — a manual telephone exchange on its last night before automation. One
+  operator, two boards of brass shutters, a ruled log, and a call for a number that is not on it. 15 scenes, 1 ending.
+- **`stories/the-dispensary.aside`** — a night pharmacy. The shop shut at six, the shutters are down, and the
+  answerphone rings at ten past one. The library's first two-hander: one room, two people, one night. 17 scenes,
+  1 ending.
+- **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
+  and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
+  2 endings.
 - **`stories/the-last-crossing.aside`** — a ferryman, a rope ferry, and the last three nights before a bridge
   opens and makes him unnecessary. **The first story here that offers the same decision more than once**: he is
   asked the same question at the same waterline three nights running, and the only thing that changes between
