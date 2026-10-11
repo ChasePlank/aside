@@ -127,6 +127,9 @@ MUTATIONS=(
   # mechanism, so deleting one proves nothing. Take the mechanic away instead - the lesson lives in the level,
   # not the text, which Tutorial's own comment says: "No sign: this level shows rather than says."
   "the tutorial stops introducing moving platforms|\$T/Tutorial.java|built.addMover(LevelMap.MoverSpec.vertical(|if (false) built.addMover(LevelMap.MoverSpec.vertical(|aside.engine.SelfTest"
+  # The run's length: load-bearing (the code comment says "AND THIS IS THE WAY HOME") and noticed by nothing until
+  # DuskTest existed. Caught by the release's copy of the same check within the hour.
+  "the run is two levels long|$E/LevelGen.java|FINAL_LEVEL = 40;|FINAL_LEVEL = 2;|aside.games.fruitjump.engine.DuskTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
 )
 
