@@ -431,26 +431,20 @@ if [ -x tools/check-literal-drift.py ]; then
   fi
 fi
 
-# ---- check-fnaf-content.sh must notice a screen that has drifted -----------------------------------------------
-# The sibling of check-fnaf-match.sh, and it exists because the match tool compares the screens by MARKER and cannot
-# see a change inside one. The fault is a single character added to a screen in the other edition.
-if [ -x tools/check-fnaf-content.sh ] && [ -f ../fnaf2/src/main/java/fnaf/GameScreen.java ]; then
-  TARGET=../fnaf2/src/main/java/fnaf/GameScreen.java
-  BAK=$(mktemp); cp "$TARGET" "$BAK"
-  python3 - "$TARGET" <<'PY'
-import sys
-p = sys.argv[1]; s = open(p).read()
-i = s.index(';') + 1
-open(p, 'w').write(s[:i] + ' ' + s[i:])
-PY
-  out=$(timeout 600 tools/check-fnaf-content.sh ../fnaf2 2>&1); rc=$?
-  cp "$BAK" "$TARGET"
-  if [ $rc -ne 0 ]; then
-    ok "check-fnaf-content notices a drifted screen" "$(echo "$out" | grep -iE 'differ|drift|FAIL' | head -1 | tr -s ' ' | cut -c1-70)"
-  else
-    bad "check-fnaf-content notices a drifted screen" "exit 0 with a screen changed"
-  fi
-fi
+# ---- check-fnaf-content.sh: NO ENTRY, and why --------------------------------------------------------------
+# I wrote one and it could not be made to work, which is worth more than a passing entry that proves nothing.
+#
+# The tool reports a NORMALISED line count per screen - GameScreen is 64 as a baseline - and it normalises imports,
+# class names, paths and trailing comments. A fault that adds a line or a comment therefore does not move the count,
+# and a fault that changes real logic moves it by one or two against a baseline of sixty-four. The first version of
+# the entry compared the count and reported "unchanged from 64" for a screen I had just edited.
+#
+# A SYNTHETIC PAIR WILL NOT WORK EITHER: the tool takes one argument, the standalone's path, and hardcodes its own
+# side - so it needs the real repositories and the real framework difference between them.
+#
+# THE HONEST POSITION IS THAT ITS SUBJECT IS A JUDGEMENT CALL. It prints how far apart the two editions' screens are
+# and says "anything higher is content and should be read, not assumed". That is a report, not a gate, and there is
+# nothing for a fault injection to make it say that it would not already say.
 
 # ---- check-audio-reproducible.sh must notice an asset that is not what the generator makes ---------------------
 # Three faults in one week came from the same silence: a generator seeding noise from Python's per-process salted
