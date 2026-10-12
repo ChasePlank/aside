@@ -53,7 +53,7 @@ MUTATIONS=(
   # THE AUDITOR'S OWN HEURISTIC. Nothing was mutating the tool that judges the stories, and setting its floor to
   # zero makes EVERY pair of options count as near-identical - not caught by 644 checks until this one existed. A
   # heuristic that over-fires is how the-last-crossing's legitimate pair got reported as a fault.
-  "audit: the wording heuristic over-fires|$A/Bot.java|a.length() >= 8 && b.length() >= 8|a.length() >= 0 \&\& b.length() >= 0|aside.engine.SelfTest"
+  "audit: the wording heuristic over-fires|$A/Bot.java|a.length() >= 8 && b.length() >= 8|a.length() >= 0 && b.length() >= 0|aside.engine.SelfTest"
   # Found by tools/tautologies.py, not by reading: the stall guard could be removed entirely and a check that
   # asserted only "a stalled pull releases" still passed, because the 1.5s cap ends it anyway.
   "hookshot: the stall guard switched off|$E/Hookshot.java|STALL_TIME = 0.3;|STALL_TIME = 0.0;|aside.engine.SelfTest"
@@ -167,6 +167,15 @@ for m in "${MUTATIONS[@]}"; do
     echo "AMBIGUOUS ANCHOR - it fits more than one place, so this proves nothing"; broken=$((broken + 1))
   elif echo "$out" | grep -q "ANCHOR MISSING"; then
     echo "ANCHOR MISSING - the mutation never applied, so this proves nothing"; broken=$((broken + 1))
+  # A MUTATION THAT DOES NOT COMPILE IS NOT A MUTATION THAT WAS CAUGHT, and this runner said it was. Found on
+  # 2026-10-12 by running one entry by hand: its replacement contained `\&\&` - which mutate.sh writes LITERALLY,
+  # because it applies replacements in Python and not in sed, where `\&` would mean a literal ampersand - so javac
+  # refused the file with "illegal character". The runner looked only for AMBIGUOUS ANCHOR, ANCHOR MISSING and NOT
+  # CAUGHT, so a COMPILE FAIL fell through to the else-branch below, which runs the suite on the RESTORED source,
+  # finds it passing, and printed "caught". An entry that cannot compile is the same species as an entry whose
+  # anchor goes missing - it proves nothing - and it reported the opposite.
+  elif echo "$out" | grep -qE "COMPILE FAIL|MUTATION DID NOT APPLY"; then
+    echo "COMPILE FAIL - the mutation never built, so this proves nothing"; broken=$((broken + 1))
   elif echo "$out" | grep -q "NOT CAUGHT"; then
     echo "NOT CAUGHT - no check covers this"; missed=$((missed + 1))
   else
