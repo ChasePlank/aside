@@ -136,6 +136,8 @@ MUTATIONS=(
   "moving platform: the path is twice as wide as it says|$E/MovingPlatform.java|x = x0 + Math.sin(phase) * amplitude;|x = x0 + Math.sin(phase) * amplitude * 2;|aside.games.fruitjump.engine.MovingPlatformTest"
   "moving platform: the rider is carried TWICE as far|$E/World.java|b.x += delta[0] * dt;|b.x += 2 * delta[0] * dt;|aside.games.fruitjump.engine.MovingPlatformTest"
   "moving platform: the rider is carried by both mechanisms again|$E/World.java|if (hitMover != null && ny == -1 && !b.carriedThisFrame) {|if (hitMover != null && ny == -1) {|aside.games.fruitjump.engine.MovingPlatformTest"
+  "particles: the pool's cursor points past the end|$E/ParticlePool.java|nextIndex = 0;\n        return p;|nextIndex = particles.size();\n        return p;|aside.games.fruitjump.engine.ParticleTest"
+  "particles: a burst emits nothing|$E/Emitter.java|if (burstCount > 0) {|if (false) {|aside.games.fruitjump.engine.ParticleTest"
 )
 
 if [ "${1:-}" = "--list" ]; then
