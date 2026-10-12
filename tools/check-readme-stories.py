@@ -120,7 +120,7 @@ def main():
             problems.append("the README says %s stories, and there are %d" % (total_line.group(1), total_files))
 
     if not problems:
-        print("=== %d story(ies): every one is named, every stated SCENE count matches, and the total agrees ===" % len(counts))
+        print("=== %d story(ies): every one is named, every stated SCENE count matches, and the total agrees ===" % total_files)
         print("ending counts are listed, not compared: the README counts branch endings and the auditor counts")
         print("ending scenes, and the two disagreed on the first story that had branches.")
         for story, claimed in sorted(seen_endings):

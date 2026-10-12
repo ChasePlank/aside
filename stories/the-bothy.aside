@@ -1,0 +1,119 @@
+title: The Bothy
+start: start
+
+== start ==
+bg workshop_bench
+music room_tone
+The bothy is two rooms and a porch at the end of a track that stops being a
+track about a mile before you get to it. There is a stove, a table, four bunks,
+and a book with a pen on a string.
+The book is for anybody who stays. You write the date, how many of you, and
+where you came from. It is not a register and nobody reads it, except that
+everybody reads it, because the first thing you do when you arrive is look at
+who was here before.
+You have been the volunteer warden for six years. That means you walk up on the
+first Saturday of the month and check the stove and the roof and the book.
+-> the_track
+
+== the_track ==
+Today is the first Saturday of the month and the track is wet and there is
+nobody up here and there will not be anybody up here until April.
+You have the key and the coal and a sandwich, and the walk in takes an hour and
+forty minutes, and you have done it seventy-two times.
+At the top of the last rise you can see the bothy, which is a low grey shape
+with a green door, and you can see that the door is open.
+-> the_door
+
+== the_door ==
+The door being open is not alarming. The latch is old and the wind takes it,
+and you have found it open twice before, and both times you wrote it in your
+own notebook and mentioned it to nobody.
+You go in.
+The stove is cold. The table is clear. The book is open at a page with writing
+on it, which means somebody has been here since the last time you were.
+-> the_book
+
+== the_book ==
+The last entry is dated nine days ago and it says: two of us, from the north.
+The handwriting is small and careful and the pen is back on its string, which
+is more than most people manage.
+You have read a hundred of these. You have never met any of the people who
+write them and you never will, and that is the whole arrangement: they get a
+roof and a stove and a book, and you get to know that the roof held.
+-> the_check
+
+== the_check ==
+You check the stove, which is drawing. You check the roof, which is not leaking
+in the two places it leaked last year. You sweep the floor and you take the
+ash out and you put the ash on the midden with the rest.
+Then you sit at the table with your sandwich and the book, because this is the
+part of the job you would not give up.
+* Read back through the winter. -> read_back
+* Write today's entry. -> write_today
+* Neither. Just sit. -> just_sit
+
+== read_back ==
+You read back to November, which is as far as anybody has been this year.
+Two of us, from the north. One of us, from the coast. Four of us, and one of
+them is nine years old, and whoever wrote that has underlined the nine.
+Two of us, from the north, again, in the same hand as today's.
+You do the arithmetic without meaning to. Nine days ago was a Tuesday, and the
+forecast that week was for the worst weather of the winter, and somebody walked
+in here in it and wrote in the book and left the pen on the string.
+-> the_write
+
+== write_today ==
+You write the date, and one of us, and where you came from, which is the town
+at the bottom of the glen, and then you sit with the pen for a while because
+there is a fifth column in this book that nobody has ever used and that you did
+not put there.
+It is headed, in a hand much older than yours, WENT OUT.
+-> the_fifth
+
+== just_sit ==
+You sit. The stove ticks as it cools and the wind does what it does and there is
+no sound in the bothy that you have not heard seventy-two times.
+You are fifty-one years old and you have walked in here on the first Saturday
+of every month for six years, and in that time you have spoken to four people
+on this track, and none of them were here.
+-> the_write
+
+== the_fifth ==
+You have looked at that column for six years and assumed it was for the warden
+to fill in, and you have never filled it in, and neither has anybody else.
+WENT OUT.
+You write it. Today's date, one of us, and in the fifth column, in your own
+hand, you write the town at the bottom of the glen.
+~ wrote_went_out true
+-> the_write
+
+== the_write ==
+You finish the sandwich and you wash the cup you did not use and you bank the
+stove down to nothing, because that is what you do, and you leave the coal you
+brought in a heap by the door for whoever is next.
+You put the pen back on its string.
+You close the book.
+-> the_lock
+
+== the_lock ==
+You pull the door to and the latch takes it and you check it with your hand,
+which you always do.
+Halfway down the track you stop and look back, which you never do, and the
+bothy is a low grey shape with a green door, and the door is shut.
+In April somebody will walk in and read the book and see today's date and one of
+us and the town at the bottom of the glen, and in the fifth column, WENT OUT.
+They will not know what it means and they will not need to.
+* Leave it at that. -> END
+* Walk back up and write a note under it. -> the_note [if wrote_went_out]
+
+== the_note ==
+You walk back up, which takes an hour and forty minutes in the other direction
+and is the only time you have ever done the track twice in one day.
+You write, under WENT OUT, in the smallest hand you can manage: it means the
+warden came up and went home again, and it has been empty for six years because
+nobody ever wrote in it, and you are writing in it now so that the next person
+who opens this book does not have to wonder.
+Then you put the pen back on the string and you close the book and you walk
+down again, and it is dark by the bottom, and the bothy has a light on it that
+is the moon on the green door.
+-> END

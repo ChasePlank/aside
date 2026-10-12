@@ -104,7 +104,7 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Sixteen stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Seventeen stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line` and `the-last-crossing`, plus `night-shift` (a test
   fixture). Ten are stories you can play, each with its own register, and each is audited rather than asserted —
   `tools/audit-stories.sh` prints every one with its scene and ending counts. This bullet said "five" and named
@@ -347,6 +347,9 @@ be called complete while the picks line cannot. That distinction is the whole re
   building, and **the first story here with two narrators**: every scene is a letter, and the reader sees both
   sides while neither of them does. A letter cannot be unsent, so a choice in one scene becomes a fact the other
   person has to answer in the next. 13 scenes, 3 endings.
+- **`stories/the-bothy.aside`** — a volunteer warden walks up to a mountain bothy on the first Saturday of the
+  month, checks the stove and the roof, and reads the book. There is a fifth column in the book that nobody has ever
+  used. 12 scenes, 1 ending.
 - **`stories/the-last-route.aside`** — a bus driver on the 44's last run before the timetable changes. A stop in
   a lay-by that has been on the timetable since 1974 and that nobody has used in eleven years, and a man in the
   mirror who has been there since the hospital. 12 scenes, 1 ending.
