@@ -2154,7 +2154,10 @@ public class SelfTest {
     static void aCheckpointCarriesYourHealth() {
         aside.games.fruitjump.engine.Combat combat = new aside.games.fruitjump.engine.Combat();
         combat.playerHP = 1;                       // a rough run, one heart left
-        combat.maxHP = 3;
+        // A CAP RAISED ABOVE THE DEFAULT, which this fixture did not have until the release's copy of the same
+        // checkpoint turned out to be missing its maxHP line entirely: with maxHP set to the default 3 here, a
+        // checkpoint that never wrote the field would have satisfied every assertion in this check.
+        combat.maxHP = 5;
         aside.games.fruitjump.engine.PlayerInventory inv =
                 new aside.games.fruitjump.engine.PlayerInventory();
         inv.keys = 2;
@@ -2162,7 +2165,7 @@ public class SelfTest {
                 aside.games.fruitjump.GameplayScreen.checkpointFor(7, combat, inv, 42.5);
         check("a checkpoint carries your health into the next level, not a fresh bar (hp " + c.playerHP
                 + ", keys " + c.keys + ", level " + c.levelNum + ")",
-                c.playerHP == 1 && c.keys == 2 && c.levelNum == 7 && c.playerX < 0);
+                c.playerHP == 1 && c.maxHP == 5 && c.keys == 2 && c.levelNum == 7 && c.playerX < 0);
     }
 
     /**

@@ -117,6 +117,9 @@ MUTATIONS=(
   "rooms: a transition that never ends|\$E/ScreenManager.java|TRANSITION_TIME = 0.3;|TRANSITION_TIME = 5.0;|aside.games.fruitjump.engine.TransitionTest"
   "rooms: the exit room is never recognised|\$E/RoomWorld.java|return exitRoomId != null && exitRoomId.equals(roomId);|return false;|aside.engine.SelfTest"
   "rooms: the exit is the room you start in|\$E/RoomWorld.java|exitRoomId = path.get(|exitRoomId = startRoomId; if (false) exitRoomId = path.get(|aside.engine.SelfTest"
+  "checkpoint: the health is a fresh bar|\$E/../GameplayScreen.java|c.playerHP = (int) combat.playerHP;|c.playerHP = 3;|aside.engine.SelfTest"
+  "checkpoint: the lives cap is not carried|\$E/../GameplayScreen.java|c.maxHP = (int) combat.maxHP;|c.maxHP = 3;|aside.engine.SelfTest"
+  "checkpoint: the keys are not carried|\$E/../GameplayScreen.java|c.keys = inv.keys;|c.keys = 0;|aside.engine.SelfTest"
   # The boss's OFFENCE, which had no check: what it does when it is hit was covered, what it does to you was not.
   "boss: it never lobs a volley|$E/Boss.java|return phase >= 2 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|return phase >= 99 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|aside.engine.SelfTest"
   "boss: the volley is not wired|$E/World.java|b.setVolleyCallback((x, y, dirX) -> addProjectile(Projectile.bomb(x, y, dirX < 0 ? -1 : 1)));|// volley not wired|aside.engine.SelfTest"
