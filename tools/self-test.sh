@@ -183,7 +183,7 @@ fi
 if [ -x tools/audit-stories.sh ] && [ -f stories/a440.aside ]; then
   STORIES=$(ls stories/*.aside 2>/dev/null | wc -l | tr -d ' ')
   WORDS=(ZERO FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH EIGHTH NINTH TENTH ELEVENTH TWELFTH THIRTEENTH
-         FOURTEENTH FIFTEENTH SIXTEENTH)
+         FOURTEENTH FIFTEENTH SIXTEENTH SEVENTEENTH EIGHTEENTH NINETEENTH TWENTIETH)
   OVER=$((STORIES + 1))
   OVER_WORD="${WORDS[$OVER]:-}"
   if [ -z "$OVER_WORD" ]; then
@@ -357,6 +357,28 @@ bigger = seg.replace(m.group(0), str(int(m.group(1)) + 1) + ' scenes', 1)
 p.write_text(s[:i] + bigger + s[i + 1400:])
 PY
   out=$(timeout 600 tools/check-readme-stories.py 2>&1); rc=$?
+  cp "$README_BAK" README.md
+
+  # AND THE TOTAL, which is a different claim from any per-story line: a document can be right in every particular
+  # and wrong in its summary. The README's total has been wrong twice by hand - "Eleven stories" when there were
+  # thirteen, "Fourteen" when there were sixteen - and neither was caught by anything.
+  cp README.md "$README_BAK"
+  python3 - <<'PY'
+import pathlib, re
+p = pathlib.Path('README.md'); s = p.read_text()
+m = re.search(r'\*\*([A-Za-z]+) stories\*\*', s)
+words = "Sixteen Fifteen Fourteen Thirteen Twelve".split()
+nxt = words[words.index(m.group(1)) + 1] if m.group(1) in words[:-1] else "Eleven"
+p.write_text(s.replace(m.group(0), "**%s stories**" % nxt, 1))
+PY
+  tout=$(timeout 600 tools/check-readme-stories.py 2>&1); trc=$?
+  cp "$README_BAK" README.md
+  if [ $trc -ne 0 ] && grep -q "stories, and there are" <<<"$tout"; then
+    ok "check-readme-stories notices a wrong total" "$(echo "$tout" | grep STALE | head -1 | tr -s ' ' | cut -c1-64)"
+  else
+    bad "check-readme-stories notices a wrong total" "exit $trc, and nothing about the total"
+  fi
+
   cp "$README_BAK" README.md
   if [ $rc -ne 0 ] && grep -q "bell-codes" <<<"$out"; then
     ok "check-readme-stories notices a count that disagrees" "$(echo "$out" | grep STALE | head -1 | tr -s ' ')"

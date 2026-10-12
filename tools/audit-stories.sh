@@ -99,7 +99,7 @@ total_stories=$(ls stories/*.aside 2>/dev/null | wc -l)
 # Built from one array the two cannot disagree, and there is no fallback to fall through: the regex is made from the
 # same words the lookup uses, so a word it matches is a word it can number.
 ORDINALS=(ZERO FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH EIGHTH NINTH TENTH ELEVENTH TWELFTH THIRTEENTH
-          FOURTEENTH FIFTEENTH SIXTEENTH)
+          FOURTEENTH FIFTEENTH SIXTEENTH SEVENTEENTH EIGHTEENTH NINETEENTH TWENTIETH)
 ORD_RE=$(IFS='|'; echo "${ORDINALS[*]:1}")
 highest=0
 for f in stories/*.aside; do

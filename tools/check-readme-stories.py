@@ -27,6 +27,29 @@ STORIES = ROOT / "stories"
 # `- **`stories/night-shift.aside`** - ... 9 scenes, 3 endings.` and the many shapes around it: the scene count is
 # the first `N scenes` after a story path, and the ending count is the `N ending(s)` anywhere on that line or the
 # two that follow, because the prose wraps.
+WORDS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+    "twenty": 20,
+}
+
 SCENES = re.compile(r"(\d+)\s+scenes?\b")
 ENDINGS = re.compile(r"(\d+)\s+ending(?:s| scenes?)?\b")
 
@@ -43,6 +66,8 @@ def audited_counts():
 def main():
     text = README.read_text()
     counts = audited_counts()
+    # every story file, which is what a total counts - the auditor's list excludes its own fixture
+    total_files = len(list(STORIES.glob("*.aside")))
     if not counts:
         print("could not read the auditor's counts - run tools/audit-stories.sh and see why", file=sys.stderr)
         return 2
@@ -76,8 +101,26 @@ def main():
         # covers less than its name suggests is the thing this week keeps finding.
         seen_endings.add((story, e.group(1) if (e := ENDINGS.search(window)) else "unknown"))
 
+    # AND THE TOTAL, which is the number a reader trusts most and the one nobody re-runs. The per-story lines were
+    # all correct twice while the sentence adding them up was wrong: "Eleven stories" when there were thirteen, and
+    # "Fourteen" when there were sixteen. A document can be right in every particular and wrong in its summary.
+    total_line = re.search(r"\*\*([A-Za-z]+) stories\*\*", text)
+    if not total_line:
+        problems.append("no '**N stories**' line to check the total against")
+    else:
+        claimed = WORDS.get(total_line.group(1).lower())
+        if claimed is None:
+            problems.append("the total says '%s', which is not a number this check knows" % total_line.group(1))
+        elif claimed != total_files:
+            # AGAINST THE FILE COUNT, NOT THE AUDITED COUNT. The auditor skips night-shift, which is its own
+            # fixture, so the audited list is one shorter than the library - and my first version of this compared
+            # the README's total against that shorter number and reported "the README says Sixteen stories, and
+            # there are 15" on a README that was right. The fault injection made it worse: changing the total to
+            # Fifteen made the check PASS, because it had the wrong denominator.
+            problems.append("the README says %s stories, and there are %d" % (total_line.group(1), total_files))
+
     if not problems:
-        print("=== %d story(ies): every one is named, and every stated SCENE count matches ===" % len(counts))
+        print("=== %d story(ies): every one is named, every stated SCENE count matches, and the total agrees ===" % len(counts))
         print("ending counts are listed, not compared: the README counts branch endings and the auditor counts")
         print("ending scenes, and the two disagreed on the first story that had branches.")
         for story, claimed in sorted(seen_endings):
