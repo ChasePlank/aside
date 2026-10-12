@@ -21,7 +21,7 @@
 //      the healthy one, and it catches a script that throws at runtime as well as one that will not parse.
 //
 // Rendered output is a symptom. The error channel is the diagnosis.
-import { readdirSync, mkdirSync } from 'node:fs';
+import { readdirSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -48,7 +48,14 @@ if (files.length === 0) {
 const shots = process.env.SHOTDIR || '/root/downloads/webshots';
 mkdirSync(shots, { recursive: true });
 
-const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+// THE SYSTEM BROWSER WHEN THERE IS ONE, because puppeteer's own download is 656 MB and it is a CACHE - I deleted
+// it during a disk cleanup while this check was running, and the tool threw on launch. A tool that needs a
+// half-gigabyte cache to work is a tool that breaks when somebody tidies up. The sandbox has Chrome at the path
+// below; puppeteer falls back to its own copy when it does not.
+const SYSTEM_CHROME = '/opt/google/chrome/chrome';
+const launchOpts = { args: ['--no-sandbox'] };
+if (existsSync(SYSTEM_CHROME)) launchOpts.executablePath = SYSTEM_CHROME;
+const browser = await puppeteer.launch(launchOpts);
 let pass = 0;
 const failed = [];
 
