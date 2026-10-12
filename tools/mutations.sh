@@ -132,6 +132,9 @@ MUTATIONS=(
   "the run is two levels long|$E/LevelGen.java|FINAL_LEVEL = 40;|FINAL_LEVEL = 2;|aside.games.fruitjump.engine.DuskTest"
   "parallax: the distant ridge moves the most|$E/Camera.java|return x * scrollFactor;|return x * (1 - scrollFactor);|aside.games.fruitjump.engine.ParallaxTest"
   "tutorial: one level short of the boss|$T/Tutorial.java|int LAST = 11;|int LAST = 10;|aside.engine.SelfTest"
+  "moving platform: a quarter of a period is a sixth of one|$E/MovingPlatform.java|double phase = (pathTimer / period) * 2 * Math.PI;|double phase = (pathTimer / period) * Math.PI;|aside.games.fruitjump.engine.MovingPlatformTest"
+  "moving platform: the path is twice as wide as it says|$E/MovingPlatform.java|x = x0 + Math.sin(phase) * amplitude;|x = x0 + Math.sin(phase) * amplitude * 2;|aside.games.fruitjump.engine.MovingPlatformTest"
+  "moving platform: the rider is carried TWICE as far|$E/World.java|b.x += delta[0] * dt;|b.x += 2 * delta[0] * dt;|aside.games.fruitjump.engine.MovingPlatformTest"
 )
 
 if [ "${1:-}" = "--list" ]; then
