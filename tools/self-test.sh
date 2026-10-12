@@ -33,6 +33,42 @@ bad()  { printf '  %-38s FAIL    %s\n' "$1" "$2"; fail=$((fail+1)); }
 # A mutation harness that can leave a mutation behind is worse than no harness,
 # for the same reason a check that cannot fail is worse than no check.
 STORY_BAK=""
+# RESTORE ON INTERRUPTION, which this suite has needed twice now.
+#
+# It modifies TRACKED files on purpose - it plants a fault in the story, the tutorial, the shelf page and the other
+# edition - and each entry puts its own file back at the end. That is fine until the run is cut short, and then the
+# fault stays in the tree: `git add -A` sweeps it into a commit, and what ships is the fault rather than the story.
+# It has happened twice in two hours, once from my own `timeout` and once from a lost session.
+#
+# The individual restore_* calls stay where they are - they are the normal path. This is the backstop for not
+# reaching them.
+# RESTORE EVERYTHING ON INTERRUPTION, which this suite has needed three times now.
+#
+# It modifies TRACKED files on purpose - the story, the tutorial, the tutorial count in the game screen, and three
+# web builds in two repositories - and each entry puts its own file back at the end. That is fine until the run is
+# cut short, and then the fault stays in the tree: `git add -A` sweeps it into a commit, and what ships is the fault
+# rather than the story. It has happened three times in three hours: my own `timeout`, a lost session, and a killed
+# run while I was testing this very trap.
+#
+# The individual restore_* calls stay where they are - they are the normal path. This is the backstop for not
+# reaching them, and it restores from the same backups they use.
+cleanup() {
+  restore_story 2>/dev/null || true
+  restore_tut 2>/dev/null || true
+  for pair in "web/night-shift.html:/tmp/st-web.bak" \
+              "web/bearings.html:/tmp/st-br.bak" \
+              "${TP:-../tp}/src/main/resources/style.css:/tmp/st-css.bak"; do
+    f="${pair%%:*}"; b="${pair##*:}"
+    [ -f "$b" ] && cp "$b" "$f" 2>/dev/null || true
+  done
+}
+# AND THE SIGNAL TRAPS EXIT, which the first version did not - it cleaned up and then carried on, so a TERM during a
+# run left the suite still going and still faulting files. Found by killing a run on purpose and watching it refuse
+# to die: four orphaned runs were alive at once, from two lost sessions and two of my own tests, all racing over the
+# same story file.
+trap cleanup EXIT
+trap 'cleanup; exit 130' INT TERM
+
 restore_story() {
   if [ -n "$STORY_BAK" ] && [ -f "$STORY_BAK" ]; then
     cp "$STORY_BAK" stories/a440.aside 2>/dev/null || true
@@ -63,7 +99,6 @@ restore_tut() {
     LAST_BAK=""
   fi
 }
-trap 'restore_story; restore_tut' EXIT INT TERM
 
 # ---- diff.sh must report what a filter hides ---------------------------------------------------------------
 printf 'a\nb\nc\n' > /tmp/st-a; printf 'a\nB\nC\n' > /tmp/st-b
@@ -395,3 +430,51 @@ if [ -x tools/check-literal-drift.py ]; then
     bad "check-literal-drift notices one number changed" "exit $rc, and nothing about the pair"
   fi
 fi
+
+# ---- check-fnaf-content.sh must notice a screen that has drifted -----------------------------------------------
+# The sibling of check-fnaf-match.sh, and it exists because the match tool compares the screens by MARKER and cannot
+# see a change inside one. The fault is a single character added to a screen in the other edition.
+if [ -x tools/check-fnaf-content.sh ] && [ -f ../fnaf2/src/main/java/fnaf/GameScreen.java ]; then
+  TARGET=../fnaf2/src/main/java/fnaf/GameScreen.java
+  BAK=$(mktemp); cp "$TARGET" "$BAK"
+  python3 - "$TARGET" <<'PY'
+import sys
+p = sys.argv[1]; s = open(p).read()
+i = s.index(';') + 1
+open(p, 'w').write(s[:i] + ' ' + s[i:])
+PY
+  out=$(timeout 600 tools/check-fnaf-content.sh ../fnaf2 2>&1); rc=$?
+  cp "$BAK" "$TARGET"
+  if [ $rc -ne 0 ]; then
+    ok "check-fnaf-content notices a drifted screen" "$(echo "$out" | grep -iE 'differ|drift|FAIL' | head -1 | tr -s ' ' | cut -c1-70)"
+  else
+    bad "check-fnaf-content notices a drifted screen" "exit 0 with a screen changed"
+  fi
+fi
+
+# ---- check-audio-reproducible.sh must notice an asset that is not what the generator makes ---------------------
+# Three faults in one week came from the same silence: a generator seeding noise from Python's per-process salted
+# hash(), so re-running it MOVED the committed assets. The fault here is one byte of one asset.
+if [ -x tools/check-audio-reproducible.sh ]; then
+  ASSET=$(ls audio/*.wav 2>/dev/null | head -1)
+  if [ -n "${ASSET:-}" ]; then
+    BAK=$(mktemp); cp "$ASSET" "$BAK"
+    printf '\x00' | dd of="$ASSET" bs=1 seek=2000 count=1 conv=notrunc 2>/dev/null
+    out=$(timeout 900 tools/check-audio-reproducible.sh 2>&1); rc=$?
+    cp "$BAK" "$ASSET"
+    if [ $rc -ne 0 ]; then
+      ok "check-audio-reproducible notices a changed asset" "$(echo "$out" | grep -iE 'differ|reproduc|FAIL' | head -1 | tr -s ' ' | cut -c1-70)"
+    else
+      bad "check-audio-reproducible notices a changed asset" "exit 0 with an asset byte changed"
+    fi
+  fi
+fi
+
+# THE SUMMARY, WHICH I DELETED. A line-removal script I wrote earlier ran from the write-only probe to the next
+# `# ----` marker, and there was no next marker, so it consumed the end of the file - summary and exit code with it.
+# The suite still ran and printed every ok and bad line, and said nothing at the end, which is the quietest possible
+# way for a suite to stop reporting. Restored, and worth remembering: a script that deletes "up to the next marker"
+# deletes the rest of the file when there is no next marker.
+echo
+echo "=== $pass tool self-test(s) passed, $fail failed ==="
+[ "$fail" = 0 ] || exit 1

@@ -105,3 +105,14 @@ done
 echo
 echo "=== $total differing line(s) across the screens after normalising the framework; worst is $worstname at $worst ==="
 echo "A pair at 0-4 is framework. Anything higher is content and should be read, not assumed."
+
+# AND IT EXITS NON-ZERO WHEN IT FINDS CONTENT, which it did not until a fault injection showed it. The script ended
+# on the line above, so it counted the differing lines, printed the worst, and returned 0 - a check in the gate that
+# could not fail. THE SECOND ONE THIS HOUR: check-literal-drift.py had the same defect, and both were written the
+# same way, with the verdict printed and nothing acting on it.
+#
+# The threshold is the one the line above already states: 0-4 lines is framework, anything higher is content.
+if [ "$worst" -gt 4 ]; then
+  echo "  FAIL: $worstname differs by $worst line(s), which is content rather than framework"
+  exit 1
+fi
