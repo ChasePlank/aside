@@ -141,6 +141,11 @@ def main():
         print()
     if not drift and not offset_drift:
         print("  nothing found: no shared line differs by a number, or by an offset one side has and the other")
+    # AND IT FAILS WHEN IT FINDS SOMETHING, which it did not until a fault injection showed it. `return 0` sat at
+    # the end of main() rather than inside the nothing-found branch, so the tool reported drift and exited zero - a
+    # check in the gate that could not fail, which is the exact defect it was written to find in other things.
+    if drift or offset_drift:
+        return 1
     return 0
 
 

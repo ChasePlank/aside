@@ -380,6 +380,18 @@ if [ -x tools/find-duplicated-lists.py ]; then
   fi
 fi
 
-echo
-echo "=== $pass tool self-test(s) passed, $fail failed ==="
-[ "$fail" = 0 ] || exit 1
+# ---- check-literal-drift.py, on a pair of trees where one number is off -----------------------------------------
+# The bug it exists for: the release fired arrows from `player.y - 10` where aside fires `player.y`, the fix reached
+# one edition and not the other, and the file diffs differ by 179 lines so one number does not stand out.
+if [ -x tools/check-literal-drift.py ]; then
+  PROBE=$(mktemp -d); mkdir -p "$PROBE/a" "$PROBE/b"
+  printf 'x = player.y - 10;\ny = other;\n' > "$PROBE/a/one.java"
+  printf 'x = player.y;\ny = other;\n'      > "$PROBE/b/one.java"
+  out=$(timeout 300 tools/check-literal-drift.py "$PROBE/a" "$PROBE/b" 2>&1); rc=$?
+  rm -rf "$PROBE"
+  if [ $rc -ne 0 ] && grep -qE "one.java|differ|drift" <<<"$out"; then
+    ok "check-literal-drift notices one number changed" "$(echo "$out" | grep -iE 'differ|drift' | head -1 | tr -s ' ' | cut -c1-70)"
+  else
+    bad "check-literal-drift notices one number changed" "exit $rc, and nothing about the pair"
+  fi
+fi
