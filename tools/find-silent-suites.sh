@@ -30,7 +30,10 @@ while IFS= read -r line; do
     "  "*" ok "*|"  "*" FAIL "*) ;;
     *) continue ;;
   esac
-  case "$line" in *"==="*) continue ;; esac
+  # ONLY THE GATE'S OWN SUMMARY STARTS WITH `===`. The first version skipped any line CONTAINING `===`, and every
+  # suite's verdict is wrapped in `=== ... ===`, so it was silently skipping the suites it exists to examine - the
+  # third time this script has had the fault it hunts. A prefix match keeps the summary out and the suites in.
+  case "$line" in "==="*) continue ;; esac
   name=$(echo "$line" | awk '{print $1}')
   # THREE SHAPES, and the second one caught me: `N passed`, `N checks`, and `N/N scene(s)`. The first version knew
   # only `N passed` and reported seventeen suites read out of forty - silent about the rest, which is the exact defect

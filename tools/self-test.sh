@@ -330,6 +330,56 @@ PY
   fi
 fi
 
+# ---- the two match tools must notice an edition that drifts -----------------------------------------------------
+# These are the tools I trust most and they had no fault injected, which is the wrong way round: a comparison that
+# cannot fail is the quietest kind, because it agrees with whatever it is pointed at. The fault is one character in
+# one engine file of the other edition.
+for pair in "check-fnaf-match.sh:../fnaf2:src/main/java/fnaf/engine/Animatronic.java" \
+            "check-platformer-match.sh:../tp:src/main/java/tropical/engine/Bat.java"; do
+  tool="${pair%%:*}"; rest="${pair#*:}"; other="${rest%%:*}"; file="${rest#*:}"
+  target="$other/$file"
+  if [ -x "tools/$tool" ] && [ -f "$target" ]; then
+    BAK=$(mktemp); cp "$target" "$BAK"
+    python3 - "$target" <<'PY'
+import sys
+p = sys.argv[1]; s = open(p).read()
+i = s.index(';') + 1          # somewhere harmless but real, on the first statement line
+open(p, 'w').write(s[:i] + ' ' + s[i:])
+PY
+    out=$(timeout 600 "tools/$tool" "$other" 2>&1); rc=$?
+    cp "$BAK" "$target"
+    if [ $rc -ne 0 ]; then
+      ok "$tool notices a drifted edition" "$(echo "$out" | grep -E '^differing|differ' | head -1 | tr -s ' ' | cut -c1-70)"
+    else
+      bad "$tool notices a drifted edition" "exit 0 with a file changed - it agreed with a difference"
+    fi
+  fi
+done
+
+# ---- and the two sweeps, on synthetic input, because their subjects are reports and trees ----------------------
+if [ -x tools/find-silent-suites.sh ]; then
+  printf '  something ok     === 0 passed, 0 failed ===\n  other ok         === 7 passed, 0 failed ===\n' > /tmp/silent-probe.txt
+  out=$(timeout 300 tools/find-silent-suites.sh /tmp/silent-probe.txt 2>&1); rc=$?
+  rm -f /tmp/silent-probe.txt
+  if [ $rc -ne 0 ] && grep -q "SILENT" <<<"$out"; then
+    ok "find-silent-suites notices a suite that ran nothing" "$(echo "$out" | grep '===' | head -1 | tr -s ' ')"
+  else
+    bad "find-silent-suites notices a suite that ran nothing" "exit $rc, and no SILENT line"
+  fi
+fi
+
+if [ -x tools/find-duplicated-lists.py ]; then
+  PROBE=$(mktemp -d)
+  printf 'A="ALPHA, BRAVO, CHARLIE"\nB="ALPHA, BRAVO, CHARLIE"\n' > "$PROBE/one.sh"
+  out=$(timeout 300 tools/find-duplicated-lists.py "$PROBE" 2>&1); rc=$?
+  rm -rf "$PROBE"
+  if grep -q "appear in more than one place" <<<"$out" && grep -q "2 places" <<<"$out"; then
+    ok "find-duplicated-lists notices a list written twice" "$(echo "$out" | grep '===' | head -1 | tr -s ' ')"
+  else
+    bad "find-duplicated-lists notices a list written twice" "it did not report the pair"
+  fi
+fi
+
 echo
 echo "=== $pass tool self-test(s) passed, $fail failed ==="
 [ "$fail" = 0 ] || exit 1
