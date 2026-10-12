@@ -55,6 +55,7 @@ STORY_BAK=""
 cleanup() {
   restore_story 2>/dev/null || true
   restore_tut 2>/dev/null || true
+  restore_frame 2>/dev/null || true
   for pair in "web/night-shift.html:/tmp/st-web.bak" \
               "web/bearings.html:/tmp/st-br.bak" \
               "${TP:-../tp}/src/main/resources/style.css:/tmp/st-css.bak"; do
@@ -74,6 +75,20 @@ restore_story() {
     cp "$STORY_BAK" stories/a440.aside 2>/dev/null || true
     rm -f "$STORY_BAK"
     STORY_BAK=""
+  fi
+}
+# AND THE SAME HAZARD FOR A COMMITTED FRAME. The check-sheets entry below corrupts a PNG under docs/frames/ on
+# purpose, and docs/frames is TRACKED - so a kill between the corruption and the copy-back would leave a deliberately
+# damaged frame in the tree, which is exactly the fault the tool exists to catch, left behind by the check that
+# catches it. Same shape as the story and the tutorial above; the third file this suite has had to teach to put
+# itself back.
+FRAME_BAK=""
+FRAME_FILE=""
+restore_frame() {
+  if [ -n "$FRAME_BAK" ] && [ -f "$FRAME_BAK" ] && [ -n "$FRAME_FILE" ]; then
+    cp "$FRAME_BAK" "$FRAME_FILE" 2>/dev/null || true
+    rm -f "$FRAME_BAK"
+    FRAME_BAK=""; FRAME_FILE=""
   fi
 }
 # THE SAME HAZARD FOR THE TUTORIAL-COUNT INJECTIONS BELOW, and the same fix. They break GameplayScreen.java on
@@ -486,6 +501,119 @@ if [ -x tools/check-audio-reproducible.sh ]; then
 fi
 
 # THE SUMMARY, WHICH I DELETED. A line-removal script I wrote earlier ran from the write-only probe to the next
+# ---- find-write-only.py must name a value that is written and never read ----------------------------------------
+#
+# THIS IS THE ONE REPORT IN THIS SUITE, and the entry is shaped differently because of that. Every other tool here
+# exits non-zero when it finds something; this one is a REPORT, so it exits 0 finding nothing, exits 0 finding
+# twelve things, and THE EXIT CODE CARRIES NO INFORMATION AT ALL. An entry asserting "rc != 0" would have been a
+# check that cannot fail - the same defect this tool exists to hunt. What is asserted instead is the two halves
+# that matter, both on output:
+#
+#   it NAMES a value that is written and never read     (the fault)
+#   and it does NOT name one that is read               (the false-positive direction)
+#
+# The second half is not politeness. A report that lists every field is as useless as one that lists none, and the
+# first version of this tool did list every field - it counted the declaration line as a read - which is why the
+# negative control is here.
+#
+# THE PROBE FILE MUST NOT BE CALLED Probe/Test/Suite. The tool excludes those by name - "a field only a test can
+# read is a field the player cannot" - and the first probe written for this entry WAS called Probe.java, so the
+# tool reported "0 value(s) declared" and the entry would have blamed the tool for a mistake in its own fixture.
+if [ -x tools/find-write-only.py ]; then
+  FW=$(mktemp -d)
+  mkdir -p "$FW/aside/games/fruitjump/engine"
+  cat > "$FW/aside/games/fruitjump/engine/Widget.java" <<'FWJ'
+package aside.games.fruitjump.engine;
+
+class Widget {
+    int writtenNeverRead = 0;
+    int writtenAndRead = 0;
+
+    void go() {
+        writtenNeverRead = 3;
+        writtenAndRead = 4;
+        int x = writtenAndRead;
+        System.out.println(x);
+    }
+}
+FWJ
+  out=$(timeout 300 python3 tools/find-write-only.py "$FW" 2>&1)
+  rm -rf "$FW"
+  if grep -q "writtenNeverRead" <<<"$out" && ! grep -q "writtenAndRead" <<<"$out"; then
+    ok "find-write-only names an unread value" "$(echo "$out" | grep writtenNeverRead | tr -s ' ' | cut -c1-70)"
+  elif ! grep -q "writtenNeverRead" <<<"$out"; then
+    bad "find-write-only names an unread value" "it did not report a field that nothing reads"
+  else
+    bad "find-write-only names an unread value" "it also reported a field that IS read"
+  fi
+fi
+
+# ---- check-sheets.sh must notice a committed frame that the game no longer draws --------------------------------
+#
+# THE FAULT IS THE ONE THAT HAS ACTUALLY HAPPENED, twice: a game changed, the frames under docs/frames/ were not
+# regenerated, and the committed pictures stopped being what the code draws. The tool is in the gate, so if it
+# silently passed, a stale frame would sit in a tracked directory looking like evidence.
+#
+# THE FRAME IS DERIVED, NOT TYPED. docs/frames holds thirty frames and the tool names twelve as incomparable - the
+# ones that seed from a clock or open from a save - so picking one by name would break the day that list changes.
+# This walks docs/frames and takes the first frame the tool would actually compare, and it SKIPS rather than fails
+# if it cannot find one.
+#
+# THE CORRUPTION IS PAINTED, not a byte flipped: the comparison has a measured 32-pixel allowance for antialiasing
+# between machines, so a one-byte change would correctly pass and this entry would blame the tool for its fixture.
+if [ -x tools/check-sheets.sh ] && [ -d docs/frames ]; then
+  FRAMES_VARYING="drift.png ledger.png lesson.png fnaf.png fnaf2.png fnaf3.png fnaf4.png fnaf5.png fnaf6.png fnaf7.png fnaf8.png fnaf9.png"
+  FRAME_FILE=""
+  for f in docs/frames/*.png; do
+    b=$(basename "$f")
+    case " $FRAMES_VARYING " in *" $b "*) continue;; esac
+    FRAME_FILE="$f"; break
+  done
+  if [ -z "$FRAME_FILE" ]; then
+    printf '  %-38s skip    no comparable frame in docs/frames\n' "check-sheets notices a stale frame"
+  else
+    FRAME_BAK=$(mktemp); cp "$FRAME_FILE" "$FRAME_BAK"
+    python3 - "$FRAME_FILE" <<'PYF'
+import sys
+from PIL import Image, ImageDraw
+p = sys.argv[1]
+im = Image.open(p).convert("RGB")
+d = ImageDraw.Draw(im)
+w, h = im.size
+d.rectangle([w // 4, h // 4, w // 4 + 300, h // 4 + 200], fill=(0, 0, 0))
+im.save(p)
+PYF
+    if cmp -s "$FRAME_FILE" "$FRAME_BAK"; then
+      bad "check-sheets notices a stale frame" "the injection did not change $FRAME_FILE"
+    else
+      out=$(timeout 900 tools/check-sheets.sh 2>&1); rc=$?
+      cp "$FRAME_BAK" "$FRAME_FILE"; rm -f "$FRAME_BAK"; FRAME_BAK=""
+      # NAMED, not merely non-zero. The tool skips twelve frames by name, so a fixture that landed on one of them
+      # would leave the tool correctly reporting nothing - and an entry that accepted any non-zero exit with any
+      # STALE line anywhere would then pass while its own injection did nothing. Requiring the corrupted frame's
+      # own name in the output is the difference between "it noticed" and "it was unhappy about something else".
+      if [ $rc -ne 0 ] && grep -q "STALE" <<<"$out" && grep -q "$(basename "$FRAME_FILE")" <<<"$out"; then
+        ok "check-sheets notices a stale frame" "$(echo "$out" | grep STALE | head -1 | tr -s ' ' | cut -c1-70)"
+      else
+        bad "check-sheets notices a stale frame" "exit $rc, and nothing about $(basename "$FRAME_FILE") being stale"
+      fi
+    fi
+  fi
+fi
+
+# ---- verify-bundle-win.sh: NO ENTRY, and what the entry would have to do ----------------------------------------
+# Its shape checks - a zip that is not there, a zip with no launcher inside it - are cheap, and an entry asserting
+# only those would pass forever while the half of the tool that matters went unexercised, which is the fault this
+# file is built to prevent. The half that matters is "java.exe is running" under Wine, and reaching it costs a Wine
+# prefix (~700 MB), a wineboot, and a 45-second sleep per run - in a suite the gate runs on every commit, on a
+# machine that has been at 91 per cent full, where a full disk stops memory commits.
+#
+# SO THE INJECTION IS WRITTEN DOWN INSTEAD: break the bundle, not the tool. Delete runtime/bin/java.exe from a copy
+# of holdfast-<v>-windows-x64.zip, and verify-bundle-win.sh must exit 1 with "no java.exe" rather than reporting
+# that it started and drew. That is the false verdict the tool exists to prevent, and it is the same shape as every
+# other entry here. Run it at release time, when the prefix is being paid for anyway; until then the tool prints
+# its own UNTESTED caveat, which is honest and is why this note can wait.
+
 # `# ----` marker, and there was no next marker, so it consumed the end of the file - summary and exit code with it.
 # The suite still ran and printed every ok and bad line, and said nothing at the end, which is the quietest possible
 # way for a suite to stop reporting. Restored, and worth remembering: a script that deletes "up to the next marker"
