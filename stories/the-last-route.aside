@@ -1,0 +1,122 @@
+title: The Last Route
+start: start
+
+== start ==
+bg west_hall
+music room_tone
+The depot at ten to eleven is a yard of buses with their lights off and a hut
+with a kettle in it. You have driven the 44 for nineteen years and you know
+every stop on it the way you know the inside of your own house.
+The route is being cut in March. Not the buses - the buses are fine - the
+route, which is a different thing, and the difference is a meeting that
+happened in a room you were not in.
+Tonight is the last run before the timetable changes. Not the last ever.
+Just the last one that goes where it goes.
+-> the_pull_out
+
+== the_pull_out ==
+The first stop is the hospital and nobody is there, which is usual at eleven.
+The second is the estate and two boys get on and sit at the back and say
+nothing to each other for four stops, which is also usual.
+You drive. You have done this so many times that the bus does it and you
+come along, and the part of you that is driving is the part that does not
+need you.
+At the sixth stop a woman gets on with a bag of shopping and says the thing
+she says every Thursday.
+woman: You're late tonight.
+you: Two minutes.
+woman: You're never late.
+-> the_seventh
+
+== the_seventh ==
+The seventh stop is a lay-by with a phone box and no houses, and it has been
+on the timetable since 1974, and nobody has got on or off there in the
+eleven years you have been counting.
+You stop anyway. You always stop.
+The doors open. The lay-by is empty and the phone box is dark and the wind
+comes through the bus for the four seconds the doors are open, which is the
+longest four seconds of the route.
+-> the_question
+
+== the_question ==
+There is a man in the mirror. He has been there since the hospital and he is
+sitting in the seat behind yours, which is the seat nobody sits in, and he is
+looking out of the window at the lay-by.
+You have not seen him get on. You would have seen him get on.
+* Ask him where he is going. -> ask_him
+* Close the doors and drive. -> drive_on
+* Say nothing and wait. -> wait
+
+== wait ==
+You wait. The doors are open and the engine is running and the timetable says
+you should have pulled away four seconds ago.
+man: It used to be a farm.
+you: What did?
+man: The stop. There was a farm and a lane and a gate, and the gate is where
+the phone box is.
+-> the_answer
+
+== ask_him ==
+you: Where are you going?
+man: Nowhere on this route.
+you: Then you're on the wrong bus.
+man: I'm on the right bus. It's the route that's wrong.
+-> the_answer
+
+== drive_on ==
+You close the doors and you pull away, and you do not look in the mirror for
+the next two stops, which is four minutes, and when you do look he is still
+there.
+-> the_answer
+
+== the_answer ==
+The route runs for another twenty minutes and stops at eleven more stops and
+the man behind you does not move and does not speak again unless you speak
+first.
+At the terminus you switch the engine off and the lights stay on for the
+thirty seconds they always stay on, and you sit in the seat and you do not
+turn round, because turning round is a thing you can do once.
+* Turn round. -> turn_round
+* Open the doors and let the bus be empty. -> let_it_be
+
+== turn_round ==
+The seat behind yours is empty and has been empty for the whole run, and there
+is a bus ticket on it that was not there when you got on.
+It is a single, to the seventh stop, and it is punched with tonight's date.
+You put it in your pocket. You are not going to tell anybody about it and you
+are not going to explain why, and you are aware as you do it that this is the
+first thing in nineteen years you have taken off a bus.
+~ took_the_ticket true
+-> the_morning
+
+== let_it_be ==
+You open the doors and you switch the lights off and you leave the bus to be
+empty, which it is, and which it was, and which it will be at the depot where
+somebody else checks it.
+You walk to your car across a yard of buses with their lights off.
+You do not look back at the seventh stop on the way home, because the seventh
+stop is eight miles behind you and looking back is not a thing a driver does.
+-> the_morning
+
+== the_morning ==
+bg west_hall
+music fan_hum
+In March the timetable changes and the 44 becomes the 44A and it goes along
+the bypass instead, and the seventh stop comes off the map, which is not the
+same as coming off the world.
+On the first morning of the new timetable you drive the new route, and at
+four minutes past eleven you are doing fifty on a road with no stops on it
+at all.
+* Say nothing to anybody, ever. -> END
+* Tell the depot manager about the lay-by. -> tell_him [if took_the_ticket]
+
+== tell_him ==
+You tell him there was a stop on the old route that nobody used and that it
+had been on the timetable for fifty years, and he says he knows, it came up
+in the meeting, and that is why it is not on the new one.
+You do not tell him about the man or the ticket. The ticket is in the drawer
+in the kitchen at home and it says the seventh stop and tonight's date, and
+the date on it is the last night the bus went there.
+You keep it, which is a thing you have never done, and you drive the bypass,
+which is a thing you will do every day until you stop.
+-> END
