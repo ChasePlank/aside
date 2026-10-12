@@ -211,6 +211,19 @@ fi
 
 echo
 echo "  caught: $caught   not caught: $missed   never applied or ambiguous: $broken"
+
+# A FILTER THAT MATCHES NOTHING IS A FAILURE, NOT A SUCCESS.
+#
+# The OK line below only asked whether anything was MISSED or never applied, so a filter naming no entry at all
+# printed "caught: 0   not caught: 0   never applied or ambiguous: 0" and then "OK every invariant listed here is
+# one a suite would notice breaking" -- having checked nothing. A typo in a filter, or an entry renamed, reads as a
+# clean run. This is the rule this repository already wrote down for the story audit's filters, and it applies here
+# for the same reason: the run has to be able to say it did nothing.
+if [ -n "$filter" ] && [ $((caught + missed + broken)) -eq 0 ]; then
+  echo "  THE FILTER MATCHED NOTHING - \"$filter\" names no entry, so this run checked nothing." >&2
+  exit 2
+fi
+
 if [ "$missed" -eq 0 ] && [ "$broken" -eq 0 ]; then
   echo "  OK every invariant listed here is one a suite would notice breaking"
   exit 0
