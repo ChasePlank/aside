@@ -586,7 +586,11 @@ PYF
     if cmp -s "$FRAME_FILE" "$FRAME_BAK"; then
       bad "check-sheets notices a stale frame" "the injection did not change $FRAME_FILE"
     else
-      out=$(timeout 900 tools/check-sheets.sh 2>&1); rc=$?
+      # MEASURED AT 720 SECONDS, so 900 was 25% of headroom and a slower machine would have been killed
+      # mid-comparison and reported as a failure that is not real. check-sheets runs every game twice, so its
+      # cost is inherent and the timeout has to clear it with room to spare. A check that fails because the
+      # machine was busy is worse than no check, because it is believed.
+      out=$(timeout 1800 tools/check-sheets.sh 2>&1); rc=$?
       cp "$FRAME_BAK" "$FRAME_FILE"; rm -f "$FRAME_BAK"; FRAME_BAK=""
       # NAMED, not merely non-zero. The tool skips twelve frames by name, so a fixture that landed on one of them
       # would leave the tool correctly reporting nothing - and an entry that accepted any non-zero exit with any
