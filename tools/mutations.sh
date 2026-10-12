@@ -135,6 +135,7 @@ MUTATIONS=(
   "moving platform: a quarter of a period is a sixth of one|$E/MovingPlatform.java|double phase = (pathTimer / period) * 2 * Math.PI;|double phase = (pathTimer / period) * Math.PI;|aside.games.fruitjump.engine.MovingPlatformTest"
   "moving platform: the path is twice as wide as it says|$E/MovingPlatform.java|x = x0 + Math.sin(phase) * amplitude;|x = x0 + Math.sin(phase) * amplitude * 2;|aside.games.fruitjump.engine.MovingPlatformTest"
   "moving platform: the rider is carried TWICE as far|$E/World.java|b.x += delta[0] * dt;|b.x += 2 * delta[0] * dt;|aside.games.fruitjump.engine.MovingPlatformTest"
+  "moving platform: the rider is carried by both mechanisms again|$E/World.java|if (hitMover != null && ny == -1 && !b.carriedThisFrame) {|if (hitMover != null && ny == -1) {|aside.games.fruitjump.engine.MovingPlatformTest"
 )
 
 if [ "${1:-}" = "--list" ]; then
