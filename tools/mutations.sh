@@ -120,6 +120,8 @@ MUTATIONS=(
   "checkpoint: the health is a fresh bar|\$E/../GameplayScreen.java|c.playerHP = (int) combat.playerHP;|c.playerHP = 3;|aside.engine.SelfTest"
   "checkpoint: the lives cap is not carried|\$E/../GameplayScreen.java|c.maxHP = (int) combat.maxHP;|c.maxHP = 3;|aside.engine.SelfTest"
   "checkpoint: the keys are not carried|\$E/../GameplayScreen.java|c.keys = inv.keys;|c.keys = 0;|aside.engine.SelfTest"
+  "levels: a gap wider than the jump|\$E/LevelGen.java|this.maxGapCells = Math.min(4, BASE_MAX_GAP_CELLS + (levelNum - 1) / 5);|this.maxGapCells = Math.min(7, BASE_MAX_GAP_CELLS + (levelNum - 1) / 5);|aside.engine.SelfTest"
+  "doors: the box is a sprite with no height|\$E/LevelMap.java|d.visibleH = TILE * 2;|d.visibleH = 0;|aside.engine.SelfTest"
   # The boss's OFFENCE, which had no check: what it does when it is hit was covered, what it does to you was not.
   "boss: it never lobs a volley|$E/Boss.java|return phase >= 2 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|return phase >= 99 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|aside.engine.SelfTest"
   "boss: the volley is not wired|$E/World.java|b.setVolleyCallback((x, y, dirX) -> addProjectile(Projectile.bomb(x, y, dirX < 0 ? -1 : 1)));|// volley not wired|aside.engine.SelfTest"
