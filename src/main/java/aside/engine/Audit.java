@@ -48,7 +48,10 @@ public class Audit {
                     + "   choice options " + options);
 
             System.out.println("\n--- art the script asks for ---");
-            printArtList(s, p);
+            // A MISSING BACKGROUND IS A FAULT, UNLIKE A MISSING POSE: the story asks for a room and draws
+            // nothing there, and it still plays, so nothing else notices. See printArtList for the detail.
+            int artFaults = printArtList(s, p);
+            failures += artFaults;
 
             System.out.println("\n--- traversal ---");
             Bot.Report r = new Bot().run(s);
@@ -104,6 +107,12 @@ public class Audit {
                            ? "\n  the unreachable-scene list is nonetheless COMPLETE: every scene was reached, "
                              + "so nothing can be missing from it"
                            : ""));
+            } else if (artFaults > 0) {
+                // THE VERDICT LINE HAS TO MEAN THE WHOLE VERDICT. The exit code counted a missing background before
+                // this and the CLEAN line did not, so `tools/audit-stories.sh` - which judges a story by grepping
+                // for `^CLEAN` - reported it clean while the tool returned 1 for it. A verdict line that disagrees
+                // with the exit status is worse than either alone: one of the two is believed.
+                System.out.println("\nISSUES: " + artFaults + " background(s) with no image");
             } else {
                 System.out.println("\nCLEAN");
             }
@@ -123,7 +132,7 @@ public class Audit {
         if (failures > 0) System.exit(1);
     }
 
-    static void printArtList(Script s, java.nio.file.Path storyPath) {
+    static int printArtList(Script s, java.nio.file.Path storyPath) {
         // The story id is only known here, which is why the existence checks below live in this method: the art
         // lists are aggregated across stories but a story's own art lives under art/stories/<id>/, and without
         // the id neither check can see it. Per-story art arrived after both checks were first written.
@@ -178,12 +187,21 @@ public class Audit {
 
         // Backgrounds, the third check of the same shape and the one that was owed. A missing background draws
         // nothing where the scene should be, which fails as silently in the presenter as a missing sprite does.
+        //
+        // AND UNLIKE THE POSES ABOVE, THIS IS COUNTED AGAINST THE VERDICT - that is the half that was owed. The
+        // pose list is a SHOPPING LIST: art not yet drawn for a character is work in progress and legitimate. A
+        // BACKGROUND IS NOT: a story that asks for one and does not get it draws nothing where a room should be,
+        // and the story still plays, so nothing else notices. MEASURED on 2026-10-13, before this line existed: the
+        // audit printed `backgrounds with no image yet: 1` for such a story and its verdict was still CLEAN, which
+        // is how `the-exchange` shipped drawing somebody else's office. Every real story reports zero today; the
+        // one entry is the demo fixture, whose missing background is planted on purpose and which the audit skips.
         java.util.List<String> noBg = new java.util.ArrayList<>();
         for (String b : backgrounds) {
             if (!existsIn("art/backgrounds", "art/stories/" + storyId + "/backgrounds", b + ".png", b + ".jpg")) noBg.add(b);
         }
         System.out.println("  backgrounds with no image yet: " + noBg.size());
         for (String u : noBg) System.out.println("      " + u);
+        return noBg.size();
     }
 
     /** True if any of the given file names exists in any of the given directories. */
