@@ -83,6 +83,7 @@ public final class Games {
         g.add(new aside.games.lamproom.LampRoomGame());
         g.add(new aside.games.waterline.WaterLineGame());
         g.add(new aside.games.bellcodes.BellCodesGame());
+        g.add(new aside.games.exchange.ExchangeGame());
         g.add(new aside.games.ninetydays.NinetyDaysGame());
         g.add(new aside.games.a440.A440Game());
         g.add(new aside.games.changeover.ChangeoverGame());
