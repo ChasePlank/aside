@@ -1,0 +1,126 @@
+# The Canteen - a cook, a standing order, and a plate nobody comes for.
+# Written for the library. One person, one procedure, one decision: whether to keep a habit that outlived its reason.
+
+title: The Canteen
+start: start
+
+== start ==
+bg dining
+music room_tone
+The canteen serves eleven to two, and at two it is a room with chairs in it. You
+have worked it for nineteen years: the rota on the wall, the till that does not
+connect to anything, the urn, and the board with the day's two things on it.
+Wednesday is pie and it has been pie for nineteen years, which is not a rule
+anybody wrote down. It is just what Wednesday is.
+-> the_board
+
+== the_board ==
+The board says PIE. Under it, on a strip of card you wrote yourself a long time
+ago, in the same marker, it says:
+for R. no onion.
+You have made a no-onion pie every Wednesday since the card went up. R sits at
+the end table under the clock, or sat, and eats it in eleven minutes, or ate,
+and the plate goes back on the stack at the end of the shift either way.
+You have not seen R since the summer.
+* Make it, same as always. -> make_it
+* Ask somebody about the card. -> ask_around
+* Take the card down. -> take_it_down
+
+== make_it ==
+You make it, because it is Wednesday, and the pie is the pie. Onion in the big
+one, none in the small one, and the small one goes in the low oven so it stays
+warm past two.
+You take it out at half past two and put it on the end table under the clock
+with a paper napkin and a fork, and you clear it away at three.
+* Ask somebody about the card. -> ask_around
+* Leave the plate out at the end of the shift, just once. -> leave_it
+* Write a note for yourself and get on with the washing up. -> wash_up
+
+== ask_around ==
+You ask Doreen, who does the sandwiches and has been here longer than you.
+doreen: R? That's the inspector's lad. The one that came with him in the summer
+on the survey. Used to get here at ten past two when the queue was gone.
+you: And now?
+doreen: Survey finished in August, love.
+She goes back to the bread, and then, over her shoulder, the way she says
+things that matter: doreen: He ate it every week for a year, though.
+* Take the card down. -> take_it_down
+* Put the card away in the drawer instead of the bin. -> the_drawer
+* Carry on. It is Wednesday. -> make_it
+
+== take_it_down ==
+You peel the tape off the board and the card comes away with a strip of paint
+on it, and where it was is a rectangle that is darker than the rest of the
+board. You put it in the bin under the counter, on top of the peelings.
+At two there is a room with chairs in it and no card, and Wednesday is pie,
+and the small one is not in the low oven, and the shift is twenty minutes
+shorter than it has been every Wednesday for years.
+-> ending_stopped
+
+== the_drawer ==
+You put the card in the drawer with the spare markers and the rota from 2019
+and the key to the store that nobody has used since the store was rekeyed.
+The dark rectangle on the board fills in, over a month, the way those things
+do, and R comes up at ten past two in a queue that is not there, and you make
+the small pie anyway because you know how.
+-> ending_kept
+
+== wash_up ==
+You write *R - no onion* on the back of a delivery note and put it in the
+drawer, which is what you do with things you are not dealing with, and you get
+on with the washing up.
+The urn ticks. Doreen's radio plays the same four songs. At two the room has
+chairs in it.
+-> ending_pattern
+
+== leave_it ==
+You put the small pie on the end table with a napkin and a fork and you do not
+clear it away at three. You stack the chairs around it and mop the far half of
+the floor and lock the till and it is still there when you go.
+In the morning it is not there, and the plate is on the stack, washed, which
+is not how you left it, and nothing about that is your business, so you fill
+the urn.
+-> ending_left
+
+== ending_stopped ==
+The Wednesday after that you make one pie and it sells out by one o'clock, and
+the Wednesday after that you make two, and by the end of the month Wednesday
+is just a day with pie on it.
+You are not sad about it. It is a board in a canteen and you are a cook, and
+nineteen years of a small pie is a long time for a thing that was never on the
+rota, and you have done the sensible thing, and you know you have.
+You keep the card, though. It is in the bin under the peelings and you take it
+out again at the end of the shift and put it in the drawer with the markers,
+and you do not tell anybody, and that is the whole of it.
+-> END
+
+== ending_kept ==
+You make the small pie every Wednesday for the rest of the year, and the year
+after that, and the till stays broken and the urn ticks and the card in the
+drawer gets a fold in it and stays legible.
+It is not for R by then. R is a lad who ate pie in a queue that is not there,
+and you are a woman who makes it, and the two of you agree about a Wednesday
+without either of you saying so.
+You have worked here nineteen years. Most of what you know is in your hands.
+-> END
+
+== ending_pattern ==
+*R - no onion* goes in the drawer and the drawer fills up and in nineteen years
+you have not once looked in it for anything but a marker.
+The canteen closes in the spring, not because of anything, because the site is
+moving. On the last Wednesday you make the small one out of habit and it goes
+in the low oven and nobody asks for it, and you eat it yourself at the end
+table under the clock in eleven minutes, which is exactly how long it takes.
+-> END
+
+== ending_left ==
+The plate is washed and on the stack and nothing about that is your business.
+You think about it in the car and in the morning and when you are filling the
+urn, and by Thursday you have decided to ask Doreen about the survey and the
+inspector and the lad, and Doreen says what Doreen says, which is that the site
+is moving in the spring and the lad was kind and eighteen and got here at ten
+past two.
+You make the small pie on the last Wednesday too. You put it on the end table
+with a napkin and a fork, and you clear it away at three, and nineteen years is
+a long time and it was not wasted.
+-> END
