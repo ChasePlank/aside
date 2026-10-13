@@ -104,12 +104,15 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Seventeen stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
-  `the-lamp-room`, `the-discrepancy`, `the-water-line` and `the-last-crossing`, plus `night-shift` (a test
-  fixture). Ten are stories you can play, each with its own register, and each is audited rather than asserted —
-  `tools/audit-stories.sh` prints every one with its scene and ending counts. This bullet said "five" and named
-  five while `stories/` held eleven, which is the same fault as a comment that outlives its code: nothing was
-  checking it, and the five newest were missing from it. See "What is in here" below.
+- **Eighteen stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+  `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout` and `the-stage-door`, plus `night-shift` (a test
+  fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene and
+  ending counts.
+  **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
+  held eleven, and then said "Seventeen" while naming ten. The count is checked (`tools/check-readme-stories.py`
+  compares the ordinal word against the files) and the LIST is not, which is why the half nobody checks is the half
+  that went stale. See "What is in here" below.
 - **Holdfast** — the platformer, and the oldest thing here. It was "Fruit Jump" as a working title until
   2026-10-04; the name is settled now, and the premise it already had is the one it keeps: *a climber, a sunset,
   and a way home.* It has water: pools

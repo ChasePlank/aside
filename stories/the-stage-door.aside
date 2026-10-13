@@ -1,0 +1,209 @@
+# The Stage Door - a doorkeeper, a book, and the last night of a run.
+# Written for the library. One person, one procedure, one decision, and nobody is a ghost.
+
+title: The Stage Door
+start: start
+
+== start ==
+bg backstage
+music room_tone
+The stage door is a green door in an alley, and the alley is where the smokers
+go and where the bins are, and in eleven years you have never once used the
+front.
+Inside is a desk with a lamp, a telephone that only rings inward, a rack of
+keys on hooks, and the book.
+The book is a ledger with a line for every person who comes in: name, time,
+and who they are here to see. You write it in their presence. That is the
+whole rule and it is the only one you have ever needed.
+Tonight is the last night. The run closes at eleven and the get-out starts at
+midnight and by Tuesday the door will open onto a building with no show in it.
+-> the_book
+
+== the_book ==
+You turn to tonight's page. The list for a closing night is longer than usual:
+the company, the crew, two of the producers, a critic who has been asked to
+come and has come, and somebody's mother.
+Halfway down, in the hand of the stage manager, one line is not a name:
+see me about the understudy - R
+You have seen that handwriting on every list for six weeks. You have never
+once been told what it is about.
+* Look at the call sheet on the board. -> the_board
+* Wait. Somebody will come to the door. -> the_door
+
+== the_board ==
+The call sheet is pinned by the phone, and it says what call sheets say: half
+hour, beginners, curtain. Somebody has drawn a line through the second cover
+and written *no* beside it, and then, underneath, in pencil, as if to
+themselves: ask J.
+You put your finger on the pencil mark. It is not your handwriting and it is
+not R's.
+-> the_door
+
+== the_door ==
+At half an hour the company comes through in the usual order, and you write
+them in as they pass, and they say the things they say.
+danny: Last one, then.
+you: Last one.
+The lamp makes the alley outside into a black rectangle with a hand in it
+every few minutes. The book fills. At the bottom of the page there is still
+the line R wrote, and no name beside it.
+Then the bell goes, and it is not the company, and it is not the time the
+company comes.
+-> she_asks
+
+== she_asks ==
+There is a woman in the doorway with a canvas bag held in both hands.
+woman: I'm not on the list.
+You look at the page. She is not on the list.
+woman: I know how it works. I'm not asking you to break it. I'm asking you to
+write me in.
+you: Who are you here to see?
+woman: Nobody. I was in it.
+She says it the way somebody says a thing they have practised in the street.
+woman: Eleven years ago, in this building, in the other production. I was the
+second cover. I never went on. Not once, not for a matinee, not for a warm-up.
+I stood in the wings at every performance of that run and I knew every part
+and nobody ever saw me do one line of it.
+The bag shifts in her hands. Something in it is heavy and flat.
+-> the_choice
+
+== the_choice ==
+you: Tonight is the last night.
+woman: I know. That's why it has to be tonight.
+Behind her, the alley. Behind you, the book, open, with a line at the bottom
+that the stage manager wrote and never explained.
+* Write her in and walk her to the wings. -> let_her_in
+* Keep the rule: no name, no entry. -> keep_the_rule
+* Take the book and find R. -> find_r
+
+== let_her_in ==
+you: Name.
+She gives it. You write it, and the time, and in the last column you write
+WINGS, which is not a person, and which you have never written before.
+You take her through the pass door and along the back of the set. The house is
+filling up on the other side of the flats, a sound like weather. You leave her
+where the second cover stands, at the corner where you can see the whole stage
+and be seen by nobody.
+woman: Thank you.
+you: Eleven years is a long time to hold a part.
+woman: It was never mine.
+She takes the thing out of the bag. It is a script, and it is soft as cloth,
+and the corners of it are gone.
+-> ending_wrote_her
+
+== keep_the_rule ==
+you: I can't. Not without a name on the list, and I'm not allowed to put one
+there.
+woman: You're allowed to write who comes in.
+you: I'm allowed to write who is expected.
+For a moment she does not move, and then she puts the bag down on the step
+outside and stands with her hands empty, which is worse.
+woman: I was in it. Eleven years ago. Second cover. I never went on.
+you: I'm sorry.
+woman: So am I.
+She goes back up the alley the way she came, and the bins are the only things
+out there, and you close the door and stand in the lamp for a while.
+-> ending_the_rule
+
+== find_r ==
+You take the book off the desk and go through the pass door with it under your
+arm, which is a thing you have never done, and you find R by the prompt corner
+with a headset round her neck.
+R: What's wrong?
+you: There's a woman at the door. She says she was the second cover. Eleven
+years ago.
+R looks at the book. Then she looks at the line she wrote herself, and at the
+blank beside it, and something in her face closes like a door.
+R: Second cover in the other production. That was my sister.
+you: Your -
+R: She covered for me for a whole run and I never missed a night. Nobody ever
+saw her do it. Not the company, not the management, not the critics. And she
+came tonight, and you left her in the alley.
+you: She's still there.
+R: No she isn't.
+-> ending_r_was_told
+
+== ending_wrote_her ==
+The house goes dark the way it does, all at once, and the overture starts, and
+for two hours the building is a machine that runs on everybody in it.
+You go back to the desk. The book is open where you left it, and the lamp is
+on, and the alley outside is a black rectangle with nobody in it.
+When the curtain comes down the noise goes on longer than a curtain call and
+somebody's mother comes through the pass door crying, and the company comes
+out one at a time carrying flowers and cardboard and pieces of the set, and
+you write them all out, and the page fills up, and the last line of it is
+still the one R wrote.
+At midnight the get-out starts and the alley fills with a lorry and six men
+and a lot of noise, and by two there is no set left, only the marks on the
+floor where it stood.
+You take the keys off the hooks and put them in the tin, which is the last
+thing you do on a closing night, and you take the book with you, which is not.
+At midnight the get-out starts and the alley fills with a lorry and six men
+and a lot of noise, and by two there is no set left, only the marks on the
+floor where it stood.
+You take the keys off the hooks and put them in the tin, which is the last
+thing you do on a closing night, and you take the book with you, which is not.
+The book goes in the drawer with the others: eleven years of them, one a year,
+each one a ledger of everybody who ever came through the green door.
+In tonight's there is a line in your own hand that says WINGS where a name
+should be, and it is the only lie in the drawer.
+You think about that on the way home, and about a part held for eleven years
+by somebody nobody ever saw, and about the fact that the rule was never about
+the book. The book was just how you kept the rule.
+-> END
+
+== ending_the_rule ==
+The house goes dark the way it does, all at once, and the overture starts, and
+for two hours the building is a machine that runs on everybody in it.
+You go back to the desk. The book is open where you left it, and the lamp is
+on, and the alley outside is a black rectangle with nobody in it.
+When the curtain comes down the noise goes on longer than a curtain call and
+somebody's mother comes through the pass door crying, and the company comes
+out one at a time carrying flowers and cardboard and pieces of the set, and
+you write them all out, and the page fills up, and the last line of it is
+still the one R wrote.
+At midnight the get-out starts and the alley fills with a lorry and six men
+and a lot of noise, and by two there is no set left, only the marks on the
+floor where it stood.
+You take the keys off the hooks and put them in the tin, which is the last
+thing you do on a closing night, and you take the book with you, which is not.
+At midnight the get-out starts and the alley fills with a lorry and six men
+and a lot of noise, and by two there is no set left, only the marks on the
+floor where it stood.
+You take the keys off the hooks and put them in the tin, which is the last
+thing you do on a closing night, and you take the book with you, which is not.
+The book goes in the drawer with the others: eleven years of them, one a year,
+each one a ledger of everybody who ever came through the green door.
+Tonight's page is complete and correct and every line of it is true.
+You think about that on the way home, and about a woman with a canvas bag who
+had practised the sentence in the street, and about the difference between a
+door and a rule, and you are not sure you would do it again.
+-> END
+
+== ending_r_was_told ==
+The house goes dark the way it does, all at once, and the overture starts, and
+for two hours the building is a machine that runs on everybody in it.
+You go back to the desk. The book is open where you left it, and the lamp is
+on, and the alley outside is a black rectangle with nobody in it.
+When the curtain comes down the noise goes on longer than a curtain call and
+somebody's mother comes through the pass door crying, and the company comes
+out one at a time carrying flowers and cardboard and pieces of the set, and
+you write them all out, and the page fills up, and the last line of it is
+still the one R wrote.
+At midnight the get-out starts and the alley fills with a lorry and six men
+and a lot of noise, and by two there is no set left, only the marks on the
+floor where it stood.
+You take the keys off the hooks and put them in the tin, which is the last
+thing you do on a closing night, and you take the book with you, which is not.
+At midnight the get-out starts and the alley fills with a lorry and six men
+and a lot of noise, and by two there is no set left, only the marks on the
+floor where it stood.
+You take the keys off the hooks and put them in the tin, which is the last
+thing you do on a closing night, and you take the book with you, which is not.
+The book goes in the drawer with the others: eleven years of them, one a year,
+each one a ledger of everybody who ever came through the green door.
+You told R. R is the only person who could have done anything about it and R
+did nothing about it, and that is the shape the night had, and you write it
+down the way you write everything down, because that is the job.
+Under the last line, in the space where the totals go, you put nothing.
+-> END
