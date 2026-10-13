@@ -24,12 +24,17 @@ two deliberately planted bugs, and it stays off the shelf on purpose.
 was in another story's folder, and nothing loads a story's folder except its game module — which it did not have.
 Both halves are fixed, and the second was the real one.
 
-## The one-file download is 1.7 MB smaller
+## Five more stories, and 125 KB
 
-The shelf was carrying **six builds twice** — the same six stories, listed once by the catalogue and once by hand —
-and 1,707,028 bytes of it were exact duplication. It is 8,947 KB now against 10,615 KB, and it is under the size
-limit the project sets for a single page a phone downloads. Nothing had noticed: the checks that compare the shelf
-against the files use sets, and a build appearing twice collapses to one entry.
+`aside.html` is **9,162,113 bytes**, against **9,036,572** for v1.14: five more stories cost about 125 KB in the
+single file a phone downloads.
+
+That number is worth stating plainly because it was nearly not the number. The shelf assembles from the catalogue of
+game modules, and the six stories that gained modules this week were *also* still listed by hand in the shelf's own
+list — so each was in the file twice, **1,707,028 bytes of exact duplication**, and the page went over the size
+limit the project sets for it. That duplication **never reached a release**: it appeared when the modules landed and
+was removed before this one was built. It was found by measuring the file rather than reading the list, because the
+checks that compare the shelf against the files use sets, and a build appearing twice collapses to one entry.
 
 ## What is verified, and what is not
 
