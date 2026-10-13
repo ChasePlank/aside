@@ -83,7 +83,15 @@ public class Audit {
                     || (scenesIssue && (scenesComplete || !unfinished))
                     || (otherTraversal && !unfinished);
 
-            if (provenIssue) {
+            if (artFaults > 0) {
+                // FIRST, BECAUSE IT DOES NOT DEPEND ON THE WALK. A scene asking for a background nobody drew is a
+                // proven fault whatever the traversal did - and this branch used to be in the `else` at the end of
+                // the chain, so an UNFINISHED walk printed `CLEAN SO FAR (traversal partial...)` over it. The walk
+                // is unfinished under load, which is how the injection caught it: the same story reported clean
+                // inside the gate and failed when run by hand, on the same code.
+                System.out.println("\nISSUES: " + artFaults + " background(s) with no image");
+                failures++;
+            } else if (provenIssue) {
                 System.out.println("\nISSUES FOUND");
                 failures++;
             } else if (otherTraversal && unfinished) {
@@ -107,12 +115,6 @@ public class Audit {
                            ? "\n  the unreachable-scene list is nonetheless COMPLETE: every scene was reached, "
                              + "so nothing can be missing from it"
                            : ""));
-            } else if (artFaults > 0) {
-                // THE VERDICT LINE HAS TO MEAN THE WHOLE VERDICT. The exit code counted a missing background before
-                // this and the CLEAN line did not, so `tools/audit-stories.sh` - which judges a story by grepping
-                // for `^CLEAN` - reported it clean while the tool returned 1 for it. A verdict line that disagrees
-                // with the exit status is worse than either alone: one of the two is believed.
-                System.out.println("\nISSUES: " + artFaults + " background(s) with no image");
             } else {
                 System.out.println("\nCLEAN");
             }
