@@ -468,6 +468,24 @@ if [ -x tools/check-fnaf-match.sh ] && [ -d ../fnaf2/src/main/java/fnaf/engine ]
   fi
 fi
 
+# ---- check-platformer-match.sh must notice a file the RELEASE has and this repository does not ----------------
+# THE SIBLING OF THE ENTRY ABOVE, for the other pair of editions. Its file loop walks this repository's engine and
+# prints what the release lacks - so a file added on the RELEASE side was invisible, and the summary sentence it
+# printed was only ever half of the comparison. MEASURED before the direction was added: both engine directories
+# hold the same 52 files, so nothing was missing in either direction; this is the guard against it starting.
+# The restore hook is the same one: a file that did not exist before cannot be put back by a pair of copies.
+if [ -x tools/check-platformer-match.sh ] && [ -d ../tp/src/main/java/tropical/engine ]; then
+  DRIFT_FILE="../tp/src/main/java/tropical/engine/TempOnlyThere.java"
+  printf 'package tropical.engine;\npublic class TempOnlyThere {}\n' > "$DRIFT_FILE"
+  out=$(timeout 600 tools/check-platformer-match.sh 2>&1); rc=$?
+  restore_drift
+  if [ $rc -ne 0 ] && grep -q "NOT in this repository" <<<"$out"; then
+    ok "check-platformer-match notices a file only the release has" "$(echo "$out" | grep 'NOT in this repository' | head -1 | tr -s ' ' | cut -c1-56)"
+  else
+    bad "check-platformer-match notices a file only the release has" "exit $rc, and no NOT in this repository line"
+  fi
+fi
+
 # ---- and the two sweeps, on synthetic input, because their subjects are reports and trees ----------------------
 if [ -x tools/find-silent-suites.sh ]; then
   printf '  something ok     === 0 passed, 0 failed ===\n  other ok         === 7 passed, 0 failed ===\n' > /tmp/silent-probe.txt

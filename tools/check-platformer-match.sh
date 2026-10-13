@@ -56,7 +56,7 @@ normalise() {
       -e 's/\btropical\b//g'
 }
 
-same=0; differ=0; differing=(); missing=(); detail=()
+same=0; differ=0; differing=(); missing=(); otherOnly=(); detail=()
 for f in "$HERE_ENGINE"/*.java; do
   name="$(basename "$f")"
   other="$THERE_ENGINE/$name"
@@ -77,7 +77,27 @@ for f in "$HERE_ENGINE"/*.java; do
   detail+=("$(printf '%-16s %4d line(s) in one and not the other, %4d when order counts' "$name" "$content" "$order")")
   differ=$((differ + 1))
 done
+# AND THE OTHER DIRECTION, WHICH THIS COULD NOT SEE: a file the RELEASE has and this repository does not.
+#
+# The loop above walks THIS repository's engine files and prints the ones the release lacks, so the sentence
+# "in this repository and NOT in the release" was only ever half of the comparison - a file added on the release
+# side was invisible. The same gap was closed in check-fnaf-match.sh on 2026-10-13; this is its sibling, and two
+# tools answering the same question should not answer it differently.
+#
+# MEASURED BEFORE ADDING IT, which is why this is a guard rather than a fix: both engine directories hold the same
+# 52 files today, so nothing is missing in either direction.
+for f in "$THERE_ENGINE"/*.java; do
+  [ -f "$f" ] || continue
+  name="$(basename "$f")"
+  if [ ! -f "$HERE_ENGINE/$name" ]; then
+    otherOnly+=("$name"); differ=$((differ + 1))
+  fi
+done
 
+
+if [ ${#otherOnly[@]} -gt 0 ]; then
+  echo "in the release and NOT in this repository: ${otherOnly[*]}"
+fi
 echo "=== $same engine file(s) identical, $differ differing ==="
 if [ ${#missing[@]} -gt 0 ]; then
   echo "in this repository and NOT in the release: ${missing[*]}"
