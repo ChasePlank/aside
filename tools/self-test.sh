@@ -18,8 +18,9 @@ set -u
 cd "$(dirname "$0")/.." || exit 2
 
 pass=0; fail=0
+failed_names=()
 ok()   { printf '  %-38s ok      %s\n' "$1" "$2"; pass=$((pass+1)); }
-bad()  { printf '  %-38s FAIL    %s\n' "$1" "$2"; fail=$((fail+1)); }
+bad()  { printf '  %-38s FAIL    %s\n' "$1" "$2"; fail=$((fail+1)); failed_names+=("$1"); }
 
 # PUT THE STORY BACK EVEN IF THIS SCRIPT IS INTERRUPTED.
 #
@@ -655,6 +656,51 @@ fi
 # The suite still ran and printed every ok and bad line, and said nothing at the end, which is the quietest possible
 # way for a suite to stop reporting. Restored, and worth remembering: a script that deletes "up to the next marker"
 # deletes the rest of the file when there is no next marker.
+# ---- artifact-changed.sh must refuse a no-change release, and must not refuse a real one ----------------------
+# THE FAULT IS THE ONE THE TOOL WAS WRITTEN FOR: on 2026-10-04 a release went out byte-identical to the previous
+# one, because nothing compared the two files, and it had to be deleted along with its tag.
+#
+# AND ITS REFUSAL PATH WAS UNREACHABLE FOR THE ARTIFACTS WE ACTUALLY RELEASE until 2026-10-13: both bundles changed
+# bytes on every build - the tar carried entry mtimes, gzip carried its own timestamp - so the comparison could
+# only ever catch a RE-UPLOADED file and never a no-change rebuild. Reproducible builds made this guard able to
+# fire, which is why it is worth injecting now.
+#
+# IT IS EXERCISED AGAINST THE wake RELEASE, whose only asset is 116 KB and whose repository copy is the same bytes
+# (the release-status tool says so, and this checks that claim as a side effect). A 116 KB download per run is
+# small enough to sit in a gate; the artifacts we release are 60 MB and up.
+WAKE=/root/workspace/wake/index.html
+if [ -x tools/artifact-changed.sh ] && [ -f "$WAKE" ] && command -v gh >/dev/null 2>&1; then
+  out=$(timeout 300 tools/artifact-changed.sh ChasePlank/wake "$WAKE" 2>&1); rc=$?
+  if [ $rc -eq 1 ] && grep -q "IDENTICAL" <<<"$out"; then
+    ok "artifact-changed refuses a no-change release" "$(echo "$out" | grep -o 'IDENTICAL to [^ ]*' | head -1)"
+  elif [ $rc -eq 2 ]; then
+    ok "artifact-changed refuses a no-change release" "NOT CHECKED - could not reach GitHub"
+  else
+    bad "artifact-changed refuses a no-change release" "exit $rc - it did not refuse bytes identical to the published ones"
+  fi
+  # AND IT MUST NOT REFUSE A GENUINE CHANGE, or the guard would block every release - which is the failure a
+  # one-directional test would call a pass.
+  TMPC=$(mktemp /tmp/wake-changed-XXXXXX.html)
+  cp "$WAKE" "$TMPC"; printf '\n<!-- one comment more, so the bytes differ -->\n' >> "$TMPC"
+  out=$(timeout 300 tools/artifact-changed.sh ChasePlank/wake "$TMPC" 2>&1); rc=$?
+  rm -f "$TMPC"
+  if [ $rc -eq 0 ]; then ok "artifact-changed passes a genuine change" "differs from the published asset"
+  elif [ $rc -eq 2 ]; then ok "artifact-changed passes a genuine change" "NOT CHECKED - could not reach GitHub"
+  else bad "artifact-changed passes a genuine change" "exit $rc - it refused a file that differs"; fi
+else
+  ok "artifact-changed refuses a no-change release" "NOT CHECKED - no wake checkout, or no gh"
+fi
+
+# NAME THE FAILURES AT THE END, because a count on its own is not actionable. On 2026-10-13 one run of this script
+# reported "24 passed, 1 failed" and the failing entry's line had already scrolled past a filter - so the only way to
+# learn which one it was would have been to run the whole five-minute thing again and hope it flaked the same way.
+# The gates here have printed `failed: <names>` for weeks; this is the same three lines.
+if [ $fail -gt 0 ]; then
+  echo
+  printf 'failed:'
+  for n in "${failed_names[@]}"; do printf ' %s' "$n"; done
+  echo
+fi
 echo
 echo "=== $pass tool self-test(s) passed, $fail failed ==="
 [ "$fail" = 0 ] || exit 1
