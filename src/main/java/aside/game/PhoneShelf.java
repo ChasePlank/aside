@@ -69,39 +69,21 @@ public final class PhoneShelf {
     static final List<Entry> STORIES = List.of(
             new Entry("web/night-shift.html", "Night Shift",
                     "A night shift at the pizzeria, and the first thing the engine could do.",
-                    "Roxanne's. Also the audit bot's test fixture \u2014 two of its bugs are planted."),
-            new Entry("web/exchange.html", "The Exchange",
-                    "A manual telephone exchange on its last night, and a call for a number that is not on it.",
-                    "Roxanne's. The first one about handing the work to a machine."),
-            new Entry("web/bothy.html", "The Bothy",
-                    "A volunteer warden walks up to a mountain bothy on the first Saturday of the month.",
-                    "Roxanne's. The one with no hook at all - nothing is wrong and nothing is explained."),
-            new Entry("web/last-route.html", "The Last Route",
-                    "A bus driver on the 44's last run before the timetable changes, and a stop nobody uses.",
-                    "Roxanne's. The first one where the strange thing is never explained."),
-            new Entry("web/harbour.html", "The Harbour",
-                    "A river pilot at three in the morning, a ship at the bar, and a margin of forty minutes.",
-                    "Roxanne's. The first one whose last column nobody asked for."),
-            new Entry("web/lookout.html", "The Lookout",
-                    "A fire lookout in the last hour of a shift, a column of smoke, and the question of when.",
-                    "Roxanne's. The first one where the choice changes the ending."),
-            new Entry("web/dispensary.html", "The Dispensary",
-                    "A night pharmacy, one phone call after hours, and a box of tablets nobody collected.",
-                    "Roxanne's. The first two-hander: one room, two people, one night.")
+                    "Roxanne's. Also the audit bot's test fixture \u2014 two of its bugs are planted.")
     );
 
     /** A line about how this one plays, for the games that need one. */
     static String noteFor(String id) {
         return switch (id) {
             case "residue" -> "Keeps its room in this browser. Come back and it will have aged.";
-            case "exchange" -> "Keeps the log in this browser. One night, and one sitting.";
+            case "exchange" -> "Roxanne's. The first one about handing the work to a machine.";
             // FIVE STORIES HAD NO LINE HERE BECAUSE THEY HAD NO MODULE, so they were not on the shelf to need one -
             // and their absence from `Games.all()` kept them out of the LIBRARY as well. See the game modules.
-            case "bothy" -> "Keeps the book in this browser. One visit, and the page you wrote on.";
-            case "dispensary" -> "Keeps the prescription book in this browser. One night, and one call.";
-            case "harbour" -> "Keeps the log in this browser. One tide, and one ship brought in.";
-            case "last-route" -> "Keeps the depot book in this browser. One evening, and one last run.";
-            case "lookout" -> "Keeps the log in this browser. Eleven summers, and four fires called in.";
+            case "bothy" -> "Roxanne's. The one with no hook at all - nothing is wrong and nothing is explained.";
+            case "dispensary" -> "Roxanne's. The first two-hander: one room, two people, one night.";
+            case "harbour" -> "Roxanne's. The first one whose last column nobody asked for.";
+            case "last-route" -> "Roxanne's. The first one where the strange thing is never explained.";
+            case "lookout" -> "Roxanne's. The first one where the choice changes the ending.";
             case "ledger" -> "Keeps its ledger in this browser. Six nights, and one sitting.";
             case "testimony" -> "Keeps its account in this browser. Eight questions, and one sitting.";
             case "outside" -> "Keeps its week in this browser. Seven days, and one sitting.";

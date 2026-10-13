@@ -47,19 +47,19 @@ public class SelfTest {
      * The shelf is one file a phone downloads, and it grows by accident rather than by decision - so this is the
      * bound that makes growth a decision.
      *
-     * <p><b>RAISED FROM 10240 TO 12288 ON 2026-10-13, DELIBERATELY, AND THE REASON IS THE POINT.</b> Five stories
-     * became reachable in the library that day (the-bothy, the-dispensary, the-harbour, the-last-route, the
-     * lookout - they had no game module, so `Games.all()` did not list them and neither the library nor the shelf
-     * carried them). Adding them put the shelf at 10615 KB against 10240, and the growth is their ART.
+     * <p><b>RAISED TO 12288 ON 2026-10-13 AND PUT BACK TO 10240 THE SAME DAY, WHICH IS THE USEFUL PART.</b> Five
+     * stories became reachable in the library and the shelf went to 10615 KB against 10240, so I raised the bound
+     * and wrote that the real fix was deduplicating the shared backgrounds. THE REAL CAUSE WAS NOT SHARED ART: the
+     * shelf was carrying SIX BUILDS TWICE - the six stories that had just gained game modules were also still
+     * listed by hand in `PhoneShelf.STORIES`, so each was in the file as one build from `Games.all()` and another
+     * from that list. MEASURED: 10870573 bytes with 1707028 of them exact repeats, and after moving the authored
+     * blurbs and notes into the modules and trimming STORIES to the one build with no module, 9162113 bytes -
+     * 8947 KB, comfortably under the ORIGINAL bound.
      *
-     * <p>WHAT I AM NOT DOING: pretending that is the end of it. Three of the five use backgrounds from the SHARED
-     * pool - the dispensary draws `office_night`, the last route and the lookout both draw `west_hall` - and each
-     * build carries its own copy of that image, which the shelf then inlines. The same picture is in the file
-     * several times over. DEDUPLICATING THE SHARED BACKGROUNDS IS THE REAL FIX and would put this back under the
-     * old bound; it is a change to how the shelf is assembled rather than a number, so it is written here as the
-     * next step and not done in the same hour as making five stories reachable.
+     * <p>So the ceiling is back where it was, and the lesson is in the entry above: I raised a bound to accommodate
+     * a number whose cause I had not measured.
      */
-    static final long SHELF_CEILING_KB = 12288;
+    static final long SHELF_CEILING_KB = 10240;
 
     /** One decimal place, for a number a person has to read in a report. */
 
@@ -755,6 +755,19 @@ public class SelfTest {
                 for (String f : onDisk) check("web/" + f + " is on the shelf", listed.contains(f));
                 check("and the shelf lists nothing that is not on disk",
                         listed.size() == onDisk.size());
+
+                // AND ONCE EACH, which nothing asked. The two checks above use SETS - `listed` is a HashSet - so a
+                // build appearing TWICE collapsed to one entry and every comparison still balanced. That is how six
+                // stories spent 1.7 MB of the shelf being in it twice without a single check saying so; it was found
+                // by measuring the FILE, not by looking at the list.
+                java.util.Set<String> seenOnce = new java.util.HashSet<>();
+                java.util.List<String> listedTwice = new java.util.ArrayList<>();
+                for (PhoneShelf.Entry e : entries) {
+                    if (!seenOnce.add(e.file())) listedTwice.add(e.file());
+                }
+                check("the shelf lists each build once (" + listedTwice.size() + " listed twice"
+                        + (listedTwice.isEmpty() ? "" : ": " + String.join(", ", listedTwice)) + ")",
+                        listedTwice.isEmpty());
 
                 // And the other half. A game with no phone build has to be
                 // NAMED as missing rather than simply absent: silence about a

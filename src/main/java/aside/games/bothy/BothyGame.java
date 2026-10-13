@@ -35,7 +35,7 @@ public class BothyGame implements Game {
     @Override public String title() { return "The Bothy"; }
 
     @Override public String blurb() {
-        return "Two rooms and a porch at the end of a track that stops being a track.";
+        return "A volunteer warden walks up to a mountain bothy on the first Saturday of the month.";
     }
 
     @Override

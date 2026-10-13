@@ -35,7 +35,7 @@ public class HarbourGame implements Game {
     @Override public String title() { return "The Harbour"; }
 
     @Override public String blurb() {
-        return "Eighteen feet of fibreglass, and the job of meeting ships at the bar and bringing them in.";
+        return "A river pilot at three in the morning, a ship at the bar, and a margin of forty minutes.";
     }
 
     @Override

@@ -35,7 +35,7 @@ public class LastrouteGame implements Game {
     @Override public String title() { return "The Last Route"; }
 
     @Override public String blurb() {
-        return "A depot at ten to eleven, and the route being cut in March.";
+        return "A bus driver on the 44's last run before the timetable changes, and a stop nobody uses.";
     }
 
     @Override

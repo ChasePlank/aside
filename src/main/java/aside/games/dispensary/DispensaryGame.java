@@ -35,7 +35,7 @@ public class DispensaryGame implements Game {
     @Override public String title() { return "The Dispensary"; }
 
     @Override public String blurb() {
-        return "The back half of a shop that shut at six, and the answerphone that still rings in it.";
+        return "A night pharmacy, one phone call after hours, and a box of tablets nobody collected.";
     }
 
     @Override

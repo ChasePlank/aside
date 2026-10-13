@@ -35,7 +35,7 @@ public class LookoutGame implements Game {
     @Override public String title() { return "The Lookout"; }
 
     @Override public String blurb() {
-        return "Thirty feet of timber on a ridge, eleven summers in the chair, and four fires called in.";
+        return "A fire lookout in the last hour of a shift, a column of smoke, and the question of when.";
     }
 
     @Override

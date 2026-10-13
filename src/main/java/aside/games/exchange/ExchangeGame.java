@@ -31,7 +31,7 @@ public class ExchangeGame implements Game {
     @Override public String title() { return "The Exchange"; }
 
     @Override public String blurb() {
-        return "Eleven years of other people's calls, and one you are not supposed to know.";
+        return "A manual telephone exchange on its last night, and a call for a number that is not on it.";
     }
 
     @Override
