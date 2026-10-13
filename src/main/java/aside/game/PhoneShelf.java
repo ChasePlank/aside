@@ -95,6 +95,13 @@ public final class PhoneShelf {
         return switch (id) {
             case "residue" -> "Keeps its room in this browser. Come back and it will have aged.";
             case "exchange" -> "Keeps the log in this browser. One night, and one sitting.";
+            // FIVE STORIES HAD NO LINE HERE BECAUSE THEY HAD NO MODULE, so they were not on the shelf to need one -
+            // and their absence from `Games.all()` kept them out of the LIBRARY as well. See the game modules.
+            case "bothy" -> "Keeps the book in this browser. One visit, and the page you wrote on.";
+            case "dispensary" -> "Keeps the prescription book in this browser. One night, and one call.";
+            case "harbour" -> "Keeps the log in this browser. One tide, and one ship brought in.";
+            case "last-route" -> "Keeps the depot book in this browser. One evening, and one last run.";
+            case "lookout" -> "Keeps the log in this browser. Eleven summers, and four fires called in.";
             case "ledger" -> "Keeps its ledger in this browser. Six nights, and one sitting.";
             case "testimony" -> "Keeps its account in this browser. Eight questions, and one sitting.";
             case "outside" -> "Keeps its week in this browser. Seven days, and one sitting.";

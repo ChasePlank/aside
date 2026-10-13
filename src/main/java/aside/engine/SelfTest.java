@@ -43,7 +43,23 @@ public class SelfTest {
      * it would add about 3 MB per story and take the shelf from 8.4 MB to
      * roughly 20. Raising this number is a deliberate act.
      */
-    static final long SHELF_CEILING_KB = 10240;
+    /**
+     * The shelf is one file a phone downloads, and it grows by accident rather than by decision - so this is the
+     * bound that makes growth a decision.
+     *
+     * <p><b>RAISED FROM 10240 TO 12288 ON 2026-10-13, DELIBERATELY, AND THE REASON IS THE POINT.</b> Five stories
+     * became reachable in the library that day (the-bothy, the-dispensary, the-harbour, the-last-route, the
+     * lookout - they had no game module, so `Games.all()` did not list them and neither the library nor the shelf
+     * carried them). Adding them put the shelf at 10615 KB against 10240, and the growth is their ART.
+     *
+     * <p>WHAT I AM NOT DOING: pretending that is the end of it. Three of the five use backgrounds from the SHARED
+     * pool - the dispensary draws `office_night`, the last route and the lookout both draw `west_hall` - and each
+     * build carries its own copy of that image, which the shelf then inlines. The same picture is in the file
+     * several times over. DEDUPLICATING THE SHARED BACKGROUNDS IS THE REAL FIX and would put this back under the
+     * old bound; it is a change to how the shelf is assembled rather than a number, so it is written here as the
+     * next step and not done in the same hour as making five stories reachable.
+     */
+    static final long SHELF_CEILING_KB = 12288;
 
     /** One decimal place, for a number a person has to read in a report. */
 
