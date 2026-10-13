@@ -94,7 +94,18 @@ chmod +x "$B/$NAME.sh"
 [ -n "$README" ] && [ -f "$README" ] && cp "$README" "$B/README.txt"
 
 TAR="/root/$NAME-linux-x64.tar.gz"
-tar czf "$TAR" -C "$OUT" "$NAME" 2>/dev/null
+# DETERMINISTIC, so that the same inputs produce the same bytes. MEASURED on 2026-10-13: two consecutive builds of
+# this bundle from one jar came out e920c5d2150985e45095b38e... against c9db51b73d368a54f2d95b23..., and the same
+# test on the GAME's bundle gave 4e37e5f8239fdfd24b983d10... against 001f58fa0e1e40ac6a05af74... - so this was not
+# one project's fault, it was this line.
+#
+# IT MATTERS BECAUSE `artifact-changed.sh` COMPARES BYTES and refuses a release identical to the published one. With
+# a tarball that differs on every build, that guard can only ever catch a RE-UPLOADED file, never a no-change
+# rebuild - which is the case it was written for, and the reason the release repository's jar was made reproducible
+# first. Three sources of difference, all of them in this line: each entry's mtime, gzip's own header timestamp, and
+# the order the directory happens to be read in.
+tar --sort=name --mtime='2026-01-01 00:00:00' --owner=0 --group=0 --numeric-owner \
+    -cf - -C "$OUT" "$NAME" 2>/dev/null | gzip -n > "$TAR"
 printf '  %-10s %s  (%.0f MB compressed, %.0f MB extracted)\n' "$NAME" "$TAR" \
   "$(du -k "$TAR" | cut -f1 | awk '{print $1/1024}')" "$(du -sk "$B" | cut -f1 | awk '{print $1/1024}')"
 
