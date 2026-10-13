@@ -94,7 +94,7 @@ public final class PhoneShelf {
     static String noteFor(String id) {
         return switch (id) {
             case "residue" -> "Keeps its room in this browser. Come back and it will have aged.";
-            case "the-exchange" -> "Keeps the log in this browser. One night, and one sitting.";
+            case "exchange" -> "Keeps the log in this browser. One night, and one sitting.";
             case "ledger" -> "Keeps its ledger in this browser. Six nights, and one sitting.";
             case "testimony" -> "Keeps its account in this browser. Eight questions, and one sitting.";
             case "outside" -> "Keeps its week in this browser. Seven days, and one sitting.";

@@ -2530,7 +2530,18 @@ public class SelfTest {
         return out;
     }
 
-    /** The game id for a story file: the shelf looks for web/&lt;game-id&gt;.html, and `the-lamp-room` is `lamp-room`. */
+    /**
+     * The game id for a story file: the shelf looks for {@code web/<game-id>.html}, and `the-lamp-room` is
+     * `lamp-room`.
+     *
+     * <p>I "FIXED" THIS WRONGLY ON 2026-10-13 AND THE SUITE TOLD ME SO. The Exchange's build was being read from
+     * {@code web/exchange.html} while the failure named {@code web/the-exchange.html}, so I concluded the id should
+     * come from the game module - and changed this to prefer a module that declares the full name. That made the
+     * shelf disagree with itself instead, and the count of passing checks fell by five: the shelf, this helper and
+     * the build name all use THE SQUASHED ID, and the module I wrote for The Exchange was the thing that did not
+     * follow it. Its id is `exchange` now, its art stays under the story's own directory (`the-exchange`), which is
+     * what `the-lamp-room` does - {@code loadStory(".", "the-lamp-room")} against a game id of `lamp-room`.
+     */
     static String gameIdFor(String storyName) {
         return storyName.replaceFirst("^the-", "");
     }

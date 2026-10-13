@@ -26,7 +26,7 @@ public class ExchangeGame implements Game {
 
     static final String STORY = "stories/the-exchange.aside";
 
-    @Override public String id() { return "the-exchange"; }
+    @Override public String id() { return "exchange"; }
 
     @Override public String title() { return "The Exchange"; }
 
