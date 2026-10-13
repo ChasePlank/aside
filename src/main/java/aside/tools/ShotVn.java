@@ -67,10 +67,23 @@ public class ShotVn extends Application {
                 else vn.advance();
             }
         } else {
-            while (vn.shown.isEmpty() && steps++ < 400) {
-                if (vn.mode == Vn.Mode.CHOOSING) vn.choose(0);
-                else vn.advance();
+            // AND THE STOP CONDITION HAS TO BE ONE THAT CAN BE REACHED. "Advance to a beat that shows somebody"
+            // is unsatisfiable for a story with no cast, and several of these are one-handers with no `show` line
+            // at all - MEASURED on 2026-10-13: `the-exchange` and `the-bothy` have zero `show` directives between
+            // them, so the loop ran to its 400-step cap and the DIAG line said `shown={}` every time. It stopped
+            // somewhere in the middle of the story and called it a scene with a person in it.
+            // Asked of the SCRIPT TEXT, because `show` is not a beat kind of its own - it is a STAGE beat, like
+            // `bg` and `music`, and picking it out of those needs the parser's insides. One line of text is the
+            // same question, and it is the one that was measured.
+            boolean hasCast = java.nio.file.Files.readString(Path.of("stories", story + ".aside"))
+                    .lines().anyMatch(l -> l.startsWith("show "));
+            while ((hasCast ? vn.shown.isEmpty() : vn.mode != Vn.Mode.CHOOSING) && steps++ < 400) {
+                if (vn.mode == Vn.Mode.CHOOSING) {
+                    if (!hasCast) break;      // a choice is the beat this tool wanted
+                    vn.choose(0);
+                } else vn.advance();
             }
+            if (!hasCast) System.out.println("DIAG this story shows nobody: stopping at the first choice instead");
         }
         System.out.println("DIAG reached a beat after " + steps + " steps: shown=" + vn.shown
                 + " speaker=" + vn.speaker() + " mode=" + vn.mode);
@@ -98,10 +111,16 @@ public class ShotVn extends Application {
 
         var t = new javafx.animation.PauseTransition(javafx.util.Duration.millis(500));
         t.setOnFinished(e -> {
-            // Three ticks, not ninety. One frame is enough to draw, and this screen decodes
-            // large sprite PNGs per tick - ninety of them is how the first attempt spent two
-            // minutes and hit its timeout without ever reaching the snapshot.
-            for (int i = 0; i < 3; i++) ui.tick(1.0 / 60);
+            // TWELVE TICKS, NOT THREE AND NOT NINETY, AND THE NUMBER IS THE WHOLE POINT.
+            //
+            // Three was chosen to avoid the two-minute timeout ninety ticks caused, and it is not enough: JavaFX
+            // decodes an Image IN THE BACKGROUND unless told otherwise, so at three ticks the background may not be
+            // decoded yet and the snapshot catches a BLACK FRAME WITH A TEXT BOX ON IT. That is not a slow tool, it
+            // is a tool that cannot tell "this story's art is missing" from "this story's art had not finished
+            // decoding" - and it reported the first when the second was true. MEASURED on 2026-10-13: the frame for
+            // `the-exchange` was byte-identical (78b77081e832) before and after the story's background became
+            // resolvable, which is how it was caught.
+            for (int i = 0; i < 12; i++) ui.tick(1.0 / 60);
             WritableImage img = scene.snapshot(null);
             try {
                 int w = (int) img.getWidth(), h = (int) img.getHeight();
