@@ -85,6 +85,22 @@ for f in "$HERE"/src/main/java/aside/games/fnaf/engine/*.java; do
   fi
 done
 
+# AND THE OTHER DIRECTION, WHICH THIS COULD NOT SEE: A FILE ADDED ON THE STANDALONE SIDE.
+#
+# The loop above iterates THIS repository's engine files, so a new one in the release repository was invisible -
+# and "make sure they both match" has to mean both directions, or the check reports agreement by looking at half
+# the evidence. MEASURED on 2026-10-13: both directories hold the same five files, so this is a guard against a
+# future drift rather than a fault found now - which is the honest way to add it, and the reason it is written down
+# rather than left as an assumption.
+for f in "$THEIRS"/src/main/java/fnaf/engine/*.java; do
+  [ -f "$f" ] || continue
+  name=$(basename "$f")
+  if [ ! -f "$HERE/src/main/java/aside/games/fnaf/engine/$name" ]; then
+    printf '  %-22s ONLY THERE (in the standalone, not here)\n' "$name"
+    differ=$((differ + 1)); differing+=("$name (standalone only)")
+  fi
+done
+
 echo
 
 # THE SCREENS, BY MARKER. Present in both, or absent in both. See the note at the top for why this is markers

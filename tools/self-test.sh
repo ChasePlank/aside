@@ -58,6 +58,7 @@ cleanup() {
   restore_tut 2>/dev/null || true
   restore_frame 2>/dev/null || true
   restore_art 2>/dev/null || true
+  restore_drift 2>/dev/null || true
   for pair in "web/night-shift.html:/tmp/st-web.bak" \
               "web/bearings.html:/tmp/st-br.bak" \
               "${TP:-../tp}/src/main/resources/style.css:/tmp/st-css.bak"; do
@@ -89,6 +90,17 @@ FRAME_FILE=""
 # AND A DIRECTORY, WHICH THE PAIR-LIST ABOVE CANNOT EXPRESS. The check-boot entry below moves art/ aside on purpose -
 # it is the fault that check exists for - so the same backstop applies: a kill between the move and the move back
 # would leave the app with no art in the tree.
+# AND A FILE THAT DID NOT EXIST BEFORE, which no restore-by-pair can put back: the match entry below creates one on
+# the standalone side and deletes it after. A kill in between would leave a stray file in the release repository's
+# tree, which is the same accident the pair restores exist to prevent.
+DRIFT_FILE=""
+restore_drift() {
+  if [ -n "$DRIFT_FILE" ] && [ -f "$DRIFT_FILE" ]; then
+    rm -f "$DRIFT_FILE"
+    DRIFT_FILE=""
+  fi
+}
+
 ART_BAK=""
 restore_art() {
   if [ -n "$ART_BAK" ] && [ -d "$ART_BAK" ] && [ ! -d art ]; then
@@ -438,6 +450,23 @@ PY
     fi
   fi
 done
+
+# ---- check-fnaf-match.sh must notice a file the STANDALONE has and this repository does not ---------------------
+# THE DIRECTION THE TOOL COULD NOT SEE UNTIL 2026-10-13. Its file loop iterates THIS repository's engine files, so a
+# new one in the release repository was invisible - and "make sure they both match" read as agreement while looking
+# at half the evidence. The entry above injects a CONTENT change; this one injects an EXISTENCE change, which is a
+# different fault and needs its own injection.
+if [ -x tools/check-fnaf-match.sh ] && [ -d ../fnaf2/src/main/java/fnaf/engine ]; then
+  DRIFT_FILE="../fnaf2/src/main/java/fnaf/engine/TempDrift.java"
+  printf 'package fnaf.engine;\npublic class TempDrift {}\n' > "$DRIFT_FILE"
+  out=$(timeout 600 tools/check-fnaf-match.sh ../fnaf2 2>&1); rc=$?
+  restore_drift
+  if [ $rc -ne 0 ] && grep -q "ONLY THERE" <<<"$out"; then
+    ok "check-fnaf-match notices a file only the standalone has" "$(echo "$out" | grep 'ONLY THERE' | head -1 | tr -s ' ' | cut -c1-58)"
+  else
+    bad "check-fnaf-match notices a file only the standalone has" "exit $rc, and no ONLY THERE line"
+  fi
+fi
 
 # ---- and the two sweeps, on synthetic input, because their subjects are reports and trees ----------------------
 if [ -x tools/find-silent-suites.sh ]; then
