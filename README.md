@@ -367,6 +367,12 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-stage-door.aside`** — a doorkeeper, a ledger with a line for everybody who comes in, and the last
+  night of a run. A woman arrives who is not on the list: the second cover eleven years ago, in this building, in
+  the other production, who never went on. **The first story here that branches WITHOUT A VARIABLE** — and the
+  reason is worth knowing, because the engine has no author syntax for a conditional jump (`Beat.Kind.IFGOTO`
+  exists and the parser never produces it, so `-> ending [if flag]` is parsed as prose). Its three branches each
+  carry the night to their own ending instead. 12 scenes, 3 endings.
 - **`stories/the-last-crossing.aside`** — a ferryman, a rope ferry, and the last three nights before a bridge
   opens and makes him unnecessary. **The first story here that offers the same decision more than once**: he is
   asked the same question at the same waterline three nights running, and the only thing that changes between
