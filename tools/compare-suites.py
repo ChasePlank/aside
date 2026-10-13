@@ -35,23 +35,30 @@ SUITE = re.compile(r"(Test|Suite)\.java$")
 shared = sorted(f[:-5] for f in os.listdir(E_DIR)
                 if SUITE.search(f) and os.path.exists(os.path.join(R_DIR, f)))
 print(f"suites in both editions: {len(shared)}")
-agree, mismatch, no_numbers = 0, [], []
+by_numbers, by_verdict, mismatch, unnamed = [], [], [], []
 for cls in shared:
     a, arc = run(ENGINE, "out", "aside.games.fruitjump.engine.", cls)
     t, trc = run(RELEASE, "classes", "tropical.engine.", cls)
-    if a is None or t is None:
-        no_numbers.append((cls, a, t, arc, trc))
-        if arc != 0 or trc != 0:
-            print(f"  ({cls}: exit engine {arc}, release {trc})")
-        continue
-    if a == t:
-        agree += 1
+    if a is not None and t is not None:
+        (by_numbers if a == t else mismatch).append((cls, a, t))
     else:
-        mismatch.append((cls, a, t))
-for cls, a, t, arc, trc in no_numbers:
-    print(f"  {cls:<22} NO NUMBERS in one of them (engine says {a}, release {t})")
+        # NEITHER OF THESE IS "THE SAME NUMBERS", AND THEY ARE NOT THE SAME THING AS EACH OTHER:
+        #   * one side reports no numbers at all -> the verdict is all there is to compare, and it IS compared
+        #   * one side reports numbers and the other does not -> the two suites are not telling the same story,
+        #     which is worth naming without calling it a disagreement about behaviour
+        if arc == trc:
+            by_verdict.append((cls, a, t, arc))
+        else:
+            mismatch.append((cls, a, t))
+        if (a is None) != (t is None):
+            unnamed.append(cls)
+for cls, a, t, rc in by_verdict:
+    print(f"  {cls:<22} verdict only (both exit {rc}; numbers: engine {a}, release {t})")
 for cls, a, t in mismatch:
-    print(f"  {cls:<22} DIFFERS: engine {a[0]} passed/{a[1]} failed, release {t[0]} passed/{t[1]} failed")
-print(f"\n=== {agree} suite(s) report the same numbers, {len(mismatch)} do not, "
-      f"{len(no_numbers)} comparable by numbers at all ===")
+    ea = f"engine {a[0]}/{a[1]}" if a else "engine none"
+    ra = f"release {t[0]}/{t[1]}" if t else "release none"
+    print(f"  {cls:<22} DIFFERS: {ea}, {ra}")
+extra = f" of which {len(unnamed)} report numbers on one side only" if unnamed else ""
+print(f"\n=== {len(by_numbers)} agreed on numbers, {len(by_verdict)} agreed on the verdict alone{extra}, "
+      f"{len(mismatch)} disagreeing ===")
 sys.exit(1 if mismatch else 0)
