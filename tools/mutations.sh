@@ -122,6 +122,7 @@ MUTATIONS=(
   "checkpoint: the keys are not carried|\$E/../GameplayScreen.java|c.keys = inv.keys;|c.keys = 0;|aside.engine.SelfTest"
   "levels: a gap wider than the jump|\$E/LevelGen.java|this.maxGapCells = Math.min(4, BASE_MAX_GAP_CELLS + (levelNum - 1) / 5);|this.maxGapCells = Math.min(7, BASE_MAX_GAP_CELLS + (levelNum - 1) / 5);|aside.engine.SelfTest"
   "validator: the bot jumps lower than the player|\$E/LevelValidator.java|static final double JUMP_V = -420;|static final double JUMP_V = -200;|aside.engine.SelfTest"
+  "death: the retry restarts the run|$E/../GameOverScreen.java|ui.replace(new GameplayScreen(ui, Math.max(1, levelReached)));|ui.replace(new GameplayScreen(ui, 1));|aside.ui.GameOverRobotTest"
   "doors: the box is a sprite with no height|\$E/LevelMap.java|d.visibleH = TILE * 2;|d.visibleH = 0;|aside.engine.SelfTest"
   # The boss's OFFENCE, which had no check: what it does when it is hit was covered, what it does to you was not.
   "boss: it never lobs a volley|$E/Boss.java|return phase >= 2 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|return phase >= 99 && rng.nextDouble() < 0.5 ? Attack.VOLLEY : Attack.CHARGE;|aside.engine.SelfTest"
