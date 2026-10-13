@@ -134,6 +134,39 @@ for suite in "${SUITES[@]}"; do
   # The second counted any "N checks" as a failure. It is the same defect the script exists to catch, one level
   # up: a check that reports a problem that is not there, which is why the pattern below was TESTED against ten
   # real summary lines - six passing, four failing - before it was run.
+  # A SUITE THAT DIED IN THE JVM IS NOT A SUITE THAT FAILED A CHECK, and until now this gate could not tell them
+  # apart.
+  #
+  # MEASURED in the sibling release on 2026-10-12: FOUR crashes in one day, in FOUR DIFFERENT JavaFX suites -
+  # CustomizeTest, GameplayRobotTest, TutorialTest, RoomsTest - every crash dump identical: SIGSEGV at the same
+  # `getenv+0x9d` inside libc, on a native thread, 0.3 seconds into startup, while JavaFX's natives load and BEFORE
+  # ANY CHECK RUNS. Each was reported as that suite failing a check, and two of them sent me looking for a flaky
+  # test that did not exist. This repository leaves the same dumps, and it now runs a display-dependent suite of its
+  # own, so it can fail the same way.
+  #
+  # SO: 134 (SIGABRT) and 139 (SIGSEGV) mean the PROCESS died, not that anything was asserted. Retried once, because
+  # a process that died before its checks ran cannot be evidence about the code - and if it dies again the crash is
+  # reproducible and is a failure. The retry is PRINTED: a silent retry is exactly how a real crash gets hidden.
+  if [ $rc -eq 134 ] || [ $rc -eq 139 ]; then
+    printf '  %-12s CRASH  exit %s - the JVM died starting it, before any check ran; retrying once\n' "$name" "$rc"
+    hs=$(ls -t hs_err_pid*.log 2>/dev/null | head -1)
+    [ -n "$hs" ] && printf '  %-12s        crash dump: %s\n' "" "$hs"
+    out=$("$JAVA" --module-path "$FX" \
+          --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
+          -cp "$OUT:src/main/resources" "$suite" 2>&1)
+    rc=$?
+    if [ $rc -eq 134 ] || [ $rc -eq 139 ]; then
+      printf '  %-12s FAIL   exit %s TWICE - the JVM dies starting this suite, reproducibly\n' "$name" "$rc"
+      fail=$((fail + 1)); failed_names+=("$name")
+    else
+      clean=$(echo "$out" | grep -viE '^WARNING|^[[:space:]]+at |Exception in thread|MediaException|^Caused by')
+      last=$(echo "$clean" | grep -E 'passed|failed|CHECK|checks|present|OK|PASS' | tail -1)
+      [ -z "$last" ] && last=$(echo "$clean" | tail -1)
+      printf '  %-12s ok     the retry ran: %s\n' "$name" "$last"
+      pass=$((pass + 1))
+    fi
+    continue
+  fi
   if [ $rc -ne 0 ] || echo "$last" | grep -qE '(^|[^0-9])[1-9][0-9]* failed|CHECK\(S\) FAILED|(^| )FAIL( |$)'; then
     printf '  %-12s FAIL   %s\n' "$name" "$last"
     fail=$((fail + 1)); failed_names+=("$name")
