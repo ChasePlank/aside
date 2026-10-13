@@ -259,6 +259,43 @@ fi
 # red and teach the next reader to ignore it - so it is written here as the open question instead, with the three
 # measurements that say the FIX is right.
 
+# ---- the audit must FAIL on a background nobody drew, not merely print the count ------------------------------
+# THE FAULT IS THE ONE THAT SHIPPED: `the-exchange` asked its scene for a projection booth, the art was in another
+# story's folder, and the frame drew somebody else's office - while the audit said `backgrounds with no image yet: 1`
+# and reported the story CLEAN. The count was printed for weeks and was never part of the verdict.
+#
+# IT FAILED HERE TWICE BEFORE IT PASSED, AND BOTH WERE THE FIX RATHER THAN THE FIXTURE - which is the useful part:
+#   1. the count was wired into the EXIT CODE only, and `tools/audit-stories.sh` judges a story by grepping `^CLEAN`,
+#      so the shell tool still called it clean;
+#   2. the verdict branch sat at the END of the chain, so an UNFINISHED traversal printed `CLEAN SO FAR (traversal
+#      partial...)` over the fault - and the walk is unfinished under load, which is why this reported clean inside
+#      the gate and failed when run by hand, on the same code. A missing background does not depend on the walk.
+# A TEMPORARY DIAGNOSTIC ENTRY (since removed) printed OUT, the injected line count, the direct verdict and the shell
+# tool's line from inside this script, which is how the second one was confirmed rather than guessed.
+if [ -x tools/audit-stories.sh ] && [ -f stories/a440.aside ]; then
+  STORY_BAK=$(mktemp); cp stories/a440.aside "$STORY_BAK"
+  python3 - <<'INJECT'
+p = 'stories/a440.aside'; s = open(p).read()
+old = 'bg workshop_bench'
+assert old in s, 'the background line is not there to add to'
+open(p, 'w').write(s.replace(old, old + '\nbg a_room_nobody_drew', 1))
+INJECT
+  out=$(timeout 600 tools/audit-stories.sh 2>&1); rc=$?
+  restore_story
+  # ASSERT ON WHAT THE TOOL ACTUALLY PRINTS. `audit-stories.sh` reports a failing story as
+  # `=== 1 story(ies) with issues: a440 ===` and does NOT repeat the missing background's name in that line - so a
+  # check grepping for `a_room_nobody_drew` failed while the tool had failed correctly, and the message then said
+  # "reported clean", which was not what happened at all. A MESSAGE THAT NAMES THE WRONG FAULT SENDS THE NEXT
+  # READER TO THE WRONG PLACE, and this one cost an hour.
+  if [ $rc -ne 0 ] && grep -q "with issues" <<<"$out"; then
+    ok "the audit fails on a background nobody drew" "$(echo "$out" | grep 'with issues' | head -1 | tr -s ' ' | cut -c1-56)"
+  elif [ $rc -eq 0 ]; then
+    bad "the audit fails on a background nobody drew" "exit 0 with a scene asking for a room nobody drew"
+  else
+    bad "the audit fails on a background nobody drew" "exit $rc but no 'with issues' line to say which story"
+  fi
+fi
+
 # Seven stories were not audited by anything until this step existed, so the step itself has to be shown to work.
 # The fault is a jump to a scene that does not exist - the plainest thing the auditor is for.
 if [ -x tools/audit-stories.sh ] && [ -f stories/a440.aside ]; then
