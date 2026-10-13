@@ -43,6 +43,31 @@ if [ ! -d "$OUT" ]; then
   exit 2
 fi
 
+# COMPILE FIRST, which this gate did not do until 2026-10-13.
+#
+# IT REQUIRED A PRE-BUILT out/ AND SAID SO - "no build in out - compile first" - which made the verdict a
+# statement about whatever happened to be in that directory. A source file edited and not recompiled was tested IN
+# ITS PREVIOUS FORM, and the gate would report it green. That is the same shape as every guard this project has
+# found that depends on somebody remembering to run it, and it was found on 2026-10-13 in the worst possible way:
+# trying to fault-inject the crash branch below, by adding two suites and running the gate, and reading
+#
+#     aside.ui.CrashOnceTest FAIL   Error: Could not find or load main class aside.ui.CrashOnceTest
+#
+# - the suites had never been compiled, so the injection tested nothing.
+#
+# The sibling release's gate has compiled first for weeks, and its comment gives the reason: a committed jar built
+# from older source is a silent distribution bug. The same is true here, one step earlier - a gate built from older
+# source is a silent verification bug, and worse, because it reports success.
+#
+# A FAILED COMPILE STOPS THE RUN rather than continuing to judge suites built from the last good source: there is
+# nothing to judge, and the errors are printed so the reason is on screen.
+echo "compiling ..."
+"$JAVAC" --module-path "$FX" --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
+    -cp "$OUT" -d "$OUT" $(find src/main/java -name '*.java') 2>&1 | grep "error:" && {
+  echo "  COMPILE FAILED - nothing below would be judging the current source" >&2
+  exit 1
+}
+
 # THE GATES. Curated, because the name does not decide: `DoorStressTest` reports a distribution and never
 # fails, and `SpriteProbe` is an asset tool that says "not a folder: art/raw" and exits 0. A pattern cannot tell
 # those from `WaterProbe`, which exits non-zero when a pool is the wrong shape.
