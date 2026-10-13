@@ -56,6 +56,7 @@ cleanup() {
   restore_story 2>/dev/null || true
   restore_tut 2>/dev/null || true
   restore_frame 2>/dev/null || true
+  restore_art 2>/dev/null || true
   for pair in "web/night-shift.html:/tmp/st-web.bak" \
               "web/bearings.html:/tmp/st-br.bak" \
               "${TP:-../tp}/src/main/resources/style.css:/tmp/st-css.bak"; do
@@ -84,6 +85,16 @@ restore_story() {
 # itself back.
 FRAME_BAK=""
 FRAME_FILE=""
+# AND A DIRECTORY, WHICH THE PAIR-LIST ABOVE CANNOT EXPRESS. The check-boot entry below moves art/ aside on purpose -
+# it is the fault that check exists for - so the same backstop applies: a kill between the move and the move back
+# would leave the app with no art in the tree.
+ART_BAK=""
+restore_art() {
+  if [ -n "$ART_BAK" ] && [ -d "$ART_BAK" ] && [ ! -d art ]; then
+    mv "$ART_BAK" art 2>/dev/null || true
+    ART_BAK=""
+  fi
+}
 restore_frame() {
   if [ -n "$FRAME_BAK" ] && [ -f "$FRAME_BAK" ] && [ -n "$FRAME_FILE" ]; then
     cp "$FRAME_BAK" "$FRAME_FILE" 2>/dev/null || true
@@ -496,6 +507,28 @@ if [ -x tools/check-audio-reproducible.sh ]; then
       ok "check-audio-reproducible notices a changed asset" "$(echo "$out" | grep -iE 'differ|reproduc|FAIL' | head -1 | tr -s ' ' | cut -c1-70)"
     else
       bad "check-audio-reproducible notices a changed asset" "exit 0 with an asset byte changed"
+    fi
+  fi
+fi
+
+# ---- check-boot.sh must notice the app losing its art ----------------------------------------------------------
+# THE FAULT IS THE ONE THE CHECK WAS WRITTEN FOR, and it was measured before the entry existed: with art/ in place
+# the app reports "[assets] loaded 12 backgrounds, 17 sprites" and draws a 434017-byte frame; with it missing it
+# reports "[assets] no background folder at ./art/backgrounds" and STILL DRAWS - 78145 bytes, 1245 colours - and
+# exits 0. So a boot check that judged the frame alone calls a missing asset folder a pass, which is exactly what
+# the first version of this tool did.
+if [ -x tools/check-boot.sh ]; then
+  ART_BAK=$(mktemp -d)
+  mv art "$ART_BAK/art" 2>/dev/null && ART_BAK="$ART_BAK/art"
+  if [ ! -d "$ART_BAK" ]; then
+    bad "check-boot.sh notices the app losing its art" "the injection did not move art/ - nothing was tested"
+  else
+    out=$(timeout 300 tools/check-boot.sh 2>&1); rc=$?
+    restore_art
+    if [ $rc -ne 0 ] && grep -q "could not find its art" <<<"$out"; then
+      ok "check-boot.sh notices the app losing its art" "$(echo "$out" | grep -m1 'no background folder' | tr -s ' ' | cut -c1-60)"
+    else
+      bad "check-boot.sh notices the app losing its art" "exit $rc with the art folder missing"
     fi
   fi
 fi

@@ -237,6 +237,21 @@ if [ -x tools/check-fnaf-match.sh ]; then
   fi
 fi
 
+# AND THE APP ITSELF, WHICH NOTHING HERE STARTED. Every suite builds its own screen, the frames come from
+# CheckGames (a tools class) and the phone builds are separate files - so `aside.ui.Main`, the class a person
+# actually starts, was named in this repository only as a STRING in make-jar.sh. It boots the app's own path:
+# root resolution, Assets.load, Audio.load, the UiManager, ninety ticks, and a composited frame.
+if [ -x tools/check-boot.sh ]; then
+  boot_out=$(tools/check-boot.sh 2>&1); boot_rc=$?
+  if [ $boot_rc -eq 0 ]; then
+    echo "  $(echo "$boot_out" | grep -E 'booted:' | tail -1)"
+  else
+    echo "  app-boot             FAIL   the app does not start, or starts without its art"
+    echo "$boot_out" | sed 's/^/    /' | head -5
+    fail=$((fail + 1)); failed_names+=("app-boot")
+  fi
+fi
+
 # THE SCREENS. Every game has a suite and none of them opens a screen - a game can pass every check it has and
 # still show a blank window on start. This opens all of them and measures what they drew. Needs a display, which
 # this script already guarantees.
