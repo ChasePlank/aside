@@ -219,6 +219,21 @@ if [ -x tools/check-sheets.sh ]; then
   fi
 fi
 
+# THE NUMBER CLAIM. The README says the two editions of the platformer are "aligned by their self-tests reporting
+# the same numbers rather than by diffing text", and nothing had ever compared them: the match tool reports five
+# files differing by text and says so, and a difference in text is not a difference in behaviour. This runs every
+# suite both editions share and compares what each one says about itself. MEASURED on 2026-10-13: 15 of 19 report
+# the same numbers, 0 disagree, and 4 report no numbers to compare - which the tool names rather than counts as
+# agreement.
+if [ -x tools/compare-suites.py ]; then
+  nums_out=$(timeout 600 python3 tools/compare-suites.py 2>&1); nums_rc=$?
+  echo "  $(echo "$nums_out" | grep -E '^=== ' | tail -1)"
+  if [ $nums_rc -ne 0 ]; then
+    echo "$nums_out" | grep -E 'DIFFERS|NO NUMBERS' | sed 's/^/    /'
+    fail=$((fail + 1)); failed_names+=("suite-numbers")
+  fi
+fi
+
 # THE FNAF MATCH. This repository and ChasePlank/fnaf are meant to be the same game, and the README says they
 # are aligned "by their self-tests reporting the same numbers rather than by diffing text" - which is the right
 # criterion for behaviour and not something anyone can run in a second. This is the cheap exact first pass. It

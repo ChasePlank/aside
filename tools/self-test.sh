@@ -486,6 +486,31 @@ if [ -x tools/check-platformer-match.sh ] && [ -d ../tp/src/main/java/tropical/e
   fi
 fi
 
+# ---- compare-suites.py must notice two editions whose suites report different numbers -------------------------
+# THE FAULT IS THE ONE THE TOOL EXISTS FOR: the README claims the editions agree by their numbers, and the tool that
+# checks it has to notice when they do not. Stub editions, so the injection does not touch either real repository:
+# two tiny suites with the same name and different counts.
+if [ -x tools/compare-suites.py ]; then
+  STUB=$(mktemp -d)
+  for side in engine release n; do :; done
+  mkdir -p "$STUB/engine/src/main/java/aside/games/fruitjump/engine" "$STUB/release/src/main/java/tropical/engine" \
+           "$STUB/engine/out" "$STUB/release/classes"
+  printf 'package aside.games.fruitjump.engine;\npublic class DemoTest { public static void main(String[] a) { System.out.println("=== 3 passed, 0 failed ==="); } }\n' > "$STUB/engine/src/main/java/aside/games/fruitjump/engine/DemoTest.java"
+  printf 'package tropical.engine;\npublic class DemoTest { public static void main(String[] a) { System.out.println("=== 4 passed, 0 failed ==="); } }\n' > "$STUB/release/src/main/java/tropical/engine/DemoTest.java"
+  # THE TOOLCHAIN IS SOURCED IN A SUBSHELL, because this script does not source find-java.sh itself - its other
+  # entries call tools that do. The first version used $JAVAC directly and died on `JAVAC: unbound variable`, which
+  # under `set -u` is not a warning: the whole self-test stopped there and printed no summary at all.
+  ( . tools/find-java.sh && "$JAVAC" -d "$STUB/engine/out" "$STUB/engine/src/main/java/aside/games/fruitjump/engine/DemoTest.java" ) 2>/dev/null
+  ( . tools/find-java.sh && "$JAVAC" -d "$STUB/release/classes" "$STUB/release/src/main/java/tropical/engine/DemoTest.java" ) 2>/dev/null
+  out=$(timeout 300 python3 tools/compare-suites.py "$STUB/engine" "$STUB/release" 2>&1); rc=$?
+  rm -rf "$STUB"
+  if [ $rc -ne 0 ] && grep -q "DIFFERS" <<<"$out"; then
+    ok "compare-suites notices two editions that disagree" "$(echo "$out" | grep 'DIFFERS' | head -1 | tr -s ' ' | cut -c1-58)"
+  else
+    bad "compare-suites notices two editions that disagree" "exit $rc, and no DIFFERS line"
+  fi
+fi
+
 # ---- and the two sweeps, on synthetic input, because their subjects are reports and trees ----------------------
 if [ -x tools/find-silent-suites.sh ]; then
   printf '  something ok     === 0 passed, 0 failed ===\n  other ok         === 7 passed, 0 failed ===\n' > /tmp/silent-probe.txt
