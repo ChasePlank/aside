@@ -1,0 +1,116 @@
+# The Round - a night cleaner, fourteen rooms, and one that is always already clean.
+# Written for the library. One person, one procedure, and the list that has to agree with the building.
+
+title: The Round
+start: start
+
+== start ==
+bg east_hall
+music room_tone
+The round is fourteen rooms and it takes four hours, and you have done it in the
+same order for six years: the two floors, the washrooms, the stairs, the
+kitchens, and the cupboard at the end where the trolley lives.
+The list is on card in the cupboard, in your own handwriting, because the
+building changed hands twice and nobody ever printed a new one.
+Fourteen lines. You do them in order. That is the whole job.
+-> the_first_floor
+
+== the_first_floor ==
+The first floor is offices: nine of them, all the same shape, all with a bin and
+a desk and a window that looks at the car park.
+Seven are used. Two are not, and have not been for as long as you have worked
+here, and you do them anyway, because they are on the list.
+Tonight the eighth office is empty in a way the others are not: cleared. Desk,
+chair, the little shelf, the picture hook, all of it gone, and the carpet has
+four pale rectangles where the desk legs stood.
+* Do it anyway. It is on the list. -> do_it
+* Look in the other unused office. -> the_ninth
+* Ask the security desk in the morning. -> morning
+
+== the_ninth ==
+The ninth office was cleared years ago and you have cleaned it every night of
+those years. There is nothing in it. There is a radiator, and a window, and a
+smell of dust that you have decided is the building rather than the room.
+You stand in it for a minute with the trolley in the doorway, which is a
+minute nobody is paying you for.
+* Do the eighth anyway. -> do_it
+* Leave the eighth and come back to it at the end. -> come_back
+
+== do_it ==
+You do it. Bin, desk gone, so just the carpet, and you vacuum the four pale
+rectangles because the machine does not know the difference between a clear
+floor and a furnished one.
+The eighth office is on the list. It is not your job to decide whether a room
+should be there. It is your job to leave it the way the list says a room is.
+-> the_washrooms
+
+== come_back ==
+You do the round in order and you leave the eighth for last, which is against
+the order and which you have not done in six years.
+You come back at half past four with the trolley and the light off, and the
+eighth office is clean. Vacuumed, in four pale rectangles, and the bin emptied,
+and the window, and everything the way you do it, and you have not been in it.
+-> ending_someone
+
+== morning ==
+In the morning you stand at the security desk with your card and you ask about
+the eighth office, and the man on the desk looks at the book, because that is
+what the desk has: a book.
+security: Eight was vacated on the fourteenth. Contractors took the furniture
+out in the afternoon. Nobody's been up since.
+you: I cleaned it last night.
+security: You clean everything.
+you: I know.
+* Do it anyway, tonight, and keep doing it. -> do_it
+* Take the line off the card. -> take_it_off
+* Leave the line on the card and stop going in. -> ending_quiet
+
+== the_washrooms ==
+The washrooms are the washrooms: eight sinks, four cubicles a side, and the
+floor that needs doing properly because it is the only floor anybody notices.
+Then the stairs, then the kitchens, and the kitchens are the good part because
+of the windows and the quiet, and then the cupboard, where the trolley goes and
+where the card is.
+You tick nothing, because you have never ticked anything. You look at the card
+the way you look at it every night, and tonight you count the lines.
+Fourteen, and always fourteen.
+-> ending_counted
+
+== take_it_off ==
+You take the pen off the trolley and you draw a line through the eighth office,
+and it takes a second, and then the card says thirteen and looks wrong, and the
+building does not feel any different at all.
+You do the thirteenth room and you put the pen back in the cup and you go home
+in the dark, and that is that, and it is the right thing, and you know it is.
+It is on the list tomorrow because you have not got round to writing out a
+clean card. It is on the list next week too. The pen stays in the cup.
+-> END
+
+== ending_counted ==
+Fourteen, and always fourteen, and there are nine offices, and two of them have
+not been used since before the building changed hands twice, and one of them was
+cleared on the fourteenth by contractors who have been up once.
+You do the washrooms. You do the stairs. You do the kitchens, and you stand at
+the kitchen window for longer than the job needs, because it is the good part
+and nobody is counting.
+-> END
+
+== ending_quiet ==
+You keep the line on the card and you stop opening the door. The trolley goes
+past it four times a night and the carpet inside gets whatever the corridor
+gets, which is nothing, because the corridor gets done by you.
+In November somebody puts a sign on the eighth door, and in January the corridor
+outside it is part of the round by everybody's account, and you have never once
+said anything about any of it, which is the whole of the arrangement you have
+with this building.
+-> END
+
+== ending_someone ==
+You leave it clean and you do not write anything down, and for six weeks the
+eighth office is on the list and clean by the time you get to it, and after six
+weeks it is not, and you go back to doing it, and you are old enough to know
+that both of those mean the same thing.
+The list stays at fourteen. You have never been asked about it. You put the
+trolley away at five past five and you say goodnight to the building, which is
+something you started doing years ago and could not tell you when.
+-> END

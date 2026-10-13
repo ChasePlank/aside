@@ -104,9 +104,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Nineteen stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door` and `the-canteen`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen` and `the-round`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene and
   ending counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -367,6 +367,11 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-round.aside`** — a night cleaner, a card in a cupboard with fourteen rooms on it in their own
+  handwriting, and one office that has been cleared, so the list and the building no longer agree. **The list is the
+  only thing that says what the job is**, and its four endings are what a person does about that: tick it anyway,
+  cross it out, keep it and stop opening the door, or come back at half past four and find it already done.
+  11 scenes, 4 endings.
 - **`stories/the-canteen.aside`** — a cook, a works canteen, and a strip of card on the board that says `for R. no onion.`
   A standing order nobody has collected since the summer, and nineteen years of one small pie. **The story is about
   whether to keep a habit that has outlived its reason**, and its four endings are that question answered four ways -
