@@ -14,7 +14,26 @@ list, and the shared ones are the question.
 """
 import os, re, subprocess, sys
 
-JAVA = os.environ.get("JAVA", "/root/jdk-27+35/bin/java")
+# THE TOOLCHAIN IS A LOOKUP, NOT A DEFAULT.
+#
+# This was `os.environ.get("JAVA", "/root/jdk-27+35/bin/java")` with the module path hardcoded to
+# `/root/javafx-sdk-27/lib`. Neither path exists on the sandbox this runs on, so the tool died in
+# subprocess.run with a traceback, printed no DIFFERS line, and its own self-test failed -- which is how this was
+# found. It is the family this repository closed on 2026-10-07: a default that is a GUESS standing where a LOOKUP
+# belongs, and tools/find-java.sh is the one place that looks. A tool written after the closure reintroduced it.
+def _toolchain():
+    here = os.path.dirname(os.path.abspath(__file__))
+    try:
+        r = subprocess.run(["bash", "-c", '. tools/find-java.sh >/dev/null 2>&1; printf "%s\n%s" "$JAVA" "$FX"'],
+                           cwd=os.path.dirname(here), capture_output=True, text=True, timeout=120)
+        lines = r.stdout.splitlines()
+        if len(lines) >= 2 and lines[0] and lines[1]:
+            return lines[0], lines[1]
+    except Exception:
+        pass
+    return os.environ.get("JAVA", "java"), os.environ.get("FX", "")
+
+JAVA, FX = _toolchain()
 ENGINE = sys.argv[1] if len(sys.argv) > 1 else "/root/workspace/aside"
 RELEASE = sys.argv[2] if len(sys.argv) > 2 else "/root/workspace/tp"
 E_DIR = os.path.join(ENGINE, "src/main/java/aside/games/fruitjump/engine")
@@ -23,7 +42,7 @@ NUMS = re.compile(r"(\d+)\s+(?:passed|checks?)\D+(\d+)\s+failed", re.I)
 
 def run(repo, out, package, cls):
     cp = os.pathsep.join([out, os.path.join(repo, "src/main/resources")])
-    cmd = [JAVA, "--module-path", "/root/javafx-sdk-27/lib",
+    cmd = [JAVA, "--module-path", FX,
            "--add-modules", "javafx.controls,javafx.graphics,javafx.media,javafx.swing",
            "-cp", cp, package + cls]
     env = dict(os.environ, DISPLAY=os.environ.get("DISPLAY", ":99"))
