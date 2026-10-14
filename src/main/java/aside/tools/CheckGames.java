@@ -84,6 +84,20 @@ public class CheckGames extends Application {
         var wait = new javafx.animation.PauseTransition(javafx.util.Duration.millis(450));
         wait.setOnFinished(e -> {
             try {
+                // A CAPTURE RUN MUST NOT INHERIT A SAVE - AND MUST NOT LEAVE ONE EITHER.
+                //
+                // The platformer's menu adds a "Continue" item whenever its autosave exists, so its frame is a
+                // function of whether ANYBODY has played the game - including THIS tool, which plays every game it
+                // opens. `check-sheets.sh` moves the file aside before the run and its own run then CREATES one, so
+                // the frame a later comparison sees differs from the committed one: MEASURED 8653 pixels, and the
+                // tool's own comment records two agents spending an hour flipping that frame back and forth and
+                // blaming the machine. It was a save file.
+                //
+                // CLEARED ONLY UNDER -Dshotdir, which every capture path sets and the game itself never does, so a
+                // person's real save is not touched by a test run.
+                if (System.getProperty("shotdir") != null) {
+                    new java.io.File(System.getProperty("user.home"), ".tropical-punch-autosave.txt").delete();
+                }
                 current = g.create(ui);
                 ui.push(current);
                 current.enter();
