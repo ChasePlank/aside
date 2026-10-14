@@ -49,8 +49,13 @@ cut -f1 "$TMP/all.tsv" | sort | uniq -c | awk '{print $1"\t"substr($0, index($0,
   [ "$n" -eq "$TOTAL" ] && continue      # every sibling has it: fine
   mods=$(awk -F'\t' -v n="$name" -v g="^$GROUP" '$1==n && $2 ~ g {printf "%s ", $2}' "$TMP/all.tsv")
   printf '%-4s %-58s %s\n' "$n/$TOTAL" "${name:0:58}" "$mods"
-done | sort -t/ -k1 -n
+done | sort -t/ -k1 -n | tee "$TMP/partial.txt"
 
+echo
+# A SUMMARY LINE, because this tool was run by nothing for a week and a report nobody reads is a report that
+# might as well not be produced. The gate prints this line every run; the table above is for a person.
+n=$(wc -l < "$TMP/partial.txt" | tr -d ' ')
+echo "=== $n check(s) appear in some siblings and not others ==="
 echo
 echo "A PARTIAL count is the useful signal: some siblings hold this check and others do not. It is still a"
 echo "QUESTION - the check may genuinely only apply to some games - so read both before copying anything."

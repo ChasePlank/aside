@@ -566,6 +566,34 @@ if [ -x tools/compare-suites.py ]; then
   fi
 fi
 
+# ---- compare-suites.sh must notice a check that only one sibling has -------------------------------------------
+# THE FAULT IS THE ONE IT WAS WRITTEN FOR, from its own header: "fnaf7 and fnaf8 both protect NIGHTS = 5 and fnaf2
+# did not - the same structure, the same nightRow/nightAt pair, the same comment, and the check had simply never
+# been copied across." That is invisible to a sweep that looks at one module at a time.
+# AND THE TOOL WAS RUN BY NOTHING FOR A WEEK, which is why there is a gate line as well as this entry: a report
+# nobody runs is a report nobody reads, and the fnaf2 gap was found by a sweep done BY HAND.
+if [ -x tools/compare-suites.sh ]; then
+  PROBE=$(find src/main/java -name SelfTest.java | grep fnaf | head -1)
+  if [ -n "$PROBE" ]; then
+    cov_before=$(timeout 300 bash tools/compare-suites.sh 2>&1 | grep -oE '^=== [0-9]+' | grep -oE '[0-9]+')
+    cp "$PROBE" "$A/probe.bak"
+    python3 - "$PROBE" <<'COV'
+import io, sys
+p = sys.argv[1]; s = io.open(p, encoding="utf-8").read()
+i = s.rindex("}")
+s = s[:i] + '    static void probeForTheCoverageTool() { check("a uniquely named probe check for the coverage tool", true); }\n' + s[i:]
+io.open(p, "w", encoding="utf-8").write(s)
+COV
+    cov_after=$(timeout 300 bash tools/compare-suites.sh 2>&1 | grep -oE '^=== [0-9]+' | grep -oE '[0-9]+')
+    cp "$A/probe.bak" "$PROBE"
+    if [ -n "$cov_before" ] && [ -n "$cov_after" ] && [ "$cov_after" -gt "$cov_before" ]; then
+      ok "compare-suites notices a check only one sibling has" "$cov_before -> $cov_after with a probe added"
+    else
+      bad "compare-suites notices a check only one sibling has" "before=$cov_before after=$cov_after"
+    fi
+  fi
+fi
+
 # ---- check-web-builds.sh must notice a build that is not what its generator produces ---------------------------
 # THE FAULT IS THE ONE IT EXISTS FOR: a `web/<game>.html` that no longer matches its `Web<Game>` generator - which
 # would ship a stale page with nothing saying so, because the README's claim about regenerating every build was

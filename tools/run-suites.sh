@@ -252,6 +252,17 @@ if [ -x tools/check-fnaf-match.sh ]; then
   fi
 fi
 
+# AND A REPORT THAT NOTHING RAN FOR A WEEK. `compare-suites.sh` answers "which checks exist in one game's suite
+# and not in its siblings'", and its own header records the day it found a real gap: fnaf7 and fnaf8 both protected
+# NIGHTS = 5 and fnaf2 did not, same structure, same comment, check simply never copied across. Nothing called it,
+# so that report would never have been seen again. IT IS INFORMATION, NOT A VERDICT - the tool's own closing note
+# says a partial count is a QUESTION, and that two suites can agree on output while verifying different things - so
+# the gate prints the count and leaves the table to a person.
+if [ -x tools/compare-suites.sh ]; then
+  cov_out=$(timeout 300 bash tools/compare-suites.sh 2>&1)
+  echo "  $(echo "$cov_out" | grep -E '^=== ' | tail -1)"
+fi
+
 # AND THE GAME PHONE BUILDS, WHICH NOTHING REGENERATED. The README says "the suite regenerates each build and
 # compares it to the checked-in copy, so a stale build fails rather than shipping" - TRUE for the story builds and
 # FALSE for the eighteen built by `Web<Game>` classes, which no check and no mutation touched. MEASURED on
