@@ -450,12 +450,19 @@ PY
   # thirteen, "Fourteen" when there were sixteen - and neither was caught by anything.
   cp README.md "$README_BAK"
   python3 - <<'PY'
-import pathlib, re
+import pathlib, re, sys
 p = pathlib.Path('README.md'); s = p.read_text()
-m = re.search(r'\*\*([A-Za-z]+) stories\*\*', s)
-words = "Sixteen Fifteen Fourteen Thirteen Twelve".split()
-nxt = words[words.index(m.group(1)) + 1] if m.group(1) in words[:-1] else "Eleven"
-p.write_text(s.replace(m.group(0), "**%s stories**" % nxt, 1))
+# NINETY-NINE, WHICH CANNOT BE RIGHT while the library is short of ninety-nine stories, AND AN ASSERT SO THAT A
+# FUTURE FAILURE TO INJECT IS LOUD. This replaced a version that walked a hand-written list of words and took the
+# NEXT one: the list stopped at Twelve/Sixteen and its regex accepted only one word, so when the README began
+# saying "Twenty-one" the search returned None, the script died at m.group(1), the README was never modified - and
+# the entry then reported "exit 0, and nothing about the total", WHICH READS LIKE THE CHECKER FAILING WHEN ACTUALLY
+# THE INJECTION HAD STOPPED INJECTING. A fault injection that silently becomes a no-op is worse than none, because
+# the entry passes for the wrong reason and nobody looks at it again.
+m = re.search(r'\*\*([A-Za-z]+(?:-[A-Za-z]+)?) stories\*\*', s)
+if not m:
+    sys.exit("the injection could not find the total line to break")
+p.write_text(s.replace(m.group(0), "**Ninety-nine stories**", 1))
 PY
   tout=$(timeout 600 tools/check-readme-stories.py 2>&1); trc=$?
   cp "$README_BAK" README.md
