@@ -177,6 +177,14 @@ open(p, "w").write(s.replace(f, t, 1))
     continue
   fi
   OUT=$("$JAVA" -cp "classes:$CP" "$SUITE" 2>&1 | tail -1)
+
+  # RESTORE THE MOMENT THE SUITE RETURNS, not at the end of the file. MEASURED 2026-10-14: a full
+  # sweep of `drift` left SIX MUTATED STRING CONSTANTS in Drift.java (`WORDMARK = "X"` among them) -
+  # exactly the mutations whose suite CRASHED, because everything between the suite run and the restore
+  # at the bottom of this file is a chance for the run to end first: a crash, a kill, a pipe closing.
+  # A restore that is 47 lines away from the mutation is a restore that can be missed, and a mutation
+  # left in the tree is a mutation that can be COMMITTED.
+  cp "$BAK" "$FILE"
   # Two verdict formats in this repository: the engine and FNAF suites end with
   # "N passed, M failed", and the verb suites end with "N/M checks passed". The
   # first version of this test only knew the first, so every verb suite read as
