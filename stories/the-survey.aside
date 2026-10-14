@@ -1,0 +1,128 @@
+# The Survey - the other side of The Canteen: the lad who ate the pie, and the summer he stopped.
+# Written for the library. The first story here that pairs with another, and the first whose subject is a kindness
+# he did not acknowledge at the time.
+
+title: The Survey
+start: start
+
+== start ==
+bg east_corner
+music room_tone
+You are eighteen and you have a clipboard and a hi-vis that is too big, and the
+job is a survey: levels, levels, levels, all summer, four sites.
+Your father got you the work. He is the inspector, which means he walks through
+buildings with a different clipboard and says no to things, and on site nobody
+talks to you unless the talking is about the levels.
+-> the_site
+
+== the_site ==
+bg dining
+The canteen is the only place on the site where you are not a clipboard. It
+serves eleven to two, it has a woman on the till who never asks your name, and on
+Wednesdays there is pie.
+You go in at ten past two because that is when the queue has gone and the food
+is still out and you can sit at the end table under the clock with your back to
+the room.
+The first Wednesday you ask for the pie and the woman says, before you have
+finished the sentence: no onion. You do not tell her that you hate onion. You
+just eat it.
+-> the_wednesdays
+
+== the_wednesdays ==
+It becomes a thing that happens. Wednesday, ten past two, the end table, the
+small pie with no onion in it, and eleven minutes, which is how long you take.
+You do not know her name and she does not know yours. You never ask for the no
+onion again and she never asks you about it. It is the only hour of the week you
+are not being looked at.
+-> the_end_of_the_summer
+
+== the_end_of_the_summer ==
+bg east_corner
+The survey finishes in August. You hand in the clipboard, you are paid for
+eleven weeks, and the Tuesday after that you go back to college and stop going
+past the site, because there is no reason to and it is four miles out of the way.
+In October your father says the site is moving in the spring, in the way he says
+things about buildings: as a fact about the building and not about anybody.
+* Say something about the canteen. -> say_something
+* Say nothing, and put the site out of your head. -> say_nothing
+* Go back on a Wednesday, on the bus, without telling anyone. -> go_back
+
+== say_something ==
+you: There's a woman in the canteen. She used to do me a pie with no onion in it.
+father: What?
+you: Nothing. She did me a pie.
+He looks at you the way he looks at a level that does not match the drawing, and
+then he says the fact about the moving again, in almost the same words, because
+that is how he deals with things that are not about buildings.
+-> the_bus
+
+== say_nothing ==
+You say nothing. There is nothing to say: a woman made you a pie for eleven weeks
+because you asked for one the first time and she remembered, and that is not a
+story, that is a canteen.
+-> the_bus
+
+== go_back ==
+bg dining
+You go back on a Wednesday in November and it takes an hour and a bus change and
+you get there at ten past two, which is the exact minute, because of course it
+is.
+The canteen looks the same. The end table is there. Under the clock. You stand in
+the doorway with your hands out of your pockets and the woman on the till looks
+up and says:
+woman: No onion?
+And you have not been in this building for three months and she has a queue of
+two behind you, and she remembers, and you realise you have been carrying
+something for eleven weeks that you did not know you were carrying.
+* Say yes and sit down. -> sit_down
+* Say that you are not staying, and thank her properly anyway. -> thank_her
+* Say nothing, and go. -> leave_quiet
+
+== the_bus ==
+The bus is forty minutes and you sit at the top of it with your coat on your
+knees, and somewhere over the ring road you think about the eleven weeks and
+about how many Wednesdays that actually is, which is eleven, and about the fact
+that you never once said thank you in a way that was about anything.
+You are eighteen. You have your whole life, and one pie, and no idea yet that
+the second one is the one you will keep.
+-> ending_quiet
+
+== sit_down ==
+You sit at the end table under the clock. She brings the small pie over herself,
+which she does not have to do, and puts it down and does not stay, and you eat it
+in eleven minutes because that is how long you take.
+When you go up to pay she has already put it through and she will not take the
+money, and you say thank you in the doorway like a person and not like a
+clipboard, and the bell does what bells do.
+-> END
+
+== thank_her ==
+You say you are not staying and that you came out on the bus to say thank you,
+which you have owed her for eleven weeks, and that you did not know it was owed
+until you were standing in the doorway.
+She looks at you for a moment. Then she says the thing that ends it:
+woman: It's what the card says. It was up before you came in.
+-> ending_on_the_card
+
+== leave_quiet ==
+You say nothing. You let the door shut behind you and you walk to the stop and
+you are on the bus home by four, and that is the last you see of her, and there
+is a version of this where that is a shame and there is the version where it is
+simply what eighteen is.
+-> ending_quiet
+
+== ending_on_the_card ==
+There was a strip of card on the board, in the same marker as the day's menu, and
+it said *for R. no onion* in somebody's writing, and it had been up since the
+summer.
+You do not find out that she kept making it every Wednesday after you stopped
+coming. You find that out a long time later, from nobody in particular, the way
+you find out about things that happened in a room you were in.
+-> END
+
+== ending_quiet ==
+You are twenty-six before you tell anybody about the eleven weeks, and when you
+tell it the person says it is a nice story about a canteen, which is what it is.
+You have a job now. You still do not like onion. You have never once had a pie
+with onion in it and you have never asked anybody why that is.
+-> END

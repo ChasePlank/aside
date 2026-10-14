@@ -104,9 +104,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty-two stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty-three stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser` and `the-pledge`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge` and `the-survey`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene and
   ending counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -367,6 +367,11 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-survey.aside`** — **the first story here that pairs with another**: it is the other side of The
+  Canteen. An eighteen-year-old with a clipboard, a summer of levels, and the only hour of the week he is not being
+  looked at — ten past two, the end table under the clock, a small pie with no onion in it, eleven minutes. Three
+  endings, turning on whether he says anything about a kindness he was not asked for and never acknowledged.
+  13 scenes, 3 endings.
 - **`stories/the-pledge.aside`** — a pawnbroker, a christening mug pledged for less than it is worth, and an
   engraving that names somebody who is **not on the ticket**. Three hundred and sixty days is the whole of the trade
   and it fits on the ticket; the question underneath is what a person does with a thing they have noticed about a
