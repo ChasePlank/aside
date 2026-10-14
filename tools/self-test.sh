@@ -719,6 +719,16 @@ FWJ
   fi
 fi
 
+# MEASURED 2026-10-14: THIS ENTRY IS 996 SECONDS, OVER HALF OF THIS SUITE.
+#
+# Timed line by line, the whole suite takes 1928s (~32 min) and this one block is 996s of it -- 16.6 minutes. The
+# next largest gap is 334s. The cost is inherent to check-sheets.sh, which runs EVERY GAME TWICE to separate the
+# clock-seeded frames from the comparable ones, so a narrower comparison would not help.
+#
+# It matters because the gate runs check-sheets.sh as its own check AND again inside this entry, so roughly half an
+# hour of every gate run is this one tool used twice. The gate is now over 55 minutes and cannot finish in an hour.
+#
+# Written here rather than in a commit message because this is where the next person will be looking.
 # ---- check-sheets.sh must notice a committed frame that the game no longer draws --------------------------------
 #
 # THE FAULT IS THE ONE THAT HAS ACTUALLY HAPPENED, twice: a game changed, the frames under docs/frames/ were not
