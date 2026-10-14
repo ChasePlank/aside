@@ -47,19 +47,24 @@ public class SelfTest {
      * The shelf is one file a phone downloads, and it grows by accident rather than by decision - so this is the
      * bound that makes growth a decision.
      *
-     * <p><b>RAISED TO 12288 ON 2026-10-13 AND PUT BACK TO 10240 THE SAME DAY, WHICH IS THE USEFUL PART.</b> Five
-     * stories became reachable in the library and the shelf went to 10615 KB against 10240, so I raised the bound
-     * and wrote that the real fix was deduplicating the shared backgrounds. THE REAL CAUSE WAS NOT SHARED ART: the
-     * shelf was carrying SIX BUILDS TWICE - the six stories that had just gained game modules were also still
-     * listed by hand in `PhoneShelf.STORIES`, so each was in the file as one build from `Games.all()` and another
-     * from that list. MEASURED: 10870573 bytes with 1707028 of them exact repeats, and after moving the authored
-     * blurbs and notes into the modules and trimming STORIES to the one build with no module, 9162113 bytes -
-     * 8947 KB, comfortably under the ORIGINAL bound.
+     * <p><b>RAISED TO 12288, PUT BACK TO 10240, AND THEN THE SHELF CAME DOWN ANYWAY - WHICH IS THE WHOLE STORY.</b>
+     * Five stories became reachable and the shelf went to 10615 KB against 10240, so I raised the bound and wrote
+     * that the real fix was deduplicating the shared backgrounds. The real cause was SIX BUILDS LISTED TWICE - 1.7 MB
+     * of exact duplication - so the ceiling went back and the duplication went away. Then it became BINDING AGAIN at
+     * twenty stories (9616 KB), with every new story needing a second room it could not have.
      *
-     * <p>So the ceiling is back where it was, and the lesson is in the entry above: I raised a bound to accommodate
-     * a number whose cause I had not measured.
+     * <p>AND THE FIX WAS NEITHER OF THE THINGS I HAD WRITTEN DOWN. `tools/vn-art.py`, the whole-library web-art
+     * generator, HAD NEVER BEEN RUN FOR THE EIGHT NEWEST STORIES, so their browser builds inlined full-size desktop
+     * art - The Harbour's build was 670 KB, The Canteen's 363, The Bothy's 353. It writes downscaled copies at a
+     * fixed target size, and rebuilding those five builds took the shelf from 9847146 bytes to 8128183, which is
+     * 7937 KB with 2.3 MB of headroom.
+     *
+     * <p>THE LESSON IS ABOUT WHERE I LOOK FOR SAVINGS: twice I wrote down a plan - dedup the shared backgrounds,
+     * then a coupled fix that would make it bigger - and twice the answer was A GENERATOR THAT HAD NOT BEEN RUN for
+     * the newest content. A derived artefact nobody regenerates is not a smaller problem than a stale check; it is
+     * the same problem with a bigger multiplier.
      */
-    static final long SHELF_CEILING_KB = 10240;
+static final long SHELF_CEILING_KB = 10240;
 
     /** One decimal place, for a number a person has to read in a report. */
 
