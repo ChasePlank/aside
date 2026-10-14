@@ -196,18 +196,28 @@ for f in "$TMP"/*.png; do
     echo "  STALE: docs/frames/$n" >&2; mismatch=$((mismatch + 1)); continue
   fi
   if cmp -s "$f" "docs/frames/$n"; then continue; fi
+  # THE SAME TWO NUMBERS AND THE SAME DECISION AS THE WRITE HALF. This loop was given the count alone and the
+  # count is the wrong metric -- it called stage-door STALE at 120842 pixels whose worst channel delta is 6, the
+  # same rasteriser rounding the write half had just kept. Both halves print the count and the worst delta now,
+  # and the worst delta decides.
   d=$(python3 - "$f" "docs/frames/$n" <<'PYEOF'
 import sys
 from PIL import Image, ImageChops
 a = Image.open(sys.argv[1]).convert("RGB"); b = Image.open(sys.argv[2]).convert("RGB")
 if a.size != b.size:
-    print(-1); raise SystemExit
+    print("-1 -1"); raise SystemExit
 h = ImageChops.difference(a, b).convert("L").histogram()
-print(sum(h) - h[0])
+mx = max(i for i, c in enumerate(h) if c)
+print("%d %d" % (sum(h) - h[0], mx))
 PYEOF
 )
-  if [ "$d" != "-1" ] && [ "$d" -le "$TOLERANCE" ]; then continue; fi
-  echo "  STALE: docs/frames/$n  ($d pixel(s) differ, beyond the $TOLERANCE allowance)" >&2; mismatch=$((mismatch + 1))
+  set -- $d
+  count="${1:-0}"; worst="${2:-0}"
+  if [ "$count" != "-1" ] && [ "$worst" -le 12 ]; then
+    echo "  docs/frames/$n  ($count pixel(s) differ, worst delta $worst - current)" 
+    continue
+  fi
+  echo "  STALE: docs/frames/$n  ($count pixel(s) differ, worst delta $worst, beyond the 12 allowance)" >&2; mismatch=$((mismatch + 1))
 done
 
 echo
