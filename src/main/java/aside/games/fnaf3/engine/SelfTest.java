@@ -28,6 +28,11 @@ public final class SelfTest {
     static int failed = 0;
 
     public static void main(String[] args) {
+        // THE SAME GAP FNAF4 HAD, found the same way hours later: sweeping this engine set REACTION to 0 and every
+        // check still passed. A bot that re-decides every frame still produces the outcomes this suite measures -
+        // THE TIMING IS NOT VISIBLE IN AN OUTCOME, IT IS THE THING THAT PRODUCES ONE.
+        check("the bot does not re-decide every frame (REACTION = " + Bot.REACTION + "s)",
+                Bot.REACTION >= 0.05 && Bot.REACTION <= 1.0);
         // `--survival` runs only the sweep, which is the slow part and the
         // only part that changes when a difficulty number moves. Tuning
         // means running this a dozen times in a row.

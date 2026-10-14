@@ -53,6 +53,11 @@ while IFS= read -r line; do
              old="\"$val\""; new="\"X\"" ;;
     *int*|*double*|*long*|*float*)
              val=$(echo "$decl" | sed -n 's/.*= *\([0-9.]*\).*/\1/p'); [ -n "$val" ] || continue
+             # A MUTATION THAT CHANGES NOTHING IS NOT AN UNWATCHED CONSTANT. fnaf2's `WIND = 0` came back
+             # NOT CAUGHT for hours, and the honest report is that the mutation set it to the value it already
+             # had: the constant is not unwatched, the sweep asked it a question with one answer. Reported
+             # rather than counted, because a false NOT CAUGHT sends the next reader looking at real code.
+             if [ "$val" = "0" ]; then printf '%-34s (already 0, nothing to change)\n' "$name"; continue; fi
              old="$name = $val"; new="$name = 0" ;;
     *) continue ;;
   esac

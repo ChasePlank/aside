@@ -75,6 +75,11 @@ public final class SelfTest {
     static int failed = 0;
 
     public static void main(String[] args) {
+        // FREDDY_MEMORY is how long he remembers a sighting, and setting it to 0 means he forgets instantly.
+        // Sweeping this engine on 2026-10-14 showed nothing noticed: a memory of zero still leaves every outcome
+        // this suite checks intact, because the decisions it measures do not turn on it at those moments.
+        check("Freddy remembers for a measurable while (FREDDY_MEMORY = " + Bot.FREDDY_MEMORY + "s)",
+                Bot.FREDDY_MEMORY > 0.5);
         // `--survival` runs only the sweep, which is the slow part and the
         // only part that changes when a difficulty number moves. Tuning
         // means running this a dozen times in a row.

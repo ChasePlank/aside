@@ -34,6 +34,16 @@ public final class SelfTest {
     static int failed = 0;
 
     public static void main(String[] args) {
+        // THREE CONSTANTS IN THIS ENGINE WERE UNWATCHED when it was swept on 2026-10-14, and they are the same
+        // kind: a WINDOW and a THRESHOLD that decide what the bot does, whose absence changes WHICH decisions
+        // happen rather than whether the measured outcomes come out. Assert the shapes - a window has a length, a
+        // threshold sits strictly inside its range.
+        check("the listen window has a length (LISTEN_WINDOW = " + Bot.LISTEN_WINDOW + "s)",
+                Bot.LISTEN_WINDOW > 0.05 && Bot.LISTEN_WINDOW <= 2.0);
+        check("the restraint threshold is a threshold (RESTRAINT = " + Bot.RESTRAINT + ")",
+                Bot.RESTRAINT > 0.0 && Bot.RESTRAINT < 1.0);
+        check("the slowed strategy is not instant (PRO_SLOW = " + Bot.PRO_SLOW + ")",
+                Bot.PRO_SLOW > 0.0);
         // `--survival` runs only the sweep, which is the slow part and the
         // only part that changes when a difficulty number moves. Tuning
         // means running this a dozen times in a row.
