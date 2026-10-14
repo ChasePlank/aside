@@ -104,9 +104,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty-one stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen` and `the-round`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round` and `the-riser`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene and
   ending counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -367,6 +367,11 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-riser.aside`** — a plumber called out at two in the morning to a leak in a block of flats, a riser
+  cupboard with **four tide lines on the pipe**, and a tenant who has been ringing about the damp wall since April.
+  The repair is two hours; the form has one box that decides who pays, and it is called DATE OF FAULT. Three endings:
+  the truth with the tide lines dated, April because he asked for April, or tonight, so that the form is the form it
+  was always going to be. 13 scenes, 3 endings.
 - **`stories/the-round.aside`** — a night cleaner, a card in a cupboard with fourteen rooms on it in their own
   handwriting, and one office that has been cleared, so the list and the building no longer agree. **The list is the
   only thing that says what the job is**, and its four endings are what a person does about that: tick it anyway,

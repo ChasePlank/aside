@@ -50,6 +50,17 @@ WORDS = {
     "twenty": 20,
 }
 
+# AND THE COMPOUNDS, GENERATED RATHER THAN LISTED. This table stopped at "twenty", and a library of twenty-one
+# stories then produced "no '**N stories**' line to check the total against" - A CHECKER THAT COULD NOT READ A
+# CORRECT SENTENCE, which is worse than one that reads it and disagrees. The regex beside it also only accepted
+# one word, so "Twenty-one" never reached the table at all. A list of ordinals inside a checker is the same fault
+# as a list of stories inside a README: it goes stale the first time somebody forgets it.
+_TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+_ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+for _t in range(2, 10):
+    for _o in range(0, 10):
+        WORDS.setdefault(_TENS[_t] if _o == 0 else "%s-%s" % (_TENS[_t], _ONES[_o]), _t * 10 + _o)
+
 SCENES = re.compile(r"(\d+)\s+scenes?\b")
 ENDINGS = re.compile(r"(\d+)\s+ending(?:s| scenes?)?\b")
 
@@ -104,7 +115,7 @@ def main():
     # AND THE TOTAL, which is the number a reader trusts most and the one nobody re-runs. The per-story lines were
     # all correct twice while the sentence adding them up was wrong: "Eleven stories" when there were thirteen, and
     # "Fourteen" when there were sixteen. A document can be right in every particular and wrong in its summary.
-    total_line = re.search(r"\*\*([A-Za-z]+) stories\*\*", text)
+    total_line = re.search(r"\*\*([A-Za-z]+(?:-[A-Za-z]+)?) stories\*\*", text)
     if not total_line:
         problems.append("no '**N stories**' line to check the total against")
     else:

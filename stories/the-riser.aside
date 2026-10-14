@@ -1,0 +1,162 @@
+# The Riser - a plumber, a leak that is older than it looks, and the form that decides what it says.
+# Written for the library. One person, one procedure, one decision: what to put in writing about a fault that
+# somebody has been living with for a long time.
+
+title: The Riser
+start: start
+
+== start ==
+bg hall_corner
+music room_tone
+Two in the morning, fourth floor of a block of flats, and the caretaker is
+holding a torch because the stair lights are on a timer nobody has reset since
+the clocks went back.
+The water is off at the rising main. You did that first, before you took your
+coat off, because that is the order you do it in: stop it, then go and look.
+Under the door of 4C the carpet is dark in a strip about a hand wide.
+-> the_landing
+
+== the_landing ==
+The block is six floors of the same plan. You have been here eleven times in
+four years: a burst on three, a blocked stack on five, and twice for the same
+flat, which is a thing you notice and do not write down.
+The caretaker's name is on a card by the lift: D. Whyte. The card is older than
+the lift.
+whyte: It's coming through the ceiling of 3C as well. That's why they rang.
+whyte: 4C is the one that's awake. He's been up. He's been up a while, actually.
+* Knock on 4C. -> four_c
+* Find the riser for this stack first. -> the_riser
+
+== the_riser ==
+bg closet
+The riser cupboard is at the end of the landing, painted the same as the wall so
+that nobody opens it by accident. Inside: four risers, a stopcock, a meter that
+has not been read since it was installed, and a smell of wet plaster that is not
+from tonight.
+You put your hand on the pipe for 4C and it is wet from the floor up to about
+your shoulder, and the paint has gone the way paint goes when it has been wet
+and dried and wet again. There is a tide line. There are four tide lines.
+You take a photograph of that, because you are thorough, and then you stand
+there for a moment in a small room with a torch, doing arithmetic about how long
+a pipe has to be seeping for the plaster to look like that.
+* Knock on 4C now. -> four_c
+* Write the tide lines down while you are looking at them. -> write_it_down
+
+== write_it_down ==
+You write it in your notebook: *4C riser, wet to shoulder, four tide lines,
+plaster blown.* Not for anybody - you write the same way you photograph, so that
+in a week you are not guessing.
+Then you go and knock on 4C, because he is awake and awake is a gift at this
+hour.
+-> four_c
+
+== four_c ==
+bg east_hall
+The man at 4C is about seventy and dressed, at two in the morning, in a
+cardigan, which tells you he was up before the water came through and the water
+is not why he is awake.
+tenant: It's the wall in the bathroom. It's been damp since the spring. I rang
+about it in April.
+you: Who did you ring?
+tenant: The managing agent. Twice. They sent somebody, he looked at the ceiling
+in 3C and said it was condensation.
+He stands back to let you in, and then says the thing that is actually on his
+mind, and says it fast, the way people do.
+tenant: If you write that it's been there since April, they'll say it's the
+wear and tear and it's mine to pay for. If you write tonight, it's theirs.
+* Ask what he wants you to write. -> ask_him
+* Look at the wall first, and decide after. -> the_wall
+* Tell him what you are going to write and why. -> the_truth
+
+== ask_him ==
+you: What do you want me to put on the sheet.
+tenant: I want you to put the truth.
+you: The truth is a number, and the number is April.
+tenant: Then put April.
+He says it without hesitating, which you were not expecting, and you have been
+doing this job for nineteen years and you know exactly what happens to people
+who put April in a box on a form. The managing agent's process has a step in it
+for this, and the step costs four hundred pounds and it is called chargeable.
+you: That'll be a survey. At your cost, initially. Then they'll decide.
+tenant: Then they'll decide.
+~ told_the_truth +1
+-> the_report
+
+== the_wall ==
+bg restrooms
+The bathroom is a small room that has been repainted, and repainted again, and
+the paper is the kind that is meant to hide things. You peel a corner back with
+your thumb, which you are not supposed to do, and the plaster underneath is
+black and soft and cold.
+The leak is above the bath, at the joint where the riser goes through the floor,
+and it is a two-hour repair in daylight and a nine-hour one now, and it has been
+dripping long enough that the floorboards under the bath have gone.
+You put the paper back down. From the doorway it looks the way it looked when
+you came in.
+* Write tonight, and say nothing about the paper. -> ending_quiet
+* Write April, and let the survey happen. -> ending_april
+* Write tonight, and tell the man what you actually found. -> the_report
+~ wrote_the_truth +1
+
+== the_truth ==
+you: I'm going to write what I found, which is tonight's leak at the joint and
+plaster that has been wet for a long time. I'm going to date the tide lines.
+you: I'm not going to say whose fault it is, because that's not my box on the
+form either. Somebody will decide.
+tenant: And if they decide it's mine.
+you: Then they'll have to decide that out loud, to you, in writing.
+He looks at you for a moment, and then goes to put the kettle on, which is what
+people do when they have decided to trust somebody.
+tenant: It's a shared riser. It always was.
+~ wrote_the_truth +1
+-> the_report
+
+== the_report ==
+You fill the sheet in at the van with the interior light on, because it is
+half past three and you are not going to do this twice.
+Three boxes matter: DATE OF FAULT, which is a date and not a time; ACCESS, which
+is who has to be in; and DESCRIPTION, which is four lines and has been the same
+four lines on every one of these for nineteen years, because the process wants a
+description of the pipe and not of the last eleven months.
+Tonight the description runs over into the margin.
+-> the_choice
+
+== the_choice ==
+The pen is a cheap one and the paper is thin, and above the margin it says,
+in eight-point type, that a deliberately misleading report is a disciplinary
+matter.
+if wrote_the_truth >= 1 -> ending_named
+if told_the_truth >= 1 -> ending_april
+-> ending_quiet
+
+== ending_named ==
+You write the tide lines down as lines, with dates against them where you can
+read the dates, and you write that the joint failed tonight. You do not write
+whose fault it is, because there is no box for that and there never was.
+It goes in on Thursday. The managing agent asks for a survey, and the survey
+says what your sheet said, because you were careful and there is nothing in it
+to argue with.
+The man at 4C rings the office in November to say the wall has been done. He says
+thank you the way people say it when they have been right about something for
+eight months.
+-> END
+
+== ending_april ==
+You put April in the box, because he asked you to and because it is true, and the
+rest of the sheet is tonight, and the two do not fit on one form, so the form
+takes the date you gave it and the process does what the process does.
+It comes back as chargeable. There is a survey, and the survey is his, and the
+letter that arrives in October has a reference number on it and a payment slip.
+He does not ring the office. You look the job up in December to see how it ended,
+which is a thing you do, and it ended the way the form said it would.
+-> END
+
+== ending_quiet ==
+You put tonight in the box and you put a new joint in the description, and the
+form is exactly the form it was always going to be, and nobody argues with it.
+The repair is authorised in a week. The wall is done. The man at 4C says thank
+you at the door in the way people do when they have decided not to say the rest.
+You put the photograph of the tide lines in the folder with the others, which is
+not evidence of anything and not yours to send, and nineteen years is a long time
+and you have got very good at the four lines.
+-> END
