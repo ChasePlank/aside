@@ -17,7 +17,10 @@ import java.nio.file.*;
  * be hand-edited or deleted. Reset from the info screen.
  */
 public class Progress {
-    static final int NIGHTS = 5;
+    // PUBLIC SO A SUITE IN ANOTHER PACKAGE CAN WATCH IT. Sweeping this game on 2026-10-14 found NIGHTS unwatched:
+    // set it to 0 and nothing noticed, because it was package-private and the suite that should have asserted it
+    // is in engine/. A CONSTANT NOTHING CAN REACH IS A CONSTANT NOTHING CAN CHECK - the visibility was the gap.
+    public static final int NIGHTS = 5;
 
     /** Highest night unlocked (1..5). Beating night N unlocks N+1. */
     public int unlocked = 1;

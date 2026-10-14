@@ -30,6 +30,18 @@ MOD="${1:-}"; SUITE="${2:-}"; LIMIT="${3:-12}"
 [ -d "$MOD" ] || { echo "usage: tools/sweep-module.sh <module-dir> <suite-class> [limit]" >&2; exit 2; }
 [ -n "$SUITE" ] || { echo "sweep-module: needs a suite class" >&2; exit 2; }
 
+# A SUITE CLASS THAT DOES NOT EXIST MUST NOT READ AS A SWEEP THAT FOUND NOTHING. I passed
+# `aside.games.fnaf.SelfTest` when the class is `aside.games.fnaf.engine.SelfTest`, and every one of twelve
+# mutations came back UNKNOWN with a ClassNotFoundException - a sweep that measured nothing, in a report whose
+# verdict line says how many were caught. The header already warns about this for a missing JDK; the same silence
+# applies to a missing class, and it is the mistake a person actually makes.
+if [ ! -f "$OUT/$(printf '%s' "$SUITE" | tr '.' '/').class" ]; then
+  echo "sweep-module: no compiled class $SUITE in $OUT" >&2
+  echo "  suites that DO exist for this module:" >&2
+  find "$MOD" -name 'SelfTest.java' 2>/dev/null | sed 's|.*src/main/java/||; s|\.java$||; s|/|.|g' | sed 's|^|    |' >&2
+  exit 2
+fi
+
 caught=0; missed=0; n=0
 while IFS= read -r line; do
   file="${line%%:*}"; rest="${line#*:}"
