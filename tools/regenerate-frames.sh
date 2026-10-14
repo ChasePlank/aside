@@ -187,9 +187,27 @@ for f in "$TMP"/*.png; do
     # supposed to be there. Same shape as the tail -3 mistake earlier the same night: a check looking in the wrong
     # place and reporting a fault that is its own.
     n=$(basename "$f"); case "$n" in contact-sheet.png|drift.png|ledger.png|phone.png) continue;; esac
-  if [ ! -f "docs/frames/$n" ] || ! cmp -s "$f" "docs/frames/$n"; then
-    echo "  STALE: docs/frames/$n" >&2; mismatch=$((mismatch + 1))
+  # THE SAME ALLOWANCE AS THE WRITE HALF, AND FOR THE SAME REASON. This confirm loop used `cmp -s` too, so the
+  # four antialiasing frames the write half had just correctly DECLINED to rewrite were then reported as STALE --
+  # and the tool exited 1 saying "Nothing here is safe to commit" after writing the real ones. The tolerance was
+  # moved into the half that writes and left out of the half that confirms, which is the same asymmetry one level
+  # down: a frame within the allowance is CURRENT, not stale, and must not be counted here.
+  if [ ! -f "docs/frames/$n" ]; then
+    echo "  STALE: docs/frames/$n" >&2; mismatch=$((mismatch + 1)); continue
   fi
+  if cmp -s "$f" "docs/frames/$n"; then continue; fi
+  d=$(python3 - "$f" "docs/frames/$n" <<'PYEOF'
+import sys
+from PIL import Image, ImageChops
+a = Image.open(sys.argv[1]).convert("RGB"); b = Image.open(sys.argv[2]).convert("RGB")
+if a.size != b.size:
+    print(-1); raise SystemExit
+h = ImageChops.difference(a, b).convert("L").histogram()
+print(sum(h) - h[0])
+PYEOF
+)
+  if [ "$d" != "-1" ] && [ "$d" -le "$TOLERANCE" ]; then continue; fi
+  echo "  STALE: docs/frames/$n  ($d pixel(s) differ, beyond the $TOLERANCE allowance)" >&2; mismatch=$((mismatch + 1))
 done
 
 echo
