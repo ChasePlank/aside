@@ -204,6 +204,12 @@ open(p, "w").write(s.replace(f, t, 1))
     printf '%-44s caught       %s\n' "$FROM" "$OUT"
   elif printf '%s' "$OUT" | grep -qE '0 (failed|FAILED)|checks passed|ALL PASS|PASS'; then
     printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT"
+  elif printf '%s' "$OUT" | grep -qE 'Exception|at [a-z_]+\.[a-z_.]+\('; then
+    # A SUITE THAT DIED IS NOT AN UNKNOWN. fnaf7's HOUR_SECONDS and NIGHT_HOURS come back this way: mutating them
+    # makes the suite CRASH rather than fail a check, and a crash is the mutation being noticed hard. IT IS NOT
+    # REPORTED AS "caught" EITHER - an unrelated crash must never read as a suite doing its job - so it gets its own
+    # verdict that says what happened and what to look at. "UNKNOWN" invites a shrug; this invites a look.
+    printf '%-44s FAILED       the suite died, see the trace: %s\n' "$FROM" "$OUT"
   else
     printf '%-44s UNKNOWN      %s\n' "$FROM" "$OUT"
   fi

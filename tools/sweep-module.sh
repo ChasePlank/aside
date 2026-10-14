@@ -86,6 +86,10 @@ while IFS= read -r line; do
     # labels - fnaf2 has four of those - and the honest fallback is a value that cannot collide: one more than the
     # value it already has. MEASURED 2026-10-14: 4 of 12 constants in fnaf2's engine reported COMPILE FAIL and so
     # were never actually asked a question.
+    # AND THE ONE LEVEL UP, WHICH I MISSED THE FIRST TIME: mutate.sh prints a distinct FAILED verdict
+    # when the suite dies, and this case statement had no branch for it, so it fell through to `??`
+    # and the sweep reported UNKNOWN anyway. A VERDICT IS ONLY AS GOOD AS THE PARSER ABOVE IT.
+    *FAILED*)   echo "caught (the suite died - see the trace)"; caught=$((caught + 1)) ;;
     *COMPILE*)
       if [ -n "$val" ] && [ "$val" != "0" ]; then
         # AND +1 IS NOT ALWAYS ENOUGH: fnaf2's CHECK_HALL/CHECK_VENT_L/CHECK_VENT_R are 1, 2 and 3 in a switch,
