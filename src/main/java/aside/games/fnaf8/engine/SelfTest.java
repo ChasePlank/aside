@@ -31,6 +31,14 @@ public final class SelfTest {
     static int failed = 0;
 
     public static void main(String[] args) {
+        // SWEPT 2026-10-14: GREED and FINISH were unwatched. GREED is the slack allowed when choosing between two
+        // equally good wants; FINISH is the margin before the meeting ends. Both decide WHICH action happens rather
+        // than whether the measured outcomes come out, so neither shows up in those outcomes - the same shape as
+        // the timings and thresholds found across this family, and the same answer: assert the thing itself.
+        check("GREED is a slack, not a licence (GREED = " + Bot.GREED + ")",
+                Bot.GREED > 0.0 && Bot.GREED <= 10.0);
+        check("FINISH is a margin inside the meeting (FINISH = " + Bot.FINISH + "s)",
+                Bot.FINISH > 0.0 && Bot.FINISH <= Meeting.MAX);
         if (args.length > 0 && args[0].equals("--survival")) {
             survival();
             System.out.println();

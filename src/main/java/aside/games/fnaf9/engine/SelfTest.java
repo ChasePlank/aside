@@ -87,6 +87,14 @@ public final class SelfTest {
     static int failed = 0;
 
     public static void main(String[] args) {
+        // SWEPT 2026-10-14: EARLY_AT, GLANCE_ON and GLANCE_OFF were all unwatched, and the two glance constants
+        // are INTERLOCKED - `lookFor < GLANCE_ON` lights the glance, `lookFor < GLANCE_ON + GLANCE_OFF` keeps it,
+        // so one check covers both and states the ordering that makes them a window rather than a number.
+        check("the glance window is ordered and positive (GLANCE_ON = " + Bot.GLANCE_ON
+                        + "s, GLANCE_OFF = " + Bot.GLANCE_OFF + "s)",
+                Bot.GLANCE_ON > 0.0 && Bot.GLANCE_OFF > 0.0 && Bot.GLANCE_OFF >= Bot.GLANCE_ON);
+        check("the early threshold is early (EARLY_AT = " + Bot.EARLY_AT + "s)",
+                Bot.EARLY_AT > 0.0 && Bot.EARLY_AT <= 10.0);
         if (args.length > 0 && args[0].equals("--survival")) {
             survival();
             System.out.println();

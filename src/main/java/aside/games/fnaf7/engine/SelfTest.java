@@ -29,6 +29,14 @@ public final class SelfTest {
     static int failed = 0;
 
     public static void main(String[] args) {
+        // SWEPT 2026-10-14: PRO_REST and RELIGHT were constants a mutation could change with every check still
+        // passing. They are the same kind as the pacing constants in fnaf3/fnaf4 - a rest duration and the darkness
+        // needed before relighting - and neither is visible in an outcome, because a bot that rests for no time at
+        // all still produces the outcomes this suite measures. Assert the shapes.
+        check("the rest lasts a measurable while (PRO_REST = " + Bot.PRO_REST + "s)",
+                Bot.PRO_REST > 0.05 && Bot.PRO_REST <= 5.0);
+        check("relighting needs some darkness (RELIGHT = " + Bot.RELIGHT + "s)",
+                Bot.RELIGHT > 0.0 && Bot.RELIGHT <= 2.0);
         if (args.length > 0 && args[0].equals("--survival")) {
             survival();
             System.out.println();
