@@ -26,7 +26,13 @@ SHOT=$(mktemp -u /tmp/aside-boot-XXXXXX.png)
 LOG=$(mktemp)
 trap 'rm -f "$SHOT" "$LOG"' EXIT
 
-"$JAVA" --module-path "$FX" --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
+# THROUGH run-headless.sh, because a JavaFX command needs a display that may have just died. This called "$JAVA"
+# directly, so with no live display the app failed at PlatformImpl.startup and this check exited 1 WITHOUT EVER
+# LOOKING AT THE BOOT -- and its own fault injection then failed for the wrong reason: it asserts the output says
+# "could not find its art", and what it got was a JavaFX startup stack trace. run-headless.sh asks the display
+# whether it is SERVING with xdpyinfo and starts Xvfb if not, which is what check-sheets.sh and
+# regenerate-frames.sh already do for CheckGames.
+tools/run-headless.sh "$JAVA" --module-path "$FX" --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
     -cp "$OUT:src/main/resources" -Daside.snapshot="$SHOT" aside.ui.Main > "$LOG" 2>&1
 rc=$?
 
