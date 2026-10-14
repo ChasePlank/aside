@@ -51,6 +51,18 @@ public class SelfTest {
     }
 
     public static void main(String[] args) {
+        // THE BOT'S PHASES, WHICH NOTHING WATCHED: WIND, CHECK_HALL, CHECK_VENT_L, CHECK_VENT_R and MASK are five
+        // ints a switch dispatches on, and every one of them was invisible to a mutation until the sweep learned to
+        // test them - they are 0..4 IN SEQUENCE, so "to 0" collided with another case and so did "to value+1", and
+        // FOUR CONSTANTS SAT BEHIND A COMPILE ERROR REPORTED AS ?? RATHER THAN AS UNTESTED.
+        //
+        // IT HAS TO BE ASSERTED DIRECTLY. A phase the switch has no case for turns out to survive every outcome
+        // this suite measures - the bot still decides, the night still runs - so THE PHASE SET IS NOT IN THE
+        // OUTCOME, IT IS HOW THE MACHINE NAMES ITS OWN STATES. Same shape as the pacing constants in fnaf3 and
+        // fnaf4, and the same answer: assert the thing itself, with the reason written next to it.
+        check("the bot's phases are the five the switch knows",
+                Bot.WIND == 0 && Bot.CHECK_HALL == 1
+                        && Bot.CHECK_VENT_L == 2 && Bot.CHECK_VENT_R == 3 && Bot.MASK == 4);
         System.out.println("=== FNAF 2 self-test ===\n");
 
         // 0. THE NIGHT-SELECT ROWS ARE THE SAME RECTANGLES THE MOUSE MAP TESTS AGAINST. MouseMap says so in its

@@ -70,6 +70,33 @@ while IFS= read -r line; do
   case "$out" in
     *caught*)    echo "caught";   caught=$((caught + 1)) ;;
     *NOT\ CAUGHT*) echo "NOT CAUGHT"; missed=$((missed + 1)) ;;
+    # A MUTATION THAT WILL NOT COMPILE IS NOT A TESTED CONSTANT. The blunt "to 0" collides with a switch's case
+    # labels - fnaf2 has four of those - and the honest fallback is a value that cannot collide: one more than the
+    # value it already has. MEASURED 2026-10-14: 4 of 12 constants in fnaf2's engine reported COMPILE FAIL and so
+    # were never actually asked a question.
+    *COMPILE*)
+      if [ -n "$val" ] && [ "$val" != "0" ]; then
+        # AND +1 IS NOT ALWAYS ENOUGH: fnaf2's CHECK_HALL/CHECK_VENT_L/CHECK_VENT_R are 1, 2 and 3 in a switch,
+        # so bumping one lands on the next. A value well outside the range is the fallback for that, which also
+        # asks the switch what it does with a value it has no case for.
+        bump=$(awk -v v="$val" 'BEGIN { printf "%.10g", v + 1 }')
+        out2=$(JAVA="$JAVA" FX="$FX" timeout 600 tools/mutate.sh "$SUITE" "$file" "$old" "$name = $bump" 2>&1 | tail -1)
+        case "$out2" in
+          *caught*)    echo "caught (0 would not compile, tried $bump)"; caught=$((caught + 1)) ;;
+          *NOT\ CAUGHT*) echo "NOT CAUGHT ($bump)"; missed=$((missed + 1)) ;;
+          *COMPILE*)
+            far=$(awk -v v="$val" 'BEGIN { printf "%.10g", v + 100 }')
+            out3=$(JAVA="$JAVA" FX="$FX" timeout 600 tools/mutate.sh "$SUITE" "$file" "$old" "$name = $far" 2>&1 | tail -1)
+            case "$out3" in
+              *caught*)    echo "caught (tried $far)"; caught=$((caught + 1)) ;;
+              *NOT\ CAUGHT*) echo "NOT CAUGHT ($far)"; missed=$((missed + 1)) ;;
+              *)           echo "?? $out3" ;;
+            esac ;;
+          *)           echo "?? $out2" ;;
+        esac
+      else
+        echo "?? $out"
+      fi ;;
     *)           echo "?? $out" ;;
   esac
 done < <(grep -rn "static final" "$MOD" --include=*.java 2>/dev/null \
