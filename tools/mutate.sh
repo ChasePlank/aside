@@ -127,7 +127,12 @@ fi
 CP=$(ls "$FX"/*.jar 2>/dev/null | tr '\n' ':')
 BAK=$(mktemp)
 cp "$FILE" "$BAK"
-trap 'cp "$BAK" "$FILE"; rm -f "$BAK"' EXIT
+# THE TRAP THAT USED TO BE HERE DID NOT FIRE, so it was replaced by a comment rather than left in place.
+# MEASURED 2026-10-14 with it instrumented to write a marker file: killing a sweep by `timeout 8` wrote NO MARKER
+# and left two mutated constants in the tree. A protection that is present and inert is worse than none, because
+# the next reader sees a trap and stops worrying. The cleanup lives in tools/sweep-module.sh now, which refuses to
+# start on a dirty module (so restoring cannot destroy work) and `git checkout`s the module on any exit.
+
 
 fail=0
 while [ $# -gt 0 ]; do
@@ -215,6 +220,10 @@ open(p, "w").write(s.replace(f, t, 1))
   fi
 done
 
+# THE RESTORE, WHICH IS THE ONLY ONE THAT MATTERS NOW THE TRAP IS GONE - and it has to come BEFORE the rm, which is
+# what the removed trap got right and my first replacement got wrong: deleting the backup first left the file
+# mutated and printed `cp: cannot stat`, which is how a broken cleanup announces itself.
 cp "$BAK" "$FILE"
+rm -f "$BAK"
 "$JAVAC" -nowarn -cp "$CP" -d classes $(find src/main/java -name '*.java') 2>/dev/null
 exit $fail
