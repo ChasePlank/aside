@@ -42,6 +42,12 @@ if [ ! -f "$OUT/$(printf '%s' "$SUITE" | tr '.' '/').class" ]; then
   exit 2
 fi
 
+# HOW MANY THERE ARE, NOT JUST HOW MANY WERE TRIED. The loop takes the first `$LIMIT` declarations in
+# grep order, which is FILE ORDER - so a module's verdict is about a SLICE, and "0 not caught" quietly
+# means "0 among the first twelve". MEASURED 2026-10-14: `drift`'s first twelve are all `Color` and
+# `Font` constants, which this tool skips by type, while the names it reported came from a different
+# slice entirely. A verdict without its denominator is a claim about a sample dressed as the whole.
+TOTAL_DECLS=$(grep -rn "static final" "$MOD" --include=*.java 2>/dev/null | grep -vE 'Test\.java' | wc -l | tr -d ' ')
 caught=0; missed=0; n=0
 while IFS= read -r line; do
   file="${line%%:*}"; rest="${line#*:}"
@@ -137,6 +143,6 @@ done < <(grep -rn "static final" "$MOD" --include=*.java 2>/dev/null \
   echo "NOTE: could not recompile after the sweep - recompile before believing the next result."
 
 echo
-echo "$MOD against $SUITE: $caught caught, $missed not caught, of $n tried."
+echo "$MOD against $SUITE: $caught caught, $missed not caught, of $n tried - $TOTAL_DECLS static final declaration(s) here, so $((TOTAL_DECLS - n)) were never tried."
 echo "A NOT CAUGHT is a QUESTION: the constant may be free (a label, a colour) or covered by a check that"
 echo "survives this particular blunt change. It is where to look, not what to fix."
