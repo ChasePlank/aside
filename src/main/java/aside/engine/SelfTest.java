@@ -3,6 +3,8 @@ package aside.engine;
 import aside.game.PhoneShelf;
 import aside.game.Game;
 import aside.game.Games;
+import aside.games.fnaf.Progress;
+import aside.games.fnaf.Sprites;
 import aside.games.fnaf6.WebSalvage;
 import aside.ui.LibraryLayout;
 
@@ -220,6 +222,20 @@ static final long SHELF_CEILING_KB = 10240;
     }
 
     public static void main(String[] args) throws Exception {
+
+        // THE GAME CONSTANTS THAT COULD NOT BE CHECKED WHERE THEY LIVE. Sweeping `fnaf` on 2026-10-14 found NIGHTS
+        // (the whole game: five nights) and SCALE (how big a sprite is drawn) unwatched - and NIGHTS was
+        // PACKAGE-PRIVATE with its suite in engine/, so the check that should have asserted it COULD NOT SEE THE
+        // CONSTANT IT WAS ABOUT. A CONSTANT NOTHING CAN REACH IS A CONSTANT NOTHING CAN CHECK.
+        //
+        // AND IT CANNOT LIVE IN THAT SUITE ANYWAY: check-fnaf-match.sh requires the engine's SelfTest.java to be
+        // BYTE-IDENTICAL in the standalone edition, and a check for a game constant must name that game's package
+        // (`aside.games.fnaf.Progress` versus `fnaf.Progress`), so no version of it can be. THIS SUITE IS NOT
+        // COMPARED ACROSS EDITIONS and already asserts game invariants - the platformer's mechanics are here, and
+        // so is `aside.games.fnaf6.WebSalvage` - which makes it the right home rather than a compromise.
+        check("FNAF 1 has five nights to choose (NIGHTS = " + Progress.NIGHTS + ")", Progress.NIGHTS == 5);
+        check("FNAF 1 sprites have a scale to be drawn at (SCALE = " + Sprites.SCALE + ")",
+                Sprites.SCALE > 0);
         System.out.println("=== Aside engine self-test ===\n");
 
         Path story = Path.of("stories", "night-shift.aside");
