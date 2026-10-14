@@ -15,8 +15,11 @@
 # weak part. This is the same move as `tools/with-display.sh`: put the precondition IN THE PATH rather than in my
 # head, so the mistake cannot be made by typing the obvious thing.
 #
-# IT ALSO GUARANTEES A DISPLAY, because every class worth running here is JavaFX: that is what with-display.sh does,
-# and this calls it rather than repeating it.
+# IT ALSO GUARANTEES A DISPLAY, because every class worth running here is JavaFX: that is what run-headless.sh does,
+# and this calls it rather than repeating it. (I wrote a second wrapper for this on 2026-10-13 - tools/with-display.sh
+# - WITHOUT LOOKING, and run-headless.sh had existed all along, with a header saying the same three-times-bitten
+# thing and three tools already using it. Retired the same day. READ THE SIBLING TOOL FIRST is in my own memory and
+# I broke it; the cost was one duplicated file and a lesson re-learned.)
 set -u
 cd "$(dirname "$0")/.." || exit 2
 
@@ -29,6 +32,6 @@ if [ "${1:-}" = "-cp" ]; then
 fi
 [ $# -ge 1 ] || { echo "usage: tools/run-java.sh [-cp <classpath>] <MainClass> [args...]" >&2; exit 2; }
 
-exec tools/with-display.sh "$JAVA" --module-path "$FX" \
+exec tools/run-headless.sh "$JAVA" --module-path "$FX" \
     --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
     -cp "$CP" "$@"
