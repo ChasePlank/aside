@@ -64,6 +64,13 @@ public final class SelfTest {
     static void room() {
         section("the room");
 
+        // THE BOT'S PACING, WHICH NOTHING WATCHED. Sweeping this engine on 2026-10-14 set REACTION to 0 and EVERY
+        // CHECK STILL PASSED, because a bot that re-decides sixty times a second survives the outcomes the suite
+        // measures - REACT still beats IDLE, HOLD is still better than SWEEP. The timing is not visible in an
+        // outcome; it is the thing that produces one, and it was the only constant in this engine that a mutation
+        // could change without anything noticing.
+        check("the bot does not re-decide every frame (REACTION = " + Bot.REACTION + "s)",
+                Bot.REACTION >= 0.05 && Bot.REACTION <= 1.0);
         check("four places", Room.ALL.length == 4);
         check("the bed is the hub", Room.HUB == Room.Where.BED);
 

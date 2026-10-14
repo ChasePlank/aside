@@ -37,6 +37,12 @@ while IFS= read -r line; do
   [ "$n" -ge "$LIMIT" ] && break
 
   # what kind of constant is it, and what is a blunt wrong version of it
+  name=$(echo "$decl" | sed -n 's/.* \([A-Z_][A-Z_0-9]*\) *=.*/\1/p')
+  # THE ANCHOR CARRIES THE NAME, so it matches once. It used to be the value alone - "= 6" - AND A VALUE LIKE 6
+  # APPEARS IN MORE THAN ONE CONSTANT, so mutate.sh correctly refused it as AMBIGUOUS and the constant went
+  # UNTESTED. The refusal is right (a mutation must change exactly one place; "a false positive is the quiet one")
+  # but the anchor was this caller's job. MEASURED 2026-10-14: 2 of 14 constants in fnaf4's engine were skipped
+  # this way, and the sweep reported them as questions rather than as its own gap.
   case "$decl" in
     # ARRAYS ARE SKIPPED. The anchor has to match the file's own spacing exactly, and the first version built
     # "{ 1, 3, 5 }" where the file said "{1, 3, 5}" - so it reported ANCHOR MISSING, which reads like a fault in
@@ -47,7 +53,7 @@ while IFS= read -r line; do
              old="\"$val\""; new="\"X\"" ;;
     *int*|*double*|*long*|*float*)
              val=$(echo "$decl" | sed -n 's/.*= *\([0-9.]*\).*/\1/p'); [ -n "$val" ] || continue
-             old="= $val"; new="= 0" ;;
+             old="$name = $val"; new="$name = 0" ;;
     *) continue ;;
   esac
 
