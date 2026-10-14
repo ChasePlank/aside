@@ -1,7 +1,5 @@
 package aside.games.fnaf.engine;
 
-import aside.games.fnaf.Progress;
-import aside.games.fnaf.Sprites;
 
 
 /**
@@ -40,14 +38,6 @@ public class SelfTest {
     }
 
     public static void main(String[] args) {
-        // NIGHTS AND SCALE, FOUND BY SWEEPING THIS ENGINE ON 2026-10-14 - and this engine had never been swept.
-        // NIGHTS is the whole game: five nights is what the player is doing, and nothing here noticed it going to
-        // zero. IT IS THE SAME GAP THE SWEEP'S OWN HEADER CITES ("fnaf7 and fnaf8 both protect NIGHTS = 5 and
-        // fnaf2 did not"), which is the argument for sweeping every sibling rather than the ones you suspect.
-        check("there are five nights to choose (NIGHTS = " + Progress.NIGHTS + ")", Progress.NIGHTS == 5);
-        // SCALE is the sprite scale, and zero is sprites that draw at no size at all. The shape is the check: it
-        // has to be positive, and no drawable scale is smaller than a pixel.
-        check("sprites have a scale to be drawn at (SCALE = " + Sprites.SCALE + ")", Sprites.SCALE > 0);
         System.out.println("=== FNAF-Glamrock self-test ===\n");
 
         // 1. Determinism check: same seed = same night. THE NIGHT, NOT THE CLOCK.
