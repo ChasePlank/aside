@@ -559,6 +559,23 @@ if [ -x tools/compare-suites.py ]; then
   fi
 fi
 
+# ---- check-web-builds.sh must notice a build that is not what its generator produces ---------------------------
+# THE FAULT IS THE ONE IT EXISTS FOR: a `web/<game>.html` that no longer matches its `Web<Game>` generator - which
+# would ship a stale page with nothing saying so, because the README's claim about regenerating every build was
+# true for the stories and false for the eighteen games.
+# AND IT CHECKS THE TOOL'S RESTORE AT THE SAME TIME: the tool puts back what it changed, so a failing run leaves the
+# tree as it found it. That is asserted here rather than assumed, because a check that leaves a modified build in the
+# working tree is a check that has to be cleaned up by hand.
+if [ -x tools/check-web-builds.sh ] && [ -f web/bearings.html ]; then
+  printf '\n<!-- injected by the self-test -->\n' >> web/bearings.html
+  out=$(timeout 900 tools/check-web-builds.sh 2>&1); rc=$?
+  if [ $rc -ne 0 ] && grep -q "STALE" <<<"$out" && [ -z "$(git status --porcelain web/bearings.html)" ]; then
+    ok "check-web-builds notices a stale build, and restores it" "$(echo "$out" | grep -A1 STALE | tail -1 | tr -s ' ')"
+  else
+    bad "check-web-builds notices a stale build, and restores it" "exit $rc, or the injected build was left modified"
+  fi
+fi
+
 # ---- and the two sweeps, on synthetic input, because their subjects are reports and trees ----------------------
 if [ -x tools/find-silent-suites.sh ]; then
   printf '  something ok     === 0 passed, 0 failed ===\n  other ok         === 7 passed, 0 failed ===\n' > /tmp/silent-probe.txt

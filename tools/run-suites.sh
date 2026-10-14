@@ -252,6 +252,21 @@ if [ -x tools/check-fnaf-match.sh ]; then
   fi
 fi
 
+# AND THE GAME PHONE BUILDS, WHICH NOTHING REGENERATED. The README says "the suite regenerates each build and
+# compares it to the checked-in copy, so a stale build fails rather than shipping" - TRUE for the story builds and
+# FALSE for the eighteen built by `Web<Game>` classes, which no check and no mutation touched. MEASURED on
+# 2026-10-14: every one of them was current, so the claim was unchecked rather than false, and it is checked now.
+if [ -x tools/check-web-builds.sh ]; then
+  web_out=$(timeout 900 tools/check-web-builds.sh 2>&1); web_rc=$?
+  if [ $web_rc -eq 0 ]; then
+    echo "  $(echo "$web_out" | grep -E '^=== ' | tail -1)"
+  else
+    echo "  web-builds           FAIL   a build is not what its generator produces"
+    echo "$web_out" | grep -E 'STALE|FAILED|  web/' | sed 's/^/    /' | head -4
+    fail=$((fail + 1)); failed_names+=("web-builds")
+  fi
+fi
+
 # AND THE APP ITSELF, WHICH NOTHING HERE STARTED. Every suite builds its own screen, the frames come from
 # CheckGames (a tools class) and the phone builds are separate files - so `aside.ui.Main`, the class a person
 # actually starts, was named in this repository only as a STRING in make-jar.sh. It boots the app's own path:
