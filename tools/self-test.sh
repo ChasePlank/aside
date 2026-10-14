@@ -576,7 +576,10 @@ if [ -x tools/compare-suites.sh ]; then
   PROBE=$(find src/main/java -name SelfTest.java | grep fnaf | head -1)
   if [ -n "$PROBE" ]; then
     cov_before=$(timeout 300 bash tools/compare-suites.sh 2>&1 | grep -oE '^=== [0-9]+' | grep -oE '[0-9]+')
-    cp "$PROBE" "$A/probe.bak"
+    # A SELF-CONTAINED TEMP FILE, not "$A": that variable belongs to check-sheets.sh, and with `set -u` an unbound
+    # name ABORTS THIS SCRIPT rather than failing an entry - which is what happened, and why the gate reported a
+    # failed tool self-test with no FAIL line to name. The convention in this file is mktemp, used by the entries above.
+    PROBE_BAK=$(mktemp); cp "$PROBE" "$PROBE_BAK"
     python3 - "$PROBE" <<'COV'
 import io, sys
 p = sys.argv[1]; s = io.open(p, encoding="utf-8").read()
@@ -585,7 +588,7 @@ s = s[:i] + '    static void probeForTheCoverageTool() { check("a uniquely named
 io.open(p, "w", encoding="utf-8").write(s)
 COV
     cov_after=$(timeout 300 bash tools/compare-suites.sh 2>&1 | grep -oE '^=== [0-9]+' | grep -oE '[0-9]+')
-    cp "$A/probe.bak" "$PROBE"
+    cp "$PROBE_BAK" "$PROBE"; rm -f "$PROBE_BAK"
     if [ -n "$cov_before" ] && [ -n "$cov_after" ] && [ "$cov_after" -gt "$cov_before" ]; then
       ok "compare-suites notices a check only one sibling has" "$cov_before -> $cov_after with a probe added"
     else
