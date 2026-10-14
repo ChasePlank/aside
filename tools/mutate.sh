@@ -194,7 +194,13 @@ open(p, "w").write(s.replace(f, t, 1))
   # CrackedPocketTest) print "PASS  <what>" and "FAIL  <what>" lines with a summary now, but a run whose LAST check
   # happens to pass used to read as NOT CAUGHT while an earlier FAIL sat right there in the output. The word PASS on
   # the last line was enough to satisfy the second pattern. A standalone FAIL is a failure whatever else printed.
-  if printf '%s' "$OUT" | grep -qE '(^|[^0-9])[1-9][0-9]* (failed|FAILED)' || printf '%s' "$OUT" | grep -qE '^FAIL([: ]|$)'; then
+  # AND "N OF M CHECKS FAILED", which is how the `tell` suite phrases it and which this did not know. Sweeping that
+  # module reported 0 caught of 12 with every mutation `?? UNKNOWN` - ten of them UI strings whose mutation the
+  # suite DID catch, printing "1 of 113 checks FAILED". A verdict this file cannot read is a module that looks
+  # untested, which is the expensive direction to be wrong in.
+  if printf '%s' "$OUT" | grep -qE '(^|[^0-9])[1-9][0-9]* (failed|FAILED)' \
+     || printf '%s' "$OUT" | grep -qE '(^|[^0-9])[1-9][0-9]* of [0-9]+ checks? FAILED' \
+     || printf '%s' "$OUT" | grep -qE '^FAIL([: ]|$)'; then
     printf '%-44s caught       %s\n' "$FROM" "$OUT"
   elif printf '%s' "$OUT" | grep -qE '0 (failed|FAILED)|checks passed|ALL PASS|PASS'; then
     printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT"
