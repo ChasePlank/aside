@@ -101,7 +101,36 @@ shopt -s nullglob
 for f in "$TMP"/*.png; do
   n=$(basename "$f")
   case "$n" in contact-sheet.png|drift.png|ledger.png) continue;; esac
-  if [ -f "docs/frames/$n" ] && cmp -s "$f" "docs/frames/$n"; then continue; fi
+  # WITHIN THE ALLOWANCE, KEEP WHAT IS COMMITTED - AND THIS IS THE LOOP THAT TOOK TWO AGENTS AN HOUR.
+  #
+  # `cmp -s` treats a six-pixel antialiasing difference exactly as it treats a changed screen, so every
+  # regeneration on a machine whose rasteriser rounds slightly differently REWROTE frames that check-sheets.sh
+  # already accepts - and two agents then committed each other's versions back and forth, each seeing "13 frames
+  # moved". MEASURED on 2026-10-14: of thirteen frames differing between two machines, FOUR were antialiasing
+  # (bell-codes 6 pixels, discrepancy 2, fnaf7 12, fnaf8 12) and the rest were real.
+  #
+  # check-sheets.sh HAS ALLOWED 32 PIXELS FOR EXACTLY THIS SINCE IT WAS WRITTEN - "the observed worst case is 6
+  # pixels and this allows 32, which is still far below any real change". THE TOLERANCE WAS ONLY IN THE HALF THAT
+  # CHECKS AND NOT IN THE HALF THAT WRITES, and that asymmetry is what made a settled question unsettle every
+  # night. Same number, and it must stay the same number.
+  TOLERANCE=32
+  if [ -f "docs/frames/$n" ]; then
+    if cmp -s "$f" "docs/frames/$n"; then continue; fi
+    d=$(python3 - "$f" "docs/frames/$n" <<'PY'
+import sys
+from PIL import Image, ImageChops
+a = Image.open(sys.argv[1]).convert("RGB"); b = Image.open(sys.argv[2]).convert("RGB")
+if a.size != b.size:
+    print(-1); raise SystemExit
+h = ImageChops.difference(a, b).convert("L").histogram()
+print(sum(h) - h[0])
+PY
+)
+    if [ "$d" != "-1" ] && [ "$d" -le "$TOLERANCE" ]; then
+      echo "  docs/frames/$n  ($d pixel(s) differ, within the $TOLERANCE allowance - kept as committed)"
+      continue
+    fi
+  fi
   # CHECK THE WRITE. `changed` used to increment whether or not cp succeeded, so on a full disk every copy failed,
   # the count still rose, and this script printed "Now: git add docs/ && commit." - which is exactly how a stale
   # frames directory was reported as an update. The harness said "[output file write failed]" in the same output;
