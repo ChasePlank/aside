@@ -108,7 +108,7 @@ varying=" drift.png ledger.png lesson.png fnaf.png fnaf2.png fnaf3.png fnaf4.png
 # between two machines is one people learn to ignore). So there is a small, printed allowance. It is a measured
 # noise floor with margin, not a guess: the observed worst case is 6 pixels and this allows 32, which is still
 # far below any real change - a moved sprite or a changed string is thousands.
-TOLERANCE=32
+TOLERANCE=12
 
 stale=0; checked=0; skipped=0
 for f in "$A"/*.png; do
@@ -128,15 +128,27 @@ a = Image.open(sys.argv[1]).convert("RGB"); b = Image.open(sys.argv[2]).convert(
 if a.size != b.size:
     print(-1); raise SystemExit
 h = ImageChops.difference(a, b).convert("L").histogram()
-print(sum(h) - h[0])
+# THE COUNT AND THE WORST DELTA, because the count alone conflates two different things. MEASURED on 2026-10-14
+# between two machines: stage-door differed in 120842 pixels whose WORST channel delta was 6, and round in 75609
+# whose worst was also 6 - rasteriser rounding, spread thinly over a whole frame - while lesson differed in 42466
+# with a worst delta of 224, which is a different screen. A rule that looks only at how many pixels moved calls
+# those three the same kind of event. It is the MAGNITUDE that separates them, so both numbers are printed.
+mx = max(i for i, c in enumerate(h) if c)
+print("%d %d" % (sum(h) - h[0], mx))
 PY
 )
-  if [ "$d" = "-1" ]; then
+  # THE WORST DELTA DECIDES, NOT THE COUNT - the same rule as regenerate-frames.sh, and it has to be the same rule
+  # or the two halves disagree and the frames flip back and forth forever. 12 is a measured noise floor with
+  # margin: the worst rounding difference seen between two machines is 6, and a real change measures in the
+  # hundreds (lesson, 224, which is a different screen).
+  set -- $d
+  count="${1:-0}"; worst="${2:-0}"
+  if [ "$count" = "-1" ]; then
     printf '  %-22s STALE    the frame is a different size\n' "$n"; stale=1
-  elif [ "$d" -gt "$TOLERANCE" ]; then
-    printf '  %-22s STALE    %s pixel(s) differ\n' "$n" "$d"; stale=1
-  elif [ "$d" -gt 0 ]; then
-    printf '  %-22s ok       %s pixel(s) differ, within the %s allowance\n' "$n" "$d" "$TOLERANCE"
+  elif [ "$worst" -gt "$TOLERANCE" ]; then
+    printf '  %-22s STALE    %s pixel(s) differ, worst delta %s\n' "$n" "$count" "$worst"; stale=1
+  elif [ "$count" -gt 0 ]; then
+    printf '  %-22s ok       %s pixel(s) differ, worst delta %s, within the %s allowance\n' "$n" "$count" "$worst" "$TOLERANCE"
   fi
 done
 

@@ -113,7 +113,7 @@ for f in "$TMP"/*.png; do
   # pixels and this allows 32, which is still far below any real change". THE TOLERANCE WAS ONLY IN THE HALF THAT
   # CHECKS AND NOT IN THE HALF THAT WRITES, and that asymmetry is what made a settled question unsettle every
   # night. Same number, and it must stay the same number.
-  TOLERANCE=32
+  TOLERANCE=12
   if [ -f "docs/frames/$n" ]; then
     if cmp -s "$f" "docs/frames/$n"; then continue; fi
     d=$(python3 - "$f" "docs/frames/$n" <<'PY'
@@ -123,11 +123,21 @@ a = Image.open(sys.argv[1]).convert("RGB"); b = Image.open(sys.argv[2]).convert(
 if a.size != b.size:
     print(-1); raise SystemExit
 h = ImageChops.difference(a, b).convert("L").histogram()
-print(sum(h) - h[0])
+# THE COUNT AND THE WORST DELTA, because the count alone conflates two different things. MEASURED on 2026-10-14
+# between two machines: stage-door differed in 120842 pixels whose WORST channel delta was 6, and round in 75609
+# whose worst was also 6 - rasteriser rounding, spread thinly over a whole frame - while lesson differed in 42466
+# with a worst delta of 224, which is a different screen. A rule that looks only at how many pixels moved calls
+# those three the same kind of event. It is the MAGNITUDE that separates them, so both numbers are printed.
+mx = max(i for i, c in enumerate(h) if c)
+print("%d %d" % (sum(h) - h[0], mx))
 PY
 )
-    if [ "$d" != "-1" ] && [ "$d" -le "$TOLERANCE" ]; then
-      echo "  docs/frames/$n  ($d pixel(s) differ, within the $TOLERANCE allowance - kept as committed)"
+    # THE WORST DELTA DECIDES, NOT THE COUNT. 12 is a measured noise floor with margin: the worst rounding
+    # difference seen between two machines is 6, and a real change measures in the hundreds (lesson, 224).
+    set -- $d
+    count="${1:-0}"; worst="${2:-0}"
+    if [ "$count" != "-1" ] && [ "$worst" -le 12 ]; then
+      echo "  docs/frames/$n  ($count pixel(s) differ, worst delta $worst - kept as committed)"
       continue
     fi
   fi
