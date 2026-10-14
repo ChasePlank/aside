@@ -1,0 +1,146 @@
+# The Pledge - a pawnbroker, a christening mug with somebody else's name on it, and a redemption date.
+# Written for the library. One person, one procedure, one decision: what to do with a thing you have noticed
+# about a thing you are holding.
+
+title: The Pledge
+start: start
+
+== start ==
+bg lost_office
+music room_tone
+Three hundred and sixty days, and then it is yours to sell. That is the whole of
+the trade and it fits on the ticket: the pledge, the sum, the rate, and the
+date.
+You have run the shop for twenty-two years. The window says GOLD - SILVER -
+WATCHES and the rest of it is on the shelves behind you and has been for longer
+than most of the people who bring things in.
+The man at the counter is in his fifties and has put a box on the glass, which
+is how you know it matters, because nobody puts a box down unless they have
+decided to.
+-> the_box
+
+== the_box ==
+It is a christening mug. Silver, probably, with the dents that come from being
+used, and a band of worn engraving round the middle.
+He watches you turn it over, which people do not usually.
+you: What do you want for it?
+man: Whatever you give.
+you: That is not how it works. You tell me what you want and I tell you what I
+can do.
+man: Sixty.
+The silver is worth ninety on a good day. You have been doing this long enough
+to know that a man who asks for less than the thing is worth wants the ticket
+and not the money, and that is a different transaction from the one in the
+window.
+-> the_engraving
+
+== the_engraving ==
+bg closet
+You write the ticket out the way you write all of them: date, description, sum,
+rate, and the date three hundred and sixty days from now, which you say out loud
+because that is the part people need to hear.
+man: Three hundred and sixty days.
+you: The fourteenth. October the fourteenth.
+You put the mug in the window box on the shelf behind you, on the second shelf,
+which is where the things go that are worth keeping an eye on.
+-> the_name
+
+== the_name ==
+You clean the engraving with your thumb, because you always do, and the band
+reads *for Ellis, on his baptism*, and underneath, in smaller letters, a date
+that makes the mug sixty years old.
+The man's name is on the ticket. His name is not on the mug.
+* Ask him whose it is. -> ask_him
+* Say nothing. Write the ticket as it is. -> write_it
+* Look at him for a moment longer than the trade needs. -> look_at_him
+
+== ask_him ==
+you: Ellis.
+man: My brother.
+you: And where is your brother?
+man: Where do you think.
+He says it without any weight at all, in the way people say a fact they have
+carried a long way, and you have been in this trade long enough to know that the
+next sentence will be a lie or the truth and that which one does not change the
+silver.
+man: It was going to be mine anyway. He'd have wanted -
+He stops, because he can hear it.
+man: I need the sixty.
+~ asked +1
+-> the_terms
+
+== look_at_him ==
+You look at him. He looks at the mug. Neither of you says anything for about
+four seconds, which in a shop is a very long time.
+man: It's not stolen, if that's what you're doing.
+you: I'm not doing anything. I'm looking at a mug.
+man: Sixty.
+-> the_terms
+
+== write_it ==
+You write the ticket as it is: a christening mug, sixty pounds, three hundred and
+sixty days. No name but his on the paperwork.
+He takes his copy and folds it into his coat and goes out, and the bell over the
+door does what it does, and the mug sits on the second shelf with a name on it
+that is not on the ticket.
+-> ending_quiet
+
+== the_terms ==
+You put his copy of the ticket on the glass and push it across, and he takes it
+and does not read it, which is also how you know.
+you: Three hundred and sixty days. After that the pledge is forfeit and the mug
+is mine to sell. That is what the ticket says and it is what I will do.
+man: I know what it says.
+you: Do you want me to write your brother's name on my half?
+if asked >= 1 -> the_answer
+-> the_form
+
+== the_answer ==
+you: Do you want me to write your brother's name on my half?
+He looks at the mug for a while, and then at the ticket, and then at you.
+man: He was forty-one. It was in a drawer with his keys in it and I have the
+keys.
+you: That is not an answer to what I asked.
+man: It's the answer you're going to get.
+He takes his copy of the ticket and goes out, and the bell does what it does.
+-> ending_named
+
+== the_form ==
+You put his copy on the glass and he takes it and folds it into his coat, and
+neither of you says the name that is on the mug and not on the paper. The trade
+is the trade. It has been for two hundred years and it is why anybody brings
+anything in.
+man: Three hundred and sixty days.
+you: The fourteenth of October.
+He goes out. The bell.
+-> ending_forfeit
+
+== ending_named ==
+You write it on the shop's half in pencil, under the description, where the
+auctioneers will find it in thirty years and wonder, and you put the mug back on
+the second shelf and you do not sell it when the day comes.
+He comes in on the eleventh month, which is not the fourteenth, with sixty
+pounds and a bad apology, and you take the money and hand him the mug and do not
+say anything about the pencil, because the pencil was for the mug and not for
+him.
+-> END
+
+== ending_quiet ==
+You put the mug back on the second shelf, and the ticket says what it says, and
+the fourteenth of October comes round the way dates do.
+He does not come. You did not expect him to and you are not sure whether that is
+because you know the trade or because you looked at him for four seconds and
+decided something, and you have been in this business twenty-two years and you
+still cannot tell those two apart.
+The mug is forfeit. It is yours to sell. It sits on the second shelf.
+-> END
+
+== ending_forfeit ==
+The fourteenth of October comes and goes, and the mug is yours to sell, and in
+November you put it in the window with a card: SILVER CHRISTENING MUG, 1966,
+ENGRAVED, £140.
+It sells in nine days to a woman buying it for a grandchild who is not called
+Ellis, and she asks whether you can take the engraving off, and you say no,
+because you cannot, and because it is the only part of it that was ever
+anybody's.
+-> END

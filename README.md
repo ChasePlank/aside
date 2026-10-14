@@ -104,9 +104,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty-one stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty-two stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round` and `the-riser`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser` and `the-pledge`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene and
   ending counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -367,6 +367,11 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-pledge.aside`** — a pawnbroker, a christening mug pledged for less than it is worth, and an
+  engraving that names somebody who is **not on the ticket**. Three hundred and sixty days is the whole of the trade
+  and it fits on the ticket; the question underneath is what a person does with a thing they have noticed about a
+  thing they are holding. Three endings: his name goes in pencil on the shop's half, or nobody says the name and the
+  mug is forfeit in the window with a card, or you write the ticket as it is and never find out. 13 scenes, 3 endings.
 - **`stories/the-riser.aside`** — a plumber called out at two in the morning to a leak in a block of flats, a riser
   cupboard with **four tide lines on the pipe**, and a tenant who has been ringing about the damp wall since April.
   The repair is two hours; the form has one box that decides who pays, and it is called DATE OF FAULT. Three endings:
