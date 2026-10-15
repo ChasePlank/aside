@@ -1,0 +1,178 @@
+# The Flue - a sweep, a chimney, and something somebody put up it.
+# Written for the library. One person, one procedure, and the question of what to do with a thing that was hidden.
+
+title: The Flue
+start: start
+
+== start ==
+bg hall_corner
+music room_tone
+The house is on the list because it has four chimneys and one of them has not been
+swept since the old man died, which the daughter tells you on the phone, twice.
+You have been doing this fourteen years: rods, brush, sheets, the register, and the
+same three sentences said in the same order every time you go into somebody's
+front room.
+-> the_sheets
+
+== the_sheets ==
+You put the sheets down before anything else. That is the first sentence. The
+sheets go from the hearth to the door and up over the pictures, and people always
+watch the pictures.
+daughter: Be careful of the -
+you: They're covered. That's what the sheets are for.
+She stands in the doorway with her arms folded, which is what people do when they
+have decided to be in the way politely.
+-> the_first
+
+== the_first ==
+The first three are straight: front room, back room, the one over the kitchen. Soot
+comes down the way it always does, you take the brush up and bring it down, and the
+daughter says something about her father every time you come out of a room.
+daughter: He did them himself, always. Even when he couldn't get up the ladder.
+daughter: I used to hold the rods.
+-> the_landing
+
+== the_landing ==
+The fourth is the bedroom, and the bedroom is the one that has not been done, and
+the flue for it runs up the outside wall behind the cupboard on the landing.
+You open the cupboard. It is a cupboard: a hoover, two tins of paint, a box of
+Christmas things, and the register of a man who did his own chimneys in biro on the
+back of a calendar.
+-> the_landing_look
+
+== the_landing_look ==
+The calendar is seven years of Wednesdays, and the last entry is in a different
+hand, and it is shorter than the others, and it says *done*, once.
+* Take the calendar down. -> take_calendar
+* Leave it and get on with the bedroom flue. -> the_bedroom
+* Ask her about the calendar. -> ask_her
+
+== take_calendar ==
+You take it down. Behind it, in the recess where the flue bends, there is a gap in
+the brick about the size of a fist, and in the gap there is a tobacco tin with a
+rubber band round it.
+You have found things up chimneys before. Coins, mostly, and once a set of keys,
+and once a letter that you did not read and handed over folded.
+-> the_tin
+
+== the_bedroom ==
+You do the bedroom flue, which is the one that needed doing, and the soot comes
+down black and wet and takes twenty minutes. When you go back out onto the landing
+the cupboard door is open the way you left it and the calendar is still hanging on
+the nail.
+-> the_fourth_done
+
+== ask_her ==
+you: Who wrote the last one?
+daughter: I did.
+you: It's shorter than the others.
+daughter: It was the last time. I did it with the rods out of the shed because he
+couldn't and he sat on the stairs and told me when to push.
+~ asked_her +1
+-> the_calendar_answer
+
+== the_calendar_answer ==
+She says it the way people say a thing they have said to themselves a lot.
+daughter: He had me do it in September and he died in February and I have not
+touched it since, and that's why it's on the list, and I know it's daft.
+you: It's not daft. It's a chimney.
+daughter: It's not, though.
+-> the_tin_or_the_room
+
+== the_tin_or_the_room ==
+The brush is out of the flue and the sheets are down and the register is filled in
+and this is the part of the job where you decide what you are going to be.
+* Open it in front of her. -> the_open
+* Put it back exactly as it was and finish the job. -> ending_left_it
+* Put it in your bag. -> ending_took_it
+
+== the_tin ==
+bg closet
+It is a tobacco tin and it is heavier than a tobacco tin. The band has perished and
+comes off in your fingers and you open it standing in a cupboard on somebody else's
+landing with a brush in your other hand.
+Inside there is money, folded, in notes that stopped being printed years ago, and a
+photograph of a woman on a bicycle, and nothing with anybody's name on it.
+-> the_decision
+
+== the_fourth_done ==
+You fill the register in at the front door, which is the third sentence, and she
+signs it with her own pen because she did not like the look of yours.
+daughter: He'd have hated anybody doing the bedroom one.
+you: He'd have hated it being black up there more.
+She laughs, once, and it is a real one, and then she pays you and you carry the
+rods out to the van and that is the job.
+-> END
+
+== the_decision ==
+Through the wall you can hear the daughter moving around in the kitchen, putting the
+kettle on for somebody who is going to drink it alone.
+The tin has been in the brick for a while. Whatever it is, somebody put it there and
+did not tell anybody, and the only person who could have is seven years dead.
+if asked_her >= 1 -> the_open
+-> the_quiet_choice
+
+== the_quiet_choice ==
+You could put the tin in your bag. Nobody would know: the cupboard holds a hoover, a
+can of paint and a box of Christmas things, and the calendar goes back on its nail
+over the gap, and the gap is behind the calendar, and the calendar is behind a
+cupboard door on a landing nobody uses.
+* Take it. It is nobody's now. -> ending_took_it
+* Put it back and say nothing to anybody. -> ending_left_it
+-> the_open
+
+== the_open ==
+You take it into the kitchen with the sheet still folded over your arm, because
+carrying it in a bag would be a different thing.
+you: I found something up the bedroom flue.
+daughter: What sort of something.
+you: It was in a tin. It's money, and a photograph. I haven't counted it.
+She puts the kettle down and does not pick it up again.
+-> the_open_answer
+
+== the_open_answer ==
+daughter: Show me.
+You put the tin on the table with the lid off and she looks at the notes for a long
+time without touching them, and then she turns it round to see the photograph and
+makes a noise that is not a word.
+daughter: That's not my mother.
+you: No.
+daughter: That's the woman from the shop. She had that bicycle until I was nineteen.
+She sits down at her own kitchen table and you stand there with a brush in your hand
+and neither of you says anything for a while, and then she starts laughing, which is
+how it goes sometimes.
+daughter: He never said a word. Not once, in all of it.
+-> ending_told_her
+
+== ending_told_her ==
+You finish the register standing up because she has not offered you a chair, and she
+signs it and pays you and adds twenty pounds that you say is not necessary and she
+says is not for you, and you drive home with the rods in the back.
+It is not your money and it was never going to be, and the part you did was carry a
+tin into a kitchen instead of out of it, which is not a thing anybody will ever ask
+you about.
+You do the same three sentences at the next house and you mean them a little more
+than you did, which is the whole of what fourteen years has taught you.
+-> END
+
+== ending_left_it ==
+You put the band back on as best it will go and put the tin back in the recess and
+the calendar back on its nail, and you do the bedroom flue, and you fill the register
+in at the front door.
+daughter: He'd have hated anybody doing the bedroom one.
+you: He'd have hated it being black up there more.
+She laughs once. You carry the rods out to the van and drive home and never mention
+it to anybody, and the tin is still there now, and so is the calendar over it, and
+that is a thing you have decided and will go on deciding.
+-> END
+
+== ending_took_it ==
+It goes in the bag under the sheets. You finish the register standing up, and she
+signs it, and you are home by four with the rods in the back and a tobacco tin in the
+cupboard under your own stairs.
+The notes are old but a bank will take them, and you know that because you asked,
+three days later, at a counter in another town, and then did not do it.
+It is under your stairs fourteen years later. You have never opened the photograph
+again and you have never thrown the tin away, and you are not sure which of those two
+is the thing you are doing.
+-> END

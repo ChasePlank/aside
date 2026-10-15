@@ -90,6 +90,7 @@ public final class Games {
         g.add(new aside.games.riser.RiserGame());
         g.add(new aside.games.pledge.PledgeGame());
         g.add(new aside.games.survey.SurveyGame());
+        g.add(new aside.games.flue.FlueGame());
         g.add(new aside.games.bothy.BothyGame());
         g.add(new aside.games.dispensary.DispensaryGame());
         g.add(new aside.games.harbour.HarbourGame());

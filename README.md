@@ -104,9 +104,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty-three stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty-four stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge` and `the-survey`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey` and `the-flue`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene and
   ending counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -367,6 +367,12 @@ be called complete while the picks line cannot. That distinction is the whole re
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-flue.aside`** — a sweep, four chimneys, and the one that has not been done since the old man died.
+  Behind a calendar in the cupboard on the landing the flue bends, and in the bend there is a gap the size of a fist
+  and a **tobacco tin with a perished rubber band round it**: money in notes that stopped being printed years ago, and
+  a photograph of a woman on a bicycle, and nothing with anybody's name on it. Four endings, and they are four answers
+  to a question the job does not cover: what you do with a thing somebody hid, when the only person who could have
+  hidden it is seven years dead. 19 scenes, 4 endings.
 - **`stories/the-survey.aside`** — **the first story here that pairs with another**: it is the other side of The
   Canteen. An eighteen-year-old with a clipboard, a summer of levels, and the only hour of the week he is not being
   looked at — ten past two, the end table under the clock, a small pie with no onion in it, eleven minutes. Three
