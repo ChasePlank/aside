@@ -88,6 +88,7 @@ SUITES=(
   aside.games.fruitjump.engine.PlayerModelTest
   aside.games.fruitjump.engine.DuskTest
   aside.games.fruitjump.engine.CombatTest
+  aside.games.fruitjump.engine.AIDirectorTest       # the director's own behaviour, pinned before anybody wires it
   aside.games.fruitjump.engine.SlopeTest
   aside.games.fruitjump.engine.BatTest
   aside.games.fruitjump.engine.ArrowTest
