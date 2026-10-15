@@ -50,6 +50,34 @@ step "3/6  the notes exist, and are the ones this release will attach"
 ( cd "$TP" && tools/check-release-notes.sh --draft "$NOTES" aside.html Aside-linux-x64.tar.gz ) \
   || die "the DRAFT notes name a file this release would not attach - fix them before publishing"
 
+# AND THE FIGURES IN THE PROSE, WHICH NOTHING READ.
+#
+# The guard above verifies that the files the notes NAME exist. IT DOES NOT READ A SINGLE NUMBER IN THEM. Measured
+# 2026-10-15, by fault injection: it passed a draft whose shelf size was wrong by one byte AND whose story total was
+# wrong by one - and both were wrong in the real draft, because a story landed after the notes were written.
+# THE NOTES ARE ATTACHED TO THE ARTIFACT, so they have to describe it. Two figures here can be checked mechanically
+# and are: the shelf's size in bytes, and the number of stories in the library.
+SHELF="$HERE/web/aside.html"
+if [ -f "$SHELF" ]; then
+  shelf_bytes=$(stat -c%s "$SHELF")
+  shelf_want=$(printf '%s' "$shelf_bytes" | sed -E ':a; s/\B[0-9]{3}\b/,&/; ta')
+  grep -q "$shelf_want bytes" "$NOTES" \
+    || die "the notes never state the shelf's size ($shelf_want bytes) - they are attached to the artifact"
+fi
+story_count=$(ls "$HERE"/stories/*.aside 2>/dev/null | wc -l)
+python3 - "$NOTES" "$story_count" <<'PY' || die "the notes never state the library's story count ($story_count)"
+import sys
+notes, n = sys.argv[1], int(sys.argv[2])
+tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+ones = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+w = {tens[t] if o == 0 else "%s-%s" % (tens[t], ones[o]): t * 10 + o
+     for t in range(2, 10) for o in range(10)}
+words = [k for k, v in w.items() if v == n]
+text = open(notes).read()
+if not any("%s stories" % k in text for k in words):
+    sys.exit("no '%s stories'" % (words[0] if words else str(n)))
+PY
+
 step "4/6  the jar, and the shelf the library ships"
 ( cd "$HERE" && tools/make-jar.sh ) || die "make-jar failed"
 [ -f "$JAR" ] || die "make-jar did not write $JAR"
