@@ -61,16 +61,47 @@ for _t in range(2, 10):
     for _o in range(0, 10):
         WORDS.setdefault(_TENS[_t] if _o == 0 else "%s-%s" % (_TENS[_t], _ONES[_o]), _t * 10 + _o)
 
-SCENES = re.compile(r"(\d+)[^\S\n]+scenes?\b")
-ENDINGS = re.compile(r"(\d+)[^\S\n]+ending(?:s| scenes?)?\b")
+# WHERE A NUMBER AND ITS NOUN MAY BE SEPARATED BY A LINE BREAK, AND WHERE THEY MAY NOT.
+#
+# Two real cases pull in opposite directions, and both were measured:
+#   * the README's prose WRAPS between a number and its noun ("21 scenes, 90" / "  beats, 17 choice options"), and a
+#     pattern restricted to horizontal whitespace MISSED that claim - then read a neighbouring story's number from
+#     further down the same window and reported `the-discrepancy: README says 113 beats, the auditor counts 90`;
+#   * a report block quoted in the README ends a line with one count and starts the next with a LABEL
+#     ("states expanded:     5296553" / "scenes:              131/131 reached"), and a plain `\s+` read that as a
+#     claim of "5296553 scenes".
+# A CONTINUATION LINE IS INDENTED AND A REPORT LABEL STARTS AT COLUMN ZERO, so the separator is horizontal
+# whitespace, or a line break followed by indentation. Both cases now behave, and neither is a guess.
+_W = r"(?:[^\S\n]+|\n[ \t]{2,})"
+
+SCENES = re.compile(r"(\d+)" + _W + r"scenes?\b")
+ENDINGS = re.compile(r"(\d+)" + _W + r"ending(?:s| scenes?)?\b")
+# AND THE TWO OTHER NUMBERS THE PER-STORY LINES STATE. `the-water-line` was documented as 103 beats and has 113 -
+# in the same section whose whole point is that these counts are audited rather than asserted. Nothing checked them
+# because the tool did not print them; it does now, so they are checked here like the scene count is.
+BEATS = re.compile(r"(\d+)" + _W + r"beats?\b")
+OPTIONS = re.compile(r"(\d+)" + _W + r"choice options?\b")
 
 
 def audited_counts():
     out = subprocess.run([str(ROOT / "tools" / "audit-stories.sh")], cwd=ROOT,
                          capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=300).stdout
     counts = {}
-    for m in re.finditer(r"^  ([a-z0-9-]+)\s+\S+\s+\d+/(\d+) scene\(s\), (\d+) ending", out, re.M):
-        counts[m.group(1)] = (int(m.group(2)), int(m.group(3)))
+    # ONE REGEX PER NUMBER, on each per-story line, rather than one long pattern that has to match the whole line's
+    # shape: the tool has three line shapes (`ok`, `all reached ...`, `ISSUES`) and a pattern over the whole line
+    # would silently stop matching the day a fourth is added.
+    for line in out.splitlines():
+        head = re.match(r"^  ([a-z0-9-]+)\s+\S+\s+", line)
+        if not head:
+            continue
+        sc = re.search(r"(\d+)/(\d+) scene\(s\)", line)
+        en = re.search(r"(\d+) ending\(s\)", line)
+        be = re.search(r"(\d+) beats\b", line)
+        op = re.search(r"(\d+) options\b", line)
+        if not sc:
+            continue
+        counts[head.group(1)] = (int(sc.group(2)), int(en.group(1)) if en else -1,
+                                 int(be.group(1)) if be else -1, int(op.group(1)) if op else -1)
     return counts
 
 
@@ -85,7 +116,7 @@ def main():
 
     problems = []
     seen_endings = set()
-    for story, (scenes, endings) in sorted(counts.items()):
+    for story, (scenes, endings, beats, options) in sorted(counts.items()):
         if story not in text:
             problems.append("%s: not mentioned in the README at all" % story)
             continue
@@ -105,6 +136,14 @@ def main():
             continue
         if int(m.group(1)) != scenes:
             problems.append("%s: README says %s scenes, the auditor counts %d" % (story, m.group(1), scenes))
+        # THE SAME TREATMENT FOR THE OTHER TWO, and only when the line states them: most stories do not.
+        b = BEATS.search(window)
+        if b and beats >= 0 and int(b.group(1)) != beats:
+            problems.append("%s: README says %s beats, the auditor counts %d" % (story, b.group(1), beats))
+        o = OPTIONS.search(window)
+        if o and options >= 0 and int(o.group(1)) != options:
+            problems.append("%s: README says %s choice options, the auditor counts %d"
+                            % (story, o.group(1), options))
         # AND THE ENDING COUNT IS NOT COMPARED, because the two sides mean different things by it. `the-water-line`
         # says "three endings" in its own header and the auditor counts ONE `-> END`, and both are right: the
         # branches converge on a single ending scene. Comparing them produced a false positive within an hour of the

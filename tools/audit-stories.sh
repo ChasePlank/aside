@@ -53,8 +53,13 @@ for f in stories/*.aside; do
   out=$(timeout 900 "$JAVA" -Xmx"$HEAP" -Daside.budget="$BUDGET" -cp "$OUT" aside.engine.Audit "$f" 2>&1)
   scenes=$(echo "$out" | grep -oE "scenes: *[0-9]+/[0-9]+" | grep -oE "[0-9]+/[0-9]+")
   endings=$(echo "$out" | grep -oE "distinct endings: *[0-9]+" | grep -oE "[0-9]+")
+  # AND THE TWO NUMBERS THE README ALSO STATES PER STORY - beats and choice options - which nothing checked. The
+  # auditor prints them in its header line, so this only has to pass them through. `the-water-line` was documented
+  # as 103 beats and has 113: A NUMBER NOBODY RE-RUNS, in the same section that says the counts are audited.
+  beats=$(echo "$out" | sed -n 's/^scenes [0-9]* *beats \([0-9]*\).*/\1/p' | head -1)
+  options=$(echo "$out" | sed -n 's/^scenes [0-9]* *beats [0-9]* *choice options \([0-9]*\).*/\1/p' | head -1)
   if echo "$out" | grep -q "^CLEAN"; then
-    printf '  %-22s ok           %s scene(s), %s ending(s)\n' "$name" "${scenes:-?}" "${endings:-?}"
+    printf '  %-22s ok           %s scene(s), %s ending(s), %s beats, %s options\n' "$name" "${scenes:-?}" "${endings:-?}" "${beats:-?}" "${options:-?}"
     clean=$((clean + 1))
   elif echo "$out" | grep -q "INCONCLUSIVE"; then
     # TWO DIFFERENT THINGS, AND THE DIFFERENCE MATTERS. "the traversal did not exhaust" is not the same as
@@ -65,7 +70,7 @@ for f in stories/*.aside; do
     total=${scenes##*/}
     reached=${scenes%%/*}
     if [ "$reached" = "$total" ] && [ "$total" != "0" ]; then
-      printf '  %-22s all reached  %s scene(s), %s ending(s) - traversal did not exhaust, no issues found\n' \
+      printf '  %-22s all reached  %s scene(s), %s ending(s), %s beats, %s options - traversal did not exhaust, no issues found\n' \
         "$name" "$scenes" "${endings:-?}"
       inconclusive=$((inconclusive + 1))
     else
@@ -73,7 +78,7 @@ for f in stories/*.aside; do
       inconclusive=$((inconclusive + 1))
     fi
   else
-    printf '  %-22s ISSUES       %s scene(s), %s ending(s)\n' "$name" "${scenes:-?}" "${endings:-?}"
+    printf '  %-22s ISSUES       %s scene(s), %s ending(s), %s beats, %s options\n' "$name" "${scenes:-?}" "${endings:-?}" "${beats:-?}" "${options:-?}"
     echo "$out" | grep -E "^    !!|^    \?\?" | head -4 | sed 's/^/      /'
     issues=$((issues + 1)); failed_names+=("$name")
   fi

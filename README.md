@@ -352,7 +352,7 @@ the story itself did not move: what moved was the traversal, and every number th
   the auditor counts one: it counts *terminal scenes*, not the ways of reaching them. Worth knowing when reading
   any of these numbers.
 - **`stories/the-water-line.aside`** — an archivist in a city that is flooding, moving the collection up a floor
-  every few years and deciding what gets carried. 18 scenes, 103 beats, 25 choice options, CLEAN. Three narrative
+  every few years and deciding what gets carried. 18 scenes, 113 beats, 25 choice options, CLEAN. Three narrative
   endings again, and the one that costs the most is the one where you take nothing.
 - **`stories/two-of-everything.aside`** — a brother and a sister clearing out their mother's house in a weekend.
   **The first story here with two people in it** — the five before it are each one person alone with a task — and
