@@ -480,6 +480,28 @@ PY
   fi
 fi
 
+# ---- check-readme-stories.py must notice a story the auditor did not report a readable line for ----------------
+# THE FAULT IS A STATUS WORD THAT DOES NOT CARRY THE COUNTS. The checker reads the AUDITOR'S OUTPUT, so a story it
+# cannot parse is a story whose claims are never checked - silently, and that is reachable by adding a status: the
+# tool gained `partial` on 2026-10-15 and the next one might print a different shape. It is the failure this
+# checker exists for, one level up, so the entry breaks the SHAPE and requires it to be named.
+if [ -x tools/check-readme-stories.py ] && [ -f tools/audit-stories.sh ]; then
+  AS_BAK=$(mktemp); cp tools/audit-stories.sh "$AS_BAK"
+  python3 - <<'AS'
+p = 'tools/audit-stories.sh'; s = open(p).read()
+old = "%s scene(s), %s ending(s), %s beats, %s options\\n' "
+assert s.count(old) >= 1, 'the ok line to break is not there'
+open(p, 'w').write(s.replace(old, "%s scenes, %s ending(s), %s beats, %s options\\n' ", 1))
+AS
+  as_out=$(timeout 900 python3 tools/check-readme-stories.py 2>&1); as_rc=$?
+  cp "$AS_BAK" tools/audit-stories.sh; rm -f "$AS_BAK"
+  if [ $as_rc -ne 0 ] && grep -q "UNCHECKED" <<<"$as_out"; then
+    ok "check-readme-stories notices a story it could not read" "$(echo "$as_out" | grep UNCHECKED | head -1 | tr -s ' ' | cut -c1-58)"
+  else
+    bad "check-readme-stories notices a story it could not read" "exit $as_rc, and nothing about UNCHECKED"
+  fi
+fi
+
 # ---- check-audit-findings.py must notice the README disowning a finding the auditor prints ----------------------
 # THE FAULT IS THE ONE THAT ACTUALLY HAPPENED: the table said `choices that do not matter` was NOT IN THIS TREE while
 # the auditor had been printing it for six days. A row that disowns a real finding is as expensive as one that

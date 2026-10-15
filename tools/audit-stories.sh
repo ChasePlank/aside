@@ -43,7 +43,7 @@ SKIP="${SKIP:-night-shift}"
 
 [ -d "$OUT/aside/engine" ] || { echo "  stories: no build in $OUT" >&2; exit 2; }
 
-clean=0; issues=0; inconclusive=0; failed_names=()
+clean=0; issues=0; inconclusive=0; partial=0; failed_names=()
 for f in stories/*.aside; do
   [ -f "$f" ] || continue
   name=$(basename "$f" .aside)
@@ -58,7 +58,20 @@ for f in stories/*.aside; do
   # as 103 beats and has 113: A NUMBER NOBODY RE-RUNS, in the same section that says the counts are audited.
   beats=$(echo "$out" | sed -n 's/^scenes [0-9]* *beats \([0-9]*\).*/\1/p' | head -1)
   options=$(echo "$out" | sed -n 's/^scenes [0-9]* *beats [0-9]* *choice options \([0-9]*\).*/\1/p' | head -1)
-  if echo "$out" | grep -q "^CLEAN"; then
+  # CLEAN SO FAR IS NOT CLEAN, AND THE AUDITOR IS EXPLICIT ABOUT IT.
+  #
+  # `grep -q "^CLEAN"` MATCHES BOTH `CLEAN` AND `CLEAN SO FAR (traversal partial: ...)`, so a walk that did not
+  # exhaust was reported here as a plain `ok` - and the distinction is the one the README spends a paragraph on:
+  # "A clean report is not always a finished one." THE REPORT THAT EXISTS TO PRESERVE THAT DISTINCTION WAS
+  # COLLAPSING IT. So the partial case is tested FIRST and named, and the reader can see which stories the search
+  # could not finish rather than inferring it from a scene count that happens to be complete.
+  #
+  # It is still a pass: the auditor exits 0 for a partial walk that found nothing, and so does this.
+  if echo "$out" | grep -q "^CLEAN SO FAR"; then
+    printf '  %-22s partial      %s scene(s), %s ending(s), %s beats, %s options - the traversal did not exhaust; nothing found in what it saw\n' \
+      "$name" "${scenes:-?}" "${endings:-?}" "${beats:-?}" "${options:-?}"
+    partial=$((partial + 1))
+  elif echo "$out" | grep -q "^CLEAN"; then
     printf '  %-22s ok           %s scene(s), %s ending(s), %s beats, %s options\n' "$name" "${scenes:-?}" "${endings:-?}" "${beats:-?}" "${options:-?}"
     clean=$((clean + 1))
   elif echo "$out" | grep -q "INCONCLUSIVE"; then
@@ -123,7 +136,8 @@ fi
 
 echo
 if [ "$issues" -eq 0 ]; then
-  echo "=== $clean story(ies) clean, $inconclusive inconclusive, 0 with issues ==="
+  echo "=== $clean story(ies) clean, $partial partial, $inconclusive inconclusive, 0 with issues ==="
+  [ "$partial" -eq 0 ] || echo "    (partial: nothing found, but the traversal did not exhaust - so the search cannot prove a scene is unreachable)"
   [ "$inconclusive" -eq 0 ] || echo "    (an inconclusive run is not a fault, but it is not a pass either)"
   exit 0
 fi

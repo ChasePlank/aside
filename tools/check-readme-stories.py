@@ -115,6 +115,16 @@ def main():
         return 2
 
     problems = []
+    # AND EVERY STORY FILE IS ACCOUNTED FOR - which the loop below CANNOT SEE ON ITS OWN, because it iterates the
+    # AUDIT'S output. A story the parser could not read is a story whose claims are never checked, SILENTLY, and
+    # that is reachable by adding a status word: the tool gained `partial` on 2026-10-15, and the next one might
+    # not carry the counts. It is the failure this whole checker exists for, one level up.
+    # `night-shift` is excluded BY NAME because the auditor skips it deliberately - it is SelfTest's fault fixture.
+    for path in sorted(STORIES.glob("*.aside")):
+        if path.stem == "night-shift" or path.stem in counts:
+            continue
+        problems.append("%s: the auditor reported nothing this checker could read, so its claims are UNCHECKED"
+                        % path.stem)
     seen_endings = set()
     for story, (scenes, endings, beats, options) in sorted(counts.items()):
         if story not in text:
