@@ -480,6 +480,36 @@ PY
   fi
 fi
 
+# ---- check-story-repetition.py must notice a phrase copied from one story into another -------------------------
+# THE FAULT IS A SENTENCE FROM ONE STORY PASTED INTO ANOTHER, which is what the tool exists for and is invisible when
+# each story is read on its own. The injection is a real sentence, moved, so the entry fails loudly if the story it
+# quotes is ever reworded - an injection that silently stops injecting is worse than none.
+if [ -x tools/check-story-repetition.py ] && [ -f stories/the-forge.aside ] && [ -f stories/the-pane.aside ]; then
+  P_BAK=$(mktemp); cp stories/the-pane.aside "$P_BAK"
+  python3 - <<'SR'
+import io, re, sys
+src = io.open("stories/the-forge.aside", encoding="utf-8").read()
+m = re.search(r"You have shod four thousand horses\.[^.]*\.", src)
+if not m:
+    sys.exit("the sentence to move is no longer in the-forge - fix this entry rather than letting it pass")
+p = "stories/the-pane.aside"; s = io.open(p, encoding="utf-8").read()
+old = "You have a piece of glass in your hand"
+if old not in s:
+    sys.exit("the anchor in the-pane is gone - fix this entry rather than letting it pass")
+io.open(p, "w", encoding="utf-8").write(s.replace(old, m.group(0) + " " + old, 1))
+SR
+  sr_rc=$?
+  sr_out=$(python3 tools/check-story-repetition.py 2>&1); sr_check=$?
+  cp "$P_BAK" stories/the-pane.aside; rm -f "$P_BAK"
+  if [ $sr_rc -ne 0 ]; then
+    bad "check-story-repetition notices a copied phrase" "the injection did not run: $sr_out"
+  elif [ $sr_check -ne 0 ] && grep -q "share a" <<<"$sr_out"; then
+    ok "check-story-repetition notices a copied phrase" "$(echo "$sr_out" | grep 'share a' | head -1 | cut -c1-58)"
+  else
+    bad "check-story-repetition notices a copied phrase" "exit $sr_check, and nothing about a shared run"
+  fi
+fi
+
 # ---- check-readme-stories.py must notice a story the auditor did not report a readable line for ----------------
 # THE FAULT IS A STATUS WORD THAT DOES NOT CARRY THE COUNTS. The checker reads the AUDITOR'S OUTPUT, so a story it
 # cannot parse is a story whose claims are never checked - silently, and that is reachable by adding a status: the

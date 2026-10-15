@@ -451,6 +451,22 @@ if [ -f tools/check-readme-stories.py ]; then
   fi
 fi
 
+# AND A PHRASE THE LIBRARY USES TWICE. Twenty-nine stories, five and a half thousand lines, one author: a sentence
+# copied from one story into another reads as voice in BOTH, and each story is read on its own. The unit is the SCENE
+# and the comparison is ACROSS stories, both of which were measured before the tool existed - 339 shared runs here
+# are WITHIN one story and are deliberate parallel structure (sibling endings telling the same night several ways),
+# and a check that flagged those would be firing on valid content.
+if [ -f tools/check-story-repetition.py ]; then
+  printf '  %-20s ' "story-repetition"
+  if out=$(timeout 600 python3 tools/check-story-repetition.py 2>&1); then
+    echo "ok     $(echo "$out" | grep -E '^=== [0-9]+ story' | head -1)"
+  else
+    echo "FAIL   $(echo "$out" | grep -E '^=== [0-9]+ pair' | head -1)"
+    echo "$out" | grep -A2 'share a' | head -8 | sed 's/^/  /'
+    gate_failed=1
+  fi
+fi
+
 if [ -f tools/check-tutorial-counts.py ]; then
   echo "  --- stated tutorial counts ---"
   tut_out=$(python3 tools/check-tutorial-counts.py 2>&1); tut_rc=$?
