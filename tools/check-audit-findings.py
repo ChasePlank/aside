@@ -98,12 +98,12 @@ def main():
                     problems.append("the table says '%s' is NOT IN THIS TREE, and Bot.java prints it" % cell.strip())
 
     if problems:
-        print("  === %d claim(s) about the auditor's findings no longer match it ===" % len(problems))
+        print("=== %d claim(s) about the auditor's findings no longer match it ===" % len(problems))
         for p in problems:
             print("  STALE  " + p)
         print("  The table is at 'What it reports, and which findings you can trust' in README.md.")
         return 1
-    print("  === %d finding(s) printed, %d of them documented, and no stale ones ===" % (len(findings), len(findings)))
+    print("=== %d finding(s) printed, %d of them documented, and no stale ones ===" % (len(findings), len(findings)))
     return 0
 
 
