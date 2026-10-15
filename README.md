@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty-five stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty-six stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue` and `the-lock`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock` and `the-face`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -394,6 +394,12 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-face.aside`** — a shot firer at a quarry with four days left. Three shots a day, eight holes that
+  all go within a second of each other, and then **a click from up at the face, which is the sound a hole makes when
+  it has not done anything at all.** The rule is on the wall of the magazine in his own handwriting: *do not approach
+  the face for thirty minutes, and then approach it as though the charge is live.* Four endings, and the question is
+  what the rule is for when the men are in the bothy with the kettle on and the owner's car is at the gate. 15 scenes,
+  98 beats, 4 choice options.
 - **`stories/the-lock.aside`** — a lock keeper, four gates, eleven minutes a boat, and a schedule on a board by the
   office: six to eight, twelve to two, five to seven. At ten past seven a narrowboat comes up the cut, alone, and the
   answer to *"am I too late?"* has been yes four times this year. **The question underneath is what a schedule is

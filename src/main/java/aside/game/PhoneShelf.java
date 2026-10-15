@@ -85,6 +85,7 @@ public final class PhoneShelf {
             case "survey" -> "Keeps the canteen in this browser. Eleven weeks, and one pie with no onion.";
             case "flue" -> "Keeps the register in this browser. Four chimneys, and one that was never done.";
             case "lock" -> "Keeps the board in this browser. Four gates, and a boat that comes up after hours.";
+            case "face" -> "Keeps the book in this browser. Three shots a day, and one that only clicks.";
             // FIVE STORIES HAD NO LINE HERE BECAUSE THEY HAD NO MODULE, so they were not on the shelf to need one -
             // and their absence from `Games.all()` kept them out of the LIBRARY as well. See the game modules.
             case "bothy" -> "Roxanne's. The one with no hook at all - nothing is wrong and nothing is explained.";

@@ -1,0 +1,136 @@
+# The Face - a shot firer, three shots a day, and a charge that does not go off.
+# Written for the library. One person, one rule, and the question of who the rule is for.
+
+title: The Face
+start: start
+
+== start ==
+bg east_corner
+music room_tone
+The quarry has four benches and a face that has been worked from the top down since
+nineteen fifty-one, and it closes on Friday, which is four days.
+Three shots a day: eleven, two, and four. You load them yourself, you fire them
+yourself, and you are the only person on the site who is allowed to push the handle.
+-> the_morning
+
+== the_morning ==
+The eleven o'clock goes up clean and the men come back off the bank at half past and
+the loader takes the spoil away and it is a Tuesday like any other Tuesday.
+At two you load the second one into the same bench, eight holes, and you are thinking
+about the fact that there are four days left and that after Friday nobody will be
+allowed up here at all.
+-> the_second
+
+== the_second ==
+The whistle goes. The men walk back to the bothy and one of them, the lad who started
+in the spring, stops at the corner and looks back, which they do for the first month.
+You wait for the count. You always count.
+-> the_count
+
+== the_count ==
+Eight. Seven. Six. You count them down and at three you push the handle and the ground
+moves the way it always moves, all eight going within a second of each other, and the
+dust comes up over the bench and hangs there.
+And then, in the quiet afterwards, there is one more. Not a bang. A click, from up at
+the face, the sound a hole makes when it has not done anything at all.
+-> the_misfire
+
+== the_misfire ==
+The rule is thirty minutes. It is written on the wall of the magazine in your own
+handwriting and it says: in the event of a misfire, do not approach the face for thirty
+minutes, and then approach it as though the charge is live.
+The men are in the bothy with the kettle on. The owner is at the gate in his car
+because he comes at four. The lad is still at the corner looking up.
+-> the_decision
+
+== the_decision ==
+You have the handle in your hand and the box is open and there is nothing to do for
+twenty-nine minutes except stand here and be a person who is waiting.
+* Wait the thirty. It is written on the wall. -> wait
+* Go up now. You have done this nineteen years. -> go_up
+* Send them all home and come back to it in the morning. -> send_home
+* Walk up to the bothy and tell them what a misfire is. -> tell_them
+
+== wait ==
+You put the handle down and you sit on the box and you watch the face, and the dust
+settles, and at eleven minutes the lad comes over and stands next to you without saying
+anything and stays there for the rest of it.
+At thirty you walk up the bank. The hole is where you left it, and it is live, and you
+deal with it the way the book says, and it takes another forty minutes and nobody is
+hurt and the day is gone.
+-> ending_waited
+
+== go_up ==
+You walk up the bank at nine minutes, because the owner's car is at the gate and the
+lorry is booked and because you have done this nineteen years and you know what a
+misfire sounds like.
+The hole has already gone. The stemming is blown out and the rock is broken and there
+is a fresh scar on the face that was not there when you counted, and it went at some
+point while you were standing at the box with the handle in your hand, and you did not
+hear it because it went without a sound.
+-> ending_went_quiet
+
+== send_home ==
+You walk to the bothy and tell them to pack up, and the lad asks whether it is because
+of the click, and you say yes, and he nods like somebody who has been told a fact rather
+than a decision.
+They go. The owner's car is still at the gate and you walk down and tell him through
+the window that the face is live and nobody goes up until it is dealt with, and he asks
+how long, and you say you do not know, and he drives off without saying anything else.
+-> ending_handed_on
+
+== tell_them ==
+You put the handle in the box and you walk to the bothy, and four men look up, and you
+tell them what a misfire is: that the charge is in the hole, that it is live, that the
+rule is thirty minutes, and that the clicking is not the charge failing, it is the
+charge deciding.
+The lad asks what happens if it goes while you are up there. You tell him the truth,
+which is that you do not go up while it is deciding, and that this is the whole of the
+rule and that it is written on the wall because it is the whole of the rule.
+-> the_telling
+
+== the_telling ==
+You sit down with them and drink the tea, which you have not done in nineteen years,
+and at thirty minutes you go up with the lad at the bottom of the bank watching, and you
+deal with it, and it is the same as it would have been if you had gone up at nine
+minutes, and that is not the point and you both know it.
+-> ending_told
+
+== ending_waited ==
+The face is dealt with and the lorry comes on Thursday instead and the owner says
+nothing about it, and on Friday the quarry closes and the men take their tools and the
+lad takes the whistle, because you gave it to him, because there is nobody else.
+You have the rule on the wall of the magazine in your own handwriting and the magazine
+is going to be filled in on Monday, and you take the piece of wall with the rule on it
+out with a bolster and a hammer, which takes an hour, and which nobody asks you about.
+-> END
+
+== ending_went_quiet ==
+You stand at the top of the bank with the box in your hand and the scar in front of you
+and you work out, from where the stemming has landed, that it went at about four
+minutes, which is three minutes after the click and five minutes before you started
+walking.
+You write it in the book as a misfire that fired. The inspector reads the book on
+Thursday and asks you one question, which is how long you waited, and you tell him nine
+minutes, and he writes that down, and that is the last anybody says about it.
+-> END
+
+== ending_handed_on ==
+The face is dealt with on Thursday by a man from the company who comes with a van and a
+certificate, and he asks you why it was not dealt with on Tuesday, and you tell him the
+truth, which is that you sent four men home rather than stand at the box for thirty
+minutes, and he writes it down and does not look up.
+The quarry closes on Friday and the lad goes to a site in the next county and you do not
+hear from him again, and the rule is still on the wall of the magazine when they fill
+the magazine in, in your handwriting, in ink that has not faded at all.
+-> END
+
+== ending_told ==
+You have never told anybody what a misfire is. Nineteen years, and the rule was a thing
+you kept rather than a thing you said, and saying it out loud in a bothy with four men
+and a kettle is the only piece of the job you are going to miss.
+On Friday the lad asks whether he can have the whistle and you say yes, and he asks
+whether the rule is the same everywhere and you say no, and he asks what he should do
+then, and you say the thing that is actually true: that he should write his own on the
+wall and then keep it.
+-> END
