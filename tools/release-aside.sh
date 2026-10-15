@@ -57,14 +57,29 @@ step "3/6  the notes exist, and are the ones this release will attach"
 # wrong by one - and both were wrong in the real draft, because a story landed after the notes were written.
 # THE NOTES ARE ATTACHED TO THE ARTIFACT, so they have to describe it. Two figures here can be checked mechanically
 # and are: the shelf's size in bytes, and the number of stories in the library.
-SHELF="$HERE/web/aside.html"
-if [ -f "$SHELF" ]; then
-  shelf_bytes=$(stat -c%s "$SHELF")
+# WHICH ARTIFACT THE FIGURES ARE COMPARED AGAINST, AND THE FIRST VERSION OF THIS GOT IT WRONG WITHIN THE HOUR.
+#
+# It read the WORKING COPY. That is right while a release is being prepared, and WRONG THE MOMENT IT IS PUBLISHED:
+# the notes then describe the TAGGED artifact, and the next story moves the working copy on - so the check would fail
+# for every release after its own, for a reason that is not a fault. Measured 2026-10-15: v1.18 was published, and
+# the twenty-ninth story would have made this refuse the v1.18 notes immediately.
+#
+# So: the tag if it exists, the working copy if it does not.
+if git -C "$HERE" rev-parse -q --verify "refs/tags/$VERSION" >/dev/null 2>&1; then
+  SHELF_BYTES=$(git -C "$HERE" show "$VERSION:web/aside.html" | wc -c)
+  STORY_COUNT=$(git -C "$HERE" ls-tree -r --name-only "$VERSION" stories/ | grep -c '\.aside$')
+  echo "  (comparing against the PUBLISHED $VERSION, not the working copy)"
+else
+  SHELF_BYTES=$(stat -c%s "$HERE/web/aside.html" 2>/dev/null)
+  STORY_COUNT=$(ls "$HERE"/stories/*.aside 2>/dev/null | wc -l)
+fi
+if [ -n "$SHELF_BYTES" ] && [ "$SHELF_BYTES" != "0" ]; then
+  shelf_bytes="$SHELF_BYTES"
   shelf_want=$(printf '%s' "$shelf_bytes" | sed -E ':a; s/\B[0-9]{3}\b/,&/; ta')
   grep -q "$shelf_want bytes" "$NOTES" \
     || die "the notes never state the shelf's size ($shelf_want bytes) - they are attached to the artifact"
 fi
-story_count=$(ls "$HERE"/stories/*.aside 2>/dev/null | wc -l)
+story_count="$STORY_COUNT"
 python3 - "$NOTES" "$story_count" <<'PY' || die "the notes never state the library's story count ($story_count)"
 import sys
 notes, n = sys.argv[1], int(sys.argv[2])

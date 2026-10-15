@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty-eight stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty-nine stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge` and `the-endpaper`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper` and `the-pane`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -394,6 +394,12 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-pane.aside`** — a glazier of thirty years who *can read a broken window the way other people read
+  a face*: which pane went first, whether it was hit or leaned on, **and whether the glass is on the inside or the
+  outside of the frame, because glass goes the way the force went.** A back door put through overnight, a crime
+  number, an insurance form — and glass on a step that is under a porch, with no wind in this county that puts glass
+  under a porch. Four endings, and they are four answers to whether a fact you can see is yours to say. 16 scenes,
+  108 beats, 4 choice options.
 - **`stories/the-endpaper.aside`** — a bindery over a shop that sells paper and envelopes, twenty-two years of trade,
   and a Book of Common Prayer from 1901 whose front pastedown has lifted at one corner. Under the lifted corner there
   is writing in pencil, and you can read four words of it: *I did not tell her.* **The trade's answer is that a

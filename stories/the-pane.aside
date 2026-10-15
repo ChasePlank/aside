@@ -1,0 +1,148 @@
+# The Pane - a glazier, a broken window, and which side the glass is on.
+# Written for the library. One person, one fact, and the question of whether a fact is yours to say.
+
+title: The Pane
+start: start
+
+== start ==
+bg east_corner
+music room_tone
+You have been glazing for thirty years and you can read a broken window the way other
+people read a face. Which pane went first. Whether it was hit or leaned on. Whether the
+glass is on the inside or the outside of the frame, and that one is the whole of it,
+because glass goes the way the force went.
+You are called out for insurance work, mostly, and mostly it is what the form says.
+-> the_call
+
+== the_call ==
+The house is a bungalow at the end of a road of bungalows and the call is from a man
+who says his mother's back door was put through last night and can you come today.
+You can come today. You are there by half past nine with a van full of glass and a
+wooden metre stick you have had since 1994.
+-> the_house
+
+== the_house ==
+The back door is half glazed and the bottom pane is gone and the gap has been boarded
+with a piece of hardboard and two screws, which somebody did last night and did well.
+There is glass on the kitchen floor. There is also glass on the step outside, and the
+step outside is under a porch, and there is no wind in this county that puts glass
+under a porch.
+The man makes the tea and tells you what happened while you sweep up.
+-> the_story
+
+== the_story ==
+man: Half eleven, they think. She was in bed, she heard it, she came down and it was like
+this, and nothing's been taken.
+man: The police came out and did a report and said they'd be in touch, and the insurance
+want a glazier's invoice and a crime number, so that's what I'm getting.
+His mother is sitting at the kitchen table with her hands around the cup and she has not
+said anything at all, and she is watching you sweep, which people do.
+-> the_reading
+
+== the_reading ==
+You pick up four pieces off the floor and you look at them the way you look at four
+pieces, and then you look at the frame, and then at the step, and then at the frame again.
+Everything about the door says one thing and everything about the floor says the same
+thing, and it is not the thing in the story: whatever went through this pane went through
+it from the kitchen side, and the pane folded outwards, and the pieces on the step are
+the pieces that would do that.
+-> the_decision
+
+== the_decision ==
+The man is at the sink with his back to you telling you about the crime number. His
+mother is at the table with her hands around the cup.
+You have a piece of glass in your hand and a metre stick under your arm and the hardboard
+is leaning against the wall where you took it down, and the invoice in your pocket has a
+line on it that says CAUSE OF BREAK, which is a line the insurance asks for and which you
+have filled in four hundred times and never once thought about.
+* Say nothing. Fit the glass. Write "forced entry" on the line. -> say_nothing
+* Tell the man, plainly, once, with the pieces in your hand. -> tell_the_man
+* Ask the mother what happened, with him out of the room. -> ask_her
+* Write what you can see on the line and let the form say it. -> the_line
+
+== say_nothing ==
+You fit the glass. It takes forty minutes and it is a good fit and you put the hardboard
+in the van because the man says he does not want it and somebody might as well have it.
+You write FORCED ENTRY on the line and he pays you in cash and thanks you for coming out,
+and his mother says thank you as well, from the table, and it is the only thing she says.
+-> ending_fitted
+
+== tell_the_man ==
+you: I have to tell you what I can see, because it's on the form.
+man: Go on.
+you: The glass went outwards. It was broken from this side, from the kitchen, and the
+pieces on the step are the pieces that would be there if it was.
+He looks at the door for a long time. He does not look at his mother and she does not look
+at him, and the two of them do the same thing at the same moment, which is nothing.
+-> the_after
+
+== the_after ==
+man: Right.
+you: That's what I can see. What you put on the form is yours.
+man: Right.
+He pays you and you go, and you have fitted the glass and you have said the true thing
+once and you have not said it twice, which is the whole of what a person in a van can do
+about a kitchen.
+-> ending_said_it
+
+== ask_her ==
+You ask the man to give you a hand with a sheet of glass from the van, which is a lie, and
+he goes, and the back door stays open, and you carry on sweeping.
+woman: It was me.
+She says it to the floor. You do not stop sweeping and you do not say anything, because
+there is a way of doing this and it is to keep sweeping.
+woman: He'd been on at me about the will since Easter. I didn't want him going through the
+drawer again. I put my hand through it and then I sat down and then I thought about it for
+an hour before I rang him.
+-> the_told_me
+
+== the_told_me ==
+You put the glass in and it is a good fit and the man comes back with the sheet you did
+not need and says where do you want it, and you say the van, and he puts it in the van.
+The mother asks you for the invoice and you give it her and she reads the line that says
+CAUSE OF BREAK and then she looks at you, and you have to decide what is on that line
+while she is looking at you.
+-> ending_hers
+
+== the_line ==
+You fit the glass and you take the invoice out and you write, on the line that says CAUSE
+OF BREAK, four words that are true and that are not an accusation: GLASS WENT FROM INSIDE.
+The man reads it at the door and goes very still, and then he folds it in half and puts it
+in his inside pocket and pays you, and says thank you for coming out, and closes the door.
+-> ending_the_line
+
+== ending_fitted ==
+The insurance pays it. That is what the form is for and that is what the line is for, and
+you have never once been asked a question about it in thirty years and you will not be
+asked one about this either.
+You think about the woman at the table for a while, on the drive home, and then you stop
+thinking about her, because there are two more calls on the sheet and the second one is in
+the next town.
+-> END
+
+== ending_said_it ==
+You said the true thing once and you did not say it twice, and that is the whole of the
+job you could do, and it is more than most of the trade would have done.
+Six weeks later you are called back to the same road for a different house and you look at
+the bungalow as you go past. The pane is in. Somebody has painted the frame, which nobody
+asked them to do, and which is the kind of thing people do when they have decided something.
+-> END
+
+== ending_hers ==
+You do not know what she wrote. You never see the form again and you are not the person it
+goes to and there is no version of the next ten years in which you find out.
+What you know is that she read the line and looked at you and then took the pen off the
+ledge herself and wrote on the invoice in her own hand, and that she did it without asking
+you what to put, and that she was steady about it, and that her son was in the van with a
+sheet of glass he did not need.
+-> END
+
+== ending_the_line ==
+The four words go to the insurance company and you never hear anything about them, because
+an insurance company is a machine that reads a line and prices a risk and does not ring a
+glazier.
+You fit glass in that road three more times that winter and you never see the man again,
+and once you see the mother in the shop and she looks at you for exactly as long as it
+takes to decide, and then she nods, and you nod, and that is the entire conversation, and
+it is the one you think about.
+-> END
