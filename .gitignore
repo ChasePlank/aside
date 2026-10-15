@@ -8,3 +8,8 @@ classes/
 hs_err_pid*.log
 replay_pid*.log
 saves/
+
+# Python bytecode caches from tools/*.py. RUNNING one as a script does not create one - IMPORTING one does, and that
+# is how this appeared: a debug session imported check-readme-stories.py to read its own regexes, and the tree then
+# reported a modification that was not one. Same entry, same reason, as the crash logs above.
+__pycache__/
