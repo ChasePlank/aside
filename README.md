@@ -308,25 +308,43 @@ count was 17 for a long time and the count was right — the map was wrong.
 ## What is in here
 
 - **`stories/overtime.aside`** — the five-night FNAF Glamrock visual novel. **Six distinct endings**, and the
-  spread is wide: `ending_remembered_close` is the rarest at 5,356 of the paths explored, `ending_overtime` the
-  most common at 386,617. The auditor reports the distribution, so you can see which branches players actually
-  reach — and a fuller audit of it is below.
+  spread is wide: `ending_remembered_close` is the rarest at **12,950** of the paths explored, `ending_overtime` the
+  most common at **710,755**. 131 scenes, 656 beats, 58 choice options. The auditor reports the distribution, so you can see which branches players actually
+  reach — and a fuller audit of it is below. (Those two numbers were 5,356 and 386,617 until 2026-10-15, when
+  re-running the command below showed the ranking still held and every count had moved.)
 
-A full-budget audit of Overtime, run rather than assumed:
+A full audit of Overtime, run rather than assumed — **and with the command that produced it, which the first
+version of this block did not record.** That omission is why it went stale: re-running it on 2026-10-15 could not
+reproduce `1,546,467` paths under either frontier, and the same command the paragraph above recommends for large
+stories now finishes the traversal instead of stopping short of it.
+
+```bash
+java -Xmx3g -Daside.budget=30000000 -Daside.frontier.paths=true -cp out aside.engine.Audit stories/overtime.aside
+```
 
 ```
-scenes 131   beats 656   choice options 58      paths explored 1,546,467
-distinct endings: 6
-unreachable scenes: 0   (complete: 131/131 scenes reached, so nothing can be missing)
-missing targets: 0      dead ends: 0      unreachable beats: 0
-never-offered picks: 0  choices that do not matter: 0
+scenes 131   beats 656   choice options 58
+paths explored:      2843020
+states expanded:     5296553
+scenes:              131/131 reached
+distinct endings:    6
+    -> ending_promised   (697805 paths)
+    -> ending_honest   (541866 paths)
+    -> ending_overtime   (710755 paths)
+    -> ending_gone   (289728 paths)
+    -> ending_remembered_close   (12950 paths)
+    -> ending_complicit   (589916 paths)
+unreachable scenes:  0
+missing targets:     0      dead ends:           0      unreachable beats:   0
+never-offered picks: 0      choices that do not matter:  0
 vars read but never written: 0   vars written but never read: 0
 
-CLEAN SO FAR (traversal partial: 131/131 scenes, budget hit)
+CLEAN
 ```
 
-The traversal was budget-limited, but the scene count is complete — which is why the unreachable list can still
-be called complete while the picks line cannot. That distinction is the whole reason the verdict says which.
+**`CLEAN`, not `CLEAN SO FAR`** — the paragraph above describes when to trust each, and this run is the first one
+here that earns the first. The structural counts (`131`, `656`, `58`) are unchanged, which is the part that says
+the story itself did not move: what moved was the traversal, and every number that depends on it.
 - **`stories/the-lamp-room.aside`** — a keeper, a lamp that goes out, and the difference between doing a job
   correctly and doing it well. 14 scenes, 81 beats, 13 choice options, **3 ending scenes**, CLEAN.
 - **`stories/the-discrepancy.aside`** — a night auditor finds room 000 in a day that balances. 21 scenes, 90

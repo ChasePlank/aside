@@ -61,8 +61,8 @@ for _t in range(2, 10):
     for _o in range(0, 10):
         WORDS.setdefault(_TENS[_t] if _o == 0 else "%s-%s" % (_TENS[_t], _ONES[_o]), _t * 10 + _o)
 
-SCENES = re.compile(r"(\d+)\s+scenes?\b")
-ENDINGS = re.compile(r"(\d+)\s+ending(?:s| scenes?)?\b")
+SCENES = re.compile(r"(\d+)[^\S\n]+scenes?\b")
+ENDINGS = re.compile(r"(\d+)[^\S\n]+ending(?:s| scenes?)?\b")
 
 
 def audited_counts():
