@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+#
+# story-chain.sh - everything a story edit needs, in the order it needs it.
+#
+#   tools/story-chain.sh                 every story whose .aside has changed since HEAD
+#   tools/story-chain.sh the-pane ...    named stories, whether changed or not
+#
+# WHY THIS EXISTS. Adding or editing a story touches SIX things besides the .aside itself - the audit, that story's
+# web build, the shelf that inlines it, the frames that render it, the suite that compares the builds, and three
+# checkers that read the README and the notes. I have run that chain by hand about thirty times, and IT HAS LOST A
+# STEP TWICE IN TWO DAYS:
+#
+#   * the v1.18 notes were written before a story landed, so they described a library one story smaller;
+#   * and on 2026-10-15 I edited five story OPENINGS, ran the audit, the web builds, the shelf and the suite - and
+#     skipped the FRAMES, because in my head "frames" belonged to the games. THE CONTACT SHEET RENDERS THE STORY
+#     PAGES TOO, and the gate caught it: five frames stale, worst deltas 222 to 231 against a noise floor of 12.
+#
+# Both were caught - the first by a check I built afterwards, the second by the gate - WHICH IS THE POINT: the gate
+# is the enforcement and this is the path. A six-step routine held in somebody's head is a routine that will lose a
+# step; `status-all.sh` exists for the same reason, after I answered its question by hand five times and got it wrong
+# twice.
+#
+# IT DOES NOT COMMIT. Committing is the decision this ends by handing back.
+set -u
+HERE="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$HERE" || exit 2
+
+step() { printf '\n=== %s\n' "$*"; }
+die()  { printf '\nSTOPPED: %s\n' "$*" >&2; exit 1; }
+
+# WHICH STORIES. Named on the command line, or whatever git says has moved. An UNTRACKED .aside counts - a brand
+# new story is the commonest case and `git diff` alone would not see it.
+if [ $# -gt 0 ]; then
+  STORIES="$*"
+else
+  STORIES=$( { git diff --name-only HEAD -- stories/ ; git ls-files --others --exclude-standard -- stories/ ; } \
+              | sed 's|^stories/||; s|\.aside$||' | sort -u )
+  [ -n "$STORIES" ] || { echo "story-chain: no story has changed since HEAD (name one to run the chain anyway)"; exit 0; }
+fi
+echo "story-chain: $(echo "$STORIES" | wc -w) story(ies): $(echo $STORIES | tr '\n' ' ')"
+
+step "1/6  the auditor, on each of them"
+for s in $STORIES; do
+  [ -f "stories/$s.aside" ] || die "no such story: stories/$s.aside"
+  out=$(tools/run-java.sh aside.engine.Audit "stories/$s.aside" 2>&1)
+  verdict=$(echo "$out" | grep -E '^CLEAN|^ISSUES|^INCONCLUSIVE' | head -1)
+  printf '  %-20s %s\n' "$s" "${verdict:-the auditor said nothing}"
+  echo "$out" | grep -E '^    !!' | head -4 | sed 's/^/    /'
+  case "$verdict" in
+    CLEAN*) ;;
+    *) die "the auditor is not clean on $s - fix that before anything else" ;;
+  esac
+done
+
+step "2/6  each story's web build"
+for s in $STORIES; do
+  # `the-lock.aside` builds to `lock.html`: the leading article is dropped, which is the convention every story here
+  # already follows.
+  o=$(echo "$s" | sed 's|^the-||')
+  tools/run-java.sh aside.engine.WebExport "stories/$s.aside" "web/$o.html" 2>&1 | tail -1 | sed 's/^/  /' \
+    || die "the web build failed for $s"
+done
+
+step "3/6  the shelf, which inlines every story that has a build"
+tools/run-java.sh aside.game.PhoneShelf 2>&1 | tail -1 | sed 's/^/  /' || die "the shelf build failed"
+
+step "4/6  the frames - WHICH COVER THE STORY PAGES, NOT ONLY THE GAMES"
+timeout 1800 tools/regenerate-frames.sh 2>&1 | tail -2 | sed 's/^/  /' || die "the frames failed"
+check=$(tools/check-sheets.sh 2>&1 | grep -E '^=== ' | tail -1)
+echo "  ${check:-no verdict from check-sheets}"
+case "$check" in *STALE*) die "the frames are still stale after regenerating - read check-sheets' output" ;; esac
+
+step "5/6  the suite - it compares every story build to its checked-in copy"
+timeout 1800 tools/run-java.sh aside.engine.SelfTest 2>&1 | tail -1 | sed 's/^/  /'
+
+step "6/6  the checkers that read the prose"
+for t in check-readme-stories.py check-story-repetition.py check-audit-findings.py; do
+  [ -f "tools/$t" ] || { echo "  $t        (absent)"; continue; }
+  out=$(timeout 900 python3 "tools/$t" 2>&1); rc=$?
+  printf '  %-28s %s\n' "${t%.py}" "$(echo "$out" | grep -E '^=== ' | tail -1)"
+  # check-readme-stories prints its STALE lines and exits non-zero; the others exit non-zero with a named verdict.
+  [ $rc -eq 0 ] || { echo "$out" | grep -E 'STALE|share a' | head -4 | sed 's/^/      /'; die "$t is not clean"; }
+done
+
+cat <<'EOF'
+
+=== everything the chain can check has passed ===
+
+WHAT IT DOES NOT DO: commit. And two things are still yours to decide rather than the script's -
+whether the stories are any good, and whether the change deserves a note in the release notes.
+EOF

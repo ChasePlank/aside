@@ -310,6 +310,22 @@ count was 17 for a long time and the count was right — the map was wrong.
 
 ## What is in here
 
+**ADDING OR EDITING A STORY TOUCHES SIX THINGS BEYOND THE `.aside` ITSELF**, and the list is not obvious from the
+outside: the auditor, that story's web build, the shelf that inlines every build, **the frames — which render the
+story pages and not only the games**, the suite that compares each build to its checked-in copy, and three checkers
+that read the README and the release notes.
+
+```bash
+tools/story-chain.sh                # every story whose .aside has changed since HEAD
+tools/story-chain.sh the-pane       # named stories, changed or not
+```
+
+It runs all six in order and **stops at the first failure**, and it does not commit. **The six-step routine was held
+in my head for about thirty stories, and it lost a step twice in two days** — the v1.18 notes described a library one
+story smaller than the one they were attached to, and five rewritten story openings left their frames stale (worst
+deltas 222 to 231, against a noise floor of 12; the gate caught it). **The gate is the enforcement and this is the
+path.**
+
 - **`stories/overtime.aside`** — the five-night FNAF Glamrock visual novel. **Six distinct endings**, and the
   spread is wide: `ending_remembered_close` is the rarest at **12,950** of the paths explored, `ending_overtime` the
   most common at **710,755**. 131 scenes, 656 beats, 58 choice options. The auditor reports the distribution, so you can see which branches players actually

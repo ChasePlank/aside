@@ -480,6 +480,31 @@ PY
   fi
 fi
 
+# ---- story-chain.sh must STOP at the first failing step --------------------------------------------------------
+# IT IS A PATH, NOT A CHECK, so the fault injected here is not its own: it is A STORY THAT FAILS THE AUDITOR, and what
+# is required is that the chain stops there rather than running the other five steps and leaving a build, a shelf and
+# a set of frames built on top of a broken story. A six-step routine that continues after a failure is worse than no
+# routine, because the later steps then produce artefacts that look finished.
+if [ -x tools/story-chain.sh ] && [ -f stories/the-pane.aside ]; then
+  SC_BAK=$(mktemp); cp stories/the-pane.aside "$SC_BAK"
+  python3 - <<'SJ'
+import io, sys
+p = "stories/the-pane.aside"; s = io.open(p, encoding="utf-8").read()
+old = "-> the_house"
+if old not in s:
+    sys.exit("the jump to break is gone from the-pane - fix this entry rather than letting it pass")
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "-> a_scene_that_is_not_there", 1))
+SJ
+  sc_out=$(timeout 600 tools/story-chain.sh the-pane 2>&1); sc_rc=$?
+  cp "$SC_BAK" stories/the-pane.aside; rm -f "$SC_BAK"
+  if [ $sc_rc -ne 0 ] && grep -q "ISSUES" <<<"$sc_out" && ! grep -q "2/6" <<<"$sc_out"; then
+    ok "story-chain stops at a story that fails the auditor" "$(echo "$sc_out" | grep -E 'ISSUES' | head -1 | tr -s ' ' | cut -c1-52)"
+  else
+    bad "story-chain stops at a story that fails the auditor" \
+        "exit $sc_rc; 'ISSUES' present: $(grep -c ISSUES <<<"$sc_out"); ran past step 1: $(grep -c '2/6' <<<"$sc_out")"
+  fi
+fi
+
 # ---- check-story-repetition.py must notice a phrase copied from one story into another -------------------------
 # THE FAULT IS A SENTENCE FROM ONE STORY PASTED INTO ANOTHER, which is what the tool exists for and is invisible when
 # each story is read on its own. The injection is a real sentence, moved, so the entry fails loudly if the story it
