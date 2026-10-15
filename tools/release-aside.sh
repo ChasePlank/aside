@@ -132,6 +132,12 @@ TO PUBLISH, which is a decision and not a step:
      --notes-file $NOTES \\
      web/aside.html $BUNDLE
 
+  AND PUSH BEFORE YOU PUBLISH. `gh release create` tags the REMOTE's head, not your working tree, so a notes commit
+  that is only local puts the tag one commit behind the notes it attaches - measured on v1.19, where the tag landed at
+  the previous commit and the notes file is in the next one. The tag's TREE was still correct (thirty stories, the
+  shelf that was built), which is why this is a refinement rather than a fault; what a reader checking out v1.19 would
+  not get is the notes themselves.
+
   Write the notes FIRST and name the files exactly as they are attached. The notes guard reads the draft, so a name
   attached to nothing stops the release here rather than on the download page.
 EOF
