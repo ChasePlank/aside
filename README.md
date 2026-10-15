@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty-six stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty-seven stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock` and `the-face`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face` and `the-forge`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -394,6 +394,11 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-forge.aside`** — a farrier at the end of a lane who *can hear a hoof on tarmac from the yard and
+  tell which foot it is*. A horse comes off a ramp with its near hind toe just touching the ground, and a man wants
+  new shoes on it today because it is for sale on Saturday and the shoes are going in a photograph. **The foot is hot
+  and there is a pulse in it that should not be there.** Four endings, and they are four answers to who the job is
+  done for — the man, the horse, the buyer, or the fortnight it actually needs. 15 scenes, 95 beats, 7 choice options.
 - **`stories/the-face.aside`** — a shot firer at a quarry with four days left. Three shots a day, eight holes that
   all go within a second of each other, and then **a click from up at the face, which is the sound a hole makes when
   it has not done anything at all.** The rule is on the wall of the magazine in his own handwriting: *do not approach

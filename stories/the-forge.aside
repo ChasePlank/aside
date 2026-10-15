@@ -1,0 +1,135 @@
+# The Forge - a farrier, a horse that is not right, and a sale on Saturday.
+# Written for the library. One person, one craft, and the question of who a job is done for.
+
+title: The Forge
+start: start
+
+== start ==
+bg workshop_bench
+music room_tone
+The forge is at the end of a lane and it has been there longer than the lane has been
+made up. You shoe for eleven farms and two riding schools and one man who keeps a
+horse because his father kept a horse.
+You are good at it. That is not a boast, it is the whole of what you have: you can
+hear a hoof on tarmac from the yard and tell which foot it is.
+-> the_van
+
+== the_van ==
+The van comes at ten with a horsebox behind it and a man you have not seen before, and
+the horse comes down the ramp and stands in the yard with its weight on three legs and
+its near hind toe just touching the ground, which is a thing a horse does when it does
+not want to put weight on a foot.
+You have seen it before you have said hello.
+-> the_look
+
+== the_look ==
+man: He's for sale on Saturday. New shoes on him and he'll fetch what he's worth.
+The horse is nine and it is not worth much and the man knows both of those things.
+He wants the near hind shod. He wants it shod today, and he wants the shoes to look
+new in a photograph.
+* Pick the foot up and look properly. -> look_properly
+* Say the price and get the tools. -> the_knowing
+* Ask him when the horse went lame. -> ask_when
+
+== look_properly ==
+You run your hand down the leg and the horse flinches at the fetlock and does not
+flinch at anything else, and when you lift the foot it comes up and the sole is hot
+through the hoof wall, which you can feel with the flat of your hand.
+There is a pulse in the digital artery that should not be there. You put the foot down
+gently, which is not a thing you would normally do.
+-> the_knowing
+
+== ask_when ==
+you: When did he go lame?
+man: He's not lame. He's got a bit of a foot.
+you: When did he get the bit of a foot?
+man: A fortnight. He's been out on the grass.
+A fortnight is long enough for an abscess to track and it is not long enough for the
+hoof to have grown out, and both of those are things you can check and neither is a
+thing he can argue with.
+-> the_knowing
+
+== the_knowing ==
+You are holding a foot that is hot and pulsing and you are standing in your own yard
+with your own tools on the bench, and the man is talking about the photograph.
+Whatever happens in the next ten minutes is going to be a thing you did, and it is
+going to be done to a horse that cannot say anything about it.
+-> the_decision
+
+== the_decision ==
+* Shoe it. He is selling it either way and it is not your horse. -> shoe_it
+* Refuse, and say why, out loud, in the yard. -> refuse
+* Shoe it and tell the man nothing, then ring the buyer. -> tell_buyer
+* Put the tools down and tell him to bring it back in a fortnight. -> fortnight
+
+== shoe_it ==
+You trim and you fit and you nail on four shoes that would photograph well, and the
+near hind is the neatest of the four because you took trouble over it, and that is the
+part you will think about.
+The horse stands for it. Horses do. The man pays in cash and puts it back in the box
+and the box goes up the lane and you sweep the yard and put the tools away.
+-> ending_shot
+
+== refuse ==
+you: I'm not shoeing this.
+man: You what?
+you: The foot's hot. There's a pulse in it. He's got an abscess in there and if I nail
+a shoe on it today you'll have a horse that can't walk by Wednesday and you'll have
+sold it to somebody by Saturday.
+He says a number of things. You let him say them, standing in your own yard, and then
+he puts the horse back in the box and drives off up the lane too fast for the surface.
+-> ending_refused
+
+== tell_buyer ==
+You shoe the horse. Then you take the man's money and you write the buyer's name down
+off the advert he left on the bench, which he did not mean to leave, and you ring the
+number that evening.
+It is a woman with a field and a daughter and she listens to all of it and asks you two
+questions, both of which are good ones, and then she thanks you and rings off, and you
+have no idea what she does next.
+-> ending_rang
+
+== fortnight ==
+You put the foot down and you pick the tools up off the bench and you put them back in
+the box, which is a sentence in this yard and everybody who has ever stood in it knows
+it.
+you: Bring him back in a fortnight. If he's still lame then, I'll do what needs doing
+and I'll do it properly. If he's not, I'll shoe him and you'll get your photograph.
+The man stands there for a moment working out whether he has been refused, and decides
+that he has not, and takes the horse away.
+-> the_fortnight_after
+
+== the_fortnight_after ==
+He comes back in eleven days with the horse walking level and an abscess that broke on
+its own out in the field, and you shoe him and it takes an hour and the shoes are good
+and the photograph is taken in the yard by the man's son.
+You do not say anything about the eleven days. He does not either. It is in the book
+that the horse came in twice, which is all the book is for.
+-> END
+
+== ending_shot ==
+The horse sells on Saturday. You see it go past the end of the lane in the box of a
+dealer from the next county, and you know the dealer, and you know where that horse is
+going, and you are the only person in this story who knows all three of those things.
+You have shod four thousand horses. You can hear a hoof on tarmac from the yard and
+tell which foot it is, and you could have told it from the ramp, and you did not.
+-> END
+
+== ending_refused ==
+He rings the next day and says a number of things and you let him say them down a phone
+this time, and then he rings the day after that and asks whether you will look at it on
+Thursday, which is the only apology this trade has.
+You look at it on Thursday. It is an abscess and it needs a vet and you say so and he
+takes it to one, and on Saturday it does not sell, and the following Saturday it sells
+to the woman with the field, and you shoe it for her for six years.
+-> END
+
+== ending_rang ==
+You never find out. That is the whole of it: you did a thing and it went out of your
+yard and into somebody else's life and you have no way of knowing whether it was the
+right thing, and you go on shoeing for eleven farms and two riding schools and one man
+who keeps a horse because his father kept a horse.
+Three years later a woman stops at the end of the lane and says her daughter's horse
+is called Bruno, and you say you do not remember him, and you do, and you are not sure
+why you said that.
+-> END
