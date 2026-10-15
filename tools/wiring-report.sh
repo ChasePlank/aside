@@ -129,6 +129,12 @@ known "movers"                   "MovingPlatform"
 known "setDirector"              "AIDirector"
 known "setSeed setVolleyCallback" "Boss"
 known "ParallaxLayer"            "ParallaxLayer"
+# SEEN 2026-10-15, and they were NOT on this list, which made the footer's "anything else is new" false for them.
+# Three setters nothing calls: AudioSystem's two volume setters and Emitter's setPosition. Whether they are features
+# waiting to be wired or code waiting to be deleted is the same wire-or-delete question as the four above, and only
+# the person who wanted them can say which - so they are recorded here rather than acted on.
+known "setMusicVolume setSfxVolume" "audio volume"
+known "setPosition"                 "Emitter position"
 echo
 echo "  The four from 2026-10-02 are Boss, AIDirector, MovingPlatform and ParallaxLayer, and they have been"
 echo "  waiting on a wire-or-delete decision since. ANYTHING ELSE ON THIS REPORT IS NEW AND WORTH A LOOK - and a"
