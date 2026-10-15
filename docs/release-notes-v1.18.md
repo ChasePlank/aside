@@ -1,9 +1,9 @@
-# Aside v1.18 — four stories, and a rule about a misfire
+# Aside v1.18 — five stories, and a rule about a misfire
 
 **Download `Aside-linux-x64.tar.gz` (Linux, one file, no Java needed) or `aside.html` (every story that has a web
 build, in one page).**
 
-## Four stories
+## Five stories
 
 - **The Flue** — a sweep, four chimneys, and the one that has not been done since the old man died. Behind a
   calendar in the cupboard on the landing the flue bends, and in the bend of the brick there is a gap the size of a
@@ -28,12 +28,18 @@ build, in one page).**
   and there is a pulse in the digital artery that should not be there.** Four endings, and they are four answers to
   who the job is done for: the man, the horse, the buyer, or the fortnight it actually needs.
 
-That is twenty-seven stories. Each is audited rather than asserted: every scene reachable, every ending reachable, no
+- **The Endpaper** — a bindery over a shop that sells paper and envelopes, and a Book of Common Prayer from 1901
+  whose front pastedown has lifted at one corner. Under the lifted corner there is writing in pencil, and you can read
+  four words of it: *I did not tell her.* **The trade's answer is that a pastedown is replaced with the boards,
+  because that is what rebinding means** — so the repair the customer paid for would erase the thing you have just
+  found. Five endings, and they are five answers to whether a repair is allowed to lose things.
+
+That is twenty-eight stories. Each is audited rather than asserted: every scene reachable, every ending reachable, no
 choice leading nowhere, no branch quietly converging on another.
 
-## Four more stories cost 320 KB
+## Five more stories cost 400 KB
 
-`aside.html` is **8,974,897 bytes** against **8,646,688** for v1.17 — **320 KB for four more stories**, and it is
+`aside.html` is **9,056,661 bytes** against **8,646,688** for v1.17 — **400 KB for five more stories**, and it is
 still under the size a phone should be asked to download in one page. The library keeps this number because it grew
 1.7 MB by accident once: builds were carrying full-size artwork because a generator had never been run for the
 newest stories.
@@ -60,7 +66,7 @@ read the report, which is the first time that mistake has been caught by anythin
 
 Every story is walked by the auditor above. The game builds are checked against the generators that write them, the
 frames against the code that draws them, the audio against the scripts that synthesise it, and the README's counts
-against the library itself — 65 cues produced twice and byte-identical, 44 suites, about 10,600 checks.
+against the library itself — 65 cues produced twice and byte-identical, 44 suites, about 10,700 checks.
 
 **Nothing here can tell you whether a story lands.** Structure and reachability are checkable; whether a story is
 worth reading is not, and no test in this repository claims otherwise.

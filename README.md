@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty-seven stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty-eight stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face` and `the-forge`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge` and `the-endpaper`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -394,6 +394,12 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-endpaper.aside`** — a bindery over a shop that sells paper and envelopes, twenty-two years of trade,
+  and a Book of Common Prayer from 1901 whose front pastedown has lifted at one corner. Under the lifted corner there
+  is writing in pencil, and you can read four words of it: *I did not tell her.* **The trade's answer is that a
+  pastedown is replaced with the boards, because that is what rebinding means** — so the repair the customer paid for
+  would erase the thing you have just found. Five endings, and they are five answers to whether a repair is allowed
+  to lose things. 15 scenes, 105 beats, 7 choice options.
 - **`stories/the-forge.aside`** — a farrier at the end of a lane who *can hear a hoof on tarmac from the yard and
   tell which foot it is*. A horse comes off a ramp with its near hind toe just touching the ground, and a man wants
   new shoes on it today because it is for sale on Saturday and the shoes are going in a photograph. **The foot is hot

@@ -1,0 +1,145 @@
+# The Endpaper - a bookbinder, a rebinding, and what is under the pastedown.
+# Written for the library. One person, one trade, and the question of whether a repair is allowed to lose things.
+
+title: The Endpaper
+start: start
+
+== start ==
+bg workshop_bench
+music room_tone
+The bindery is one room over a shop that sells paper and envelopes and nothing else, and
+you have had it for twenty-two years. Sewing frame, nipping press, a guillotine you will
+not let anybody else use, and a shelf of glues that smell like a school.
+People bring you things in carrier bags. That is most of the trade and it is not the part
+you would keep if you could keep one part.
+-> the_bag
+
+== the_bag ==
+The bag today has a book in it that was somebody's mother's, and the woman who brings it
+says the words everybody says, which are that it is falling apart and she wants it done
+properly and it does not have to look like it did, she just wants it to hold.
+It is a Book of Common Prayer, 1901, and it is falling apart. The spine has gone, the
+boards are detached, and the endpapers are foxed to the colour of strong tea.
+-> the_quote
+
+== the_quote ==
+you: New spine, new boards under the old cloth, new endpapers. Three weeks. Twenty-eight
+pounds.
+woman: Do it.
+She leaves and the bell over the door does what it does, and you put the book on the
+bench and open it properly for the first time, which is the part of the job you have
+never got tired of.
+-> the_open
+
+== the_open ==
+The front endpaper is pasted down and it has been for a hundred and twenty years and it
+has lifted at one corner, which is normal, and under the lifted corner there is writing.
+Not a signature. A paragraph, in pencil, in a hand that is not the hand on the flyleaf,
+and it goes under the pastedown and you cannot read more than four words of it.
+The four words are: *I did not tell her.*
+-> the_problem
+
+== the_problem ==
+The trade has an answer for this and the answer is that a pastedown is replaced with the
+boards, because that is what rebinding means. Twenty-two years and you have replaced
+hundreds of them and never once looked under one, because there was never anything to
+look under.
+The book is on the bench. The nipping press is behind you. She is coming back in three
+weeks and she has paid a deposit of five pounds.
+* Lift the pastedown. You have to know what it says. -> lift_it
+* Ring her and ask what she wants done. -> ring_her
+* Do the rebinding as quoted. The trade's answer is an answer. -> as_quoted
+* Put it back in the bag and tell her you cannot do it. -> hand_it_back
+
+== lift_it ==
+You steam the pastedown off with a damp cloth and a spatula and it takes forty minutes
+and it comes away in one piece, which is the good outcome and not the likely one.
+Underneath, in pencil, on the board itself, is nine lines. It is a letter. It is dated
+1943 and it is addressed to somebody who is not the woman's mother and it is not a
+letter anybody ever sent.
+-> the_letter
+
+== the_letter ==
+It is not a scandal. That is the thing. It is a man explaining, at length, and rather
+badly, why he did not come back, and it is written on the inside of a prayer book where
+it could not be sent and could not be thrown away, which is a place a person chooses.
+You have it in your hand and it is not yours and it is not hers either, and the woman
+coming back in three weeks is the granddaughter of one of the two people in it.
+-> the_decision
+
+== ring_her ==
+You ring the number on the ticket and it rings out, and you ring it the next day and it
+rings out again, and on the third day you write to the address on the ticket because
+that is what the ticket is for.
+The letter says what you have found in the terms of the trade, which are that the
+pastedown is not original and there is writing on the board underneath it, and it asks
+her to ring you.
+She rings on the Thursday. She has read the letter four times.
+-> the_ringing
+
+== the_ringing ==
+woman: Is it bad?
+you: It's nine lines of a letter from 1943 and I've read four words of it.
+woman: What four words?
+you: I did not tell her.
+There is a long pause on the line that is not a pause about the telephone.
+woman: It's my nan's book. My nan's and my grandad's. He was in Italy in the war and he
+came back in forty-six and they were married in forty-seven.
+you: Then it isn't his writing, or it is and it is not to her.
+woman: I know what it is.
+-> the_decision
+
+== the_decision ==
+The book is on the bench with the pastedown half lifted and nine lines of somebody's
+grandfather visible in pencil on the board, and the trade's answer is that the board goes
+in the bin with the endpapers, because that is what rebinding is.
+* Keep the board. Mount the nine lines inside the new cover. -> ending_kept
+* Replace the board as quoted and say nothing more about it. -> ending_replaced
+* Ring her and read her the nine lines down the telephone. -> ending_read_aloud
+
+== as_quoted ==
+You do the rebinding as quoted. New spine, new boards, new endpapers, the old cloth
+lifted and laid back down, and it is a good piece of work and it takes the three weeks
+it was going to take.
+The old board goes in the bin with the old spine and the foxed endpapers and a hundred
+and twenty years of somebody's mother's hands, and you do not read the rest of it, and
+you will think about that for a long time.
+-> END
+
+== ending_kept ==
+You keep the board. It is the wrong thing to do by the trade and it is not a hard thing to
+do: you pare the old board down, lift the pastedown whole, and mount the nine lines inside
+the new cover on a guard, where they are visible and where they are not on the outside of
+anything.
+She cries when she collects it and then apologises and then reads it twice standing at the
+counter, and the second time she reads it out loud, which you had not expected and which is
+the last thing you learn about the family in the book.
+-> END
+
+== ending_replaced ==
+You replace the board as quoted and you finish the book to the three weeks and it is good
+work and she is pleased with it.
+The old board goes in the bin with the foxed endpapers and the detached spine, and you do
+not take it out again, and you do not tell her, and there is nobody else alive who has read
+any of the nine lines. You have decided that this is a kindness and you have decided it
+more than once.
+-> END
+
+== ending_read_aloud ==
+You ring her and you read her the nine lines down the telephone, badly, because they are
+in pencil and they are 1943 and the man's hand goes to pieces in the last two.
+She does not say anything for a while. Then she says thank you, and then she says the thing
+that you have thought about since, which is that her nan kept it, and that keeping a thing
+is not the same as not knowing about it, and that you should do whatever you think is
+right with the board.
+So you keep the board.
+-> END
+
+== hand_it_back ==
+You put it back in the bag and you put the bag on the shelf under the counter and you
+ring her and say you are not the right person for this one, which is true and is not the
+whole of it.
+She comes and gets it on the Saturday. She does not ask why. The book goes on being a
+Book of Common Prayer with a detached board and a pastedown that has lifted at one
+corner, and it will do that for another twenty years, and then it will do something else.
+-> END

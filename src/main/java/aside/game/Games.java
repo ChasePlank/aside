@@ -94,6 +94,7 @@ public final class Games {
         g.add(new aside.games.lock.LockGame());
         g.add(new aside.games.face.FaceGame());
         g.add(new aside.games.forge.ForgeGame());
+        g.add(new aside.games.endpaper.EndpaperGame());
         g.add(new aside.games.bothy.BothyGame());
         g.add(new aside.games.dispensary.DispensaryGame());
         g.add(new aside.games.harbour.HarbourGame());
