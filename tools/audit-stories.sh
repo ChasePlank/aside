@@ -116,7 +116,32 @@ total_stories=$(ls stories/*.aside 2>/dev/null | wc -l)
 #
 # Built from one array the two cannot disagree, and there is no fallback to fall through: the regex is made from the
 # same words the lookup uses, so a word it matches is a word it can number.
-ORDINALS=(ZERO FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH EIGHTH NINTH TENTH ELEVENTH TWELFTH THIRTEENTH FOURTEENTH FIFTEENTH SIXTEENTH SEVENTEENTH EIGHTEENTH NINETEENTH TWENTIETH TWENTY-FIRST TWENTY-SECOND TWENTY-THIRD TWENTY-FOURTH TWENTY-FIFTH TWENTY-SIXTH TWENTY-SEVENTH TWENTY-EIGHTH TWENTY-NINTH THIRTIETH)
+# GENERATED, NOT LISTED, AND THE SELF-TEST FOUND IT THE DAY THE LIBRARY REACHED THIRTY.
+#
+# This was a typed array ending at THIRTIETH. The claim is found with a regex built from this table, so AN ORDINAL
+# WORD THAT IS NOT IN THE TABLE IS NOT RECOGNISED AS A CLAIM AT ALL - a story claiming to be thirty-first read as
+# claiming nothing and this tool reported clean. THE CHECK WAS BLIND IN THE ONE DIRECTION IT EXISTS FOR.
+#
+# AND THE FIRST VERSION OF THIS FIX WAS WORSE THAN THE BUG, in a way worth recording: it generated words up to 199
+# with maps that stop at ninety, so the generator threw a KeyError at 100 - MID-STREAM, leaving a SHORT array, WITH
+# THE `while` STILL EXITING 0 AND NOTHING ANYWHERE SAYING SO. A silent truncation of the table is the same blindness
+# one level down. Hence both halves: the loop stops where the words stop, AND a short array exits 2.
+ORDINALS=(ZERO)
+while IFS= read -r _w; do [ -n "$_w" ] && ORDINALS+=("$_w"); done < <(python3 - <<'ORD'
+ones = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
+        "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth",
+        "eighteenth", "nineteenth"]
+tens_card = {20: "twenty", 30: "thirty", 40: "forty", 50: "fifty", 60: "sixty", 70: "seventy", 80: "eighty", 90: "ninety"}
+tens_ord = {20: "twentieth", 30: "thirtieth", 40: "fortieth", 50: "fiftieth", 60: "sixtieth",
+            70: "seventieth", 80: "eightieth", 90: "ninetieth"}
+for n in range(1, 100):
+    if n < 20: w = ones[n]
+    elif n % 10 == 0: w = tens_ord[n]
+    else: w = "%s-%s" % (tens_card[n - n % 10], ones[n % 10])
+    print(w.upper())
+ORD
+)
+[ "${#ORDINALS[@]}" -ge 100 ] || { echo "audit-stories: the ordinal generator produced only ${#ORDINALS[@]} words - this tool would be blind past that" >&2; exit 2; }
 ORD_RE=$(IFS='|'; echo "${ORDINALS[*]:1}")
 highest=0
 for f in stories/*.aside; do
