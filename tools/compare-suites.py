@@ -38,6 +38,35 @@ ENGINE = sys.argv[1] if len(sys.argv) > 1 else "/root/workspace/aside"
 RELEASE = sys.argv[2] if len(sys.argv) > 2 else "/root/workspace/tp"
 E_DIR = os.path.join(ENGINE, "src/main/java/aside/games/fruitjump/engine")
 R_DIR = os.path.join(RELEASE, "src/main/java/tropical/engine")
+
+# WHICH BUILD DIRECTORY THE RELEASE IS RUN FROM, AND WHY THIS IS NOT A DETAIL.
+#
+# It was hardcoded to "classes", which is NOT COMMITTED and NOT WHAT THE RELEASE'S OWN GATE PRODUCES - that gate
+# compiles into "out". So this comparison was reading a build directory nothing in either repository refreshes, and
+# it worked here only because an old `mutations.sh` run happened to leave one.
+#
+# MEASURED 2026-10-15: with classes/ present and current, 19 of 20 shared suites agree on their numbers. With
+# classes/ absent, all 20 are reported as DISAGREEING - THE TOOL BLAMING THE CODE FOR A DIRECTORY THAT WAS NEVER
+# BUILT, which is a failure with no fault behind it and the most expensive kind to chase.
+#
+# So: prefer what the gate produces, accept what a hand build leaves, and if neither is there, say so ONCE and exit
+# 2. A comparison that did not happen is not a comparison that succeeded - the rule `check-fnaf-match.sh` already
+# uses for a missing checkout.
+def _release_build():
+    for d in ("out", "classes"):
+        p = os.path.join(RELEASE, d)
+        if os.path.isdir(os.path.join(p, "tropical", "engine")):
+            return d
+    return None
+
+if not os.path.isdir(R_DIR):
+    print("=== the release is not checked out beside this one - nothing to compare ===")
+    sys.exit(2)
+R_BUILD = _release_build()
+if R_BUILD is None:
+    print("=== the release is not built - nothing to compare ===")
+    print("  looked for out/ and classes/ under %s; run the release's gate first" % RELEASE)
+    sys.exit(2)
 NUMS = re.compile(r"(\d+)\s+(?:passed|checks?)\D+(\d+)\s+failed", re.I)
 
 def run(repo, out, package, cls):
@@ -57,7 +86,7 @@ print(f"suites in both editions: {len(shared)}")
 by_numbers, by_verdict, mismatch, unnamed = [], [], [], []
 for cls in shared:
     a, arc = run(ENGINE, "out", "aside.games.fruitjump.engine.", cls)
-    t, trc = run(RELEASE, "classes", "tropical.engine.", cls)
+    t, trc = run(RELEASE, R_BUILD, "tropical.engine.", cls)
     if a is not None and t is not None:
         (by_numbers if a == t else mismatch).append((cls, a, t))
     else:

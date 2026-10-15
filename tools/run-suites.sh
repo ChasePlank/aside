@@ -228,10 +228,19 @@ fi
 # agreement.
 if [ -x tools/compare-suites.py ]; then
   nums_out=$(timeout 600 python3 tools/compare-suites.py 2>&1); nums_rc=$?
-  echo "  $(echo "$nums_out" | grep -E '^=== ' | tail -1)"
-  if [ $nums_rc -ne 0 ]; then
-    echo "$nums_out" | grep -E 'DIFFERS|NO NUMBERS' | sed 's/^/    /'
-    fail=$((fail + 1)); failed_names+=("suite-numbers")
+  # EXIT 2 IS "THE COMPARISON DID NOT HAPPEN", AND IT IS NOT A FAILURE - the rule the fnaf block below already
+  # states: "a comparison that did not happen is not a comparison that succeeded." The tool exits 2 when the
+  # release is not checked out beside this one, or is not built, and BOTH ARE SAID OUT LOUD rather than passed over,
+  # because a comparison silently skipped is how a real divergence hides.
+  if [ $nums_rc -eq 2 ]; then
+    echo "  $(echo "$nums_out" | grep -E '^=== ' | tail -1)"
+    echo "  suite numbers NOT CHECKED - the release is not built beside this one"
+  else
+    echo "  $(echo "$nums_out" | grep -E '^=== ' | tail -1)"
+    if [ $nums_rc -ne 0 ]; then
+      echo "$nums_out" | grep -E 'DIFFERS|NO NUMBERS' | sed 's/^/    /'
+      fail=$((fail + 1)); failed_names+=("suite-numbers")
+    fi
   fi
 fi
 
