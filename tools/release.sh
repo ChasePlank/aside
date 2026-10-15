@@ -45,8 +45,16 @@ step "4/6  build both bundles"
 "$HERE/tools/make-bundle-win.sh" "holdfast-$VERSION" "$TP/tropical-punch.jar" || die "the Windows bundle failed"
 
 step "5/6  is the artifact actually different from the last one?"
-"$HERE/tools/artifact-changed.sh" ChasePlank/Fruit-Jump "/root/holdfast-$VERSION-linux-x64.tar.gz" \
-  || die "this artifact is byte-identical to the published one - there is nothing to release"
+"$HERE/tools/artifact-changed.sh" ChasePlank/Fruit-Jump "/root/holdfast-$VERSION-linux-x64.tar.gz"
+# EXIT 1 IS "IDENTICAL" AND EXIT 2 IS "I COULD NOT TELL" - and this used to report BOTH as byte-identity, which is
+# the wrong-fault message this project has already been sent to the wrong place by once. A comparison that could not
+# identify the artifact it was comparing is NOT a comparison that found them equal.
+ac_rc=$?
+if [ $ac_rc -eq 1 ]; then
+  die "this artifact is byte-identical to the published one - there is nothing to release"
+elif [ $ac_rc -ne 0 ]; then
+  die "the artifact comparison could not tell which published asset this replaces - NOT a pass, and NOT a verdict"
+fi
 
 step "6/6  do the release notes name files that exist?"
 ( cd "$TP" && tools/check-release-notes.sh ) || die "the notes name a file attached to nothing - fix them before publishing"

@@ -50,6 +50,25 @@ for f in "$TMP"/*; do
   if [ "$(basename "$f")" = "$want" ]; then theirs=$(sha256sum "$f" | cut -d' ' -f1); fi
 done
 if [ -z "$theirs" ]; then
+  # AND BY SHAPE, BECAUSE THESE ASSETS ARE NAMED AFTER THEIR VERSION. `holdfast-1.16-linux-x64.tar.gz` can NEVER
+  # name-match `holdfast-1.15-linux-x64.tar.gz`, so the exact-name pass above can only ever work for an asset with
+  # no version in it. What was here instead - "fall back to the release's only asset" - REQUIRED A RELEASE WITH ONE
+  # ASSET, and this repository's releases carry three: THE STEP COULD NOT PASS. MEASURED 2026-10-15: it stopped the
+  # 1.16 release at "none is named ... - cannot tell which one this replaces", and the caller then reported that as
+  # byte-identity, which is a claim about bytes that was never compared.
+  # So match the same shape with the version wildcarded: 1.16 -> * finds the 1.15 it replaces.
+  pat=$(printf '%s' "$want" | sed -E 's/[0-9]+(\.[0-9]+)+/*/g')
+  hit=""
+  for f in "$TMP"/*; do
+    [ -f "$f" ] || continue
+    case "$(basename "$f")" in $pat) hit="$f" ;; esac
+  done
+  if [ -n "$hit" ]; then
+    theirs=$(sha256sum "$hit" | cut -d' ' -f1)
+    echo "  (matched $(basename "$hit") for $want by shape, with the version wildcarded)"
+  fi
+fi
+if [ -z "$theirs" ]; then
   # the asset may be renamed on upload (Fruit-Jump uploads tropical-punch.jar as fj18.jar). Fall back to the only
   # asset if there is exactly one, and say so rather than guessing when there are several.
   n=$(find "$TMP" -maxdepth 1 -type f | wc -l)
