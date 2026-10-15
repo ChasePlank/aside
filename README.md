@@ -113,12 +113,15 @@ There are four families:
 - **Twenty-four stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
   `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey` and `the-flue`, plus `night-shift` (a test
-  fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene and
-  ending counts.
+  fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
+  ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
   held eleven, and then said "Seventeen" while naming ten. The count is checked (`tools/check-readme-stories.py`
-  compares the ordinal word against the files) and the LIST is not, which is why the half nobody checks is the half
-  that went stale. See "What is in here" below.
+  compares the ordinal word against the files) **and so is the list** — a story the checker knows and this bullet
+  does not name is reported as `not mentioned in the README at all`, which was measured by removing a name and
+  watching it fire. **THIS SENTENCE SAID THE LIST WAS NOT CHECKED**, which was true when it was written and false
+  by the time I read it: the same fault as the paragraph above, in the other direction — disowning a check that
+  exists is as expensive as advertising one that does not. See "What is in here" below.
 - **Holdfast** — the platformer, and the oldest thing here. It was "Fruit Jump" as a working title until
   2026-10-04; the name is settled now, and the premise it already had is the one it keeps: *a climber, a sunset,
   and a way home.* It has water: pools
