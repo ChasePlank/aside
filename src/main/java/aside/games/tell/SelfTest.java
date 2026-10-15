@@ -43,6 +43,10 @@ public final class SelfTest {
     }
 
     public static void main(String[] args) throws Exception {
+        // THE NUMBER OF DIRECTIONS THE PLAYER CAN MOVE, which the sweep found unwatched on 2026-10-15. Set DIRS to
+        // 0 and `for (int d = 0; d < DIRS; d++)` offers no move at all - the suite CRASHED rather than said so, which
+        // is a mutation caught by dying. An assertion names it.
+        eq(Tell.DIRS, 4, "the game has four directions to move in");
         System.out.println("=== tell self-test ===\n");
 
         System.out.println("--- the house ---");

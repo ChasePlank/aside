@@ -38,6 +38,10 @@ public final class SelfTest {
     }
 
     public static void main(String[] args) throws Exception {
+        // HOW MANY ORDERS ARE HELD BEFORE THE PHASE TURNS, found the same way on 2026-10-15. Set ORDERS_HELD to 0
+        // and both `written.size() >= ORDERS_HELD` and `written.size() != ORDERS_HELD` change what the phase machine
+        // does - again by crashing the suite rather than failing a check.
+        eq(Handoff.ORDERS_HELD, 3, "three orders are held before the phase turns");
         shape();
         signals();
         watching();

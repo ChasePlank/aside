@@ -217,7 +217,13 @@ open(p, "w").write(s.replace(f, t, 1))
     printf '%-44s caught       %s\n' "$FROM" "$OUT"
   elif printf '%s' "$OUT" | grep -qE '0 (failed|FAILED)|checks passed|ALL PASS|PASS'; then
     printf '%-44s NOT CAUGHT   %s\n' "$FROM" "$OUT"
-  elif printf '%s' "$OUT" | grep -qE 'Exception|at [a-z_]+\.[a-z_.]+\('; then
+  # THE PATTERN NEEDED A "(" AND THE TRACES DO NOT ALWAYS HAVE ONE. fnaf7's and tell's and handoff's crash lines are
+  # `at aside.games.tell.SelfTest.main` - a stack frame with no call in it - so a crashed suite kept being reported as
+  # UNKNOWN, which is the third time this family of verdict has hidden a caught mutation.
+  # AND THE CLASS EXCLUDED CAPITALS, so `at aside.games.tell.SelfTest.main` never matched - JAVA CLASS NAMES ARE
+  # CAPITALISED and the pattern was written as if they were not. Two tries at this branch, both wrong, both found by
+  # running the case rather than by reading it.
+  elif printf '%s' "$OUT" | grep -qE 'Exception|at [A-Za-z_]+\.[A-Za-z_.]+\(?'; then
     # A SUITE THAT DIED IS NOT AN UNKNOWN. fnaf7's HOUR_SECONDS and NIGHT_HOURS come back this way: mutating them
     # makes the suite CRASH rather than fail a check, and a crash is the mutation being noticed hard. IT IS NOT
     # REPORTED AS "caught" EITHER - an unrelated crash must never read as a suite doing its job - so it gets its own
