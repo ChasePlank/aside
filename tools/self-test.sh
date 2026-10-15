@@ -480,6 +480,27 @@ PY
   fi
 fi
 
+# ---- check-audit-findings.py must notice the README disowning a finding the auditor prints ----------------------
+# THE FAULT IS THE ONE THAT ACTUALLY HAPPENED: the table said `choices that do not matter` was NOT IN THIS TREE while
+# the auditor had been printing it for six days. A row that disowns a real finding is as expensive as one that
+# invents a missing one, because a reader who believes it does not look at what the line reports.
+if [ -x tools/check-audit-findings.py ] && [ -f README.md ]; then
+  README_BAK=$(mktemp); cp README.md "$README_BAK"
+  python3 - <<'AF'
+p = 'README.md'; s = open(p).read()
+old = "| `choices that do not matter` |"
+assert old in s, 'the row to break is not there'
+open(p, 'w').write(s.replace(old, "| `choices that do not matter` **(NOT IN THIS TREE)** |", 1))
+AF
+  af_out=$(python3 tools/check-audit-findings.py 2>&1); af_rc=$?
+  cp "$README_BAK" README.md; rm -f "$README_BAK"
+  if [ $af_rc -ne 0 ] && grep -q "NOT IN THIS TREE" <<<"$af_out"; then
+    ok "check-audit-findings notices the table disowning a finding" "$(echo "$af_out" | grep STALE | head -1 | tr -s ' ' | cut -c1-58)"
+  else
+    bad "check-audit-findings notices the table disowning a finding" "exit $af_rc, and nothing about NOT IN THIS TREE"
+  fi
+fi
+
 # ---- the two match tools must notice an edition that drifts -----------------------------------------------------
 # These are the tools I trust most and they had no fault injected, which is the wrong way round: a comparison that
 # cannot fail is the quietest kind, because it agrees with whatever it is pointed at. The fault is one character in

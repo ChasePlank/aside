@@ -263,6 +263,23 @@ if [ -x tools/compare-suites.sh ]; then
   echo "  $(echo "$cov_out" | grep -E '^=== ' | tail -1)"
 fi
 
+# AND A TABLE IN THE README THAT NOTHING RE-RAN. The auditor's findings are documented in a table, and on
+# 2026-10-15 that table was wrong in BOTH DIRECTIONS AT ONCE: it did not name `conditions that cannot fail`, which
+# had just been added, and it described `choices that do not matter` as "NOT IN THIS TREE" while the auditor had been
+# printing it for six days. THE SECOND IS THE INVERSE OF THE FAULT THE README'S OWN PARAGRAPH WARNS ABOUT - a
+# document disowning something the tree has - and it is just as expensive, because a reader who believes it will not
+# look at what the line reports.
+if [ -x tools/check-audit-findings.py ]; then
+  af_out=$(timeout 300 python3 tools/check-audit-findings.py 2>&1); af_rc=$?
+  if [ $af_rc -eq 0 ]; then
+    echo "  $(echo "$af_out" | grep -E '^=== ' | tail -1)"
+  else
+    echo "  audit-findings       FAIL   the README's table no longer matches the auditor"
+    echo "$af_out" | grep -E 'STALE|===' | sed 's/^/    /' | head -4
+    fail=$((fail + 1)); failed_names+=("audit-findings")
+  fi
+fi
+
 # AND THE GAME PHONE BUILDS, WHICH NOTHING REGENERATED. The README says "the suite regenerates each build and
 # compares it to the checked-in copy, so a stale build fails rather than shipping" - TRUE for the story builds and
 # FALSE for the eighteen built by `Web<Game>` classes, which no check and no mutation touched. MEASURED on

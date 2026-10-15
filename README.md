@@ -60,7 +60,9 @@ java -cp out aside.engine.Audit stories/<name>.aside
 |---|---|
 | `missing targets`, `dead ends` | a jump to a scene that does not exist, or a scene that goes nowhere. Always reliable — these need no search. |
 | `vars read but never written`, `vars written but never read` | a typo'd variable name, or a flag set for no reason. Always reliable. |
-| `choices that do not matter` **(NOT IN THIS TREE — on `origin/roxanne/audit-verdict`)** | two options under the same condition going to the same place, or two options a reader cannot tell apart. Always reliable — **satisfiable is not the same as meaningful.** |
+| `choices that do not matter` | two options under the same condition going to the same place, or two options a reader cannot tell apart. Always reliable — **satisfiable is not the same as meaningful.** |
+| `conditions that cannot fail` | a jump whose condition is written on EVERY path that reaches it, so the fall-through is dead. **Always reliable**, and it is the one finding here that does not depend on the traversal at all — it asks the scene graph, not a search. |
+| `warnings` | the parser and the walk saying something about themselves: a directive it could not read, and `ran out of memory after N states expanded`. Not findings — read them. |
 | `unreachable scenes`, `unreachable beats`, `never-offered picks` | **path** questions. Reliable only if the traversal finished. |
 
 **The verdict tells you which.** If the walk did not complete, the report says `INCONCLUSIVE` and tells you
@@ -82,8 +84,12 @@ memory saving it promised. A reader following it on a large story would have hit
 to avoid, with nothing anywhere to say why. If this line ever describes something that is not here again, that is
 the failure mode.
 
-**The same applies to one row of the table above:** `choices that do not matter` is on that branch too. The
-branch's own header says which commit adds it.
+**AND THAT ROW OF THE TABLE HAS NOW BEEN WRONG IN BOTH DIRECTIONS.** `choices that do not matter` was described
+here as not being in this tree while the auditor had been printing it for six days — **the inverse of the fault the
+paragraph above describes, and just as expensive**, because a reader who believes it will not look at what the line
+reports. `conditions that cannot fail` was the other direction: added to the auditor on 2026-10-15 and not added
+here. **`tools/check-audit-findings.py` now re-runs the claim** — it reads the labels the report prints, compares
+them with the ones this table names, and fails on a mismatch either way.
 
 **A clean report is not always a finished one.** Distinguish `CLEAN` (nothing found, search complete) from
 `INCONCLUSIVE` (nothing found so far). The report says which, on purpose.
