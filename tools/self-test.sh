@@ -221,9 +221,32 @@ fi
 # before: A FIXTURE THAT COPIES THE CURRENT VALUE BREAKS ON THE ONE OCCASION IT EXISTS FOR.
 if [ -x tools/audit-stories.sh ] && [ -f stories/a440.aside ]; then
   STORIES=$(ls stories/*.aside 2>/dev/null | wc -l | tr -d ' ')
-  WORDS=(ZERO FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH EIGHTH NINTH TENTH ELEVENTH TWELFTH THIRTEENTH FOURTEENTH FIFTEENTH SIXTEENTH SEVENTEENTH EIGHTEENTH NINETEENTH TWENTIETH TWENTY-FIRST TWENTY-SECOND TWENTY-THIRD TWENTY-FOURTH TWENTY-FIFTH TWENTY-SIXTH TWENTY-SEVENTH TWENTY-EIGHTH TWENTY-NINTH THIRTIETH)
   OVER=$((STORIES + 1))
-  OVER_WORD="${WORDS[$OVER]:-}"
+  # GENERATED, NOT LISTED. This was a typed array ending at THIRTIETH, and the day the library reached thirty it ran
+  # out: "no ordinal word for 31 stories - extend the table". IT IS THE SAME FAULT AS THE ENTRY ABOVE, FROM THE
+  # OTHER SIDE - that one exists because a fixture copying the current value breaks on the one occasion it exists
+  # for, and a LIST THAT STOPS AT THE CURRENT SIZE BREAKS AT THE NEXT ONE. The word is computed now, so it cannot
+  # run out; past a hundred it returns empty and the entry says so rather than guessing a word nobody uses.
+  OVER_WORD=$(python3 - "$OVER" <<'ORD'
+import sys
+n = int(sys.argv[1])
+ones = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
+        "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth",
+        "eighteenth", "nineteenth"]
+tens_card = {20: "twenty", 30: "thirty", 40: "forty", 50: "fifty", 60: "sixty", 70: "seventy", 80: "eighty", 90: "ninety"}
+tens_ord = {20: "twentieth", 30: "thirtieth", 40: "fortieth", 50: "fiftieth", 60: "sixtieth",
+            70: "seventieth", 80: "eightieth", 90: "ninetieth"}
+if n < 20:
+    w = ones[n]
+elif n % 10 == 0 and n in tens_ord:
+    w = tens_ord[n]
+elif n < 100:
+    w = "%s-%s" % (tens_card[n - n % 10], ones[n % 10])
+else:
+    w = ""
+print(w.upper())
+ORD
+)
   if [ -z "$OVER_WORD" ]; then
     bad "audit-stories.sh notices an over-claimed ordinal" "no ordinal word for $OVER stories - extend the table"
   else
