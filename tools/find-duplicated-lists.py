@@ -41,7 +41,13 @@ def main(roots):
         for path in pathlib.Path(root).rglob("*"):
             if path.is_file() and path.suffix in SUFFIXES:
                 for words, line in lists_in(path):
-                    found[words].append((str(path), line))
+                    # ONE LINE IS ONE PLACE. A line can hold the same list twice -- `A="X, Y"` and `B="X, Y"` on
+                    # one line, which is exactly what this tool's own self-test probe writes -- and appending every
+                    # match made a single line read as "2 places". A report that counts a line against itself is a
+                    # false positive, and a false positive is the quiet one.
+                    place = (str(path), line)
+                    if place not in found[words]:
+                        found[words].append(place)
     repeats = 0
     for words, places in sorted(found.items(), key=lambda kv: -len(kv[1])):
         if len(places) < 2:
