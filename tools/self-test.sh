@@ -480,6 +480,32 @@ PY
   fi
 fi
 
+# ---- check-story-registered.py must notice a story nobody can reach -------------------------------------------
+# THE FAULT IS A STORY ABSENT FROM `Games.java`, which is invisible to every other check in this repository: the story
+# audits CLEAN, builds, gets a shelf entry and renders into the contact sheet, and no player can open it. The
+# injection removes the-plot's registration line and requires the check to name it.
+if [ -x tools/check-story-registered.py ] && [ -f src/main/java/aside/game/Games.java ]; then
+  G_BAK=$(mktemp); cp src/main/java/aside/game/Games.java "$G_BAK"
+  python3 - <<'GJ'
+import io, sys
+p = "src/main/java/aside/game/Games.java"; s = io.open(p, encoding="utf-8").read()
+old = "        g.add(new aside.games.plot.PlotGame());\n"
+if old not in s:
+    sys.exit("the-plot's registration is gone from Games.java - fix this entry rather than letting it pass")
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
+GJ
+  gj_rc=$?
+  gj_out=$(timeout 300 python3 tools/check-story-registered.py 2>&1); gj_check=$?
+  cp "$G_BAK" src/main/java/aside/game/Games.java; rm -f "$G_BAK"
+  if [ $gj_rc -ne 0 ]; then
+    bad "check-story-registered notices a story nobody can reach" "the injection did not run: $gj_out"
+  elif [ $gj_check -ne 0 ] && grep -q "the-plot" <<<"$gj_out"; then
+    ok "check-story-registered notices a story nobody can reach" "$(echo "$gj_out" | grep the-plot | head -1 | cut -c1-54)"
+  else
+    bad "check-story-registered notices a story nobody can reach" "exit $gj_check, and nothing about the-plot"
+  fi
+fi
+
 # ---- story-chain.sh must STOP at the first failing step --------------------------------------------------------
 # IT IS A PATH, NOT A CHECK, so the fault injected here is not its own: it is A STORY THAT FAILS THE AUDITOR, and what
 # is required is that the chain stops there rather than running the other five steps and leaving a build, a shelf and

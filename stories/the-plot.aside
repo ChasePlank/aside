@@ -1,0 +1,131 @@
+# The Plot - a sexton, a leaning stone, and a burial on Thursday.
+# Written for the library. One person, one rule meant for safety, and a family that has to live with it.
+
+title: The Plot
+start: start
+
+== start ==
+bg cliff_path
+music room_tone
+The burial is Thursday at eleven and the grave is open, and the soil is going on the
+sheet beside it the way it always does, turf first and then the rest, and the turf goes
+back on the mound when it is filled.
+You have dug a hundred and forty of these. You can dig one in a day and a half and you
+have never once been late, and the vicar says that at funerals the way he says the
+weather, which is to say without meaning much by it.
+-> the_stone
+
+== the_stone ==
+While the grave is open and the light is on it, you walk the row to check for anything
+that has come loose over the winter, because that is the other half of the job and it is
+the half that has a rule attached.
+The stone by the gate has come loose. It is a kerb and a headstone for a woman who died
+in 1958, it belongs to a family that still uses the churchyard, and it is leaning twelve
+degrees off plumb with a base that has washed out under it.
+-> the_rule
+
+== the_rule ==
+The rule is the diocese's and it is two sentences long and it is about safety: a
+memorial that is found unstable is made safe, and the usual way to make it safe is to
+lay it down flat on the ground, because a stone lying down cannot fall on a child.
+There is a test they teach you with a hand on the top and a steady push, and this one
+moves, and it moves at the base rather than the joint, which is the worst of the two.
+-> the_knowing
+
+== the_knowing ==
+bg workshop_bench
+You can fix it properly. You have done it twice: lift the stone, pour a new footing,
+set it back plumb, and pin the joints with stainless dowels, and it will stand for
+another sixty years. It takes a day and it costs about ninety pounds in materials, and
+nobody in this story has ninety pounds.
+Laying it flat takes forty minutes and costs nothing and is, by the letter of the rule,
+the correct answer.
+-> the_decision
+
+== the_decision ==
+It is Tuesday. The burial is Thursday, so the family will be here on Thursday, standing
+four rows away from the stone with their coats on, and they will see whatever you have
+done to it, and they will not know there was a decision.
+* Lay it flat. It is the rule and it is forty minutes. -> flat
+* Fix it properly, on your own time and your own money. -> fix_it
+* Ring the family and ask them what they want. -> ring_them
+* Leave it up and report it, so it is the church's decision and not yours. -> report_it
+
+== flat ==
+You lay it flat. Forty minutes, and the stone goes down onto a bed of sand and the
+kerbs come up and go into the corner of the wall with the others, and you stand back
+and the row looks tidier than it did, which is the part nobody tells you.
+On Thursday the family comes and buries the second wife of the man in that grave, and
+they walk past the flat stone at the gate without stopping, and you are standing at the
+door of the shed with a spade and you watch them not stop.
+-> ending_flat
+
+== fix_it ==
+You lift it on the Wednesday and you pour the footing and you set it back plumb and the
+pin comes out of the kit you keep for the church's own gates, so it costs you the
+footing and the sand and the afternoon, which is less than ninety pounds and is still
+not nothing.
+It stands. On Thursday the family comes, and one of them, an older woman, stops at the
+gate on the way out and puts her hand flat on the top of the stone and reads it, and
+then goes on, and you are forty feet away with a spade and you do not say anything.
+-> ending_fixed
+
+== ring_them ==
+The number is in the register from the last burial in that plot, nineteen years ago, and
+it rings and a man answers and you tell him what you can see and what the rule is and
+what the two options are.
+He asks how much the proper one is. You tell him. He says he will ring you back and he
+does not ring you back, and on Thursday the family comes and the stone is still standing
+and leaning and nobody says anything about it and nobody touches it.
+-> ending_asked
+
+== report_it ==
+You write it in the log and you ring the churchwarden, which is the other thing the rule
+allows, and she comes on the Thursday morning in her coat to look at it before the
+burial and stands there with her hands in her pockets.
+churchwarden: It's the base.
+you: It's the base.
+churchwarden: If I say lay it down, then it's me that said it.
+you: Yes.
+She looks at it for a while longer and then she says lay it down, and you lay it down on
+the Friday, and it is her name in the log and not yours.
+-> ending_report
+
+== ending_flat ==
+The rule is a good rule. A stone lying down does not fall on a child, and the churchyard
+is a place children walk through, and you have made safe eleven stones in nine years and
+none of them has hurt anybody.
+It is also true that you did it on a Tuesday and they came on a Thursday, and that the
+stone is the only thing in the world with that woman's name on it apart from a line in a
+book, and that it is now lying in the grass with the letters facing the sky, where the
+weather will have them in twenty years. You did the right thing in the wrong order.
+-> END
+
+== ending_fixed ==
+Nobody knows. That is the whole of it: the warden does not know, the vicar does not know,
+the family does not know, and the only evidence is a footing that is newer than the rest
+of the concrete in that row and a pin out of the kit.
+You walk past it for years. It is plumb, and it is going to stay plumb, and if anybody
+ever asks you will tell them, and nobody is ever going to ask, and a thing nobody asks
+about is a thing that did not happen.
+-> END
+
+== ending_asked ==
+He never rings back. You think about ringing him again about eleven times over the
+following fortnight and you do not, because it is his stone and his father's wife and his
+decision, and because a person who does not ring back has rung back, and you did not
+need nine years of churchyard to know it.
+The stone is still standing. You check it every month for a year, and it does not move
+any further, and then you stop checking it every month and check it every spring like
+everything else.
+-> END
+
+== ending_report ==
+Her name is in the log. That is what the log is for and it is the whole reason the rule
+has a second sentence, which is that the person who makes the decision signs for it.
+She was not avoiding it, that is not what happened - she stood in the cold and looked at
+it and took it, and then she went to the burial, and she will carry it, and that is what
+a warden is.
+You lay it down on the Friday. You do not think about it again, which is the other thing
+the log is for.
+-> END

@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty-nine stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirty stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper` and `the-pane`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane` and `the-plot`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -410,6 +410,11 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-plot.aside`** — a sexton, a grave open for a burial on Thursday, and a headstone by the gate that
+  has come loose at the base. The diocese's rule is two sentences and it is about safety: **a memorial found unstable
+  is made safe, and the usual way is to lay it down flat, because a stone lying down cannot fall on a child.** Four
+  endings, and the whole of it is that the rule is right, the family is right, and there is nobody to be angry with.
+  13 scenes, 97 beats, 4 choice options.
 - **`stories/the-pane.aside`** — a glazier of thirty years who *can read a broken window the way other people read
   a face*: which pane went first, whether it was hit or leaned on, **and whether the glass is on the inside or the
   outside of the frame, because glass goes the way the force went.** A back door put through overnight, a crime

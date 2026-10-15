@@ -456,6 +456,21 @@ fi
 # and the comparison is ACROSS stories, both of which were measured before the tool existed - 339 shared runs here
 # are WITHIN one story and are deliberate parallel structure (sibling endings telling the same night several ways),
 # and a check that flagged those would be firing on valid content.
+# AND A STORY NOBODY CAN REACH. Every other step of the story chain leaves evidence - a build is a file, the shelf is
+# a file, the frames are files, the README is compared - while A REGISTRATION IS A LINE OF JAVA, and nothing read it.
+# `the-plot` went through the whole chain and the chain stopped for the README's count and for its own build, which is
+# what it is for; the registration was mine to add by hand and NOTHING WOULD HAVE SAID SO IF I HAD FORGOTTEN.
+if [ -f tools/check-story-registered.py ]; then
+  printf '  %-20s ' "story-registered"
+  if out=$(timeout 300 python3 tools/check-story-registered.py 2>&1); then
+    echo "ok     $(echo "$out" | grep -E '^=== [0-9]+ story' | head -1)"
+  else
+    echo "FAIL   $(echo "$out" | grep -E '^=== [0-9]+ of' | head -1)"
+    echo "$out" | grep 'NOTHING' | head -4 | sed 's/^/  /'
+    gate_failed=1
+  fi
+fi
+
 if [ -f tools/check-story-repetition.py ]; then
   printf '  %-20s ' "story-repetition"
   if out=$(timeout 600 python3 tools/check-story-repetition.py 2>&1); then
