@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirty stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirty-one stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane` and `the-plot`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot` and `the-chart`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -410,6 +410,12 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-chart.aside`** — an optician, twenty minutes, and a man of eighty-three whose daughter booked the
+  appointment and drove him in. He can still read the line in one eye, **in good light, if he takes his time** — and
+  there is a form with a box on it called VISUAL STANDARD FOR DRIVING, **with two options and neither of them is
+  "nearly"**. He drove here and he is going to drive home, and the car is the last room of the house he is allowed to
+  be alone in. Four endings, and the question is who a result belongs to when the chart does not care what anybody
+  wants. 16 scenes, 107 beats, 4 choice options.
 - **`stories/the-plot.aside`** — a sexton, a grave open for a burial on Thursday, and a headstone by the gate that
   has come loose at the base. The diocese's rule is two sentences and it is about safety: **a memorial found unstable
   is made safe, and the usual way is to lay it down flat, because a stone lying down cannot fall on a child.** Four

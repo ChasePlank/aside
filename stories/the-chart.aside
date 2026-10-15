@@ -1,0 +1,147 @@
+# The Chart - an optician, a sight test, and a number that has a legal consequence.
+# Written for the library. One person, one reading, and the question of who a result belongs to.
+
+title: The Chart
+start: start
+
+== start ==
+bg east_corner
+music room_tone
+The test takes twenty minutes and you have done four thousand of them, and the one this
+morning is a man of eighty-three whose daughter made the appointment and drove him in and
+is sitting in the waiting room with a magazine she is not reading.
+He is cheerful. They usually are, at the start.
+-> the_room
+
+== the_room ==
+You do the whole test properly because that is what it is for: the letters on the chart,
+then the smaller chart, then the one with the astigmatic fan, then the field test where he
+presses the button when he sees a light in the corner of his eye and does not press it
+three times.
+His pressures are fine. His fundus is fine. His refraction has moved a long way in two
+years and the reason is cataracts, and he needs referring, and that is not the problem.
+-> the_problem
+
+== the_problem ==
+The problem is the line he can read with his glasses on, which is the fifth from the
+bottom, which is six over twelve, and the standard for driving is six over twelve in one
+eye - so he can still read it, in the right eye, if the light is good and he takes his
+time.
+With both eyes open, in this room, in October, with a lamp on him, he is a line short of
+where he was, and there is a form with a box on it, and the box is called VISUAL STANDARD
+FOR DRIVING and the box has two options and neither of them is "nearly".
+-> the_knowing
+
+== the_knowing ==
+The daughter booked it. You know that because she is in the waiting room and because the
+card says so in her handwriting, and because when people book for a parent they are usually
+asking a question they have not worked out how to ask out loud yet.
+He has driven here. He is going to drive home. He has driven for sixty-one years and the
+car is the last room of the house he is allowed to be alone in.
+-> the_decision
+
+== the_decision ==
+The room is warm and the chart is on the wall and the chart does not care what anybody
+wants. Your pen is over the box.
+* Say it in the room, plainly, to him. -> say_it
+* Tick the box that is true and say nothing about it. -> the_box
+* Go and get his daughter and tell the two of them together. -> get_her
+* Give him the new prescription, book him in for a year, and write in the notes. -> write_only
+
+== say_it ==
+you: Mr Ellery, I'm going to say a thing and I want you to hear all of it.
+you: With both eyes you're reading a line less than you were, and the line you're reading
+is the one on the form, and the form is about driving.
+man: Right.
+you: In the right eye, on a good day, in good light, you're over it. In this room, today,
+you're not.
+He is quiet for a while and then he does the thing that people of his age do, which is that
+he asks you what you would do.
+-> the_asked
+
+== the_box ==
+You tick the box that says not met, and you do it in ink, and it is accurate and it is
+dated and it is yours, and you give him the new prescription and the referral and the
+photograph of the back of his eye that he will not look at.
+He says thank you and shakes your hand and goes out to the waiting room and you hear his
+daughter ask him how it went, through the wall, and you hear him say the word fine.
+-> ending_the_box
+
+== get_her ==
+You go out and you bring her in and you say it once, to both of them at the same time,
+which is the fairer way round and which is also the harder one, because he has to hear it
+in front of his child.
+She asks the question before he does. She has been carrying the question since she made
+the appointment, and she asks it standing up, with her coat on, which is how people ask
+the thing they have actually come for.
+-> the_asked_her
+
+== the_asked_her ==
+daughter: Is he all right to drive.
+you: He's over the line in one eye. In this room, today, that's the answer, and it's the
+answer on the form and I have to tick it.
+daughter: Right.
+She is quiet for a moment and then she does what she came to do, which is to start being
+the person who will deal with this, and it takes about four minutes, and he watches her do
+it and says nothing at all.
+-> ending_in_front
+
+== ending_in_front ==
+She drives him home. He does not say anything in the car and she does not either, and the
+two of them sit in it in the driveway for a minute before either gets out.
+He sells the car in March. It is her that does the selling and her that takes the calls and
+her that drives him to the surgery in October, and he is grateful about all of it, and he
+is also a man who was told a thing in front of his child because that was judged to be the
+kinder of the two ways to do it. You still think it was.
+-> END
+
+== write_only ==
+You give him the new prescription and you book him in for next October and you write in
+the notes what you saw, in the words the notes use, which are accurate and which nobody
+will read unless something happens.
+He will come back next year and you will test him again and one of the two of us will
+decide something, eventually, and it will not be you and it will not be today.
+-> ending_the_notes
+
+== the_asked ==
+The question is: what would you do. Which is not really a question about eyes, and which
+has one honest answer and about four dishonest ones.
+You have been asked it eleven times in nine years and you have never once found a way to
+say it that does not sound like either permission or a sentence.
+-> the_answer
+
+== the_answer ==
+you: I would drive home today, because you're over the line in one eye and you've driven
+here safely and I'm not a policeman.
+you: And I'd decide this week, while it's a decision, because in six months it might not
+be one.
+man: That's a fair answer.
+you: It's a true one. It's not the same as fair.
+He laughs at that, which you did not expect, and then he sits for a minute looking at the
+chart on the wall, at the fifth line up from the bottom, which he can still read.
+-> the_end
+
+== the_end ==
+He chooses. That is the point of saying it out loud: the choice is his and it was always
+going to be his and your job was to make sure that it was a choice.
+He sells the car in March. His daughter rings the practice in April to say thank you, and
+you are not on the desk and the message says a man called about a car, which is the most
+accurate version of what happened and the only one that is filed anywhere.
+-> END
+
+== ending_the_box ==
+The form goes to the licensing people and they do what they do, which is a letter six
+weeks later and a decision that is not yours and not his either, and nobody rings the
+practice and nobody comes back in.
+You were accurate. It is on the form, in ink, dated, and it is the most defensible thing
+in this story, and it is the only thing in it that he did not get to hear from a person.
+-> END
+
+== ending_the_notes ==
+He comes back the following October. He has had the cataracts done at the hospital by then
+and he reads the whole chart, the bottom line, and he is delighted and he tells you about
+the drive there and back, twice, and you write in the notes that the standard is met.
+Which is true. Everything in the notes is true, both times, and neither entry says anything
+about October, and there is nobody alive who knows about October except you, and you do not
+think about it very often.
+-> END
