@@ -1,0 +1,139 @@
+# The Lock - a lock keeper, four gates, and a boat that comes down after hours.
+# Written for the library. One person, one procedure, and the question of what a schedule is for.
+
+title: The Lock
+start: start
+
+== start ==
+bg river_jetty
+music room_tone
+The lock is one chamber and four gates and it takes eleven minutes to work a
+boat through it, and you have done it eleven thousand times, which is a number you
+worked out one winter and have not repeated to anybody.
+The hours are on a board by the office: six to eight, twelve to two, five to seven.
+Outside those, the gates stay shut, and the water stays where you left it, and that
+is what a schedule is for.
+-> the_evening
+
+== the_evening ==
+It is ten past seven. The last boat of the day went down at twenty to, a hire boat
+with six people and a dog, and you have the paddles down and the balance beams
+pulled shut and the office light off.
+A boat comes up the cut with its light on. That is not a thing that happens.
+-> the_boat
+
+== the_boat ==
+It is a narrowboat, seventy feet of it, and it is coming slowly and it is alone. The
+man on the tiller lifts a hand and says the thing they all say.
+boater: Evening. Am I too late?
+The answer is yes. You have given that answer four times this year and every one of
+them turned round without an argument.
+-> the_choice
+
+== the_choice ==
+You are standing at the bottom gate with the windlass in your hand, which you have
+not put down since seven, and the water in the chamber is at the level of the lower
+cut, which is where it should be at this hour.
+* Work him through. Eleven minutes. -> work_him
+* Say no, the way you have said it four times. -> say_no
+* Ask him why he is late. -> ask_him
+
+== work_him ==
+You open the top paddles and the water starts and the boat comes in and the man says
+nothing at all, which is unusual, and the dog that is not there is noticeable because
+every hire boat has one.
+He is standing on the back deck with both hands on the tiller and he does not look at
+the gates, or at the water, or at you. He looks at the office window, which is dark.
+-> the_through
+
+== say_no ==
+you: You're too late. I'm shut.
+boater: Right.
+He does not argue. He puts the tiller over and the bow comes round in the wide part
+and he goes back up the cut the way he came, slow, with the light on, and you stand
+and watch him to the bend because that is what there is to do.
+-> ending_refused
+
+== ask_him ==
+you: You're late.
+boater: I know.
+you: Where are you making for?
+boater: Anywhere past the lock.
+He says it plainly and then, because you have not said no yet, he says the rest.
+boater: I was moored above the bend and there's a man been walking the towpath all
+evening. He hasn't got a boat and he hasn't got a dog and he's stopped at mine twice.
+-> the_man
+
+== the_man ==
+You look back up the way he came. The towpath is a pale line and there is nothing on
+it that you can see, and you have worked this cut for nineteen years and you know that
+"nothing you can see" at night is a different sentence from "nothing".
+You have two things in your hand, which are a windlass and a telephone that works.
+* Work him through and walk up the towpath yourself after. -> work_then_walk
+* Ring the office and let somebody else decide. -> ring_office
+* Work him through and say nothing to anybody. -> the_through
+
+== work_then_walk ==
+You work him through. Eleven minutes. He says thank you at the top gate and goes on
+into the dark, and you put the paddles down and shut the gates behind him and take the
+torch off its hook.
+The towpath is two miles to the bend. You walk it as far as the bridge with the torch
+on, and there is a coat over the rail that was not there at six, and nothing else, and
+you leave the coat where it is because it is not yours.
+-> ending_the_coat
+
+== ring_office ==
+bg closet
+The office closes at five and the phone rings four times and then a man from the
+regional number answers and asks you for the details in the order he has them on his
+screen: the boat, the registration, the time, the location, the nature of the concern.
+You give him all of it in that order, which takes six minutes, and he says somebody
+will be sent out, which is a sentence with no time on it.
+The boat has gone by the time you put the phone down. You never got the number.
+-> ending_the_number
+
+== the_through ==
+You work him through, eleven minutes, the same as every boat, and he says thank you
+and goes on into the dark towards the next lock, which is six miles and is manned by
+somebody who will be shutting at eight.
+You put the paddles down and you shut the gates and you check the balance beams twice,
+which you have not done since the year the ice took the bottom gate.
+-> ending_schedule
+
+== ending_refused ==
+You lock the office and walk to the car and the cut is flat and quiet and the light
+that was coming up it is going back down it, and that is the schedule.
+You get the boat's number anyway, from the board at the office in the morning, because
+the registration was on the bow and you are good at reading bows. You do not do
+anything with it. It is in the book, which is a thing that has a number in it now, and
+which had nothing in it the day before.
+-> END
+
+== ending_the_coat ==
+The police come to the lock on the Thursday and ask about the coat, and you tell them
+the time you walked it and how far, and the man from the boat rings the office a week
+later to say he got to the next lock and then to a mooring and that it was nothing, or
+that he did not want to say, and you cannot tell which from his voice.
+You have worked four more boats through after hours since. Nobody has asked you about
+it. The board by the office still says five to seven, and you are the only person who
+knows what you do with the eleventh hour.
+-> END
+
+== ending_the_number ==
+The regional man rings back in the morning for the boat's number and you do not have
+it, and he writes that down in the words he has for it, which are "insufficient
+detail".
+There is a folder with a line in it now that says this, and your name is on the line,
+and the man on the towpath was never mentioned by anybody. You work the boats through
+in the hours on the board and you put the windlass down at seven, and the cut is the
+same as it was, and you have been doing this nineteen years.
+-> END
+
+== ending_schedule ==
+You put the windlass in the office and you drive home with the radio on and it is
+twenty to eight, which is the time you always get home on a Tuesday.
+In the morning the water is where you left it and the gates are shut and there is
+nothing on the towpath, and you look anyway, from the car, before you unlock.
+The board by the office says six to eight, twelve to two, five to seven, and you wrote
+it out in 2019 and it has never once been wrong.
+-> END

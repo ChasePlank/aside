@@ -127,6 +127,14 @@ def main():
         window, m = None, None
         for hit in re.finditer(re.escape(story), text):
             candidate = text[hit.start():hit.start() + 1400]
+            # AND IT STOPS AT THE NEXT STORY'S BULLET. A fixed 1400-character window runs past the end of this
+            # story's line and into the next one's, so a story that states no beat count was checked against a
+            # NEIGHBOUR'S - which is what adding `the-lock` exposed, four stories at once reporting "README says
+            # 100 beats, 6 choice options", because those were the-lock's numbers sitting further down the window.
+            # A CLAIM BELONGS TO THE BULLET IT IS IN.
+            nxt = candidate.find("- **`stories/")
+            if nxt > 0:
+                candidate = candidate[:nxt]
             found = SCENES.search(candidate)
             if found:
                 window, m = candidate, found

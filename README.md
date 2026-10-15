@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Twenty-four stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Twenty-five stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey` and `the-flue`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue` and `the-lock`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -394,6 +394,10 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/the-lock.aside`** — a lock keeper, four gates, eleven minutes a boat, and a schedule on a board by the
+  office: six to eight, twelve to two, five to seven. At ten past seven a narrowboat comes up the cut, alone, and the
+  answer to *"am I too late?"* has been yes four times this year. **The question underneath is what a schedule is
+  for** once nobody is watching it. Four endings. 15 scenes, 100 beats, 6 choice options.
 - **`stories/the-flue.aside`** — a sweep, four chimneys, and the one that has not been done since the old man died.
   Behind a calendar in the cupboard on the landing the flue bends, and in the bend there is a gap the size of a fist
   and a **tobacco tin with a perished rubber band round it**: money in notes that stopped being printed years ago, and
