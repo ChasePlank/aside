@@ -66,7 +66,7 @@ public class Audit {
             // printed ISSUES FOUND and exited 1 - Overtime, 131 scenes, did exactly that at the default budget,
             // which reads as "your story is broken" when it means "the search did not finish".
             boolean reliable = !r.missingTargets.isEmpty() || !r.deadEnds.isEmpty()
-                    || !r.varsReadOnly.isEmpty() || !r.varsNeverRead.isEmpty()
+                    || !r.varsReadOnly.isEmpty() || !r.varsNeverRead.isEmpty() || !r.constConditions.isEmpty()
                     || !r.falseChoices.isEmpty();
 
             // A COMPLETENESS CLAIM THAT NEEDS NO SEARCH: if every DEFINED scene was reached, the unreachable-scene

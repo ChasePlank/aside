@@ -515,6 +515,77 @@ static final long SHELF_CEILING_KB = 10240;
                     !pr.neverOfferedChoices().isEmpty());
         }
 
+        // A CONDITION THAT CANNOT FAIL, WHICH I GOT WRONG TWICE IN ONE WEEK.
+        //
+        // `the-pledge` and `the-flue` each had a flag written on EVERY path that reached the jump reading it, so the
+        // condition was constant, the fall-through was dead, and scenes sat behind it unreachable. Both were found by
+        // a person reading a report. The check that catches it is static - reachability over the scene graph, with
+        // the scenes that write the flag removed - because the WALK-BASED version built first reported 193 hits
+        // across 24 stories: "always held in the paths explored" is bounded by the walk's coverage, and overtime's
+        // traversal does not even finish, which the audit says out loud.
+        //
+        // TWO PROBES, because a check that reports a constant condition on a story where the flag CAN be unset is
+        // worse than no check: the first must be caught and the second must not.
+        {
+            Path tmp = Files.createTempFile("aside-constcond", ".aside");
+            Files.writeString(tmp, """
+                    title: constant condition probe
+                    start: a
+
+                    == a ==
+                    ~ flag +1
+                    Some words in the room.
+                    if flag >= 1 -> b
+                    -> c
+
+                    == b ==
+                    -> END
+
+                    == c ==
+                    -> END
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            Bot.Report pr = new Bot().run(probe);
+            check("the auditor reports a jump that can never be not-taken ("
+                            + pr.constConditions.size() + " found)",
+                    !pr.constConditions.isEmpty());
+        }
+        {
+            Path tmp = Files.createTempFile("aside-constcond-negative", ".aside");
+            Files.writeString(tmp, """
+                    title: conditional condition probe
+                    start: a
+
+                    == a ==
+                    * Set it. -> s
+                    * Do not. -> n
+
+                    == s ==
+                    ~ flag +1
+                    -> d
+
+                    == n ==
+                    -> d
+
+                    == d ==
+                    if flag >= 1 -> b
+                    -> c
+
+                    == b ==
+                    -> END
+
+                    == c ==
+                    -> END
+                    """);
+            Script probe = Script.load(tmp);
+            Files.deleteIfExists(tmp);
+            Bot.Report pr = new Bot().run(probe);
+            check("and does NOT report one the flag can be unset before ("
+                            + pr.constConditions.size() + " found)",
+                    pr.constConditions.isEmpty());
+        }
+
         // Three more findings that nothing exercised, and one of them was
         // hidden by the shape of its own check.
         //

@@ -62,6 +62,8 @@ public class Bot {
         /** Written but never read anywhere — usually a typo'd name, e.g.
          *  `~ listed +1` when every condition tests `listened`. */
         public Set<String> varsNeverRead = new LinkedHashSet<>();
+        /** Conditions that cannot fail: the flag is written on every path that reaches the read. */
+        public Set<String> constConditions = new LinkedHashSet<>();
         public int pathsExplored = 0;
         public int statesExpanded = 0;
         public boolean budgetHit = false;
@@ -148,6 +150,8 @@ public class Bot {
             sb.append("vars read but never written: ").append(varsReadOnly.size()).append('\n');
             for (String s : varsReadOnly) sb.append("    !! ").append(s).append('\n');
 
+            sb.append("conditions that cannot fail: ").append(constConditions.size()).append('\n');
+            for (String x : constConditions) sb.append("    !! ").append(x).append('\n');
             sb.append("vars written but never read: ").append(varsNeverRead.size()).append('\n');
             for (String s : varsNeverRead) sb.append("    !! ").append(s).append('\n');
 
@@ -210,6 +214,8 @@ public class Bot {
                 r.deadEnds.add(sc.id + " (line " + sc.line + ")");
             }
         }
+
+        r.constConditions.addAll(conditionsThatCannotFail(script));
 
         // Anything written that no condition ever reads is dead -- and
         // nearly always a misspelling of something else that IS read.
@@ -588,6 +594,131 @@ public class Bot {
         if (s.scene(target) == null) {
             r.missingTargets.add(from + " -> '" + target + "' (line " + line + ")");
         }
+    }
+
+/**
+     * Conditions that cannot fail, because the flag is written on EVERY path that reaches the read.
+     *
+     * <p><b>THE STATIC VERSION OF A CHECK THAT COST AN HOUR AND A REVERT.</b> A walk-based version was built on
+     * 2026-10-15, proved on a fixture, and thrown away: it reported 193 hits across 24 stories, because "always
+     * held in the paths explored" is bounded by the WALK'S COVERAGE - and `overtime`'s traversal does not even
+     * finish, which the audit says out loud ("UNRELIABLE: traversal did not finish"). <b>A finding derived from a
+     * search that has disclaimed itself reads exactly like a finding that has not.</b> This asks the graph instead,
+     * and the graph does not care how much of the story anything explored.
+     *
+     * <p>THE SHAPE IT CATCHES, twice in one week: a flag written in scene A, read in scene B, with no way to reach B
+     * except through A. The condition is a constant, its other side is dead, and scenes pile up behind it.
+     *
+     * <p>RESTRICTED TO PRESENCE TESTS - `flag`, `!flag`, `flag >= 1` - and that is not timidity: ONE WRITE DOES NOT
+     * SATISFY `flag >= 3`, so a threshold would be a false positive on the first story that wrote the flag twice.
+     * A check that fires on valid stories gets ignored, which is why the hour before this one ended with nothing
+     * committed.
+     */
+    static List<String> conditionsThatCannotFail(Script script) {
+        java.util.Map<String, Set<String>> edges = new java.util.LinkedHashMap<>();
+        java.util.Map<String, java.util.Map<String, java.util.List<Integer>>> writes = new java.util.LinkedHashMap<>();
+        for (java.util.Map.Entry<String, Scene> e : script.scenes.entrySet()) {
+            String sc = e.getKey();
+            Set<String> out = new java.util.LinkedHashSet<>();
+            java.util.Map<String, java.util.List<Integer>> byVar = new java.util.LinkedHashMap<>();
+            boolean conditionalBefore = false;
+            for (Beat b : e.getValue().beats) {
+                if (b.target != null) out.add(b.target);
+                if (b.choices != null) for (Choice c : b.choices) if (c.target != null) out.add(c.target);
+                for (String eff : b.effects) {
+                    if (conditionalBefore) break;
+                    byVar.computeIfAbsent(effectName(eff), k -> new java.util.ArrayList<>()).add(b.line);
+                }
+                if (b.choices != null) for (Choice c : b.choices)
+                    for (String eff : c.effects)
+                        byVar.computeIfAbsent(effectName(eff), k -> new java.util.ArrayList<>()).add(c.line);
+                if (b.condition != null || (b.choices != null && !b.choices.isEmpty())) conditionalBefore = true;
+            }
+            edges.put(sc, out);
+            writes.put(sc, byVar);
+        }
+
+        // WHICH SCENES CAN MAKE A FLAG FALSY, and a flag with any of them is left alone entirely. `~ knocked false`
+        // in the-lamp-room is why: my first version treated every write as truth-making and reported a condition
+        // that a path plainly falsifies. Bailing out on the whole variable is coarse and it is SOUND, and a check
+        // that fires on valid stories gets ignored.
+        java.util.Map<String, Boolean> falsifies = new java.util.LinkedHashMap<>();
+        for (java.util.Map.Entry<String, Scene> e : script.scenes.entrySet()) {
+            for (Beat b : e.getValue().beats) {
+                for (String eff : b.effects) {
+                    String n = effectName(eff);
+                    String val = eff.substring(n.length()).trim();
+                    if (val.equals("false") || val.startsWith("-")) falsifies.put(n, Boolean.TRUE);
+                }
+                if (b.choices != null) for (Choice c : b.choices)
+                    for (String eff : c.effects) {
+                        String n = effectName(eff);
+                        String val = eff.substring(n.length()).trim();
+                        if (val.equals("false") || val.startsWith("-")) falsifies.put(n, Boolean.TRUE);
+                    }
+            }
+        }
+
+        List<String> found = new ArrayList<>();
+        for (java.util.Map.Entry<String, Scene> e : script.scenes.entrySet()) {
+            String sc = e.getKey();
+            for (Beat b : e.getValue().beats) {
+                // ONLY JUMPS, AND THAT IS THE WHOLE POINT. A choice whose condition always holds is merely
+                // always offered - redundant, not broken. A JUMP whose condition always holds has a fall-through
+                // that can never be taken, which is a dead branch and is the mistake I made twice in one week.
+                // Measured on 2026-10-15: without this restriction the check fired three times on the library and
+                // all three were choices.
+                if (b.condition != null && b.target != null) {
+                    String v = presenceVar(b.condition);
+                    if (v != null && cannotFail(script, sc, b.line, v, writes, edges, falsifies))
+                        found.add(sc + " line " + b.line + ": '" + b.condition + "' cannot fail, so the branch"
+                                + " after it is dead");
+                }
+            }
+        }
+        return found;
+    }
+
+    /** `flag`, `!flag` or `flag >= 1` - and null for anything else, including every threshold. */
+    static String presenceVar(String cond) {
+        String t = cond.trim();
+        if (t.startsWith("!")) {
+            String r = t.substring(1).trim();
+            return r.matches("[A-Za-z_][A-Za-z0-9_]*") ? r : null;
+        }
+        if (t.matches("[A-Za-z_][A-Za-z0-9_]*")) return t;
+        java.util.regex.Matcher m =
+                java.util.regex.Pattern.compile("^([A-Za-z_][A-Za-z0-9_]*)\\s*>=\\s*1$").matcher(t);
+        return m.matches() ? m.group(1) : null;
+    }
+
+    /** Can the read at this scene and line be reached without the flag first being written? */
+    static boolean cannotFail(Script script, String scene, int line, String var,
+                              java.util.Map<String, java.util.Map<String, java.util.List<Integer>>> writes,
+                              java.util.Map<String, Set<String>> edges,
+                              java.util.Map<String, Boolean> falsifies) {
+        if (falsifies.containsKey(var)) return false;   // some path can unset it: not a constant, and not our call
+        // Written earlier in the SAME scene, with nothing conditional between - then it is set before the read.
+        java.util.List<Integer> here = writes.getOrDefault(scene, java.util.Map.of()).get(var);
+        if (here != null && !here.isEmpty()) {
+            int first = java.util.Collections.min(here);
+            if (first < line) return true;
+        }
+        // Otherwise: every path from the start must pass through a scene that writes it. Walk the graph with
+        // those scenes removed - the reading scene is kept, because reaching it IS the question.
+        Set<String> blockers = new java.util.LinkedHashSet<>();
+        for (java.util.Map.Entry<String, java.util.Map<String, java.util.List<Integer>>> e : writes.entrySet())
+            if (e.getValue().containsKey(var) && !e.getKey().equals(scene)) blockers.add(e.getKey());
+        java.util.ArrayDeque<String> queue = new java.util.ArrayDeque<>();
+        Set<String> seen = new java.util.LinkedHashSet<>();
+        if (!blockers.contains(script.startScene)) { queue.add(script.startScene); seen.add(script.startScene); }
+        while (!queue.isEmpty()) {
+            String n = queue.poll();
+            if (n.equals(scene)) return false;   // reachable without the flag: the condition can be false
+            for (String m : edges.getOrDefault(n, Set.of()))
+                if (!blockers.contains(m) && seen.add(m)) queue.add(m);
+        }
+        return true;
     }
 
     static String effectName(String effect) {
