@@ -98,6 +98,7 @@ public final class Games {
         g.add(new aside.games.pane.PaneGame());
         g.add(new aside.games.plot.PlotGame());
         g.add(new aside.games.chart.ChartGame());
+        g.add(new aside.games.goldleaf.GoldLeafGame());
         g.add(new aside.games.bothy.BothyGame());
         g.add(new aside.games.dispensary.DispensaryGame());
         g.add(new aside.games.harbour.HarbourGame());

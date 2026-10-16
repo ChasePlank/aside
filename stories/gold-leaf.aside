@@ -1,0 +1,124 @@
+# Gold Leaf - a signwriter, a shopfront that is closing, and work that outlives its reason.
+# Written for the library. One person, one craft, and the question of what a job is for when nobody is coming.
+
+title: Gold Leaf
+start: start
+
+== start ==
+bg east_corner
+music room_tone
+Forty years of lettering and you can still tell a 1950s fascia from a 1980s one across a
+street: the weight of the strokes, where the serif sits, whether the man who did it was
+paid by the letter or by the day.
+The call came from the grocer at the end of the row, who is shutting in March, and who
+wants her fascia repainting before she goes.
+-> the_look
+
+== the_look ==
+You go and look at it on the Tuesday. It is a good fascia: hand-lettered in 1948 by a man
+whose name is under the return at the left end in pencil, and the gold has gone to a sort
+of grey-brown, and the black ground has crazed, and it is worth doing and it is worth doing
+properly and the woman standing on the pavement telling you about the shop does not need to
+be told either of those things.
+-> the_ask
+
+== the_ask ==
+you: You know it'll be painted over. New people, or a shutter, or a skip.
+her: I know.
+you: So it's for six months.
+her: It's for me. I've looked at that sign for fifty-one years and my father looked at it
+before me and I'm not having it go grey on my watch. You can put that on the bill as a
+line if you like.
+-> the_knowing
+
+== the_knowing ==
+Two ways to do it. Gold leaf is real gold, beaten to a thousandth of a hair and laid onto
+size with a gilder's tip, and it takes four days and the size has to be right to the hour or
+the leaf goes dull, and it costs a hundred and forty in materials. Gold paint is a tin of
+paint, and it takes an afternoon, and it looks nearly as good from across the road and
+nothing like it from a yard away.
+The weather is going to break on Thursday. You are sixty-three and your hands are still
+steady in the morning and not in the afternoon.
+-> the_decision
+
+== the_decision ==
+The fascia is four metres. The woman is on the pavement with her coat buttoned to the neck
+and she has already said the sentence about the bill, which means she has thought about this
+more than she has said.
+* Do it in leaf. Four days, and do it right. -> leaf
+* Do it in gold paint. An afternoon, and honest about it. -> paint
+* Tell her what the four days cost and let her decide. -> the_price
+* Tell her she is paying for something nobody will see. -> the_argue
+
+== leaf ==
+You lay the leaf on the Thursday and the Friday and the Saturday, and the size behaves on
+two of the three, and on the Friday afternoon your hand is not what it was in the morning
+and you stop and start again on the Saturday, which costs you a day and costs her nothing
+because you had quoted four days and four days is what it took.
+It is the best piece of work you have done since 2011. She comes out on the Sunday morning
+to look at it in the flat light and stands there for a long time without saying anything,
+which is the correct response and the one you get about twice a decade.
+-> ending_leaf
+
+== paint ==
+You do it in an afternoon in gold paint, and you tell her exactly what it is, and she says
+that is what she asked for when she said repainting, and she pays the smaller bill and
+thanks you and means it.
+It looks well from the other side of the road. Up close the strokes carry a slight ridge and
+the gold is a colour rather than a metal, and for six months every day she opens that shop
+she walks under it, and it is the right sign, and it is not the sign that was there.
+-> ending_paint
+
+== the_price ==
+You tell her the two prices while standing on the pavement, in the cold, without a
+clipboard, which is a thing you can do at sixty-three and could not at thirty.
+She does not hesitate, which is what you expected, and then she says the other thing, which
+is that she wants the man's name under the return kept in pencil, and that she does not want
+it varnished over.
+-> ending_named
+
+== ending_named ==
+The name under the return is a nuisance to keep: it is in pencil on the wood, it is under
+where the new work goes, and the only way to keep it is to leave that end unpainted or to
+transfer it, which is a thing signwriters do and which is not the same as keeping it.
+You do it properly: you lift the pencil line onto the new ground in a way that will last,
+and you write your own name under the other end, which you have never done, because there is
+now a line of two of you on the same piece of wood.
+-> END
+
+== the_argue ==
+you: It's six months of a thing nobody will look at.
+her: I will.
+you: You'll be looking at boxes and a van.
+her: I'll be looking at it.
+She says it in a flat way that leaves no room, and you have had this conversation before with
+people whose reasons were worse, and you stop having it and pick the tools up out of the van,
+which is the only honourable way to end an argument you have started.
+-> the_decided
+
+== the_decided ==
+You lay the leaf. Four days, the weather holds, and it is the best work you have done since
+2011 for reasons that have very little to do with the gold.
+She shuts in March. The shutter goes on the Tuesday and the sign is behind it, and the shop
+is a phone repair place by July and the fascia is a flat vinyl board, and you do not go and
+look, because you know exactly what it looks like and you have a photograph.
+-> END
+
+== ending_leaf ==
+The shop shuts in March and the sign goes behind a shutter and then behind a vinyl board in
+July, and you do not know how long the wood is there under it, and you never will.
+That is the whole of the trade and you have known it for forty years: you make things for
+the wall they are on and the wall outlives the reason, and the sign was never for the street
+or for the customers or for the next people. It was for a woman standing on a pavement in
+February saying I'm not having it go grey on my watch. You have never once been asked for
+anything better than that.
+-> END
+
+== ending_paint ==
+You see her in the street the following year, after the shop, and she says hello and asks
+about your hands, and neither of you mentions the sign, and that is not an omission: there
+is nothing to say about an afternoon's work that did what it was asked to do.
+It looked well from the other side of the road. She walked under it twice a day for six
+months and it did not go grey on her watch, and that is what she asked for, and you gave her
+exactly what she asked for, and you have thought about it more often than she has.
+-> END

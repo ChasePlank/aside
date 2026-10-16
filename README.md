@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirty-one stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirty-two stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot` and `the-chart`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart` and `gold-leaf`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -410,6 +410,13 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/gold-leaf.aside`** — a signwriter of forty years, and a grocer shutting in March who wants her fascia
+  repainted before she goes. **The sign is hand-lettered in 1948, the gold has gone to a sort of grey-brown, and it will
+  be painted over or shuttered within the year** — "it's for me. I've looked at that sign for fifty-one years and my
+  father looked at it before me, and I'm not having it go grey on my watch." Real gold, laid four days; gold paint, one
+  afternoon; or telling her she is paying for something nobody will see. **The first title here that is not "The
+  something"** — 24 of 31 began that way, and the seven that did not are the ones that stand out in a list. 13 scenes,
+  90 beats, 4 choice options.
 - **`stories/the-chart.aside`** — an optician, twenty minutes, and a man of eighty-three whose daughter booked the
   appointment and drove him in. He can still read the line in one eye, **in good light, if he takes his time** — and
   there is a form with a box on it called VISUAL STANDARD FOR DRIVING, **with two options and neither of them is

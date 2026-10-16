@@ -74,6 +74,14 @@ def main():
         if not re.search(r'case\s+"%s"\s*->' % re.escape(gid), shelf):
             problems.append("%s: PhoneShelf.java has no case \"%s\" - the shelf would show a blank line"
                             % (story, gid))
+            continue
+        # AND THE ID HAS TO BE THE BUILD'S FILENAME, because the shelf pairs a game with `web/<id>.html` and nothing
+        # else. `gold-leaf` shipped with the id `goldleaf` against a build called `gold-leaf.html`, so the shelf could
+        # not find it and the suite said "web/gold-leaf.html is on the shelf" - which reads like a missing file and was
+        # really a naming convention broken in one place. Checked here so the next one is caught by a tool.
+        if not os.path.exists(os.path.join(ROOT, "web", gid + ".html")):
+            problems.append("%s: the id \"%s\" has no web/%s.html - the shelf pairs a game with web/<id>.html, "
+                            "so this story would be missing from it" % (story, gid, gid))
 
     if problems:
         print("=== %d of %d story(ies) cannot be reached by a player ===" % (len(problems), checked))
