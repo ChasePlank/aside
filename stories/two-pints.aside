@@ -1,0 +1,134 @@
+# Two Pints - a milk round, a doorstep that is still being paid for, and what a person does about it.
+# Written for the library. One person, one small order, and the question of how far a job reaches.
+
+title: Two Pints
+start: start
+
+== start ==
+bg east_corner
+music room_tone
+Three hundred and forty bottles on a Tuesday and you know all of them by the doorstep they
+stand on: the two pints at the end of Chandlers Lane, the six at the shop, the gold top at
+number 9 which has been gold top since 1994 and nobody has ever explained it.
+You start at half past four and you are done by eight, and you have been doing it for
+twenty-one years, and the round is a thing you carry in your head rather than on a sheet.
+-> the_order
+
+== the_order ==
+The two pints at the end of Chandlers Lane have been on the book since before you had the
+round. They are paid by direct debit and the address on the book is Mr A. Ellery and the
+bottles come back empty on the Saturday and always have.
+Three weeks ago a woman you have not seen before left a note in the empty bottle.
+-> the_note
+
+== the_note ==
+It was on the back of a shopping list and it said *please keep leaving them* and it had a
+phone number on it and nothing else, and you have been leaving them, and now it is the
+Thursday of the fourth week and the bottles are not coming back empty.
+They are coming back full, which is a thing that happens at a house where somebody is
+not drinking the milk and nobody has told the dairy, and you have delivered eleven pints to
+a doorstep where the milk is standing outside all day and then coming in at night by
+somebody who is not drinking it.
+-> the_knowing
+
+== the_knowing ==
+The dairy is a phone call and a form and the order comes off the book. That is the whole of
+what the job asks of you: you deliver what is on the book and you ring the office if
+something is wrong with the book.
+You have been doing it for twenty-one years and you have made that call four times, and one
+of them was a man in a hospice who died on the Sunday and the family wrote to the depot to
+say thank you for stopping the milk.
+-> the_decision
+
+== the_decision ==
+You are at the end of the lane with an empty crate and eleven bottles standing on a step in
+the cold, and the woman's phone number is in your pocket where it has been for three weeks.
+* Ring the office and take it off the book. It is what the job asks. -> ring_office
+* Knock. Somebody is in there taking the milk in at night. -> knock
+* Ring her. She left a number, and that is what a number is for. -> ring_her
+* Keep leaving them, and say nothing to anybody. -> keep_leaving
+
+== ring_office ==
+You ring the office at half past eight and give them the address and they take it off the
+book, and the last delivery is the Friday, and there is no note on the doorstep on the
+Saturday because there is no bottle to leave one in.
+The dairy does it properly: somebody rings the number on the account and something is
+arranged, and you are not told what, and you do not ask, because that is the office and this
+is the lane.
+-> ending_office
+
+== knock ==
+You knock at half past six with a crate under your arm, which is early, and you have
+half-prepared something to say about the milk, and the door is opened by a man of about
+forty in a dressing gown who has clearly not slept.
+man: You're the milk.
+you: I'm the milk.
+man: She's in the home at Wren. She's been in the home since the second week. I'm here doing
+the house up and I didn't want to stop the milk because it's the last thing that's still
+coming here.
+-> the_note_man
+
+== the_note_man ==
+You stand on the step with the crate and he stands in the doorway and neither of you says
+anything for a moment, and then he says the thing that is the whole of it, which is that he
+is drinking two pints of milk a day and hates milk, and has been doing it since the second
+week because the alternative is a doorstep with nothing on it.
+He asks you to keep leaving them. He says it in the way people say things they have thought
+about for three weeks.
+-> ending_the_step
+
+== ring_her ==
+You ring the number at ten past seven in the evening, which is a reasonable hour, and she
+answers on the second ring like somebody who has been waiting for a phone call and does not
+want to say so.
+She is the daughter. Her mother went into Wren in the second week of the month and the milk
+is still going and she knows it is still going, and she has been leaving it because
+stopping it felt like a thing you do when somebody dies or when they are not coming back.
+-> the_call
+
+== the_call ==
+She asks you what the milk is doing. You tell her the truth, which is that it is standing on
+the step all day and going in at night, and that she is not drinking it, and there is a
+pause in which the two of you both know exactly who is.
+Then she laughs, which you had not expected, and it is a real one, and she says of course
+he is, and then she says the other thing, which is: do not stop it.
+-> ending_left_on
+
+
+== keep_leaving ==
+You keep leaving them. There is no decision in it and no note and no phone call, and the
+eleven bottles become sixteen and then become a crate the dairy has to send somebody out
+about, and that is the December, and you are still leaving two pints at the end of
+Chandlers Lane in the January when the order comes off the book by itself because the
+direct debit has stopped.
+-> END
+
+== ending_office ==
+The order comes off the book and nobody rings the lane about it and the doorstep is empty on
+the Saturday and stays empty.
+You go past it twice a day for months and it is a step like any other step now, and in the
+March there is a van outside and a man carrying boxes, and in the June there is a young
+couple, and there is no reason for either of you to know the other exists. That is the job:
+you deliver what is on the book and you ring the office when something is wrong with the
+book. It is a good job and it does not reach as far as a doorstep.
+-> END
+
+== ending_the_step ==
+You keep leaving them, and you never mention it to the office, and he drinks two pints of
+milk a day and hates milk.
+It goes on until the March, which is when the house is sold, and on the last Friday there is
+a note in the bottle in handwriting you have now seen three times, and it says *thank you
+for not stopping it* and it has no number on it, and there is nothing to do with it, so you
+put it in the cab of the van and it is in there still.
+-> END
+
+== ending_left_on ==
+You do not stop it, and the dairy does not ring anybody, and the milk goes on standing on
+the step all day and going in at night.
+In the April there is a note in the bottle that says *she is home on the 12th* and on the
+13th both bottles come back empty, which is the only piece of news you get about any of it,
+and which is exactly enough, and the first time you see her at the door of the lane in the
+summer you say good morning the way you say it to three hundred and forty other doorsteps
+and she says good morning the way people do when they have never had a conversation with
+somebody, and neither of you says one word more than that.
+-> END

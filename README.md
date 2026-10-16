@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirty-two stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirty-three stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart` and `gold-leaf`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf` and `two-pints`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -416,6 +416,11 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/two-pints.aside`** — a milk round, three hundred and forty bottles, and two pints at the end of
+  Chandlers Lane that have been on the book since 1994. **The bottles have stopped coming back empty — they are coming
+  back FULL**, which is what happens at a house where nobody is drinking the milk and nobody has told the dairy. Four
+  endings, and they are four answers to how far a job reaches: ring the office, knock, ring a number left in a bottle,
+  or keep leaving them and say nothing to anybody. 14 scenes, 97 beats, 4 choice options.
 - **`stories/gold-leaf.aside`** — a signwriter of forty years, and a grocer shutting in March who wants her fascia
   repainted before she goes. **The sign is hand-lettered in 1948, the gold has gone to a sort of grey-brown, and it will
   be painted over or shuttered within the year** — "it's for me. I've looked at that sign for fifty-one years and my
