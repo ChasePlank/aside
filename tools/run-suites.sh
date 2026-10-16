@@ -127,9 +127,20 @@ export DISPLAY="$DISPLAY_NUM"
 
 pass=0; fail=0; total_checks=0
 failed_names=()
+# A SUITE THAT NEVER FINISHES IS NOT A SUITE THAT FAILED, AND UNTIL NOW THERE WAS NO WAY TO TELL.
+#
+# The crash branch below has handled 134 and 139 since 2026-10-12: a JVM that dies starting a suite is retried once,
+# because a process that died before its checks ran cannot be evidence about the code. THERE WAS NO EQUIVALENT FOR A
+# HANG, and a hang is what actually happened on 2026-10-16: during a release, a JavaFX suite sat in `futex_wait` for
+# TWENTY-FIVE MINUTES while the gate waited on it, the release path stopped in step 2, and NOTHING SAID ANYTHING - the
+# log simply stopped. Two attempts hung at different points, so it is intermittent, like the crash.
+#
+# OVERRIDABLE, because the injection for this has to be fast: a test that waits ten minutes to prove a timeout works is
+# not a test anybody will run.
+SUITE_TIMEOUT="${SUITE_TIMEOUT:-600}"
 for suite in "${SUITES[@]}"; do
   name=$(echo "$suite" | sed 's/^aside\.games\.//; s/\.SelfTest$//')
-  out=$("$JAVA" --module-path "$FX" \
+  out=$(timeout "$SUITE_TIMEOUT" "$JAVA" --module-path "$FX" \
         --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
         -cp "$OUT:src/main/resources" "$suite" 2>&1)
   rc=$?
@@ -173,16 +184,20 @@ for suite in "${SUITES[@]}"; do
   # SO: 134 (SIGABRT) and 139 (SIGSEGV) mean the PROCESS died, not that anything was asserted. Retried once, because
   # a process that died before its checks ran cannot be evidence about the code - and if it dies again the crash is
   # reproducible and is a failure. The retry is PRINTED: a silent retry is exactly how a real crash gets hidden.
-  if [ $rc -eq 134 ] || [ $rc -eq 139 ]; then
-    printf '  %-12s CRASH  exit %s - the JVM died starting it, before any check ran; retrying once\n' "$name" "$rc"
+  if [ $rc -eq 134 ] || [ $rc -eq 139 ] || [ $rc -eq 124 ]; then
+    if [ $rc -eq 124 ]; then
+      printf '  %-12s TIMEOUT after %ss - it did not finish; retrying once\n' "$name" "$SUITE_TIMEOUT"
+    else
+      printf '  %-12s CRASH  exit %s - the JVM died starting it, before any check ran; retrying once\n' "$name" "$rc"
+    fi
     hs=$(ls -t hs_err_pid*.log 2>/dev/null | head -1)
     [ -n "$hs" ] && printf '  %-12s        crash dump: %s\n' "" "$hs"
-    out=$("$JAVA" --module-path "$FX" \
+    out=$(timeout "$SUITE_TIMEOUT" "$JAVA" --module-path "$FX" \
           --add-modules javafx.controls,javafx.graphics,javafx.media,javafx.swing \
           -cp "$OUT:src/main/resources" "$suite" 2>&1)
     rc=$?
-    if [ $rc -eq 134 ] || [ $rc -eq 139 ]; then
-      printf '  %-12s FAIL   exit %s TWICE - the JVM dies starting this suite, reproducibly\n' "$name" "$rc"
+    if [ $rc -eq 134 ] || [ $rc -eq 139 ] || [ $rc -eq 124 ]; then
+      printf '  %-12s FAIL   exit %s TWICE - this suite cannot be run to a verdict on this machine\n' "$name" "$rc"
       fail=$((fail + 1)); failed_names+=("$name")
     else
       clean=$(echo "$out" | grep -viE '^WARNING|^[[:space:]]+at |Exception in thread|MediaException|^Caused by')
