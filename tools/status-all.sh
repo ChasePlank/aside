@@ -61,6 +61,28 @@ for entry in $REPOS; do
   fi
 done
 
+# AND ANY REPOSITORY THAT IS NOT IN THE LIST ABOVE, because that list is HAND-TYPED and a project added tomorrow would
+# simply not appear - a board that reports four projects and says "every project is pushed" while a fifth sits
+# unreported is the same fault as a count that has gone stale. THE GATE ALREADY DOES THIS FOR TOOL CLASSES ("NOT RUN
+# HERE"), and this is the same move one level out. MEASURED 2026-10-16: the workspace holds exactly these four, so
+# this reports nothing today and fires the day a fifth appears.
+EXTRA=""
+for d in "$WORKSPACE"/*/; do
+  n=$(basename "$d")
+  [ -d "$d/.git" ] || continue
+  case " $REPOS " in *" $n:"*) ;; *) EXTRA="$EXTRA $n" ;; esac
+done
+if [ -n "$EXTRA" ]; then
+  printf '\n=== NOT IN THE LIST ABOVE:%s\n' "$EXTRA"
+  echo "  a repository in the workspace that this script does not know about - add it to REPOS, or say why not"
+  problems=$((problems + 1))
+fi
+
 cd "$WORKSPACE"/aside 2>/dev/null || true
 printf '\n=== %s ===\n' "$([ "$problems" = "0" ] && echo 'every project is pushed, clean and published' || echo "$problems thing(s) above need attention")"
+# THE EXIT CODE NOW CARRIES THE VERDICT. It always exited 0, so the line above could say "N thing(s) above need
+# attention" while rc said everything was fine - and a report nothing can consume in a test is a report somebody has
+# to read and remember. MEASURED 2026-10-16: nothing calls this script (the only mention of it in any tool is a
+# comment), so making the code honest breaks no caller.
+if [ "$problems" != "0" ]; then exit 1; fi
 exit 0
