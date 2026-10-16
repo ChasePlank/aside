@@ -23,6 +23,27 @@
 # IT DOES NOT COMMIT. Committing is the decision this ends by handing back.
 set -u
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
+
+# AND THE NUMBERS FOR THE README, PRINTED SO THEY CAN BE PASTED RATHER THAN TYPED. This is the one thing I have got
+# wrong twice in two stories: 97 beats typed where the measurement said 107 (the-chart), and 128 where it said 97
+# (two-pints). THE README CHECKER CATCHES IT - so the failure was never shipped - but a check that catches a typo is
+# worse than a step that removes it, which is the same move as status-all.sh and the release paths.
+#
+# `story-chain.sh --numbers <story>` prints the line and stops, so it can also be asked for it on its own.
+if [ "${1:-}" = "--numbers" ]; then
+  shift
+  for s in "$@"; do
+    out=$(tools/run-java.sh aside.engine.Audit "stories/$s.aside" 2>&1)
+    sc=$(echo "$out" | grep -oE "^scenes [0-9]+" | grep -oE "[0-9]+")
+    be=$(echo "$out" | grep -oE "beats [0-9]+" | grep -oE "[0-9]+")
+    op=$(echo "$out" | grep -oE "choice options [0-9]+" | grep -oE "[0-9]+")
+    en=$(echo "$out" | grep -oE "distinct endings: +[0-9]+" | grep -oE "[0-9]+")
+    echo "$s: $sc scenes, $be beats, $op choice options, $en endings"
+  done
+  exit 0
+fi
+
+
 cd "$HERE" || exit 2
 
 step() { printf '\n=== %s\n' "$*"; }
@@ -94,6 +115,15 @@ for t in check-readme-stories.py check-story-repetition.py check-audit-findings.
   printf '  %-28s %s\n' "${t%.py}" "$(echo "$out" | grep -E '^=== ' | tail -1)"
   # check-readme-stories prints its STALE lines and exits non-zero; the others exit non-zero with a named verdict.
   [ $rc -eq 0 ] || { echo "$out" | grep -E 'STALE|share a' | head -4 | sed 's/^/      /'; die "$t is not clean"; }
+done
+
+for s in $STORIES; do
+  out=$(tools/run-java.sh aside.engine.Audit "stories/$s.aside" 2>&1)
+  printf '  README numbers for %s: %s scenes, %s beats, %s choice options, %s endings\n' "$s" \
+    "$(echo "$out" | grep -oE '^scenes [0-9]+' | grep -oE '[0-9]+')" \
+    "$(echo "$out" | grep -oE 'beats [0-9]+' | grep -oE '[0-9]+')" \
+    "$(echo "$out" | grep -oE 'choice options [0-9]+' | grep -oE '[0-9]+')" \
+    "$(echo "$out" | grep -oE 'distinct endings: +[0-9]+' | grep -oE '[0-9]+')"
 done
 
 cat <<'EOF'
