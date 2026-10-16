@@ -79,6 +79,17 @@ def main():
         # else. `gold-leaf` shipped with the id `goldleaf` against a build called `gold-leaf.html`, so the shelf could
         # not find it and the suite said "web/gold-leaf.html is on the shelf" - which reads like a missing file and was
         # really a naming convention broken in one place. Checked here so the next one is caught by a tool.
+        # AND THE TITLE, WHICH IS DISPLAYED IN TWO PLACES FROM TWO SOURCES: the shelf shows the module's
+        # `title()` and the story's own page shows its `title:` line. A mismatch is not a style choice - it is a
+        # player seeing one name in a list and another one on the page they opened. MEASURED 2026-10-16: all
+        # thirty-two agree, so this fires nowhere today; it is here because nothing was checking it.
+        mt = re.search(r'String\s+title\(\)\s*\{\s*return\s+"([^"]+)"', src)
+        st = re.search(r'^title:\s*(.+)$', open(os.path.join(ROOT, "stories", story + ".aside"),
+                                                 encoding="utf-8").read(), re.M)
+        if mt and st and mt.group(1).strip() != st.group(1).strip():
+            problems.append("%s: the story says its title is \"%s\" and the module says \"%s\" - the shelf and "
+                            "the page would disagree" % (story, st.group(1).strip(), mt.group(1).strip()))
+
         if not os.path.exists(os.path.join(ROOT, "web", gid + ".html")):
             problems.append("%s: the id \"%s\" has no web/%s.html - the shelf pairs a game with web/<id>.html, "
                             "so this story would be missing from it" % (story, gid, gid))
