@@ -1,0 +1,105 @@
+# Under Cover - a market pitch, a neighbour who undercuts, and what the trade asks of you.
+# Written for the library, which is usually one person alone with a job. This one has a crowd in it.
+
+title: Under Cover
+start: start
+
+== start ==
+bg dining
+music room_tone
+Twelve pitches under cover and eleven of them have been the same eleven people for longer than
+anyone can remember: the fruit, the bread, the man with the tools, the woman with the plants,
+and you, with the cards and the china, since 2009.
+The rain comes in sideways between the second and third pillar and always has. Everybody knows
+which pitch is dry.
+-> the_thursday
+
+== the_thursday ==
+On the Thursday there is a van in the third pitch with the back doors open and a man of about
+thirty taking out folding tables, and by eleven he has a table of cards and china and a hand-
+lettered board that says EVERYTHING A POUND.
+He is two pitches down from you, which is not next to you, and he is selling what you sell.
+-> the_day
+
+== the_day ==
+You take eleven pounds between you and the man takes about ninety, and the woman with the
+plants, who you have known since 2009, comes over at two with her arms folded and says the
+thing that everybody has been walking past your pitch not to say.
+plants: He's got a box of it in the van and he's buying it off the internet.
+you: I know.
+plants: What are you going to do?
+-> the_question
+
+== the_question ==
+That is the question, and it has four answers and you have heard three of them already today
+from people who have never had a table here.
+You have eleven pounds, a stock of cards that came from two house clearances, and a spot
+between the second and third pillar out of the rain.
+* Drop your prices. Everything a pound is not the floor. -> drop_prices
+* Go and talk to him. Two minutes, properly. -> talk_to_him
+* Carry on as you are and let the market decide. -> carry_on
+* Tell the manager, who has a rule about it in the office. -> tell_manager
+
+== drop_prices ==
+You make a board of your own with a marker on the back of a box: EVERYTHING A POUND AND A HALF.
+It takes him forty minutes to notice and twenty to answer with EVERYTHING A POUND FOR THE REST
+OF THE DAY, and you can feel the eleven other pitches taking sides without saying anything, and
+at four o'clock the whole row has a board out and only two of the eleven boards belong to people
+who were selling cards this morning.
+-> ending_race
+
+== talk_to_him ==
+You go over at half past two with two coffees, which costs you three pounds and is the most
+expensive thing you have done all day.
+He is friendly. He is genuinely friendly, and he tells you where he buys the boxes and what he
+pays for them and it is less than a third of what you paid, and when you say that, he nods, and
+says the thing that stops you: that he is not selling cards, he is selling a price, and that
+prices are a thing you can buy by the crate.
+-> the_after
+
+== the_after ==
+you: So what happens when everybody's table looks like yours.
+man: It doesn't matter what the tables look like, mate, it matters which one's still here in
+five years.
+He says it without any edge at all, and he means it, and he is probably right, and it is the
+end of a conversation that you had brought coffee to.
+He is here the following Thursday and the one after that, and he is still friendly.
+-> END
+
+== carry_on ==
+You do nothing. You take eleven pounds and then nine and then fourteen, and the man takes
+ninety and then seventy and then about the same, and the market is exactly as loud on the third
+Thursday as it was on the first.
+The others ask you about it for a fortnight and then they stop asking, and the man's board
+changes from EVERYTHING A POUND to EVERYTHING A POUND OR TWO, and nobody says anything about
+that either, and the row carries on the way a row does.
+-> END
+
+== tell_manager ==
+The manager is in the office by the gate and has been for twenty years and knows the rule, which
+is in the licence and is about the same class of goods on adjacent pitches.
+They come out and look at the two tables at eleven o'clock, side by side, yours with the cards
+from two house clearances and his with the boxes from the internet, and they stand there for a
+while with their arms folded.
+manager: Adjacent's the word, though. You're two along.
+you: I know.
+manager: And I can't run a market on what a thing's worth.
+-> ending_the_rule
+
+== ending_race ==
+The boards came down by the following Tuesday and by the Thursday after that the man had gone,
+which is what a race to the bottom does to the person who can afford it least, and it was not
+him.
+The row is still eleven people. The woman with the plants still stands at two o'clock with her
+arms folded, and she has never once mentioned the fortnight with the boards, and neither have
+you, and it sits in the row like the rain coming in between the second and third pillar.
+-> END
+
+== ending_the_rule ==
+Nothing happened. That is the whole of it: the manager looked at the two tables and said the
+word adjacent and went back to the office, and the man kept coming on Thursdays and kept being
+friendly and kept taking ninety pounds, and in the November he was two pitches down and in the
+February he was in the end pitch where the rain comes in.
+You are still here. You are still here in five years, which is what he said it was about, and
+you take eleven pounds and nine pounds and fourteen pounds and you are here.
+-> END
