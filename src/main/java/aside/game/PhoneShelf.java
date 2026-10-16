@@ -102,6 +102,7 @@ public final class PhoneShelf {
             case "called-home" -> "Keeps the notice book in this browser. A bell tower, and a method nobody else can call.";
             case "fish-on-a-friday" -> "Keeps the till in this browser. Oil due out today, and an option you only get if you skipped it.";
             case "out-of-season" -> "Keeps the ledger in this browser. A guest house in the October, and a man who does not leave.";
+            case "cone-ten" -> "Keeps the firing log in this browser. One night of wood, and a wind that arrives at four.";
             // FIVE STORIES HAD NO LINE HERE BECAUSE THEY HAD NO MODULE, so they were not on the shelf to need one -
             // and their absence from `Games.all()` kept them out of the LIBRARY as well. See the game modules.
             case "bothy" -> "Roxanne's. The one with no hook at all - nothing is wrong and nothing is explained.";

@@ -111,9 +111,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Forty-two stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Forty-three stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short`, `up-the-entry`, `half-term`, `called-home`, `fish-on-a-friday` and `out-of-season`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short`, `up-the-entry`, `half-term`, `called-home`, `fish-on-a-friday`, `out-of-season` and `cone-ten`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -418,6 +418,14 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/cone-ten.aside`** — an updraught kiln older than the potter, fourteen hours and a ton and a half of wood,
+  and four big jars that are the whole reason for the firing. Two ways up the ramp, a wind that arrives at four exactly
+  as forecast and takes a third off the rate, and three ways to answer it — hold the rate, let it drop, or soak it at
+  eight hundred — **each with a different consequence in the glaze a week later.** The ramp chosen at midnight is
+  remembered at the end: letting the wind take it and having gone up slowly lands somewhere the fast ramp cannot reach.
+  **THE DENSEST STORY HERE — 122 words per scene against a library median of 82** — written to be short and dense, and
+  the measurement says it came out dense and ordinary-length, which is what it is. 13 scenes, 102 beats, 6 choice
+  options.
 - **`stories/out-of-season.aside`** — a seaside guest house holding eleven, down to three by the middle of October,
   and a man in room four who pays a week at a time in cash and does not leave. Marion has run this house for nineteen
   years and has never said no to a booking in October: the last three weeks of the year are the boiler service, the

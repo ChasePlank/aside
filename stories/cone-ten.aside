@@ -1,0 +1,139 @@
+# Cone Ten - a kiln firing, one night, and a decision that ruins the pots if taken early.
+# Written for the library as a SHORT and DENSE one: 37 of the 42 stories before it sit between 10 and 19 scenes,
+# so this is eight scenes with more per scene - a different reading shape rather than a different subject.
+
+title: Cone Ten
+start: start
+
+== start ==
+bg workshop_bench
+music room_tone
+You pack on the Thursday and light it at nine on the Friday night, and by ten the kiln is at a hundred
+degrees and the smoke coming off the top of the chimney is white and wet and smells of the damp in the
+bricks, which is the smell of the first four hours and the reason you do not go to bed.
+The kiln is a forty-cubic-foot updraught and it is older than you are, and the firing takes fourteen
+hours and about a ton and a half of wood, and you have fired it a hundred and sixty times and lost
+work on eleven of them.
+-> the_ramp
+
+== the_ramp ==
+There are two ways up. The slow one is a hundred degrees an hour to six hundred and then open it up,
+which takes eleven hours to get to temperature and is kind to everything in the stack, including the
+four big jars that are the whole reason for the firing.
+The fast one is to open it up at four hundred, which saves three hours, and which can craze a glaze or
+take the belly out of a big pot, and which you have done twice in nine years and got away with both.
+The forecast is for the wind to get up at four in the morning and for rain on the Saturday, which
+matters because the kiln has no roof over the far side of it.
+* Slow ramp. Eleven hours and no heroics. -> slow
+* Fast ramp. You have got away with it twice and the jars are dry. -> fast
+* Split it: slow to six hundred and then push harder than usual. -> split
+
+== slow ==
+You feed it small and often and you sit on the crate by the door in the dark with the door open,
+and the kiln goes up a hundred an hour like a train keeping time, and at six hundred the firebox is
+clean and the flame at the top of the chimney is orange and steady.
+The pots will be all right. You know this at about two in the morning, and knowing it is the whole
+difference between the two ways up: the slow one is not about the pots, it is about the eleven hours
+in which nothing can go wrong that you cannot fix with a stick of wood.
+~ slow 1
+-> the_wind
+
+== fast ==
+You open it up at four hundred and the kiln takes it, and by midnight it is at eight hundred and the
+bricks on the outside of the arch are too hot to put a hand flat on, and there is a noise in the
+firebox that a kiln makes when it is going well.
+You are three hours ahead. You spend them standing in the doorway looking at the arch and listening,
+which is what a potter does with three hours he has bought with the risk of his best four jars.
+-> the_wind
+
+== split ==
+You take it slow to six hundred and then push it, which is a compromise and which is the one thing the
+kiln does not do well, because the arch has a crack in the third course from the left and it has been
+stable for nineteen years at one rate and it does not like a change.
+It does not like a change now either. At half past two there is a click you have heard once before,
+and you go round the back with a torch and there is a hairline in the third course that was not there
+at the start, and you stand in the dark with the torch on it and do the arithmetic about the four jars.
+-> the_wind
+
+== the_wind ==
+The wind gets up at four exactly as forecast, and it comes round the far side of the kiln where there
+is no roof, and at four twenty it starts taking heat off the stack: the chimney stops drawing properly
+and the flame goes from orange to grey and the kiln's rate drops by a third in ten minutes.
+This happens once or twice a year and there is a way to handle it, which is to put the boards up on
+the windward side and feed harder and hold the rate, and there is another way, which is to let it drop
+and take the firing up to sixteen hours and get to temperature on the Saturday evening instead.
+* Boards up, feed harder, hold the rate. -> boards
+* Let it drop and finish on Saturday evening. -> let_it_drop
+* Shut the firebox right down, soak it at eight hundred for three hours, and finish late. -> soak
+
+== boards ==
+You are out in the dark with the boards and the cold coming sideways and you get the windward side
+covered in twenty minutes with your hands going numb, and you feed it heavier than you would ever
+feed it in still air, and the rate comes back up over forty minutes and holds.
+The four jars come through it. You will not know that until the following Friday, and you know it
+anyway at half past four in the morning, which is a thing about firing that nobody tells you: the
+kiln is honest, and if you hold the rate it will hold the temperature, and the feeling you get when
+the firebox answers you is the whole reason you have not bought an electric one.
+-> ending_held
+
+== let_it_drop ==
+You let it drop and you do not fight it, and you spend the rest of the night in the doorway with your
+back against the frame, feeding it steady and taking the temperature where it goes rather than where
+you want it, and at nine in the morning the kiln is at eleven hundred and rising and you have been
+awake for twenty-six hours.
+You finish at half past seven on the Saturday evening, sixteen and a half hours after you lit it, and
+you are too tired to be pleased and too old to be clever about it, and you brick up the spyhole and go
+to bed while it is still at temperature behind you.
+if slow >= 1 -> the_cool_slow
+-> the_cool
+
+== soak ==
+You shut the firebox down at quarter to five in the morning with the kiln at eight hundred and you hold
+it there for three hours, which is a soak and which is a thing people do for glazes that need it, and
+then you take it up through the last four hundred degrees in the dark with the wind still on the far
+side and the flame grey and the rate never once where you wanted it.
+The kiln reaches temperature at twenty past eleven on the Saturday morning, seventeen hours after you
+lit it, and the four big jars are at the back and you will not know about the glaze for a week.
+-> ending_soak
+
+== ending_held ==
+You hold the rate through the wind and the kiln is at temperature by half past seven in the morning,
+ten and a half hours after you lit it, and you brick up the spyhole and put the boards away and go in
+and sleep for six hours in the middle of the day like a man who works nights, which is what a firing
+makes of you.
+On the following Friday you open it. The four jars are whole and the glaze on all four has run the way
+it should, and two of the smaller ones have crazed, which is nothing, and you sit on the crate with
+your hands black to the wrist and look at the biggest jar for a while, because it is the best thing you
+have made this year and because you very nearly did not.
+-> END
+
+== the_cool ==
+You brick up the spyhole at half past seven on the Saturday evening and the kiln takes three days to
+come down, which it does, and you open it on the Tuesday afternoon with the door of the shed open on
+a cold bright day.
+The four big jars are whole. The glaze is a shade greener than the last firing, which is the wood and
+not you, and it is the glaze you have been trying to get since 2019, and you carry the biggest one into
+the house in both arms and put it on the kitchen table where the light comes in, and your hands are
+shaking from the weight and from twenty-six hours and from the ordinary luck of a kiln that decided to
+be kind.
+-> END
+
+== the_cool_slow ==
+You were eleven hours getting to six hundred and then the wind took a third off the rate and you let
+it, and the kiln was at temperature at twenty past seven on the Saturday evening, sixteen and a half
+hours after you lit it, and you went to bed while it was still hot behind the bricks.
+It comes down over three days and you open it on the Tuesday, and the four jars are whole and the glaze
+is right - and you will never know which of the two things did it, the slow ramp or the long firing or
+the nine hours of the night you spent sitting on a crate doing nothing, and there is no version of this
+trade in which you get to find out.
+-> END
+
+== ending_soak ==
+The glaze on the four jars is matte, which it should not be, and the reason is in the firing and the
+firing is in your log in your own handwriting: eight hundred for three hours and then a slow climb
+through the last four hundred with the wind on the far side.
+You have made matte before and you will make it again and there is a market for it, and the biggest jar
+goes on the shelf in the workshop rather than into the house, and you fire again in the March on a
+still night and it comes out right, and the jar from the November stays where it is, on the shelf by
+the door, where you can see it from the wheel.
+-> END
