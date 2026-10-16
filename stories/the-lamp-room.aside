@@ -77,7 +77,7 @@ and somewhere below there is a can of oil you have not seen since you set your b
 * Sit down on the floor beside her and wait. -> sit
 
 == by_the_book ==
-sfx clank
+sfx pot_clank
 You trim the wick, wipe the glass, and light it the way the manual describes,
 because the manual is thirty pages long and somebody wrote all of them.
 The light comes back. It is correct. It is exactly as bright as it should be.
@@ -86,7 +86,7 @@ keeper: Same as the book, then. Somebody wrote those pages for a reason.
 -> dawn_book
 
 == oil_first ==
-sfx clank
+sfx pot_clank
 You find the can under your own bag, which is where you left it, which is where it would
 have been found anyway. Sometimes competence is just remembering where you put things.
 You oil it, then you trim it, then you light it.

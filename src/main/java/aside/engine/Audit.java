@@ -89,7 +89,10 @@ public class Audit {
                 // the chain, so an UNFINISHED walk printed `CLEAN SO FAR (traversal partial...)` over it. The walk
                 // is unfinished under load, which is how the injection caught it: the same story reported clean
                 // inside the gate and failed when run by hand, on the same code.
-                System.out.println("\nISSUES: " + artFaults + " background(s) with no image");
+                // NAMED FOR WHAT IT COUNTS. This said "background(s) with no image" and now also counts a cue the
+                // library has no sound for - so it would have been A MESSAGE NAMING THE WRONG FAULT, which is how a
+                // reader gets sent to the wrong place. It is one number over two questions now.
+                System.out.println("\nISSUES: " + artFaults + " fault(s) in the art and cues this script asks for");
                 failures++;
             } else if (provenIssue) {
                 System.out.println("\nISSUES FOUND");
@@ -203,7 +206,27 @@ public class Audit {
         }
         System.out.println("  backgrounds with no image yet: " + noBg.size());
         for (String u : noBg) System.out.println("      " + u);
-        return noBg.size();
+        // AND WHETHER THE LIBRARY HAS A SOUND FOR THE CUES IT HAS JUST LISTED. This list was printed for weeks and
+        // never checked, while the BACKGROUNDS above were checked for exactly the same thing - and the comment beside
+        // the poses even says "a missing cue was checked for and this was not". A cue with no file in audio/ fails
+        // SILENTLY BY CONSTRUCTION: the player looks up a name, finds nothing, and plays nothing.
+        //
+        // MEASURED 2026-10-16: `sfx clank`, in TWO stories, THREE uses, and no audio/clank.* anywhere - so two
+        // published stories have been silent where a clank should be since 2026-10-01, THROUGH A RELEASE, and nothing
+        // said so. The fix for the stories was to point them at `pot_clank`, which exists and is the same sound.
+        int unsourced = 0;
+        for (String c : music)
+            if (!existsIn("audio", "audio", c + ".mp3", c + ".wav")) {
+                System.out.println("    !! the library has no sound for this cue: " + c);
+                unsourced++;
+            }
+        for (String c : sfx)
+            if (!existsIn("audio", "audio", c + ".mp3", c + ".wav")) {
+                System.out.println("    !! the library has no sound for this cue: " + c);
+                unsourced++;
+            }
+
+        return noBg.size() + unsourced;
     }
 
     /** True if any of the given file names exists in any of the given directories. */
