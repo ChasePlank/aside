@@ -1048,5 +1048,21 @@ if [ -x tools/mutations.sh ]; then
   fi
 fi
 
+# ---- find-java.sh must fail for its OWN reason with an empty environment ----------------------------------------
+# `env -i tools/find-java.sh` is what a cron or systemd context looks like. It used to abort with
+# "line 28: HOME: unbound variable" - the SHELL's message rather than the tool's - because the search list includes
+# "$HOME"/jdk*/bin/java and the script runs under `set -u`. THE ASSERTION IS ABOUT WHICH FAILURE, NOT WHETHER: rc 0
+# (found a JDK) or rc 2 (its own message) are both fine, and a shell error is not. This is what keeps the fix honest.
+if [ -x tools/find-java.sh ]; then
+  fj_out=$(env -i tools/find-java.sh 2>&1); fj_rc=$?
+  if grep -q "unbound variable" <<<"$fj_out"; then
+    bad "find-java reaches its own message with an empty environment" "$(grep 'unbound variable' <<<"$fj_out" | cut -c1-44)"
+  elif [ $fj_rc -eq 0 ] || [ $fj_rc -eq 2 ]; then
+    ok "find-java reaches its own message with an empty environment" "rc=$fj_rc, no shell error"
+  else
+    bad "find-java reaches its own message with an empty environment" "rc=$fj_rc"
+  fi
+fi
+
 echo "=== $pass tool self-test(s) passed, $fail failed ==="
 [ "$fail" = 0 ] || exit 1
