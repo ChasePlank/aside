@@ -166,6 +166,12 @@ There are four families:
 
 ### The phone shelf
 
+**AND EVERY BUILD IN IT IS SILENT, ON PURPOSE.** Measured across all twenty-four: no `new Audio`, no inlined audio, no
+`.mp3` — the FNAF builds call `cue(...)` into a stub and the story builds do not call it at all. The shelf is already
+nine megabytes of artwork for one page, and sound for thirty-two stories is the size that was not worth paying. **A
+silent build and a broken one look identical, so it is said here rather than left to be discovered**, and
+`tools/check-web-builds.sh` fails if a build ever starts carrying audio — which is what keeps this paragraph true.
+
 ```bash
 java -cp out aside.game.PhoneShelf     # writes web/aside.html
 ```

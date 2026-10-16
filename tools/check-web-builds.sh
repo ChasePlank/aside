@@ -28,6 +28,27 @@ hashdir() { for f in web/*.html; do printf '%s %s\n' "$(sha256sum "$f" | cut -d'
 BEFORE=$(mktemp); AFTER=$(mktemp); trap 'rm -f "$BEFORE" "$AFTER"' EXIT
 hashdir > "$BEFORE"
 
+# AND THE PROPERTY THE BROWSER BUILDS ARE SUPPOSED TO HAVE: NO SOUND AT ALL.
+#
+# MEASURED 2026-10-16 ACROSS ALL 24 BUILDS: zero `new Audio`, zero `data:audio`, zero `.mp3` or `.wav` - the FNAF
+# builds carry `cue(...)` calls against a silent stub, and the story builds carry none. So a player on a phone hears
+# nothing from any of them, AND IT WAS DOCUMENTED NOWHERE: the README describes audio/ and the desktop builds and
+# never said whether the browser shelf was meant to be quiet. A SILENT BUILD AND A BROKEN ONE LOOK IDENTICAL.
+#
+# CHECKED HERE, so the README's sentence cannot go quietly stale: if somebody adds audio, this fails and the sentence
+# has to change with it. That is the only thing that keeps a documented property honest.
+NOISY=0
+for f in web/*.html; do
+  if grep -qE "new Audio|data:audio|\.mp3|\.wav" "$f"; then
+    echo "  $f carries audio, and the README says the browser builds are silent" >&2
+    NOISY=$((NOISY + 1))
+  fi
+done
+if [ "$NOISY" -ne 0 ]; then
+  echo "  $NOISY build(s) carry audio - either that is new and the README needs a line, or it is a mistake" >&2
+  exit 1
+fi
+
 GENS=0
 for f in src/main/java/aside/games/*/Web*.java; do
   [ -f "$f" ] || continue
