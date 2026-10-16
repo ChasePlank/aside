@@ -111,9 +111,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirty-nine stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Forty stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short`, `up-the-entry` and `half-term`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short`, `up-the-entry`, `half-term` and `called-home`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -418,6 +418,14 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/called-home.aside`** — a bell tower, a ringer of fifty-four years who has died, and the question in the
+  notice book: **whether anybody in the band can call a course of Plain Bob Major, half-muffled, at a funeral, in front
+  of a family, without it coming apart.** You have rung in this tower since you were fourteen and have never called
+  anything in your life — and **knowing the method is not calling it.** **The first story here where state changes a
+  scene in the MIDDLE as well as the ending:** saying yes to calling splits the last practice into two different
+  evenings, and the ending routes on that and on whether the bells went muffled or open. **And it opens inside a
+  conversation**, because 26 of the 39 stories before it open by inventorying something and then drawing an inference
+  from it. 17 scenes, 108 beats, 6 choice options.
 - **`stories/half-term.aside`** — a school caretaker of nineteen years, half term, and a boiler pump that has been on
   the list since 2019 with the word **DEFER** against it twice. Write it up and put it in front of the head, nurse it
   through the winter, or ring the supplier for a price — and the head asks the question you have been dreading for

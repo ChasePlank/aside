@@ -1,0 +1,155 @@
+# Called Home - a bell tower, a ringer who has died, and a method nobody else can call.
+# Written for the library. Opens inside a conversation, because 26 of the 39 stories before it open by inventorying
+# something and then drawing an inference from it. Uses state mid-story, not only at the ending.
+
+title: Called Home
+start: start
+
+== start ==
+bg hall_corner
+music room_tone
+"Treble's going," says Margaret, and the treble goes, and then the two, and by the time it gets to you
+the whole band is in it and you are pulling the fourth and counting under your breath the way you have
+counted for thirty-one years.
+"Stand," she says. The bells come down one at a time and stop in the order they were rung, which is
+tidy, and nobody says anything for a moment, because the reason you are all here is in the notice
+book on the table and everybody has read it.
+-> the_notice
+
+== the_notice ==
+Geoff died on the Tuesday. He was seventy-nine and he had rung in this tower for fifty-four years
+and he was the one who taught four of the seven people in this room, including you, and the notice
+says his funeral is a fortnight on Thursday at the crematorium and that the family have asked
+whether the tower would ring.
+Which is not the question. The question is in the next line, in Margaret's handwriting, and it is
+whether anybody in this band can CALL A COURSE OF PLAIN BOB MAJOR, half-muffled, at a funeral, in
+front of a family, without it falling apart after two leads.
+-> the_silence
+
+== the_silence ==
+Nobody answers. Margaret has called it, she called it for the last two funerals, and she is
+seventy-six and she has been saying since the spring that she is not calling another one.
+You have rung in this tower since you were fourteen and you have never called anything in your life.
+You know the method. Knowing the method is not calling it: calling it means saying the words out
+loud, on the day, into a room of people who are listening, and being right.
+* Say you will call it. -> say_yes
+* Say nothing, and hope somebody else does. -> say_nothing
+* Ask Margaret to call this one and let you call the next one, whenever that is. -> ask_margaret
+
+== say_yes ==
+you: I'll call it.
+Margaret looks at you for a moment and then does the thing she does, which is to write it in the
+notice book without commenting, and the room relaxes by one degree because it is now somebody's job.
+~ calling 1
+-> the_practice
+
+== say_nothing ==
+The silence goes on long enough to become a thing that has been decided, and then the man on the
+treble - who is forty-one and has called two peals in his life, both of them at another tower -
+says he will have a go, and Margaret does not write it down straight away, which is the closest she
+comes to an opinion.
+He will be all right. He will probably be all right. You spend the whole of the next fortnight
+knowing exactly what he is doing on the Wednesday evenings and not going.
+-> the_practice
+
+== ask_margaret ==
+you: You call this one. I'll call the next.
+her: There isn't a next, as far as this tower is concerned.
+you: Then I'll call the one after.
+She looks at you for a long moment and then agrees, and it is a real agreement rather than a
+kindness, and she writes her own name in the book and under it she writes yours, for the next one,
+with a question mark, which is her way of saying that she has heard you.
+-> the_practice
+
+== the_practice ==
+The fortnight is four Wednesday evenings and a Saturday morning, and the band practises the funeral
+touch eleven times, and on the last Wednesday it goes round twice without a fault, which has never
+happened with this band in this tower.
+if calling >= 1 -> you_called
+-> the_man_called
+
+== the_man_called ==
+The man on the treble calls it on the Saturday as well, and gets it round, and afterwards he asks
+you the question you have been dreading since the first Wednesday.
+you: What.
+man: You know it better than I do. You're counting under your breath.
+-> the_asked
+
+== you_called ==
+They ring it for you and you hear it, and it is a different thing entirely from knowing it: the band
+follows your hand and your voice and the method moves underneath everybody at once, and once it is
+going it is not a thing you are doing, it is a thing you are in the middle of.
+Margaret says one sentence at the end of the last Wednesday, which is the only comment she makes
+that fortnight.
+her: You'll do.
+-> the_asked
+
+== the_asked ==
+Which leaves the last decision and it is not the one anybody would guess: whether to call it
+HALF-MUFFLED or to ring it open.
+Half-muffled is the funeral sound - one side of the clapper muffled so the bell gives a note and
+then a dull echo - and it is what the family have asked for and what the book says.
+Open is how Geoff rang a wedding, and how he rang the last peal he ever rang, and it is what he
+would have wanted and nobody has said so out loud because it is not in the book.
+* Half-muffled, because it is what the family asked for. -> muffled
+* Open, because it is what he would have wanted and somebody has to say so. -> open
+* Ask the family, on the Thursday, at the crematorium. -> ask_them
+
+== muffled ==
+You muffle the clappers on the Thursday morning with the leathers and the cable ties and the
+sandbag under the sixth, which is the bell that rings the tenor down, and it takes forty minutes
+and you do it the way Geoff showed you, which is the slow way, and which is why it is right.
+The funeral is at two. The band is in the ringing chamber at half past one, which is earlier than
+they have ever been for anything, and everybody is in a tie.
+-> the_ending
+
+== open ==
+You put it to Margaret in the notice book rather than out loud, because a thing written is a thing
+somebody can disagree with before the day, and she writes one word under it, which is FINE, and
+then underneath that, in smaller writing, WHICH IS NOT THE SAME AS YES.
+~ open_ringing 1
+You ring it open on the Thursday and it is not a funeral sound at all, and the family are on the
+other side of a wall, and it goes round eleven times, which is more than the book says and more
+than the crematorium wanted, and Margaret does not stop you.
+-> the_ending
+
+== ask_them ==
+You are at the crematorium at half past one and you do the thing that no ringer does, which is to
+find the daughter of the dead man in a corridor and ask her a question about the bells.
+She listens to the whole of it, the muffled and the open, and asks you one question back, which is
+which one he would have picked, and you tell her, and she says do that then, and goes in.
+~ open_ringing 1
+-> the_ending
+
+== the_ending ==
+if open_ringing >= 1 -> ending_open
+if calling >= 1 -> ending_called
+-> ending_quiet
+
+== ending_called ==
+It goes round. That is all that happens and it is everything: eleven leads, half-muffled, called
+out loud into a room of seven people who are following it, and it does not come apart, and at the
+end the bells are left up in the order they were rung in.
+Margaret writes two words in the notice book on the Friday, which are TOOK IT, and that is the
+whole of what she says about the fortnight, and it is more than she has said about anything since
+the spring, and the next funeral is sixteen months away and you will call that one too.
+-> END
+
+== ending_open ==
+The bells go up and stay up through the silence and then they are rung DOWN in rounds, open, in the
+order every tower rings down in, and by the time the tenor goes the family are coming out and the
+sound is going across the car park in the flat four o'clock light.
+It is not what was asked for and it is not what the book says, and the daughter stops on the step
+and stands there for the whole of the ringing down, and then says one sentence to nobody in
+particular, which is that he would have liked that, and goes to her car.
+-> END
+
+== ending_quiet ==
+Somebody else called it and it went round, and you rang the fourth in a touch you did not call in
+a tower where you have rung for thirty-one years, and nobody in the room knew the difference
+except Margaret, who did, and who wrote nothing in the book at all that fortnight.
+You go back on the following Wednesday. So does everybody. The bells go up and come down and the
+notice book has a new page in it for the next thing, which is a wedding in the May, and the fourth
+is your bell and it will be your bell for as long as you climb the stairs, and there is a version
+of a life in a tower where that is enough, and you have not decided yet whether it is this one.
+-> END
