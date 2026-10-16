@@ -1,0 +1,107 @@
+# One Dog Short - a shepherd, a working dog losing his sight, and a whistle nobody else answers.
+# Written for the library. One person, one animal that works, and a decision about the end of a partnership.
+
+title: One Dog Short
+start: start
+
+== start ==
+bg cliff_path
+music room_tone
+Nine hundred ewes on two hills and one dog, because the other one died in the February at eleven
+years old and you did not replace him, and you have been telling yourself since the spring that
+you will do it in the autumn.
+Autumn is now, and the dog you have left is Moss, and Moss is nine and a half and going blind.
+-> the_hill
+
+== the_hill ==
+You noticed it in the June and you were sure of it in the August, which is when he ran the
+gather on the far side and came in wide on a gate that has been in the same place for forty
+years, and stood there with his head up and his ears going, waiting for a whistle he had already
+had.
+His nose is perfect. His ears are perfect. He works the near hill exactly as he always has,
+because he knows it, and knowing it is not the same as seeing it and it is doing the work.
+-> the_knowing
+
+== the_knowing ==
+Three ways you could go about it and every shepherd on this valley has taken one of them:
+You can work him on the near hill only and keep the far hill for yourself, which means the far
+hill takes twice as long and you are fifty-eight.
+You can get a pup now and train him alongside Moss, who will teach him the near hill and show
+him what a whistle means, and Moss will spend his last working year being a teacher.
+Or you can do what your father did, which is to take the dog out one morning and come back
+without him, and never say which morning.
+-> the_decision
+
+== the_decision ==
+Moss is lying by the gate with his chin on his paws and one ear turned at you, and the light is
+going, and the far hill is where the ewes are that need moving.
+* Near hill only, and take the far hill yourself. -> near_hill
+* A pup now, and let Moss teach him. -> the_pup
+* Ring the vet and ask what he thinks about the dog's sight. -> the_vet
+* The way your father did it, on a morning you do not announce. -> ending_not_him
+
+== near_hill ==
+You work the near hill with him for another two seasons, and he is good at it until the end,
+and the far hill takes you twice as long every single time, which costs you about three weeks a
+year and a knee.
+You never once say out loud that you are doing it for him. You say it is because the pup would
+be more trouble than he is worth, which is a sentence you have said to four different people
+including the man at the market, and which is not true, and everybody who knows you knows it is
+not true.
+-> ending_near
+
+== the_pup ==
+You get a bitch pup in the October from a man in the next valley and she is called Nell and she
+is everything a pup is, which is to say she is a menace and she learns in a fortnight what it
+took Moss a season.
+Moss teaches her. That is not a figure of speech: he takes her out and corrects her and stands
+over her at the gate, and by the March she is working the near hill with him and by the June she
+is doing it better, and he follows her, and he does it with his head up and his ears going.
+-> ending_the_pup
+
+== the_vet ==
+He comes out to the yard because he is a farm vet and that is what happens, and he looks at both
+eyes in the light of the open back of his car and says the thing you already knew and then says
+the thing you had not thought of.
+vet: He's not in pain. He's not confused. He's a dog doing a job he can still do on ground he
+knows, and the question you're actually asking me is whether you're allowed to keep working him.
+-> the_allowed
+
+== the_allowed ==
+you: Am I.
+vet: Nobody's ever asked me that before. It's your dog and your hill.
+He says it without any weight at all, which is the professional thing, and then he adds one more
+sentence while he is packing his bag, which is not professional and which is why you remember it.
+vet: I'd not stop him while he's still enjoying it. You'll know. He'll tell you, and it won't
+be with his voice.
+-> END
+
+== ending_not_him ==
+You do not do it. That is the whole of this: you stand at the gate in the dark on a morning in
+the November with the rifle in the truck and you do not do it, and you drive back to the house
+and put the rifle away and make tea, and Moss gets up off the flagstones and comes and sits with
+you, and neither of you ever mentions it because only one of you knows.
+Your father did it that way because there was no money and no vet within eleven miles and a dog
+that could not work was a mouth. None of those three things is true of you.
+-> END
+
+== ending_near ==
+Two more seasons. He works the near hill until the end and he never once runs wide on a gate,
+because the near hill is in his head and his head is fine.
+The far hill takes you twice as long and you are fifty-eight and you do it anyway, and in the
+last summer you take him up there with you twice, on the lead, just to be on it, and he stands
+on the top with his nose going and his head up and he is entirely happy, and you tell him the
+names of the four farms you can see, which is a thing you have not done since you were a boy and
+which nobody was there to hear.
+-> END
+
+== ending_the_pup ==
+By the second summer Nell is doing the far hill on her own whistle and Moss goes with her because
+he wants to, and there are two dogs in the truck again and the seat is full of hair.
+He goes in the January, at eleven, in his sleep on the flagstones, which is the ending every
+shepherd wants and almost none of them get. Nell is on the far hill by then and she is better
+than he was, and she is not the same, and you find that out over about four years, and you find
+it in small things: she comes in tight where he came in wide, and she does not care about the
+gate, and she answers the whistle the first time, every time, and there is a version of a
+partnership where that is the whole of it, and it took you four years to stop thinking that.
+-> END

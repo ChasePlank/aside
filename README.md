@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirty-six stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirty-seven stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump` and `fourteen-inches`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches` and `one-dog-short`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -416,6 +416,14 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/one-dog-short.aside`** — a shepherd, nine hundred ewes on two hills, and **one dog left: Moss, nine and a
+  half and going blind.** His nose is perfect and his ears are perfect and he works the near hill exactly as he always
+  has, **because he knows it, and knowing it is not the same as seeing it and it is doing the work.** Four endings, and
+  they are four answers to what you do about the end of a working partnership — including the one where you stand at the
+  gate in the dark with the rifle in the truck and do not do it, and drive back and put it away and make tea, and
+  neither of you ever mentions it **because only one of you knows**. **The first story here about a working animal
+  rather than a pet**, and it was found by asking the vet, after two seasons of not asking anybody. 11 scenes, 77
+  beats, 4 choice options.
 - **`stories/fourteen-inches.aside`** — a thatcher, a ridge that has gone nine years early, and another man's work
   underneath it: **every spar notched a quarter of an inch too deep, all the way along — which is not a mistake you make
   with a chisel by accident, it is a mistake you make by doing it faster.** Four endings, and they are four answers to
