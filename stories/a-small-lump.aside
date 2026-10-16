@@ -1,0 +1,123 @@
+# A Small Lump - a vet, an old dog, and an owner who cannot afford the answer.
+# Written for the library. One person, one animal that cannot speak, and a question about whose decision it is.
+
+title: A Small Lump
+start: start
+
+== start ==
+bg east_corner
+music room_tone
+The appointment is at ten past four and it is a lump, which is most of what a small animal
+practice does in a week: somebody has found something and they want to be told it is nothing.
+You have been doing it for eleven years and you can tell a fatty lump through the skin the way
+you can tell a full stop from a comma, and you tell people that it is nothing about forty times
+a week and you are right about thirty-nine of them.
+-> the_dog
+
+== the_dog ==
+The dog is a lurcher of about thirteen and he is called Bramble and he lies on the bench with his
+chin on his paws and lets you do whatever you like, which at thirteen is usually because he has
+decided you are not interesting.
+The owner is eighty-one and came on the bus and he has the dog's basket under the chair rather
+than leave it in the waiting room, and he has been to us twice before - once for the ears and once,
+four years ago, when the dog ate a whole Christmas cake and had to be made to be sick.
+-> the_lump
+
+== the_lump ==
+The lump is on the inside of the back leg and it is not a fatty lump. It is fixed to the muscle
+underneath and it does not move when you push it and it is about the size of a walnut, and the
+dog does not flinch, which tells you less than people think.
+The honest answer is that you need a needle in it and a laboratory, and that costs a hundred and
+forty pounds before anybody has decided anything, and you know what the man's face is going to do
+before you have said the number.
+-> the_knowing
+
+== the_knowing ==
+If it comes back as the thing you think it is, the operation is six hundred and he is thirteen
+and he is a lurcher, which is a dog with no fat on it anywhere, and the recovery is hard on a dog
+with no fat on it.
+If it comes back as something else, you have spent a hundred and forty pounds of an old man's
+money to be told to leave it alone.
+And if you do nothing at all, it will do what it does, and it will probably take about four
+months, and for most of those four months the dog will not know anything is wrong.
+-> the_decision
+
+== the_decision ==
+You are standing at the bench with your hands still on the dog and the man is sitting on the
+chair with his hat in his hands and he has not asked anything yet, which means he is waiting.
+* Give him the number first, before anything else. -> the_number
+* Tell him what you can see, and then the number. -> the_seeing
+* Offer to do the needle on the practice, at no charge, and leave the decision for later. -> the_free
+* Tell him to take the dog home and think about it, and put nothing in writing. -> the_home
+
+== the_number ==
+you: The test is a hundred and forty pounds. If it comes back as the thing I think it is, the
+operation is six hundred, and I would not be doing the operation.
+He nods, which is what they do, and then he asks the question that is the whole of it and which
+nobody ever asks in the right order.
+man: Which one of those is for him?
+-> the_which
+
+== the_seeing ==
+You take your hands off the dog and you sit down on the other chair, which you almost never do,
+and you tell him all of it in the plainest words you have: what it is, what the options are, what
+the numbers are, and what each of them is for.
+He listens the whole way through without once looking at the dog, which is how you know he is
+frightened, and at the end of it he says the thing about the basket.
+-> the_basket
+
+== the_basket ==
+man: He's got a basket in the room where I watch the television. He's had it eleven years.
+He says it as though it were an argument about the lump, and it is, and it is a better one than
+most of what gets said in this room.
+-> the_which
+
+== the_free ==
+you: I'll do the needle now, and I won't charge you for it, and we'll know in three days.
+He looks at you for a long moment and then he says no, thank you, and he says it politely, and
+when you ask him why he tells you the truth, which is that he has spent his whole life paying for
+things and he is not going to start being given them at eighty-one.
+-> END
+
+== the_home ==
+You write nothing down. You tell him it is probably nothing and to keep an eye on it, and you
+book him in for a fortnight, and he thanks you and puts the lead on and pays the consultation
+fee at the desk and goes to get the bus with the basket under his arm.
+-> ending_the_notes
+
+== the_which ==
+you: None of them is for him. He doesn't know what a needle is and he doesn't know what six
+hundred pounds is. All three of those are for you.
+man: Then I'll ask it again. Which one is for me.
+-> the_answer
+
+== the_answer ==
+You tell him the truth, which is that the answer depends on whether he can live with four months
+of not knowing, or two weeks of knowing and then four months of a different kind of not knowing,
+and that both of those are worse than the dog's four months, and that you cannot make that choice
+for him because you do not have to live in his house afterwards.
+He takes his hat off the chair and thanks you, and it is a real thank you, and it is the only one
+you will get out of the next four months.
+-> ending_the_answer
+
+== ending_the_answer ==
+He decides. Whatever he decides is his own, and it was never yours to make, and the whole of the
+job - the sitting down, the plain words, the four minutes of silence afterwards - was to keep it
+that way rather than letting it become a thing that happened to him in a room he did not choose.
+He comes back in the March with the basket under his arm and no dog, and he has come to tell you
+rather than to ask you anything, and he sits down in the waiting room without an appointment and
+waits the whole of the surgery to do it. You see him at twenty past six. It takes four minutes.
+-> END
+
+== ending_the_notes ==
+What you wrote in the notes was that the lump was probably benign and to monitor it, which is
+what you said out loud, and it is not untrue.
+He books the fortnight at the desk on his way out and he puts the basket under his arm and he
+says thank you very much, and you are the eleventh year of doing this and you know exactly what
+you have just done, which is that you have handed an eighty-one-year-old man a fortnight of
+peace in exchange for a fortnight of it being somebody else's problem, and that the somebody
+else is you, and that you will be in this room when he comes back.
+He comes back in the fortnight and the lump is bigger and he says cheerfully that he knew that,
+and the question he asks you now is the one he could have asked at ten past four, and it is
+late, and it is still better than not answering it, and you answer it.
+-> END

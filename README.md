@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirty-four stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirty-five stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints` and `under-cover`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover` and `a-small-lump`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -416,6 +416,13 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/a-small-lump.aside`** — a vet of eleven years, an appointment at ten past four, and a lurcher of about
+  thirteen called Bramble. The lump is fixed to the muscle and about the size of a walnut, and **the honest answer
+  costs a hundred and forty pounds before anybody has decided anything.** The owner is eighty-one, came on the bus, and
+  has the dog's basket under the chair rather than leave it in the waiting room. **The first story here with a patient
+  that cannot speak**, and it turns on the question nobody asks in the right order — *"which one of those is for him?"*
+  — and on the answer, which is that none of them are. Four choices, three endings: two of them are routes into the
+  same conversation rather than different decisions. 14 scenes, 87 beats, 4 choice options.
 - **`stories/under-cover.aside`** — twelve market pitches under cover, eleven of them the same eleven people for
   years, and a new van in the third pitch with a board that says EVERYTHING A POUND. **He is two along, and he is
   selling what you sell.** **The first story here with a crowd in it** — the library is usually one person alone with a
