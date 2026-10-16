@@ -54,7 +54,7 @@ java_with_javac() {
 }
 if ! java_with_javac "${JAVA:-}"; then
   JAVA=""
-  for c in /root/jdk-*/bin/java /usr/lib/jvm/*/bin/java "$HOME"/jdk*/bin/java; do
+  for c in /root/jdk-*/bin/java /usr/lib/jvm/*/bin/java "${HOME:-}"/jdk*/bin/java; do
     [ -x "$c" ] && [ -x "$(dirname "$c")/javac" ] && { JAVA="$c"; break; }
   done
   # only if there is no JDK anywhere: a runtime that cannot compile is still better than nothing for the tools
@@ -126,7 +126,7 @@ fx_works() {
 }
 if ! fx_works "${FX:-}"; then
   FX=""
-  for c in /root/javafx-sdk-*/lib /usr/share/openjfx/lib "$HOME"/javafx-sdk-*/lib "$HOME"/Downloads/javafx-sdk-*/lib; do
+  for c in /root/javafx-sdk-*/lib /usr/share/openjfx/lib "${HOME:-}"/javafx-sdk-*/lib "${HOME:-}"/Downloads/javafx-sdk-*/lib; do
     [ -d "$c" ] && { FX="$c"; break; }
   done
 fi
