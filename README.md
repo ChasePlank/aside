@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirty-seven stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirty-eight stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches` and `one-dog-short`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short` and `up-the-entry`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -416,6 +416,15 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/up-the-entry.aside`** — a coal round in the last week before Christmas, a nineteen-year-old on his
+  second winter, and **three small decisions that accumulate**: which drop to take first with the light going (the Hall
+  seven miles out, or four small ones in town); what to say when he asks whether leaving two hundredweight in a doorway
+  is all right (*"It's not for the ones that pay. It's for the ones that aren't in and have paid anyway."*); and how to
+  get two hundredweight up a **thirty-one-inch entry with eleven steps and two turns** when the cart cannot get near it.
+  **Written because ten stories in a row before it had a single crux — and a story with one decision has an inert
+  middle.** Nine choice options across three decision points, against four in each of the ten. **The middle decisions
+  change the texture of the day rather than the outcome**, which is the shape here and the next thing to push at. 20
+  scenes, 130 beats, 9 choice options.
 - **`stories/one-dog-short.aside`** — a shepherd, nine hundred ewes on two hills, and **one dog left: Moss, nine and a
   half and going blind.** His nose is perfect and his ears are perfect and he works the near hill exactly as he always
   has, **because he knows it, and knowing it is not the same as seeing it and it is doing the work.** Four endings, and

@@ -1,0 +1,182 @@
+# Up the Entry - a coal round in the last week before Christmas, and three small decisions that accumulate.
+# Written for the library. Deliberately multi-decision: ten stories in a row before this one had a single crux,
+# and a story with one decision has an inert middle.
+
+title: Up the Entry
+start: start
+
+== start ==
+bg east_corner
+music room_tone
+The yard is four hundredweight of house coal and a hundred of smokeless, which is a light load
+for the week before Christmas, because everybody who was going to order has ordered.
+You have the cart, which is a flatbed Transit with a rotten tailgate, and you have Ray, who is
+nineteen and on his second winter and who loads from the wrong end unless he is told.
+-> the_loading
+
+== the_loading ==
+The book for today is six drops and the two that matter are at opposite ends of the round: the
+Hall, which wants four hundredweight and is seven miles out past the reservoir, and then four
+small ones in the town, two hundredweight between them.
+The light goes at twenty past four. The Hall's housekeeper has already rung once.
+* Do the Hall first and the town on the way back. -> big_first
+* Do the four small ones first and the Hall last. -> small_first
+* Split it: Ray takes the town in the car, you take the Hall. -> split_it
+
+== big_first ==
+You go out first, seven miles on roads that have not been gritted, and the gate to the Hall is
+half a mile up a track with a slope on it that the Transit does not like in the wet.
+The housekeeper meets you at the yard door in an apron with flour on it and counts the sacks
+while Ray stacks them, which is the arrangement she has had with this round for eleven years.
+-> the_town
+
+== small_first ==
+The four small drops take an hour and forty minutes, which is twenty minutes longer than you
+thought, because the third one is an old woman who wants the sacks put in the outhouse and the
+outhouse has a step.
+It is ten past three when you turn for the reservoir, and the light is going, and the Hall's
+housekeeper rings the yard while you are on the road and nobody is in the office to answer it.
+-> the_hall_late
+
+== the_hall_late ==
+You get to the Hall at twenty past four with the light gone and the track slippery and the
+housekeeper standing in the yard door with her coat on over the apron.
+She takes it. She is not pleased and she takes it, and she says one sentence about next year while
+Ray stacks, and the sentence is fair and you accept it, and you are back on the reservoir road at
+five and home at twenty past, which is the latest this round has finished in four years.
+-> END
+
+== split_it ==
+You split it, which you have only done twice before, and Ray takes the car and the town list and
+goes, and you take four hundredweight and the hill.
+It works better than it has any right to. He is back at the yard by four with the sheet signed
+and the money in the tin, and you are at the Hall by half past three, and when you come down the
+track the two of you pass on the reservoir road and he flashes his lights, which is not something
+he has ever done before and which you think about for the rest of the evening.
+-> the_town
+
+== the_town ==
+The town drops are all on the same estate and the estate is one-way with a barrier that gives
+trouble, and at the second house the old man wants the coal in the bunker rather than on the
+path, and the bunker is through the kitchen.
+At the fourth house nobody is in, which happens, and you leave the sacks stacked by the door with
+the ticket under the top one, and as you are getting back in the van Ray says the thing he has
+been saving up.
+ray: That's all right, that, in't it. Leaving it.
+-> the_question
+
+== the_question ==
+Two hundredweight of coal left in a doorway and a ticket under the sack and a house that has been
+on the round since before you had it, and the money has been paid by standing order since 1998.
+It is twenty past four and there is one drop left, and it is the one up the entry.
+* Agree with him. It is the arrangement and it has always been the arrangement. -> the_arrangement
+* Tell him the arrangement exists for the houses that pay and this one does. -> the_paying
+* Leave it, and say nothing, because he will find out in eleven years. -> the_silence
+
+== the_arrangement ==
+ray: Right. I just thought I'd ask.
+you: Ask in eleven years.
+He laughs at that and gets in and slams the door the way he slams everything, and the two of you
+go up to Fell Street in the dark and the traffic, and it occurs to you, in the way things occur
+while you are driving, that he asked because somebody had told him it was not all right, and that
+somebody was probably his mother, and that he had asked you to settle an argument he had at home.
+-> the_entry
+
+== the_paying ==
+you: It's not for the ones that pay. It's for the ones that aren't in and have paid anyway.
+ray: Aye, well. You'd know.
+He says it without any edge and he is quiet for a mile, and then he asks the other thing, which is
+whether he can do the February on his own when you have your knee done, and you say yes before you
+have thought about it, and the two of you drive up to Fell Street with that between you instead.
+-> the_entry
+
+== the_silence ==
+You say nothing, which is what you have done with every other nineteen-year-old who has worked
+this round, because the eleven-year answer is the true one and it does not fit in a van.
+He watches you not answer, and he does not ask again, and over the following fortnight the two of
+you settle into a shape where he copies you rather than asks you, which is better for the coal and
+worse for him and you know both of those things.
+-> the_entry
+
+== the_entry ==
+Fell Street is a terrace with a passage up the side of number 9, and the passage is what everybody
+in the trade calls an entry, and it is thirty-one inches wide and it goes up eleven steps and turns
+twice, and the coal house is at the top of it.
+There are two hundredweight for number 9 and the entry has been the arrangement since the coal
+house was built. The cart cannot get near it. Your shoulder is what you have.
+-> the_entry_two
+
+== the_entry_two ==
+It is ten to five and dark and the fog is coming down off the park, and you have done this entry
+about a thousand times and there are two ways to do it.
+* Bag it small and take it up four trips, the way you always have. -> four_trips
+* Take a hundredweight a trip and do it in two, and mind the turn. -> two_trips
+* Leave it at the mouth of the entry and knock, and let her say what she wants. -> the_knock
+
+== four_trips ==
+Four trips of fifty pounds with the sack on your shoulder and your hand on the wall at the turn,
+and it takes eleven minutes, and the coal house at the top is dry and there is a light on in the
+kitchen and she has put a cup of tea on the step for when you come down, which she has done since
+you took the round over.
+On the fourth trip you put the last sack in and stand up straight, and your shoulder says the
+thing it says every December, and you are fifty-one and you have eleven more years of this to
+get through if you are lucky, and the tea is still hot.
+-> ending_the_cup
+
+== ending_the_cup ==
+Four trips, eleven minutes, tea on the step, and the last sack in the coal house, and number 9
+written off the sheet in the van and the money in the tin.
+The fog comes down properly while you are driving home and you do the last two miles at twenty,
+and you are in the house by half five and your knee is fine and the shoulder is not, and eleven
+more years of this is what you have told yourself you want, and on a December evening with a hot
+cup behind you it is the truth and you know it.
+-> END
+
+== two_trips ==
+Two trips of a hundredweight with the sack on your shoulder and your hand on the wall, and on the
+second one at the turn you catch the sack on the corner and it splits along the seam, and about
+twenty pounds of coal goes down eleven steps in the dark and you spend a quarter of an hour on
+your knees in it.
+She comes out at the noise with a torch and does not say anything about the coal at all, and asks
+you whether you are all right, and then sweeps it up herself while you are still apologising,
+which is the part of the evening you will remember.
+-> the_split
+
+== the_split ==
+You offered to make up the twenty pounds from tomorrow's load and she would not have it, and she
+stood at the top of the entry with the torch while you stacked the last of it and she said the
+sentence that everybody in the trade gets from somebody once or twice a decade.
+her: You've done that entry when it was worse than this.
+-> ending_the_torch
+
+== ending_the_torch ==
+She sweeps it up herself because she has had that entry longer than you have had the round, and
+the twenty pounds is neither made up nor mentioned again, and the two of you stand at the top of
+it in the fog with the torch between you and talk about the weather for four minutes, which is
+what people in this town do instead of saying the other thing.
+On the way down you count the steps, which you have never done, and there are eleven, and at the
+bottom Ray is leaning on the van with his hands in his pockets and he does not laugh, which is
+the first time all day that he has not laughed at something he could have.
+-> END
+
+== the_knock ==
+You leave the two sacks at the mouth of the entry on the pavement and knock, which is not the
+arrangement and which is the thing you have been talking to Ray about all afternoon without
+saying so.
+She opens the door in her cardigan, looks at the sacks, and looks at you, and then says the
+thing that settles the whole day, which is not about the coal.
+her: Are you not stopping for a cup, then.
+-> ending_the_door
+
+== ending_the_door ==
+She leaves the sacks where they are and takes you through to the kitchen instead, and there is a
+cup and there is a chair, and the coal gets carried up the entry an hour later by the two of you
+together with her holding the torch and calling the turns.
+Which is not the arrangement. The arrangement is thirty-one inches and eleven steps and a man on
+his own, and it exists because the coal house was built at the top of the entry in 1903 and
+somebody has to get the coal up there, and none of that is a reason to refuse a cup of tea from
+a woman who has been on this round since before you had it.
+The van is at the mouth of the entry with the tailgate down and the fog on it, and the street is
+quiet, and you are in a kitchen at ten past five on a Thursday in December being asked about
+your knee.
+-> END
