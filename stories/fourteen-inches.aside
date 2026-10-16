@@ -1,0 +1,136 @@
+# Fourteen Inches - a thatcher, a ridge, and another man's work under it.
+# Written for the library. One person, one trade, and a decision about something found under the last man's work.
+
+title: Fourteen Inches
+start: start
+
+== start ==
+bg workshop_bench
+music room_tone
+A ridge is the top of a roof and it takes about a day and a half: the old straw off, the
+spars checked, and fourteen inches of new laid and pegged and tight enough that a sparrow
+cannot get a claw in it.
+You have done four hundred of them and you can tell a good ridge from the ground by how it
+sits against the light, which is a thing that is hard to explain and impossible to fake.
+-> the_house
+
+== the_house ==
+The house is a long low thing at the end of a track and the ridge has gone, and the owner is a
+woman of about seventy who has lived in it for forty years and has a folder of paperwork for
+everything, including the last ridge, which was done nine years ago by a man called Aylward.
+Nine years is short. A ridge should give you twenty-five.
+-> the_news
+
+== the_news ==
+you: It wants doing, and it wants doing this month.
+her: How much.
+you: Twelve hundred, and I'll know more when I'm up there.
+She writes it down, which she did nine years ago too, and she asks whether the last one was
+done badly, and you say the honest thing you can say from the ground, which is that it has
+gone sooner than it should.
+-> the_up
+
+== the_up ==
+You go up on the Tuesday and strip the ridge and there it is, all the way along: the spars have
+been notched too deep. Every one. He has cut into them to seat the straw, a quarter of an inch
+past what you would take, and over nine years of weather the notches have opened and the whole
+ridge has been sitting on a row of cuts that are not going to hold another ten years of
+anything.
+That is not a mistake you make with a chisel by accident. It is a mistake you make by doing it
+faster.
+-> the_knowing
+
+== the_knowing ==
+Two ways out of it. You can lay the new ridge on the spars as they are, and it will look right
+and last about as long as the last one, and nobody will ever know from the ground. Or you can
+scarf in new spars, which is a day and a half more and about four hundred pounds, and which
+takes the job past what she has written in her folder.
+You have Aylward's number. He is still working. He is thirty miles away and you have never met
+him, and he has been doing this eleven years longer than you.
+-> the_decision
+
+== the_decision ==
+The spars are under your knees and the woman is in the garden doing something to a rose and the
+light is going. And she is going to ask you one question at the bottom of the ladder, and what
+you say to it depends on what you do next.
+* Tell her, and let her decide about the four hundred pounds. -> tell_her
+* Do the spars and say nothing about the extra, and eat the difference. -> eat_it
+* Ring Aylward before you say anything to anybody. -> ring_him
+* Lay the ridge on what is there, and put the notches in the estimate in writing. -> write_it
+
+== tell_her ==
+You go down the ladder with your hands dirty and tell her the whole of it standing in the
+garden, including what it means, which is that the four hundred pounds is not for a repair, it
+is for the last job.
+She listens with the secateurs in her hand and then says the thing that you have heard twice
+before and never from somebody who meant it as exactly as she does.
+her: He's not going to pay for it, is he.
+you: He's not going to pay for it.
+-> the_asked
+
+== the_asked ==
+her: Then it's mine.
+She says it without any bitterness at all, which is why you remember it, and she goes in and
+comes out with the folder and writes the four hundred in the margin of the nine-year-old
+invoice in her own handwriting.
+-> ending_hers
+
+== eat_it ==
+You scarf in nine spars over the Wednesday and the Thursday and you finish the ridge on the
+Friday evening and you tell her it came to twelve hundred and it did not, and she pays you and
+thanks you and you put the receipt in the van.
+The van is not yours. The four hundred is four days of somebody else's money and a fortnight of
+yours, and you do not tell your wife either, and the two of you have one argument about money
+that winter which is not about the four hundred pounds at all and which is, and you know it while
+it is happening.
+-> END
+
+== ring_him ==
+He answers on the third ring and you say who you are and where you are and what you have found,
+and there is a long pause with the wind on the line.
+He knows. He says so in four words and then says the rest of it, which is that he was on three
+jobs that month and his lad was doing the notching, and that he has thought about that ridge
+about twice a year since.
+-> the_man
+
+== the_man ==
+man: I'll come and look at it. Saturday, if that suits.
+He comes on the Saturday from thirty miles away on his own time and he looks at nine spars for
+about four minutes and then he gets his tools out of the van and works the Saturday and the
+Sunday alongside you, and does not charge anybody, and does the whole row as slowly as it should
+be done.
+He is a better thatcher than you are. You knew that before, from his work, and you know it
+differently now.
+-> ending_the_man
+
+== write_it ==
+You lay the new ridge on the spars that are there, and it takes the day and a half, and it looks
+right from the ground and from the road and from the top of the ladder if you do not know what to
+look for.
+On the estimate you write, under the total, the sentence you have been composing since Tuesday
+lunchtime: *NOTE - the spars beneath this ridge are notched too deeply and will need attention.
+Not included above.* She pays it without asking, because she pays everything, and she files it in
+the folder, and that sentence sits in a folder in that house for however many years it is until
+somebody else reads it.
+-> END
+
+== ending_hers ==
+You scarf in the spars over four days with the weather holding, and the ridge goes on on the
+Sunday, and it is a good one: fourteen inches, tight, sitting against the light the way it should.
+It will be there when she is not. That is what a roof is, and it is not a sad thought to her - she
+says so on the Sunday, standing in the garden with her hands in her cardigan, looking up.
+The invoice with the four hundred in the margin is in the folder, and the file is the only place
+in the world where it says who was careless and who paid for it, and she has never shown it to
+anybody and never will. You have thought about Aylward's name being in that folder more often than
+you have thought about the ridge.
+-> END
+
+== ending_the_man ==
+He does the row and he goes home and he never mentions it again to you, and you hear his name a
+year later from somebody in the trade, in a list of people who do good work, and you do not add
+anything to it.
+The ridge is a good one. It will be there for twenty-five years if the house is, and it will be
+read by whoever next goes up on it as a piece of work by two men, because a spliced row tells you
+which one did the scarfing if you know what you are looking at, and you know, and you are the only
+person alive who is going to look at that roof and know whose Saturday it was.
+-> END

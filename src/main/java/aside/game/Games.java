@@ -102,6 +102,7 @@ public final class Games {
         g.add(new aside.games.twopints.TwoPintsGame());
         g.add(new aside.games.undercover.UnderCoverGame());
         g.add(new aside.games.asmalllump.ASmallLumpGame());
+        g.add(new aside.games.fourteeninches.FourteenInchesGame());
         g.add(new aside.games.bothy.BothyGame());
         g.add(new aside.games.dispensary.DispensaryGame());
         g.add(new aside.games.harbour.HarbourGame());

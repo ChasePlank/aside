@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirty-five stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirty-six stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover` and `a-small-lump`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump` and `fourteen-inches`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -416,6 +416,12 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/fourteen-inches.aside`** — a thatcher, a ridge that has gone nine years early, and another man's work
+  underneath it: **every spar notched a quarter of an inch too deep, all the way along — which is not a mistake you make
+  with a chisel by accident, it is a mistake you make by doing it faster.** Four endings, and they are four answers to
+  whose job the last man's work is — including ringing him, and having him come thirty miles on his own time and work
+  the Saturday and the Sunday alongside you, and never mention it again. **The first story here about a trade looking at
+  another tradesman's work**, and the second whose title is not "The something". 14 scenes, 100 beats, 4 choice options.
 - **`stories/a-small-lump.aside`** — a vet of eleven years, an appointment at ten past four, and a lurcher of about
   thirteen called Bramble. The lump is fixed to the muscle and about the size of a walnut, and **the honest answer
   costs a hundred and forty pounds before anybody has decided anything.** The owner is eighty-one, came on the bus, and
