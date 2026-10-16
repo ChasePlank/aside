@@ -1,0 +1,116 @@
+# Out of Season - a seaside guest house, a guest who does not leave, and a story told in the THIRD person.
+# Written for the library: one of forty-one stories before it was firmly second-person (two-of-everything is the only
+# other third-person one), so the narrative stance is what changes here rather than the surface. The choices are hers.
+
+title: Out of Season
+start: start
+
+== start ==
+bg hall_corner
+music room_tone
+The man in room four arrives on the second of October with one bag and a laptop, and Marion gives him
+the key and the wifi code and does not think about him again for nine days.
+The guest house holds eleven and it is down to three by the middle of the month, which is what the
+season does: the families go at the end of August, the couples go when the schools go back, and what
+is left is walkers, one or two weddings, and whoever has decided to be somewhere else for a while.
+-> the_week
+
+== the_week ==
+He pays for a week on the Friday, in cash, and then another week on the next Friday, and by the third
+Friday she has stopped asking whether he wants the same room.
+He is in the breakfast room at half past eight every morning and out by nine, in all weather, walking,
+and back at four, and in the evening he sits in the front room with the laptop and does not put the
+television on. He is polite in the specific way people are polite when they do not want to be asked
+anything, and she has been doing this for nineteen years and knows the difference.
+-> the_ledger
+
+== the_ledger ==
+There is a thing she has never done in nineteen years, which is to say no to a booking in October.
+She has taken the season's money and the season's people and she has never once sat down with the
+ledger in the October and worked out what the last three weeks of the year actually cost, because
+the last three weeks of the year are hers: the boiler gets serviced, the gutters get done, and the
+front room is hers to sit in.
+This year she has worked it out. Three weeks of one guest is three hundred and fifteen pounds and it
+is worth less than the boiler service.
+* Say nothing and take the money. The season is the season and he is polite. -> take_it
+* Ask him, at breakfast, how long he is planning to stay. -> ask_him
+* Tell him the house closes on the fifth of November, which is true. -> close_it
+
+== take_it ==
+She says nothing and he pays on the fourth Friday and again on the fifth, and the house is quieter
+than she has ever known it in the October, and the front room is not hers.
+She starts doing the gutters in the mornings instead, because there is nothing else to do and because
+the front room is occupied, and it rains on her twice in the first week and she gets the job done
+anyway, and on the eighth morning she stops and stands on the path with the ladder up and thinks the
+thing she has been not thinking, which is that she is doing the gutters in the rain in the October to
+avoid her own front room.
+-> the_decision
+
+== ask_him ==
+She asks him on the Saturday, at breakfast, with the tray of toast in her hand, and he does something
+she has not seen him do before, which is to look at the table.
+man: Until you close, if that's all right.
+marion: We don't close.
+man: I know. I looked.
+-> the_answered
+
+== close_it ==
+She tells him on the Monday that the house closes on the fifth of November, which is true and which
+is also four days earlier than the week she usually stops and two days later than he has paid for.
+He says thank you and pays for the last week that afternoon, in cash, and is gone by the Thursday,
+and the bed in room four is stripped and turned and left, and the front room is hers from the
+fourteenth of October onward, which has never happened.
+-> the_quiet_season
+
+== the_answered ==
+man: I'm not a guest who's going to become a problem. I'm just - I'm between two things, and the
+walking is the point, and I'd rather be here than in a flat.
+He says the word here the way people say the name of a place they have decided about.
+~ knows 1
+-> the_decision
+
+== the_decision ==
+Which is the moment the season's question arrives, and it arrives with the tray still in her hands:
+whether she is a woman who lets a man pay three hundred and fifteen pounds for a room in her house in
+the October, or whether she is a woman who has a house in the October.
+* Let him stay. Three hundred and fifteen pounds is three hundred and fifteen pounds. -> he_stays
+* Tell him he can stay to the fifth but the season price ends, and say why. -> reprice
+* Tell him the truth about the front room, and that she does the gutters in the rain. -> the_truth [if knows >= 1]
+
+== he_stays ==
+He stays to the end of the month and then to the middle of the November, and she closes the house on
+the twentieth with him still in it, which means letting a room in a closed house, which she has never
+done.
+He leaves on the twenty-second with the one bag and a thank you, and the room takes her four hours to
+set right, and on the following Tuesday she sits in the front room for the first time that year with a
+cup of tea and the rain on the windows and finds that she is not sure what to do in it any more.
+-> END
+
+== reprice ==
+She tells him on the Saturday afternoon, standing in the hall with the ledger in her hand, that the
+season price ends on the fifth and that a room in a closed house in the November is seventy pounds a
+week, which is not a number she has ever said out loud.
+He says that's fair, and pays it, and stays to the twenty-second, and it turns out that the number was
+the whole of it: it was never about the money past a certain point, it was about whether she had said
+it, and saying it cost her nothing and gave her the house back for the last three weeks, when nobody
+was in the front room in the evening but her.
+-> END
+
+== the_truth ==
+She puts the tray down and sits down opposite him, which she has not done in three weeks, and tells
+him about the gutters in the rain and about the front room and about what the last three weeks of the
+year have meant for nineteen years, and he listens to the whole of it without saying anything.
+Then he tells her why he is here, which takes four minutes and which she does not repeat to anybody,
+ever, including her sister, and which changes nothing about the money and everything about the
+morning.
+-> END
+
+== the_quiet_season ==
+The season is quiet and hers. The gutters get done in the second week of the November in dry weather
+with the radio on in the yard, and the boiler is serviced on the eighteenth by a man she has used for
+eleven years, and the front room has the fire on and nobody in it but her, and she reads four books
+in three weeks, which she has not done since she was thirty.
+In the February a card comes to the house addressed to her by name, with no message in it, and it has
+a photograph of a coast path on the front, about forty miles from here, which is to say a different
+one. She puts it on the shelf in the front room where she can see it from the chair.
+-> END

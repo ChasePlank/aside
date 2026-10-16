@@ -108,6 +108,7 @@ public final class Games {
         g.add(new aside.games.halfterm.HalfTermGame());
         g.add(new aside.games.calledhome.CalledHomeGame());
         g.add(new aside.games.fishonafriday.FishOnAFridayGame());
+        g.add(new aside.games.outofseason.OutOfSeasonGame());
         g.add(new aside.games.bothy.BothyGame());
         g.add(new aside.games.dispensary.DispensaryGame());
         g.add(new aside.games.harbour.HarbourGame());

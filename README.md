@@ -111,9 +111,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Forty-one stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Forty-two stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short`, `up-the-entry`, `half-term`, `called-home` and `fish-on-a-friday`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short`, `up-the-entry`, `half-term`, `called-home`, `fish-on-a-friday` and `out-of-season`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -418,6 +418,14 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/out-of-season.aside`** — a seaside guest house holding eleven, down to three by the middle of October,
+  and a man in room four who pays a week at a time in cash and does not leave. Marion has run this house for nineteen
+  years and has never said no to a booking in October: the last three weeks of the year are the boiler service, the
+  gutters, and her own front room. **Three weeks of one guest is three hundred and fifteen pounds.** **THE FIRST STORY
+  HERE TOLD IN THE THIRD PERSON** — of the forty-one before it, exactly one was — which changes the reading rather than
+  the surface: **second person puts you inside the trade, and this makes you an observer of somebody at work.** The
+  option to tell him the truth about the front room is offered **only if she asked him how long he was staying.** 12
+  scenes, 81 beats, 6 choice options.
 - **`stories/fish-on-a-friday.aside`** — a chip shop, twenty-two years of frying, and the oil in the second fryer that
   is due out today and is now eleven o'clock and dark at the edges. Change it and lose a lunch and four hundred pounds;
   run it to Monday and lose a Friday and a Saturday on oil that has gone. **THE FIRST STORY HERE WHERE STATE CHANGES
