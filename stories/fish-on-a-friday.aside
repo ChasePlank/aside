@@ -1,0 +1,145 @@
+# Fish on a Friday - a chip shop, oil due to be changed, and an option that only appears if you did it.
+# Written for the library. The next step past state changing a mid-story scene: here the state changes WHICH OPTIONS
+# THE READER IS OFFERED, so an earlier decision alters the menu rather than only the colour of the prose.
+
+title: Fish on a Friday
+start: start
+
+== start ==
+bg workshop_bench
+music room_tone
+The haddock goes in and the phone rings at the same moment, which is how Friday starts, and you are
+holding the basket with your shoulder up against the hood and the call is the man from the wholesaler
+saying the delivery will be an hour late.
+You have been frying in this shop for twenty-two years. You know what an hour late means on a Friday
+the way you know the sound of the door.
+-> the_oil
+
+== the_oil ==
+Which brings you to the oil, because everything on a Friday brings you to the oil.
+It went in ten days ago and it is due out today, and you have been saying since Wednesday that you
+will do it before the lunch, and it is now eleven o'clock and it is not done, and the oil in the
+second fryer is dark at the edges of the pan and it smells of the thing it does when it is done.
+Doing it now costs you the lunch and about four hundred pounds between the oil and the lost trade.
+Doing it Monday costs you a Friday and a Saturday on oil that has gone.
+-> the_decision
+
+== the_decision ==
+The shop is shut until twelve either way, and the fish is an hour late either way, and there is
+nothing else to do with the next hour except decide this.
+* Change it now. Lose the lunch, fry the evening on clean oil. -> change_it
+* Run it to Monday. Four hundred pounds is four hundred pounds. -> run_it
+* Change the second fryer only, and cook the haddock in the first. -> half_of_it
+
+== change_it ==
+You pump it out into the drum at the back and you put the new oil in and it takes fifty minutes
+including the cleaning, and you open at twenty past twelve with the shop smelling of nothing, which
+is the smell of clean oil and is the best smell a fryer has.
+You do not get the lunch trade. You get the afternoon, and the afternoon on a Friday is coffee and
+one pensioner with a small cod, and you stand behind the counter reading the paper.
+~ fresh_oil 1
+-> friday_evening
+
+== run_it ==
+You decide it will do Monday, which is what you decided on Wednesday, and which is the third time
+this year.
+You open at twelve on the same oil and it is fine for the lunch, and it is fine for the afternoon,
+and by six o'clock the fish is coming out a shade darker than the fish you would put in front of
+somebody you liked, and you are turning the second fryer down to keep it from going further, which
+works and which you have done before.
+-> friday_evening
+
+== half_of_it ==
+You change the second fryer and leave the first, which is the decision that sounds like a
+compromise and is not: the second fryer is the one that does the chips, and the fish goes in the
+first, and the first is the one that has gone.
+You know this. You do it anyway, because it is eleven o'clock and the drum is heavy and doing half
+of a job is a thing a tired man can talk himself into.
+~ half 1
+-> friday_evening
+
+== friday_evening ==
+if fresh_oil >= 1 -> the_clean_evening
+if half >= 1 -> the_half_evening
+-> the_dark_evening
+
+== the_clean_evening ==
+The evening is a proper Friday: forty-two suppers between half past five and half past eight, and
+every one of them comes out the colour it should be, and the batter sits up on the fish instead of
+sliding off it, and Mrs Okonjo says so, because she says so every year after you change the oil and
+never notices herself doing it.
+You are on your feet for three hours and your wrist is what it is and you would not be anywhere
+else, and at half past nine you sit down on the crate by the door with a cup of tea and the door
+open on the street.
+-> the_late
+
+== the_half_evening ==
+The chips are right and the fish is not, and the evening runs on the split: the chips go out crisp
+and pale and the fish goes out a shade dark, and about four people notice and none of them says
+anything, and you know all four of them by name.
+At ten o'clock you take the first fryer down and pump it into the drum in the dark at the back of
+the shop, and you do it properly, which takes forty minutes, and you are home at eleven.
+-> the_late
+
+== the_dark_evening ==
+The evening runs heavy. The fish goes dark early and stays dark, and by seven you are double
+draining everything and running the extractor on full, and the shop smells of the oil rather than
+of the fish, and two people who have been coming for years come in and look at the tray and order
+chips.
+At half past eight you make the decision you should have made at eleven, which is to stop frying,
+and you tell the last three customers that you have run out of fish, which is not true, and they go
+away fine with it because it is a Friday and they are used to things running out.
+-> the_late
+
+== the_late ==
+-> the_choice
+
+== the_choice ==
+It is twenty to nine and there is a tray of fish under the lamp that you would not eat and a queue
+of three, and the decision is not about the fish any more, it is about what the rest of the night
+is for.
+* Tell them the truth, shut the fryer, and put the reason in the window for tomorrow. -> the_truth
+* Keep going to closing time and take the money. -> keep_going
+* Take the fish off and sell chips until nine. -> chips_only
+* [if !fresh_oil] Do the night properly: shut at nine, pump it out, and change it before you go home. -> the_night
+
+== the_truth ==
+You tell the three of them, who did not ask, that the fish is not good tonight and that you are not
+selling it, and one of them says fair enough and one of them says it is only a bit of colour, and
+the third one - who has been coming here since before you had the shop - says nothing at all and
+comes back on the Tuesday.
+You write it on a sheet of A4 and tape it inside the window: SORRY, NO FISH TONIGHT. BACK FRIDAY.
+And it is the first time in twenty-two years that a thing has gone in that window that was not
+either a price or a holiday.
+-> END
+
+== keep_going ==
+You keep going. You sell the tray, and then you fry a fresh basket and sell that too, because a
+Friday is a Friday and the queue does not care what you think of the oil.
+At ten past ten you take eighty pounds out of the till and you stand in the back with the door open
+and the extractor off and the smell of the whole evening on you, and you work out, because you
+cannot help working it out, that the oil would have cost you four hundred and that you have made
+one hundred and sixty of it back and lost a day of your life, and you go home and do not say any of
+that to anybody.
+-> END
+
+== chips_only ==
+You take the fish off the tray and put it in the bin, which is four pounds of haddock, and you sell
+chips until nine, and it is a busy ninety minutes and everybody is happy and two people ask when
+the fish is coming back.
+You say Friday, and it is Friday, because you do not open on the Monday and the oil is changed on
+the Saturday morning with the shop shut and nobody watching, and by the time anybody notices
+anything the tray is full of haddock the colour it should be, and the three customers who wondered
+on the Friday have long since stopped wondering.
+-> END
+
+== the_night ==
+You shut at nine, which costs you an hour, and you pump the oil out into the drum and clean the pans
+and put the new oil in, and it is twenty past eleven when you put the lid back on the drum and stand
+up straight.
+The shop is clean and the fryers are clean and tomorrow's oil is in, and you are fifty-four and your
+back is what it is, and what you have bought with the last two hours is that nobody ate anything
+tonight that you knew was not right - WHICH IS THE SAME THING YOU COULD HAVE BOUGHT AT ELEVEN THIS
+MORNING FOR FOUR HUNDRED POUNDS AND AN HOUR, and you paid for it with a Friday instead, which you
+think about on the way home and do not resolve.
+-> END

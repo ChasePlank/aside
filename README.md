@@ -111,9 +111,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Forty stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Forty-one stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short`, `up-the-entry`, `half-term` and `called-home`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short`, `up-the-entry`, `half-term`, `called-home` and `fish-on-a-friday`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -418,6 +418,14 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/fish-on-a-friday.aside`** — a chip shop, twenty-two years of frying, and the oil in the second fryer that
+  is due out today and is now eleven o'clock and dark at the edges. Change it and lose a lunch and four hundred pounds;
+  run it to Monday and lose a Friday and a Saturday on oil that has gone. **THE FIRST STORY HERE WHERE STATE CHANGES
+  WHICH OPTIONS THE READER IS OFFERED:** all three ways through the evening reach the same late decision, and one of
+  its four options — doing the night properly, shutting at nine and changing the oil before going home — **appears only
+  if you did not change it this morning.** *The option to put it right is offered only if you did not put it right.*
+  `never-offered picks` is the auditor finding that says a conditional option is really offered rather than dead, and
+  it is what makes the idiom safe to use. 16 scenes, 100 beats, 7 choice options.
 - **`stories/called-home.aside`** — a bell tower, a ringer of fifty-four years who has died, and the question in the
   notice book: **whether anybody in the band can call a course of Plain Bob Major, half-muffled, at a funeral, in front
   of a family, without it coming apart.** You have rung in this tower since you were fourteen and have never called
