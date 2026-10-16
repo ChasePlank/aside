@@ -72,8 +72,12 @@ def main():
             continue
         gid = m.group(1)
         if not re.search(r'case\s+"%s"\s*->' % re.escape(gid), shelf):
-            problems.append("%s: PhoneShelf.java has no case \"%s\" - the shelf would show a blank line"
-                            % (story, gid))
+            # THE MESSAGE SAYS WHAT ACTUALLY HAPPENS. It used to say "the shelf would show a blank line", which
+            # IS NOT TRUE: measured 2026-10-16, an absent note is simply ABSENT FROM THE DATA - the rendered entry
+            # for Holdfast is {"title":...,"blurb":...} with no `note` key at all, so the shelf draws no line. The
+            # note is optional to the platform and a convention in this library, and the message now says which.
+            problems.append("%s: PhoneShelf.java has no case \"%s\" - the shelf would draw NO NOTE for it, where "
+                            "every other story has one" % (story, gid))
             continue
         # AND THE ID HAS TO BE THE BUILD'S FILENAME, because the shelf pairs a game with `web/<id>.html` and nothing
         # else. `gold-leaf` shipped with the id `goldleaf` against a build called `gold-leaf.html`, so the shelf could
