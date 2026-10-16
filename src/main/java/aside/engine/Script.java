@@ -50,6 +50,13 @@ public class Script {
     /** Non-fatal problems found while parsing (reported, never thrown). */
     public final List<String> warnings = new ArrayList<>();
 
+    /**
+     * Scene ids that appear more than once in the file. Kept apart from `warnings` because a duplicate is not advice:
+     * the second definition SILENTLY REPLACES the first, so every jump the first one made is lost, its flags are never
+     * read, and its endings become unreachable - three symptoms with one cause, and the cause is this list.
+     */
+    public final List<String> duplicateSceneIds = new ArrayList<>();
+
     static final Pattern SCENE_HDR = Pattern.compile("^==\\s*(\\S+)\\s*==\\s*$");
     static final Pattern DIALOGUE = Pattern.compile(
             "^([A-Za-z_][A-Za-z0-9_]*)\\s*(?:\\(([^)]*)\\))?\\s*:\\s+(.*)$");
@@ -83,6 +90,7 @@ public class Script {
                 String id = m.group(1);
                 if (s.scenes.containsKey(id)) {
                     s.warnings.add(name + ":" + lineNo + " duplicate scene id '" + id + "'");
+                    s.duplicateSceneIds.add(name + ":" + lineNo + " duplicate scene id '" + id + "'");
                 }
                 current = new Scene();
                 current.id = id;

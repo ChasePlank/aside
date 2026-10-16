@@ -39,6 +39,8 @@ public class Bot {
          *  not the same as meaningful, and only the first was checked. */
         public List<String> falseChoices = new ArrayList<>();
         public List<String> missingTargets = new ArrayList<>();
+        /** Scene ids defined twice — the second silently replaces the first. */
+        public List<String> duplicateScenes = new ArrayList<>();
         public List<String> deadEnds = new ArrayList<>();
         /** Beats sitting after a GOTO in the same scene — unreachable
          *  by construction, since the jump leaves before reaching them. */
@@ -150,6 +152,8 @@ public class Bot {
             sb.append("vars read but never written: ").append(varsReadOnly.size()).append('\n');
             for (String s : varsReadOnly) sb.append("    !! ").append(s).append('\n');
 
+            sb.append("duplicate scene ids: ").append(duplicateScenes.size()).append('\n');
+            for (String x : duplicateScenes) sb.append("    !! ").append(x).append('\n');
             sb.append("conditions that cannot fail: ").append(constConditions.size()).append('\n');
             for (String x : constConditions) sb.append("    !! ").append(x).append('\n');
             sb.append("vars written but never read: ").append(varsNeverRead.size()).append('\n');
@@ -167,6 +171,11 @@ public class Bot {
         Report r = new Report();
         for (String id : script.scenes.keySet()) r.scenesDefined.add(id);
         for (String w : script.warnings) r.warnings.add(w);
+        // A DUPLICATE SCENE ID IS A FINDING, NOT A WARNING. The warning was already printed - and the audit that gave
+        // three symptoms of a duplicate and, as I read it, "named no cause" HAD named it, in a line starting "~"
+        // rather than "!!": my own grep filter hid it. It counts toward the verdict now so that a story whose
+        // duplicate happens to have no visible consequences cannot pass CLEAN with its content silently dropped.
+        for (String d : script.duplicateSceneIds) r.duplicateScenes.add(d);
         collectThresholds(script);
 
         // What the script reads vs writes — a read-only variable is

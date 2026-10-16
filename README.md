@@ -62,6 +62,7 @@ java -cp out aside.engine.Audit stories/<name>.aside
 | `vars read but never written`, `vars written but never read` | a typo'd variable name, or a flag set for no reason. Always reliable. |
 | `choices that do not matter` | two options under the same condition going to the same place, or two options a reader cannot tell apart. Always reliable — **satisfiable is not the same as meaningful.** |
 | `conditions that cannot fail` | a jump whose condition is written on EVERY path that reaches it, so the fall-through is dead. **Always reliable**, and it is the one finding here that does not depend on the traversal at all — it asks the scene graph, not a search. |
+| `duplicate scene ids` | **a scene defined twice - the second silently replaces the first**, so every jump the first one made is lost, its flags are never read, and its endings become unreachable. Always reliable. It was added on 2026-10-16 after a duplicate produced THREE findings and a warning, and the warning naming it was the one line I had filtered out of the output. |
 | `warnings` | the parser and the walk saying something about themselves: a directive it could not read, and `ran out of memory after N states expanded`. Not findings — read them. |
 | `unreachable scenes`, `unreachable beats`, `never-offered picks` | **path** questions. Reliable only if the traversal finished. |
 
@@ -363,6 +364,7 @@ unreachable scenes:  0
 missing targets:     0      dead ends:           0      unreachable beats:   0
 never-offered picks: 0      choices that do not matter:  0
 vars read but never written: 0   vars written but never read: 0
+duplicate scene ids:  0
 
 CLEAN
 ```

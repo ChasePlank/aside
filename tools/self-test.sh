@@ -1064,5 +1064,21 @@ if [ -x tools/find-java.sh ]; then
   fi
 fi
 
+# ---- the auditor must NAME a duplicate scene id, not leave three symptoms --------------------------------
+# A scene defined twice SILENTLY REPLACES the first: its jumps are lost, its flags are never read, its endings become
+# unreachable. On 2026-10-16 a duplicate produced exactly that - three findings and one warning - and the warning was
+# the one line I had filtered out of the output, so I spent twenty minutes concluding the tool had a gap. IT NAMED THE
+# CAUSE ALL ALONG AND I DID NOT READ IT. The duplicate now counts toward the verdict too, so a duplicate with no
+# visible consequences cannot pass CLEAN, and this entry keeps both halves honest.
+DUP_BAK=$(mktemp); cp stories/half-term.aside "$DUP_BAK"
+printf '\n== the_reckoning ==\nA second definition of a scene that already exists.\n-> END\n' >> stories/half-term.aside
+dup_out=$(tools/run-java.sh aside.engine.Audit stories/half-term.aside 2>&1); dup_rc=$?
+cp "$DUP_BAK" stories/half-term.aside; rm -f "$DUP_BAK"
+if [ $dup_rc -ne 0 ] && grep -q "duplicate scene id" <<<"$dup_out"; then
+  ok "the auditor names a duplicate scene id" "$(grep '!! .*duplicate scene id' <<<"$dup_out" | tr -s ' ' | cut -c1-38)"
+else
+  bad "the auditor names a duplicate scene id" "rc=$dup_rc, and no duplicate reported"
+fi
+
 echo "=== $pass tool self-test(s) passed, $fail failed ==="
 [ "$fail" = 0 ] || exit 1
