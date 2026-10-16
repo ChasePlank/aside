@@ -110,9 +110,9 @@ There are four families:
   redaction, drift, lesson, tell. One verb each.
 - **Nine FNAF games** — FNAF 1 through 9, each taking away one thing the one
   before it assumed. FNAF 1 is Roxanne's; the rest are Loona's.
-- **Thirty-eight stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
+- **Thirty-nine stories** — `overtime`, `two-of-everything`, `bell-codes`, `ninety-days`, `a440`, `changeover`,
   `the-lamp-room`, `the-discrepancy`, `the-water-line`, `the-last-crossing`, `the-bothy`, `the-dispensary`,
-  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short` and `up-the-entry`, plus `night-shift` (a test
+  `the-exchange`, `the-harbour`, `the-last-route`, `the-lookout`, `the-stage-door`, `the-canteen`, `the-round`, `the-riser`, `the-pledge`, `the-survey`, `the-flue`, `the-lock`, `the-face`, `the-forge`, `the-endpaper`, `the-pane`, `the-plot`, `the-chart`, `gold-leaf`, `two-pints`, `under-cover`, `a-small-lump`, `fourteen-inches`, `one-dog-short`, `up-the-entry` and `half-term`, plus `night-shift` (a test
   fixture). Each is audited rather than asserted — `tools/audit-stories.sh` prints every one with its scene,
   ending, beat and choice-option counts.
   **THIS BULLET HAS BEEN WRONG TWICE AND BOTH TIMES THE SAME WAY**: it said "five" and named five while `stories/`
@@ -416,6 +416,13 @@ the story itself did not move: what moved was the traversal, and every number th
 - **`stories/the-lookout.aside`** — a fire lookout in the last hour of a shift, a column of smoke four miles out,
   and the question of when to call it in. The first one where the choice changes which ending you get. 15 scenes,
   2 endings.
+- **`stories/half-term.aside`** — a school caretaker of nineteen years, half term, and a boiler pump that has been on
+  the list since 2019 with the word **DEFER** against it twice. Write it up and put it in front of the head, nurse it
+  through the winter, or ring the supplier for a price — and the head asks the question you have been dreading for
+  eleven years: *"How long have you known about this one."* **THE FIRST STORY HERE TO USE STATE, and the middle
+  decision therefore changes which endings are reachable rather than the colour of the middle:** an earlier choice sets
+  a flag and the last act routes on it, so the ending where the head knows is **unreachable unless you said something**.
+  The auditor's ending list is the proof. 17 scenes, 122 beats, 6 choice options.
 - **`stories/up-the-entry.aside`** — a coal round in the last week before Christmas, a nineteen-year-old on his
   second winter, and **three small decisions that accumulate**: which drop to take first with the light going (the Hall
   seven miles out, or four small ones in town); what to say when he asks whether leaving two hundredweight in a doorway

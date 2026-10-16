@@ -1,0 +1,168 @@
+# Half Term - a school caretaker, an old boiler, and a decision that is remembered.
+# Written for the library, and the first here to use STATE: an earlier choice sets a flag and the last act routes on
+# it, so the middle decision changes which endings are reachable rather than only the colour of the middle.
+
+title: Half Term
+start: start
+
+== start ==
+bg hall_corner
+music room_tone
+Half term is the only week of the year when the building is properly yours: nine hundred children
+out, forty staff out, and a boiler that has to be kept at fifteen degrees whether anybody is in
+it or not, because the pipes in the 1930s block are iron and they do not like being cold.
+You have been the caretaker here for nineteen years. The boiler is a Potterton from 1988 and it
+has been on the list since 2019.
+-> the_plant
+
+== the_plant ==
+You go down on the Monday morning with the log book and the torch and the pressure is eleven
+pounds where it should be twenty-eight, and the gauge has been creeping down since the Thursday,
+and there is water in the tray under the pump which there was not last week.
+You know exactly what that is. The pump gland is going, and it is a two hundred pound part, and
+the pump is the original, and when it goes properly it goes at four in the morning on the coldest
+night of the year and takes the pipework with it.
+-> the_list
+
+== the_list ==
+The list is in the office and it is a spreadsheet with a column for the estimate and a column
+for the budget and the budget column, this year, has been written in by the bursar in red.
+You have put the pump on it twice, in the March and in the September. Both times it has come
+back with the same word against it, which is the word DEFER.
+The head is in on Wednesday for two hours to sign things. The bursar is in tomorrow.
+-> the_decision
+
+== the_decision ==
+You can write it up again and put it in front of the head on Wednesday with the tray and the
+pressure reading and the photographs, and make it a thing that has been said properly in a room
+with a witness. Or you can do what you have done twice already, which is to nurse it through the
+winter with the log book and a bucket and hope the cold comes late.
+* Write it up properly and put it in front of the head on Wednesday. -> write_it_up
+* Nurse it through and say nothing more. -> nurse_it
+* Ring the pump supplier yourself and get a price, then take that in. -> get_a_price
+
+== write_it_up ==
+You photograph the tray, the gauge and the gland, and you write it up in the log in the words the
+log uses, which are not dramatic, and you print it, because a thing printed is a thing that
+exists in a meeting.
+On the Wednesday you put it in front of the head with the tray photograph on top, and she reads
+it properly, and she does the thing that heads do, which is to ask you what you would do if it
+were your building.
+~ reported 1
+-> the_head
+
+== nurse_it ==
+You nurse it. You drain the tray every morning and top the pressure up every second day and you
+write PRESSURE TOPPED in the log each time in your own handwriting, which is a thing that has
+your name on it and is also a thing that is true.
+By the December the log has twenty-nine lines in it and every one of them is a record of a fault
+you knew about, and none of them is a record of the fault, which is a distinction that would
+matter to somebody reading the log afterwards and does not matter to you while you are draining
+a tray at half past six in the morning.
+-> the_winter
+
+== get_a_price ==
+You ring three suppliers and get three prices and the middle one is two hundred and ten pounds
+delivered, and you take that in on the Wednesday as well, because a number is harder to defer than
+a part.
+The head looks at the two hundred and ten for about four seconds, and then asks the question that
+you have been dreading for eleven years without knowing it.
+head: How long have you known about this one.
+~ reported 1
+-> the_head
+
+== the_head ==
+head: How long.
+you: Since the September.
+head: And it's in the log.
+you: It's in the log twice.
+She sits back and looks at the ceiling for a moment and then says the thing that is going to be
+the whole of the rest of this, which is that the fault is not the pump.
+head: You've been managing a two hundred pound failure on your own for three months, in a building
+with nine hundred children in it, and I have been reading the word DEFER in a column.
+-> the_asked
+
+== the_asked ==
+It is a fair thing to say and it is said without any heat, and it lands the way true things land,
+which is by taking longer than you expect.
+She asks you for a decision: whether you want the pump doing in the holiday on the emergency
+budget, which will take it out of next year's roof, or whether you want to keep nursing it and
+have the roof done in the summer as planned.
+* Do the pump now, out of next year's roof. -> pump_now
+* Nurse it to the spring and keep the roof. -> nurse_to_spring
+* Tell her it is her budget and her building, and you will do whichever she says. -> her_call
+
+== the_winter ==
+The cold comes on the eleventh of December and stays for nine days, and the boiler holds, and on
+the seventh day the pump starts making the noise, which is the noise, and you sit in the plant
+room from four in the morning until half past seven with your hand on the casing waiting for it
+to go.
+It does not go. You have managed it, which is what you have done for nineteen years, and what
+nobody will ever know is that managing it took four nights of your own sleep in the last week of
+term, and that you would do it again, and that this is not a fact about the boiler at all.
+-> the_end_of_term
+
+== the_reckoning ==
+if reported >= 1 -> term_with_the_head
+-> term_quiet
+
+== term_with_the_head ==
+The pump was done in the February half term out of the roof budget and the roof was done in the
+August out of the following one, which the bursar described in a meeting as a rolling problem and
+which you understood to mean that it was now somebody's stated problem rather than your own.
+The head retires in the July and her leaving present is a bench, and at the leaving do she says
+one sentence to a room of forty people that is about a boiler and a tray, and the staff laugh
+because it is a funny sentence, and you laugh too, and you are the only person in the room who
+knows which parts of it are true.
+-> END
+
+== term_quiet ==
+You do the February and the March and the April, and the pump goes on a Tuesday in the May when
+it is fourteen degrees outside and nothing is at risk and the pipes are warm, and the head walks
+down to the plant room because she has heard the noise from her office.
+She looks at the tray, the gauge, the bucket, and says nothing for a while. Then she asks how long,
+and you say since the September, and she says
+the word that is the end of the conversation, which is the word RIGHT.
+You are asked to write it up afterwards, formally, and you do, and the write-up takes forty
+minutes, and it is the same document you could have written in the November.
+-> END
+
+== pump_now ==
+you: The pump. It's a two hundred pound part and it's the difference between a holiday job and
+a burst pipe in January.
+head: Then it's the pump.
+It is signed off on the Thursday and done in the February half term by a man called Ivor who has
+been doing the plant at this school since before you got here, and who tells you while he is
+working that this pump has been on his own list since 2019 too.
+-> END
+
+== nurse_to_spring ==
+you: Spring. And I'll keep the bucket and the log, and if it goes before then it goes.
+head: That's a decision.
+you: It is.
+She writes it in the margin of your write-up in her own handwriting, which means it is now a
+recorded decision by a named person rather than an absence of one, and that is the difference
+between the September and now, and it is not a small difference and you both know it.
+The pump goes on the second of March, eighteen days before the Easter holiday, in a frost, at ten
+past four in the afternoon while the building is full, and Ivor comes out the same evening, and
+the pipework holds because the frost was not the kind that takes pipes with it.
+-> the_winter
+
+== her_call ==
+you: It's your budget and your building. I'll do whichever you say.
+head: That is not what I asked you.
+you: It's what I've got.
+She looks at you for a moment, and then she stops asking, which she is entitled to do, and writes
+her own decision in the margin: PUMP IN FEBRUARY HALF TERM, ROOF DEFERRED, INITIALS. And it is a
+good decision, and it is hers, and it is in her handwriting, and it is the shape this has been
+heading for since the September, when the word DEFER went in a column beside your name.
+-> END
+
+== the_end_of_term ==
+The term ends on the nineteenth and the building empties properly for the first time in fourteen
+weeks, and you do the walk-round on the last afternoon, which is forty minutes and eleven keys and
+the thing you have done every term for nineteen years.
+The boiler is at fifteen degrees and the tray is dry because you drained it at seven, and the
+school is quiet in the way it is only ever quiet in the holidays, and you lock the plant room door
+and stand on the steps for a minute in the dark because there is nothing else to check.
+-> the_reckoning
